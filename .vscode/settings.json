@@ -1,0 +1,7 @@
+{
+  "files.exclude": {
+    "**/.gradle": true,
+    "**/build": true
+  },
+  "kotlin.compiler.jvm.target": "17"
+}

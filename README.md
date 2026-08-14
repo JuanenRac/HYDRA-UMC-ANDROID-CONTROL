@@ -4,7 +4,13 @@
 
 # 📱 HYDRA-UMC ANDROID CONTROL
 
-**Status: planned, not yet started.** This repository is a placeholder - scope, architecture, and feature set are still to be defined by the project owner. Nothing in this folder should be treated as a source of truth about what this project will actually do until that happens.
+**Status: scaffolding only, no real app yet.** A native Android app that controls a robot on the [HYDRA-UMC](https://github.com/JuanenRac/HYDRA-UMC) platform over Wi-Fi (speaking the same [`REMOTE_API.md`](https://github.com/JuanenRac/HYDRA-UMC-STUDIO/blob/main/docs/REMOTE_API.md) contract [HYDRA-UMC SUITE](https://github.com/JuanenRac/HYDRA-UMC-SUITE) uses) or Bluetooth (blocked on future CM5-side work - see below). See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the full design. The actual Kotlin/Jetpack Compose implementation is being built by the project owner - this repository provides the architecture write-up, a minimal Gradle project layout, and VSCode configuration for Kotlin/Gradle development, not real app code.
+
+## 🏗️ What exists so far
+
+- `docs/ARCHITECTURE.md` - the real design doc: Wi-Fi transport (real, working API today), Bluetooth transport (honestly flagged as blocked on a CM5-side BLE service that doesn't exist yet anywhere in this ecosystem).
+- `settings.gradle.kts` / `build.gradle.kts` / `app/build.gradle.kts` - a Gradle project skeleton (Jetpack Compose + OkHttp + kotlinx.serialization wired as dependencies, per the architecture doc's own recommendation), `AndroidManifest.xml`, and a Kotlin source layout (`MainActivity.kt`, `ui/`, `networking/`, `bluetooth/`), every file a documented placeholder, not implementation. No `gradlew`/`gradle-wrapper.jar` is checked in - generating a real one requires actually running Gradle (see `build.gradle.kts`'s own header comment for the command).
+- `.vscode/` - recommended Gradle/Kotlin extensions, editor settings, and build tasks.
 
 ## 🔗 Related Projects
 
