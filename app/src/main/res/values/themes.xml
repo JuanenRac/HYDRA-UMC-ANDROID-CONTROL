@@ -1,3 +1,17 @@
 <resources>
-    <style name="Theme.HydraUmcControl" parent="android:Theme.Material.Light.NoActionBar" />
+    <!-- Base application theme. -->
+    <style name="Theme.HydraUmcControl" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:statusBarColor">#F3F4F6</item>
+        <item name="android:windowLightStatusBar">true</item>
+    </style>
+
+    <!-- Splash Screen Theme -->
+    <style name="Theme.App.Starting" parent="Theme.SplashScreen">
+        <!-- Set the splash screen background -->
+        <item name="windowSplashScreenBackground">#0B0F19</item>
+        <!-- Use our custom logo -->
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_hydra_logo</item>
+        <!-- Set the post-splash screen theme to your app's main theme -->
+        <item name="postSplashScreenTheme">@style/Theme.HydraUmcControl</item>
+    </style>
 </resources>

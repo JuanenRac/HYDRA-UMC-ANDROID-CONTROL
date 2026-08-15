@@ -3,15 +3,21 @@ package com.hydraumc.control
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
+import androidx.activity.viewModels
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import com.hydraumc.control.viewmodel.RobotViewModel
 
 class MainActivity : ComponentActivity() {
+    private val robotViewModel: RobotViewModel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Handle the splash screen transition.
+        installSplashScreen()
+        
         super.onCreate(savedInstanceState)
         setContent {
             MaterialTheme {
@@ -19,24 +25,9 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    ControlPanel()
+                    MainScreen(robotViewModel)
                 }
             }
-        }
-    }
-}
-
-@Composable
-fun ControlPanel() {
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text(text = "HYDRA-UMC Android App", style = MaterialTheme.typography.headlineMedium)
-        Spacer(modifier = Modifier.height(32.dp))
-        Button(onClick = { /* TODO: Execute command or send trajectory */ }) {
-            Text("Conectar con Servidor")
         }
     }
 }
