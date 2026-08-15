@@ -40,26 +40,35 @@ uses, not a separate mobile-specific protocol:
   made from this app should show up live in an open HYDRA-UMC STUDIO
   browser tab, and vice versa - not just on next manual refresh.
 
-**Recommended stack:** `OkHttp` for the REST calls and its own WebSocket
-support for `/ws` (the de facto standard Android HTTP/WebSocket client;
-no need to hand-roll either), `kotlinx.serialization` or `Moshi` for the
-JSON payloads. Both are widely-used, actively-maintained libraries, not
-an unusual choice for this ecosystem's own "no unnecessary dependencies"
-convention - a hand-rolled `HttpURLConnection` WebSocket client would be
-real, avoidable extra work for no benefit here.
+**Actual stack:** `OkHttp` for the REST calls and its own WebSocket
+support for `/ws` (`network/HydraApiClient.kt`, `network/HydraWebSocket.kt`)
+- the de facto standard Android HTTP/WebSocket client, no need to
+hand-roll either. JSON is handled with plain `org.json` (part of the
+Android framework), deliberately NOT `kotlinx.serialization`/Moshi or any
+other strict-schema library - `model/HydraState.kt` wraps the raw
+`JSONObject` tree instead of a typed data class, so a field this app
+doesn't know about round-trips untouched on write-back instead of being
+silently dropped (the real STUDIO state, `src/store.tsx`'s
+`SystemSettings`/`HydraController`/`RobotState`, has many fields this app
+never displays or edits). See that file's own header comment for the full
+reasoning - it mirrors HYDRA-UMC SUITE's own `hydra_suite/models.py` for
+the same reason.
 
-**Discovery on a real network:** the REMOTE_API.md document itself notes
-no mDNS/Bonjour service is advertised yet (a real gap, not an oversight -
-see that document's own "Future work" section). Until that exists
-server-side, this app has 2 realistic options: (a) let the user type in
-a HYDRA-UMC's IP/hostname manually (simplest, always works), or (b) scan
-the local subnet's likely IP range hitting `/api/hydra-info` on each
-candidate (same approach HYDRA-UMC SUITE's own network scanner uses -
-see that project's own `discovery.py` for the reference algorithm once it
-exists). Android's `NsdManager` (Network Service Discovery, mDNS-based)
-becomes the much better option once the CM5 side actually advertises a
-`_hydra-umc._tcp` service - track that against REMOTE_API.md's own
-"Future work" note rather than building NSD support against nothing.
+**Discovery on a real network:** implemented (`network/Discovery.kt`) as
+option (b) below - a direct Kotlin port of HYDRA-UMC SUITE's own
+`hydra_suite/net/discovery.py`, including that file's own "always probe
+the phone's own LAN IP too, not just the other hosts on the subnet" fix.
+REMOTE_API.md itself notes no mDNS/Bonjour service is advertised yet (a
+real gap, not an oversight - see that document's own "Future work"
+section), so this app has 2 realistic options: (a) let the user type in
+a HYDRA-UMC's IP/hostname manually (`ui/SettingsScreen.kt`, always
+works), or (b) scan the local subnet's likely IP range hitting
+`/api/hydra-info` on each candidate concurrently, same approach as (a)'s
+counterpart. Android's `NsdManager` (Network Service Discovery,
+mDNS-based) becomes the much better option once the CM5 side actually
+advertises a `_hydra-umc._tcp` service - track that against
+REMOTE_API.md's own "Future work" note rather than building NSD support
+against nothing.
 
 ## 3. Bluetooth transport (secondary - NOT backed by any server-side support yet)
 
@@ -78,27 +87,58 @@ exist yet anywhere in this ecosystem as of this document's own writing
 something to build from the Android side alone.
 
 Once that CM5-side service exists, the Android side would use the
-platform's `BluetoothLeScanner`/`BluetoothGatt` APIs - see
-`app/src/main/kotlin/.../bluetooth/` below for where that implementation
-belongs once it's real.
+platform's `BluetoothLeScanner`/`BluetoothGatt` APIs, living alongside
+the packages in section 4 below (e.g.
+`app/src/main/java/com/hydraumc/control/bluetooth/`) once it's real.
 
-## 4. Suggested source layout
+## 4. Actual source layout
 
 ```text
-app/src/main/kotlin/com/electrohobby3d/hydraumccontrol/
-├── MainActivity.kt            # Entry point (placeholder)
-├── ui/                        # Jetpack Compose screens (placeholder)
-├── networking/                # OkHttp REST client + WebSocket live-sync client (placeholder)
-└── bluetooth/                 # BluetoothLeScanner/BluetoothGatt client, blocked on CM5-side GATT service (placeholder)
+app/src/main/java/com/hydraumc/control/
+├── MainActivity.kt            # Entry point - installs the splash screen, hosts MainScreen
+├── MainScreen.kt               # Bottom-nav Scaffold wiring the 4 screens below together
+├── ui/
+│   ├── DashboardScreen.kt      # Per-robot overview: online state, position, speed/accel, playback
+│   ├── ControlScreen.kt        # Jog joystick, speed/accel sliders, ATC tool change, play/pause/stop
+│   ├── ThreeDScreen.kt         # WebView embedding the full HYDRA-UMC STUDIO web UI at http://<host>:<port>
+│   └── SettingsScreen.kt       # IP/port entry, connect, and the subnet-scan results list
+├── model/
+│   └── HydraState.kt           # Thin JSONObject-backed views (HydraState/ControllerView/RobotView/ServerInfo) - see section 2
+├── network/
+│   ├── HydraApiClient.kt       # GET/POST /api/settings, GET /api/hydra-info (REMOTE_API.md sections 1-2)
+│   ├── HydraWebSocket.kt       # /ws live sync with echo-guard + auto-reconnect (REMOTE_API.md section 3)
+│   ├── Discovery.kt            # Concurrent subnet scan against /api/hydra-info
+│   └── ConnectionPrefs.kt      # Persists the last IP/port (Preferences DataStore)
+└── viewmodel/
+    └── RobotViewModel.kt       # Holds the HydraState mirror, drives every screen, pushes mutations back to the server
 ```
 
-**Recommended UI toolkit:** Jetpack Compose (Google's current recommended
-Android UI toolkit, not the legacy XML View system) - matches "latest
-technology" the same way the rest of this ecosystem's own newer projects
-(React 19, Vite, PySide6 for HYDRA-UMC SUITE) lean current rather than
+Bluetooth transport (section 3) has no source files yet - there's nothing
+real to build against on the CM5 side (see that section above).
+
+**UI toolkit:** Jetpack Compose (Google's current recommended Android UI
+toolkit, not the legacy XML View system) - matches "latest technology"
+the same way the rest of this ecosystem's own newer projects (React 19,
+Vite, PySide6 for HYDRA-UMC SUITE) lean current rather than
 legacy-compatible.
 
-## 5. Relationship to the rest of the ecosystem
+## 5. Build tooling
+
+The Gradle wrapper (`gradlew`, `gradlew.bat`, `gradle/wrapper/*`) is
+checked into this repo, pinned to Gradle 8.2 - the version AGP 8.1.0
+(`build.gradle.kts`) is validated against. Building needs a JDK 17+ to
+run Gradle itself (independent of `app/build.gradle.kts`'s own
+`sourceCompatibility`/`jvmTarget`, which target 1.8 for the compiled
+app code) and the Android SDK (`local.properties` with `sdk.dir=...`,
+generated automatically the first time Android Studio opens this
+project, or `ANDROID_HOME`/`ANDROID_SDK_ROOT`). `build-android.sh` /
+`build-android.bat` at the repo root wrap `gradlew assembleDebug` +
+`adb install` into one step, with pre-flight checks for all 3 of the
+above (missing wrapper, missing SDK location, JDK too old) since
+Gradle's own errors for each are unhelpfully generic or, in the JDK
+case, don't mention the JDK at all.
+
+## 6. Relationship to the rest of the ecosystem
 
 See the root [`README.md`](../README.md)'s own "Related Projects" section
 for the full picture. The 3 things worth knowing specifically for this

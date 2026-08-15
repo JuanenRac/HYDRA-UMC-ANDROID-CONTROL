@@ -1,2 +1,13 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# Explicit line endings for the scripts every platform's shell needs to run
+# directly, independent of each cloning machine's own core.autocrlf setting
+# (relying on that alone is what caused gradlew.bat/build-android.bat to be
+# checked out with LF-only endings on Windows and fail with cryptic
+# "'x' is not recognized as an internal or external command" errors - CRLF
+# is a hard requirement for cmd.exe's own batch parser, not a style
+# preference). Matches the upstream gradle/gradle repo's own convention.
+*.bat text eol=crlf
+gradlew text eol=lf
+*.sh text eol=lf
