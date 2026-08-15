@@ -1,37 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-HYDRA-UMC Android Control - AndroidManifest.xml (scaffolding)
-Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-GPL-3.0 - see LICENSE
-
-Wi-Fi (INTERNET) permission is real and needed from day one (the Wi-Fi
-transport in docs/ARCHITECTURE.md section 2). Bluetooth permissions are
-commented out on purpose - uncomment once the Bluetooth transport
-(section 3) has a real CM5-side GATT service to implement against; asking
-for BLUETOOTH_SCAN/BLUETOOTH_CONNECT before that exists would just be an
-unused runtime permission prompt with nothing behind it.
--->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <!-- <uses-permission android:name="android.permission.BLUETOOTH_SCAN" /> -->
-    <!-- <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" /> -->
-
     <application
-        android:label="HYDRA-UMC Control"
-        android:allowBackup="false"
-        android:supportsRtl="true">
-
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.HydraUmcControl">
         <activity
             android:name=".MainActivity"
-            android:exported="true">
+            android:exported="true"
+            android:theme="@style/Theme.HydraUmcControl">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
     </application>
-
 </manifest>

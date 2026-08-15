@@ -1,16 +1,67 @@
 // =============================================================================
-// HYDRA-UMC Android Control - root Gradle build script
+// HYDRA-UMC Android Control - app module Gradle build script
 // Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
 // GPL-3.0 - see LICENSE
 //
-// Scaffolding only - no gradle-wrapper.jar is checked in (generating one
-// correctly requires actually running Gradle, not something to fake in a
-// scaffold). Run `gradle wrapper --gradle-version 8.10` once a real
-// Android SDK + Gradle install is available locally to generate a real
-// gradlew/gradlew.bat/gradle-wrapper.jar before building - see
-// docs/ARCHITECTURE.md.
+// Scaffolding only. Jetpack Compose + OkHttp are declared per
+// docs/ARCHITECTURE.md's own recommendation (sections 2 and 4) - not
+// implemented against yet, just wired so the dependency is resolvable
+// once real code starts using it.
 // =============================================================================
+
 plugins {
-    id("com.android.application") version "8.7.0" apply false
-    id("org.jetbrains.kotlin.android") version "2.1.0" apply false
+    id("com.android.application")
+    id("org.jetbrains.kotlin.android")
+}
+
+android {
+    namespace = "com.hydraumc.control"
+    compileSdk = 33
+
+    defaultConfig {
+        applicationId = "com.hydraumc.control"
+        minSdk = 24
+        targetSdk = 33
+        versionCode = 1
+        versionName = "1.0"
+
+        vectorDrawables {
+            useSupportLibrary = true
+        }
+    }
+
+    buildTypes {
+        release {
+            isMinifyEnabled = false
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+        }
+    }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
+    }
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+    buildFeatures {
+        compose = true
+    }
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.4.3"
+    }
+}
+
+dependencies {
+    implementation("androidx.core:core-ktx:1.9.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.1")
+    implementation("androidx.activity:activity-compose:1.7.0")
+    implementation(platform("androidx.compose:compose-bom:2023.03.00"))
+    implementation("androidx.compose.ui:ui")
+    implementation("androidx.compose.ui:ui-graphics")
+    implementation("androidx.compose.ui:ui-tooling-preview")
+    implementation("androidx.compose.material3:material3")
+    
+    // Retrofit for API calls
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
 }
