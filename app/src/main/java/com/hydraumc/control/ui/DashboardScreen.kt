@@ -12,6 +12,7 @@ import androidx.compose.ui.unit.dp
 import com.hydraumc.control.viewmodel.RobotViewModel
 import kotlin.math.round
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardScreen(viewModel: RobotViewModel) {
     val robots = viewModel.robots.value

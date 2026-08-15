@@ -11,6 +11,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.hydraumc.control.viewmodel.RobotViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(viewModel: RobotViewModel) {
     var ipAddress by remember { mutableStateOf(viewModel.ipAddress.value) }

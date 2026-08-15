@@ -25,7 +25,12 @@ android {
         compose = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.4.3"
+        // Paired with the Kotlin plugin version in the root build.gradle.kts
+        // (1.9.22 -> compiler 1.5.8, per Google's own compose-kotlin
+        // compatibility map) - was 1.4.3/Kotlin 1.8.10, which only pulled in
+        // an alpha-era Material3 (see compose-bom below) missing APIs this
+        // app actually uses (e.g. TopAppBarDefaults.topAppBarColors()).
+        kotlinCompilerExtensionVersion = "1.5.8"
     }
 }
 
@@ -34,7 +39,9 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.1")
     implementation("androidx.activity:activity-compose:1.7.0")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.1")
-    implementation(platform("androidx.compose:compose-bom:2023.03.00"))
+    // 2024.02.00 -> Material3 1.2.0, stable (the old 2023.03.00 was an early
+    // alpha still missing/experimental-gating APIs this app relies on).
+    implementation(platform("androidx.compose:compose-bom:2024.02.00"))
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")

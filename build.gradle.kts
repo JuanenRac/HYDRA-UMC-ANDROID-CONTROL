@@ -4,5 +4,8 @@
 // version AGP 8.1.0 (below) is validated against.
 plugins {
     id("com.android.application") version "8.1.0" apply false
-    id("org.jetbrains.kotlin.android") version "1.8.10" apply false
+    // 1.9.22, not 1.8.10 - see app/build.gradle.kts's own composeOptions
+    // comment for why (the Compose Compiler/BOM versions this pairs with
+    // are what actually matter for API availability).
+    id("org.jetbrains.kotlin.android") version "1.9.22" apply false
 }
