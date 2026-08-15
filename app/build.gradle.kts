@@ -5,11 +5,20 @@ plugins {
 
 android {
     namespace = "com.hydraumc.control"
-    compileSdk = 33
+    // 34, not 33 - compose-bom 2024.02.00 below pulls in Compose/AndroidX
+    // artifacts (material3 1.2.0, core-ktx 1.12.0, etc.) that require
+    // compiling against API 34 (AAR metadata check), independent of
+    // targetSdk - see build.gradle.kts's own AGP version comment.
+    compileSdk = 34
 
     defaultConfig {
         applicationId = "com.hydraumc.control"
         minSdk = 24
+        // Deliberately left at 33, not bumped alongside compileSdk - this
+        // only needs to satisfy Compose's own AAR compile-time check above,
+        // and targeting 34 at runtime would opt into API-34 behavior
+        // changes never evaluated for this app (Google's own guidance:
+        // compileSdk and targetSdk can be moved independently).
         targetSdk = 33
         versionCode = 1
         versionName = "1.0"

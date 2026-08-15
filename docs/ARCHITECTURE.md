@@ -125,18 +125,26 @@ legacy-compatible.
 ## 5. Build tooling
 
 The Gradle wrapper (`gradlew`, `gradlew.bat`, `gradle/wrapper/*`) is
-checked into this repo, pinned to Gradle 8.2 - the version AGP 8.1.0
-(`build.gradle.kts`) is validated against. Building needs a JDK 17+ to
-run Gradle itself (independent of `app/build.gradle.kts`'s own
-`sourceCompatibility`/`jvmTarget`, which target 1.8 for the compiled
-app code) and the Android SDK (`local.properties` with `sdk.dir=...`,
-generated automatically the first time Android Studio opens this
-project, or `ANDROID_HOME`/`ANDROID_SDK_ROOT`). `build-android.sh` /
-`build-android.bat` at the repo root wrap `gradlew assembleDebug` +
-`adb install` into one step, with pre-flight checks for all 3 of the
-above (missing wrapper, missing SDK location, JDK too old) since
-Gradle's own errors for each are unhelpfully generic or, in the JDK
-case, don't mention the JDK at all.
+checked into this repo, pinned to Gradle 8.2 - the exact minimum AGP
+8.2.0 (`build.gradle.kts`) itself requires, per Google's own AGP 8.2.0
+release notes. AGP is 8.2.0 rather than 8.1.0 specifically because
+`compose-bom 2024.02.00` (`app/build.gradle.kts`) pulls in Compose/
+AndroidX artifacts that require compiling against API 34
+(`compileSdk = 34`) - 8.1.0's own max-recommended `compileSdk` is 33.
+Building needs a JDK 17+ to run Gradle itself (independent of
+`app/build.gradle.kts`'s own `sourceCompatibility`/`jvmTarget`, which
+target 1.8 for the compiled app code - and independent of `targetSdk`,
+left at 33 since only the compile-time API surface needed to move, not
+runtime behavior) and the Android SDK (`local.properties` with
+`sdk.dir=...`, generated automatically the first time Android Studio
+opens this project, or `ANDROID_HOME`/`ANDROID_SDK_ROOT`).
+`build-android.sh` / `build-android.bat` at the repo root wrap `gradlew
+assembleDebug` + `adb install` into one step, with pre-flight checks
+for the wrapper, the SDK location, and the JDK version, since Gradle's
+own errors for each are unhelpfully generic or, in the JDK case, don't
+mention the JDK at all. `README.md`'s own "Troubleshooting" table has
+the actual error text for every one of these, since Gradle's own
+wording for most of them isn't self-explanatory.
 
 ## 6. Relationship to the rest of the ecosystem
 
