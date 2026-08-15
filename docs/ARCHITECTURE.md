@@ -1,10 +1,13 @@
 # HYDRA-UMC Android Control - Architecture
 
-**Status: scaffolding only.** This document describes the intended design
-so real implementation work has a starting point - the actual Android app
-is not built here (per the project owner's own instruction: "la app la
-voy hacer yo"). Nothing under `app/src/` is real app logic; every file
-there is a placeholder documenting where a piece belongs.
+**Status: Wi-Fi transport implemented.** `app/src/` now contains a real
+implementation of section 2 below (discovery, `GET`/`POST /api/settings`,
+`/ws` live sync, jog/speed/tool/playback controls) - see
+`network/HydraApiClient.kt`, `network/HydraWebSocket.kt`,
+`network/Discovery.kt`, `model/HydraState.kt` and
+`viewmodel/RobotViewModel.kt` for the real code and their own header
+comments for the contract each speaks. Bluetooth transport (section 3)
+remains unimplemented, as described below.
 
 ## 1. What this app is
 

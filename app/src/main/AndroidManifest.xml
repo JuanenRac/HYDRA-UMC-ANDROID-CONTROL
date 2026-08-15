@@ -1,12 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- HYDRA-UMC STUDIO's server (server.ts) is plain http/ws, no TLS, by
+         design - REMOTE_API.md's own "trusted LAN, no auth" model. The
+         target host is a dynamic user-entered IP (network/Discovery.kt),
+         not a fixed domain, so a network-security-config domain allowlist
+         isn't an option; usesCleartextTraffic is the only way this app can
+         reach a real server at all on API 28+, which blocks cleartext by
+         default. -->
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
+        android:usesCleartextTraffic="true"
         android:theme="@style/Theme.App.Starting">
         <activity
             android:name=".MainActivity"

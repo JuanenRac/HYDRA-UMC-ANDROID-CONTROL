@@ -1,0 +1,5 @@
+<resources>
+    <!-- Matches Theme.App.Starting's splash background (themes.xml) so the
+         launcher icon and the splash screen read as the same brand. -->
+    <color name="ic_launcher_background">#0B0F19</color>
+</resources>

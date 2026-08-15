@@ -1,0 +1,29 @@
+<!-- Plain (non-adaptive) fallback for API 24-25 - see ic_launcher.xml's own
+     header comment. Identical content; the launcher itself is what applies
+     the round mask on devices that use one. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="240"
+    android:viewportHeight="240">
+  <path
+      android:pathData="M0,0h240v240h-240z"
+      android:fillColor="#0B0F19"/>
+  <path
+      android:pathData="M120,20 L220,77.7 L220,193.2 L120,220 L20,193.2 L20,77.7 Z"
+      android:strokeWidth="12"
+      android:strokeColor="#2E7D32"
+      android:strokeLineJoin="round"
+      android:fillColor="#00000000"/>
+  <path
+      android:pathData="M70,90 L70,160 M170,90 L170,160 M70,125 L170,125"
+      android:strokeWidth="20"
+      android:strokeColor="#FFFFFF"
+      android:strokeLineCap="round"
+      android:strokeLineJoin="round"/>
+  <path
+      android:pathData="M120,20 L120,60"
+      android:strokeWidth="12"
+      android:strokeColor="#2E7D32"
+      android:strokeLineCap="round"/>
+</vector>
