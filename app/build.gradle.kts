@@ -44,12 +44,15 @@ dependencies {
     
     // Navigation
     implementation("androidx.navigation:navigation-compose:2.5.3")
-    
-    // Networking (Retrofit & WebSockets)
-    implementation("com.squareup.retrofit2:retrofit:2.9.0")
-    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+
+    // Networking - GET/POST /api/settings, GET /api/hydra-info and /ws all
+    // speak plain JSON (org.json, part of the Android framework) over OkHttp;
+    // no Retrofit/Gson needed, and no REST surface is invented locally - see
+    // network/HydraApiClient.kt's own header comment for why a raw JSON tree
+    // is used instead of a typed schema.
     implementation("com.squareup.okhttp3:okhttp:4.10.0")
-    
-    // Preferences DataStore (Settings)
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+
+    // Preferences DataStore - persists the last IP/port (network/ConnectionPrefs.kt)
     implementation("androidx.datastore:datastore-preferences:1.0.0")
 }

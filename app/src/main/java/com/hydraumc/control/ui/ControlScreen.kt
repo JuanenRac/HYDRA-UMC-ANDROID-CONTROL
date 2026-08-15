@@ -18,6 +18,7 @@ fun ControlScreen(viewModel: RobotViewModel) {
     val robots = viewModel.robots.value
     val selectedId = viewModel.selectedRobotId.value
     val connectionStatus = viewModel.connectionStatus.value
+    val lastError = viewModel.lastError.value
 
     var expandedRobot by remember { mutableStateOf(false) }
     var expandedTool by remember { mutableStateOf(false) }
@@ -41,7 +42,10 @@ fun ControlScreen(viewModel: RobotViewModel) {
     ) {
         Text("Control de Robots", style = MaterialTheme.typography.headlineMedium)
         Text("Estado: $connectionStatus", style = MaterialTheme.typography.bodyMedium, color = if(connectionStatus == "Conectado") Color(0xFF2E7D32) else Color.Red)
-        
+        if (lastError != null) {
+            Text(lastError, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+        }
+
         Spacer(modifier = Modifier.height(16.dp))
         
         // Robot Selection
