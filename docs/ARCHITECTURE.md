@@ -131,11 +131,15 @@ release notes. AGP is 8.2.0 rather than 8.1.0 specifically because
 `compose-bom 2024.02.00` (`app/build.gradle.kts`) pulls in Compose/
 AndroidX artifacts that require compiling against API 34
 (`compileSdk = 34`) - 8.1.0's own max-recommended `compileSdk` is 33.
-Building needs a JDK 17+ to run Gradle itself (independent of
-`app/build.gradle.kts`'s own `sourceCompatibility`/`jvmTarget`, which
-target 1.8 for the compiled app code - and independent of `targetSdk`,
-left at 33 since only the compile-time API surface needed to move, not
-runtime behavior) and the Android SDK (`local.properties` with
+`targetSdk` is 34 too (Android 14) - initially left at 33 on the
+reasoning that only the compile-time API surface needed to move, not
+runtime behavior, but Android 14 itself shows an install-time "this app
+was built for an older Android version" warning based on `targetSdk`
+(not `compileSdk`), so matching the two avoids that regardless of the
+exact enforcement threshold on a given device. Building needs a JDK
+17+ to run Gradle itself (independent of `app/build.gradle.kts`'s own
+`sourceCompatibility`/`jvmTarget`, which target 1.8 for the compiled
+app code) and the Android SDK (`local.properties` with
 `sdk.dir=...`, generated automatically the first time Android Studio
 opens this project, or `ANDROID_HOME`/`ANDROID_SDK_ROOT`).
 `build-android.sh` / `build-android.bat` at the repo root wrap `gradlew

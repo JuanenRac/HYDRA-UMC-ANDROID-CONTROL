@@ -14,12 +14,12 @@ android {
     defaultConfig {
         applicationId = "com.hydraumc.control"
         minSdk = 24
-        // Deliberately left at 33, not bumped alongside compileSdk - this
-        // only needs to satisfy Compose's own AAR compile-time check above,
-        // and targeting 34 at runtime would opt into API-34 behavior
-        // changes never evaluated for this app (Google's own guidance:
-        // compileSdk and targetSdk can be moved independently).
-        targetSdk = 33
+        // 34 (Android 14), not 33 - matches compileSdk above. Real-device
+        // testing on Android 14 (project owner's own phone) is the actual
+        // target platform, so there's no reason to sit one API level
+        // behind it - see README.md's own Troubleshooting entry for why
+        // this was left at 33 initially and what changed.
+        targetSdk = 34
         versionCode = 1
         versionName = "1.0"
     }
