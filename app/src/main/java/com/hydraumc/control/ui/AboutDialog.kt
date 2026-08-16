@@ -1,5 +1,5 @@
 // =============================================================================
-// HYDRA-UMC CONTROL - About dialog with application information
+// HYDRA-UMC CONTROL - Professional information and credits dialog
 // Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
 // GPL-3.0 - see LICENSE
 // =============================================================================
@@ -10,36 +10,66 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.hydraumc.control.R
 import com.hydraumc.control.ui.theme.metallicIndustrial
+import com.hydraumc.control.ui.theme.HydraButton
 
 /**
- * A dialog showing information about the HYDRA-UMC CONTROL application.
+ * Dialog displaying information about the application, version, and author.
+ * @param onDismiss Callback to close the dialog.
  */
 @Composable
 fun AboutDialog(onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        confirmButton = {
-            TextButton(onClick = onDismiss) {
-                Text("CERRAR")
-            }
-        },
+        confirmButton = {}, // Custom button inside text
         title = {
-            Text("Acerca de HYDRA-UMC CONTROL", fontWeight = FontWeight.Bold)
+            Text(stringResource(R.string.about_title), fontWeight = FontWeight.ExtraBold)
         },
         text = {
             Box(modifier = Modifier.metallicIndustrial()) {
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    Text("Versión 1.0.0", style = MaterialTheme.typography.bodyLarge)
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text("Desarrollado por JuanenRac", fontWeight = FontWeight.Bold)
-                    Text("Electro Hobby 3D", style = MaterialTheme.typography.bodyMedium)
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "HYDRA-UMC",
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = stringResource(R.string.app_version),
+                        style = MaterialTheme.typography.labelLarge,
+                        color = Color.LightGray
+                    )
                     Spacer(modifier = Modifier.height(16.dp))
-                    Text("Control nativo profesional para plataformas robóticas HYDRA-UMC.", style = MaterialTheme.typography.bodySmall)
+                    Text(
+                        text = stringResource(R.string.app_description),
+                        textAlign = TextAlign.Center,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = stringResource(R.string.developed_by),
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.secondary
+                    )
+                    Text(
+                        text = stringResource(R.string.company_name),
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                    Spacer(modifier = Modifier.height(24.dp))
+                    HydraButton(
+                        text = stringResource(R.string.close_button),
+                        onClick = onDismiss,
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
             }
         },

@@ -5,6 +5,7 @@
     <string name="tab_control">Contrôle</string>
     <string name="tab_camera">Caméra</string>
     <string name="tab_3d_view">Vue 3D</string>
+    <string name="tab_telemetry">Télémétrie</string>
     <string name="tab_settings">Paramètres</string>
     <string name="dashboard_title">Dashboard</string>
     <string name="server_status">État du serveur : %s</string>
@@ -90,4 +91,20 @@
     <string name="bt_permission_required">Les autorisations Bluetooth sont requises pour rechercher des appareils.</string>
     <string name="bt_grant_permission">Accorder les autorisations</string>
     <string name="bt_disconnect_button">Déconnecter Bluetooth</string>
+
+    <!-- Profile & About -->
+    <string name="user_profile_title">PROFIL DE L\'UTILISATEUR</string>
+    <string name="username_label">Nom d\'utilisateur</string>
+    <string name="password_label">Mot de passe</string>
+    <string name="email_label">Adresse e-mail</string>
+    <string name="cancel_button">ANNULER</string>
+    <string name="accept_button">ACCEPTER</string>
+    <string name="about_title">À propos de HYDRA-UMC CONTROL</string>
+    <string name="app_version">Version 1.0.0</string>
+    <string name="developed_by">Développé par JuanenRac</string>
+    <string name="company_name">Electro Hobby 3D</string>
+    <string name="app_description">Contrôle natif professionnel pour les plateformes robotiques HYDRA-UMC.</string>
+    <string name="close_button">FERMER</string>
+    <string name="telemetry_title">Télémétrie Industrielle</string>
+    <string name="e_stop">ARRÊT D\'URGENCE</string>
 </resources>

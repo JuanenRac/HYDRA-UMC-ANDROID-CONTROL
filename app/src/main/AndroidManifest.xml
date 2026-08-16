@@ -7,6 +7,7 @@
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.VIBRATE" />
 
     <!-- HYDRA-UMC STUDIO's server (server.ts) is plain http/ws, no TLS, by
          design - REMOTE_API.md's own "trusted LAN, no auth" model. The

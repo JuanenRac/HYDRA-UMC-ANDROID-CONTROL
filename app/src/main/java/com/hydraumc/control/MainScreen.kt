@@ -51,7 +51,7 @@ sealed class Screen(val route: String, @param:StringRes val titleRes: Int, val i
 }
 
 /** List of screen items to display in the Bottom Navigation Bar. */
-val items = listOf(Screen.Dashboard, Screen.Control, Screen.Camera, Screen.ThreeD, Screen.Settings)
+val items = listOf(Screen.Dashboard, Screen.Control, Screen.Camera, Screen.ThreeD)
 
 /**
  * Main application screen that provides the scaffold for navigation and global UI components.
@@ -64,11 +64,16 @@ fun MainScreen(viewModel: RobotViewModel, onEnableBluetooth: () -> Unit = {}) {
     /** The navigation controller for the entire app. */
     val navController = rememberNavController()
     var showAboutDialog by remember { mutableStateOf(false) }
+    var showProfileDialog by remember { mutableStateOf(false) }
     var serverDropdownExpanded by remember { mutableStateOf(false) }
     val discoveredServers = viewModel.discoveredServers.value
 
     if (showAboutDialog) {
         AboutDialog(onDismiss = { showAboutDialog = false })
+    }
+    
+    if (showProfileDialog) {
+        UserProfileDialog(viewModel = viewModel, onDismiss = { showProfileDialog = false })
     }
 
     Scaffold(
@@ -169,8 +174,17 @@ fun MainScreen(viewModel: RobotViewModel, onEnableBluetooth: () -> Unit = {}) {
 
                     // Icons (Right)
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        IconButton(onClick = { /* TODO: User profile */ }) {
+                        IconButton(onClick = { showProfileDialog = true }) {
                             Icon(Icons.Default.Person, contentDescription = "Usuario", tint = MaterialTheme.colorScheme.primary)
+                        }
+                        IconButton(onClick = { 
+                            navController.navigate(Screen.Settings.route) {
+                                popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        }) {
+                            Icon(Icons.Default.Settings, contentDescription = "Ajustes", tint = MaterialTheme.colorScheme.primary)
                         }
                         IconButton(onClick = { showAboutDialog = true }) {
                             Icon(Icons.Default.Info, contentDescription = "Acerca de", tint = MaterialTheme.colorScheme.primary)
@@ -192,7 +206,14 @@ fun MainScreen(viewModel: RobotViewModel, onEnableBluetooth: () -> Unit = {}) {
                 items.forEach { screen ->
                     NavigationBarItem(
                         icon = { Icon(screen.icon, contentDescription = null) },
-                        label = { Text(stringResource(screen.titleRes)) },
+                        label = { 
+                            Text(
+                                text = stringResource(screen.titleRes),
+                                style = MaterialTheme.typography.labelSmall,
+                                maxLines = 1,
+                                softWrap = false
+                            ) 
+                        },
                         selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
                         onClick = {
                             navController.navigate(screen.route) {

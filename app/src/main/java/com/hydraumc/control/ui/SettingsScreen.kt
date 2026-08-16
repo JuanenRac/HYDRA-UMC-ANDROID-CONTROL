@@ -205,9 +205,6 @@ private fun ServerCard(server: ServerInfo, onConnect: () -> Unit) {
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 private fun BluetoothSettings(viewModel: RobotViewModel, onEnableBluetooth: () -> Unit) {
-    /** Local state to toggle the Bluetooth feature visibility in the app. */
-    var isBtFeatureEnabled by remember { mutableStateOf(true) }
-    
     /** Rationale: Determine required Bluetooth permissions based on Android version. */
     val bluetoothPermissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
         listOf(Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH_CONNECT)
@@ -235,38 +232,37 @@ private fun BluetoothSettings(viewModel: RobotViewModel, onEnableBluetooth: () -
         ) {
             Text(stringResource(R.string.tab_bluetooth), style = MaterialTheme.typography.titleLarge)
             Switch(
-                checked = isBtFeatureEnabled,
+                checked = isBtEnabled,
                 onCheckedChange = { 
-                    isBtFeatureEnabled = it 
-                    if (!it) viewModel.disconnectBle()
+                    if (it) onEnableBluetooth() else viewModel.disconnectBle()
                 }
             )
         }
         
         Spacer(modifier = Modifier.height(16.dp))
 
-        if (isBtFeatureEnabled) {
-            if (isBtEnabled) {
-                if (!permissionState.allPermissionsGranted) {
-                    BluetoothPermissionSection(permissionState)
-                } else {
-                    BluetoothScanSection(viewModel, isBtScanning, discoveredDevices)
-                }
+        if (isBtEnabled) {
+            if (!permissionState.allPermissionsGranted) {
+                BluetoothPermissionSection(permissionState)
             } else {
-                Box(modifier = Modifier.metallicIndustrial(backgroundColor = MaterialTheme.colorScheme.surfaceVariant)) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
-                        Text("Bluetooth is physically disabled on your device.", color = Color.White)
-                        Spacer(modifier = Modifier.height(8.dp))
-                        HydraButton(text = "ENABLE IN SYSTEM", onClick = onEnableBluetooth)
-                    }
-                }
+                BluetoothScanSection(viewModel, isBtScanning, discoveredDevices)
             }
         } else {
-            Text(
-                "Bluetooth feature is disabled in the app settings.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = Color.Gray
-            )
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .metallicIndustrial(backgroundColor = MaterialTheme.colorScheme.surfaceVariant),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("Bluetooth is physically disabled.", color = Color.White)
+                    Spacer(modifier = Modifier.height(12.dp))
+                    HydraButton(
+                        text = "ENABLE SYSTEM BT",
+                        onClick = onEnableBluetooth
+                    )
+                }
+            }
         }
 
         if (lastBtError != null) {

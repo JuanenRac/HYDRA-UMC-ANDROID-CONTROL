@@ -18,6 +18,7 @@
 package com.hydraumc.control.viewmodel
 
 import android.app.Application
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -138,6 +139,8 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
 
     /** List of BLE devices found during scanning. */
     val discoveredBtDevices = mutableStateOf<List<BleDevice>>(emptyList())
+    /** Industrial Telemetry Log */
+    val telemetryLogs = mutableStateOf<List<String>>(emptyList())
     /** Boolean flag for BLE scanning activity. */
     val isBtScanning = mutableStateOf(value = false)
     /** Status of the Bluetooth adapter on the device. */
@@ -157,11 +160,18 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
     private val prefs = ConnectionPrefs(application)
     /** Persistent authentication preferences manager. */
     private val authPrefs = AuthPrefs(application)
+    /** Flag to prevent clearing server list during intentional reconnection. */
+    private var isSwitchingServer = false
 
     /** Login state */
     val isLoggedIn = mutableStateOf(value = false)
     val loginUsername = mutableStateOf(value = "")
+    val loginPassword = mutableStateOf(value = "")
+    val loginEmail = mutableStateOf(value = "")
     val loginRememberMe = mutableStateOf(value = false)
+
+    /** Camera selection */
+    val selectedCameraId = mutableIntStateOf(1)
 
     init {
         /** Load saved connection settings on initialization. */
@@ -172,10 +182,12 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
             }
             
             // Load auth
-            val (user, remember, logged) = authPrefs.loadAuth()
-            loginUsername.value = user ?: ""
-            loginRememberMe.value = remember
-            if (remember && logged) {
+            val profile = authPrefs.loadAuth()
+            loginUsername.value = profile.username
+            loginPassword.value = profile.password
+            loginEmail.value = profile.email
+            loginRememberMe.value = profile.rememberMe
+            if (profile.rememberMe && profile.isLoggedIn) {
                 // Auto login
                 isLoggedIn.value = true
             }
@@ -192,11 +204,42 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
     fun login(user: String, pass: String, remember: Boolean) {
         if (user == "demo" && pass == "demo") {
             isLoggedIn.value = true
+            loginUsername.value = user
+            loginPassword.value = pass
+            loginRememberMe.value = remember
             viewModelScope.launch {
-                authPrefs.saveAuth(user, remember, isLoggedIn = true)
+                authPrefs.saveAuth(
+                    com.hydraumc.control.network.UserProfile(
+                        username = user,
+                        password = pass,
+                        email = loginEmail.value,
+                        rememberMe = remember,
+                        isLoggedIn = true
+                    )
+                )
             }
         } else {
             lastError.value = "Invalid credentials"
+        }
+    }
+
+    /**
+     * Updates and persists the user profile.
+     */
+    fun saveUserProfile(user: String, pass: String, email: String) {
+        loginUsername.value = user
+        loginPassword.value = pass
+        loginEmail.value = email
+        viewModelScope.launch {
+            authPrefs.saveAuth(
+                com.hydraumc.control.network.UserProfile(
+                    username = user,
+                    password = pass,
+                    email = email,
+                    rememberMe = loginRememberMe.value,
+                    isLoggedIn = isLoggedIn.value
+                )
+            )
         }
     }
 
@@ -210,12 +253,23 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    private fun logTelemetry(message: String) {
+        val timestamp = java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.US).format(java.util.Date())
+        telemetryLogs.value = (listOf("[$timestamp] $message") + telemetryLogs.value).take(50)
+    }
+
     /** 
      * Refreshes the current Bluetooth adapter status.
      */
     fun refreshBtStatus() {
         val bluetoothManager = getApplication<Application>().getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
-        isBtEnabled.value = bluetoothManager.adapter?.isEnabled ?: false
+        val adapter = bluetoothManager.adapter
+        val isActuallyEnabled = adapter?.isEnabled ?: false
+        isBtEnabled.value = isActuallyEnabled
+        if (!isActuallyEnabled) {
+            disconnectBle()
+            lastBtError.value = null
+        }
     }
 
     /** 
@@ -236,6 +290,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
 
         connectionStatus.value = getApplication<Application>().getString(R.string.status_connecting)
         lastError.value = null
+        isSwitchingServer = true
 
         ws?.disconnect()
         bleClient?.disconnect()
@@ -250,10 +305,24 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
 
         viewModelScope.launch {
             try {
+                logTelemetry("Connecting to $host:$portInt...")
+                val info = client.getHydraInfo()
+                if (info != null) {
+                    val server = ServerInfo.fromHydraInfo(host, portInt, info)
+                    logTelemetry("Server verified: ${server.displayName}")
+                    if (discoveredServers.value.none { it.host == host && it.port == portInt }) {
+                        discoveredServers.value += server
+                    }
+                }
+                
                 val settings = client.getSettings()
+                logTelemetry("Initial state synchronized via REST")
                 applyState(HydraState(settings))
             } catch (e: HydraApiException) {
+                logTelemetry("REST Sync Error: ${e.message}")
                 lastError.value = e.message
+            } finally {
+                isSwitchingServer = false
             }
         }
 
@@ -262,17 +331,30 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
             port = portInt,
             onStatus = { status ->
                 connectionStatus.value = when (status) {
-                    WsStatus.CONNECTING -> getApplication<Application>().getString(R.string.status_connecting)
-                    WsStatus.CONNECTED -> getApplication<Application>().getString(R.string.status_connected)
+                    WsStatus.CONNECTING -> {
+                        logTelemetry("WebSocket connecting...")
+                        getApplication<Application>().getString(R.string.status_connecting)
+                    }
+                    WsStatus.CONNECTED -> {
+                        logTelemetry("WebSocket CONNECTED")
+                        getApplication<Application>().getString(R.string.status_connected)
+                    }
                     WsStatus.DISCONNECTED -> {
-                        // Clear discovered servers if connection lost as per user request
-                        discoveredServers.value = emptyList()
+                        logTelemetry("WebSocket DISCONNECTED")
+                        // Only clear if NOT an intentional switch
+                        if (!isSwitchingServer) {
+                            discoveredServers.value = emptyList()
+                        }
                         getApplication<Application>().getString(R.string.status_disconnected)
                     }
                 }
             },
             onSettings = { payload -> applyState(HydraState(payload)) },
-        ) { message -> lastError.value = message }.also { it.connect() }
+        ) { message -> 
+            if (!isSwitchingServer) {
+                lastError.value = message 
+            }
+        }.also { it.connect() }
     }
 
     /** 
