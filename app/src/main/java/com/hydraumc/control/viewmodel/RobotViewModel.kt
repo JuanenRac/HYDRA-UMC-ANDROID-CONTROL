@@ -29,6 +29,7 @@ import androidx.lifecycle.viewModelScope
 import com.hydraumc.control.model.HydraState
 import com.hydraumc.control.model.RobotView
 import com.hydraumc.control.model.ServerInfo
+import com.hydraumc.control.R
 import com.hydraumc.control.network.ConnectionPrefs
 import com.hydraumc.control.network.HydraApiClient
 import com.hydraumc.control.network.HydraApiException
@@ -86,7 +87,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
 
     val ipAddress = mutableStateOf("192.168.1.100")
     val port = mutableStateOf("3000")
-    val connectionStatus = mutableStateOf("Desconectado")
+    val connectionStatus = mutableStateOf(application.getString(R.string.status_disconnected))
 
     /** Real, user-visible error state - every failed API/WS call lands here
      * instead of a silent printStackTrace(). Screens should show this near
@@ -118,16 +119,16 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         val host = ipAddress.value.trim()
         val portValue = port.value.trim()
         if (host.isEmpty() || portValue.isEmpty()) {
-            lastError.value = "Introduce una IP y un puerto."
+            lastError.value = getApplication<Application>().getString(R.string.error_enter_ip_port)
             return
         }
         val portInt = portValue.toIntOrNull()
         if (portInt == null) {
-            lastError.value = "Puerto inválido: $portValue"
+            lastError.value = getApplication<Application>().getString(R.string.error_invalid_port, portValue)
             return
         }
 
-        connectionStatus.value = "Conectando..."
+        connectionStatus.value = getApplication<Application>().getString(R.string.status_connecting)
         lastError.value = null
 
         ws?.disconnect()
@@ -153,9 +154,9 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
             port = portInt,
             onStatus = { status ->
                 connectionStatus.value = when (status) {
-                    WsStatus.CONNECTING -> "Conectando..."
-                    WsStatus.CONNECTED -> "Conectado"
-                    WsStatus.DISCONNECTED -> "Desconectado"
+                    WsStatus.CONNECTING -> getApplication<Application>().getString(R.string.status_connecting)
+                    WsStatus.CONNECTED -> getApplication<Application>().getString(R.string.status_connected)
+                    WsStatus.DISCONNECTED -> getApplication<Application>().getString(R.string.status_disconnected)
                 }
             },
             onSettings = { payload -> applyState(HydraState(payload)) },
@@ -194,7 +195,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
     private fun mutateSelected(mutate: (RobotView) -> Unit) {
         val robotId = selectedRobotId.value ?: return
         val robotView = state.robotById(robotId) ?: run {
-            lastError.value = "El robot seleccionado ya no existe en el estado del servidor."
+            lastError.value = getApplication<Application>().getString(R.string.error_robot_not_found)
             return
         }
         mutate(robotView)
@@ -208,7 +209,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
             "play" -> mutateSelected { it.setPlaying(true) }
             "pause" -> mutateSelected { it.togglePaused() }
             "stop" -> mutateSelected { it.stop() }
-            else -> lastError.value = "Comando desconocido: $command"
+            else -> lastError.value = getApplication<Application>().getString(R.string.error_unknown_command, command)
         }
     }
 
@@ -233,7 +234,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         mutateSelected { robot ->
             val tool = robot.atcTools.find { it.slot == slot }
             if (tool == null) {
-                lastError.value = "No existe ninguna herramienta en el slot $slot."
+                lastError.value = getApplication<Application>().getString(R.string.error_no_tool_in_slot, slot)
             } else {
                 robot.setTool(tool.tool)
             }

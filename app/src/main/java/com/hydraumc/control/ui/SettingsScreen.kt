@@ -8,8 +8,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.hydraumc.control.viewmodel.RobotViewModel
+import com.hydraumc.control.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -21,20 +23,20 @@ fun SettingsScreen(viewModel: RobotViewModel) {
     val lastError = viewModel.lastError.value
 
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-        Text("Conexión con HYDRA-UMC STUDIO", style = MaterialTheme.typography.headlineSmall)
+        Text(stringResource(R.string.settings_title), style = MaterialTheme.typography.headlineSmall)
         Spacer(modifier = Modifier.height(16.dp))
 
         OutlinedTextField(
             value = ipAddress,
             onValueChange = { ipAddress = it },
-            label = { Text("Dirección IP") },
+            label = { Text(stringResource(R.string.ip_label)) },
             modifier = Modifier.fillMaxWidth()
         )
         Spacer(modifier = Modifier.height(8.dp))
         OutlinedTextField(
             value = port,
             onValueChange = { port = it },
-            label = { Text("Puerto") },
+            label = { Text(stringResource(R.string.port_label)) },
             modifier = Modifier.fillMaxWidth()
         )
         Spacer(modifier = Modifier.height(16.dp))
@@ -43,7 +45,7 @@ fun SettingsScreen(viewModel: RobotViewModel) {
             viewModel.port.value = port
             viewModel.connect()
         }, modifier = Modifier.fillMaxWidth()) {
-            Text("Guardar y Conectar")
+            Text(stringResource(R.string.save_and_connect))
         }
 
         if (lastError != null) {
@@ -60,21 +62,21 @@ fun SettingsScreen(viewModel: RobotViewModel) {
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("Buscar en la red local", style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(R.string.search_local), style = MaterialTheme.typography.titleMedium)
             if (isScanning) {
                 CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
             } else {
-                TextButton(onClick = { viewModel.scanNetwork() }) { Text("Escanear") }
+                TextButton(onClick = { viewModel.scanNetwork() }) { Text(stringResource(R.string.scan_button)) }
             }
         }
         Text(
-            "Prueba GET /api/hydra-info en cada IP de tu subred (igual que HYDRA-UMC SUITE).",
+            stringResource(R.string.scan_description),
             style = MaterialTheme.typography.bodySmall
         )
         Spacer(modifier = Modifier.height(8.dp))
 
         if (discoveredServers.isEmpty() && !isScanning) {
-            Text("Sin resultados todavía.", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+            Text(stringResource(R.string.no_results_yet), style = MaterialTheme.typography.bodySmall, color = Color.Gray)
         } else {
             LazyColumn(modifier = Modifier.fillMaxWidth()) {
                 items(discoveredServers) { server ->
@@ -93,7 +95,7 @@ fun SettingsScreen(viewModel: RobotViewModel) {
                             Column {
                                 Text(server.displayName, style = MaterialTheme.typography.titleSmall)
                                 Text(
-                                    "${server.host}:${server.port} · ${server.controllerCount} controlador(es), ${server.robotCount} robot(s)",
+                                    stringResource(R.string.server_info, server.host, server.port, server.controllerCount, server.robotCount),
                                     style = MaterialTheme.typography.bodySmall
                                 )
                             }
@@ -101,7 +103,7 @@ fun SettingsScreen(viewModel: RobotViewModel) {
                                 ipAddress = server.host
                                 port = server.port.toString()
                                 viewModel.connectToDiscovered(server)
-                            }) { Text("Conectar") }
+                            }) { Text(stringResource(R.string.connect_button)) }
                         }
                     }
                 }
