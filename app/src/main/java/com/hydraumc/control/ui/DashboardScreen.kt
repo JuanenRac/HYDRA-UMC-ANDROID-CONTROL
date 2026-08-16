@@ -1,6 +1,8 @@
 package com.hydraumc.control.ui
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
@@ -8,44 +10,88 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.lerp
 import com.hydraumc.control.viewmodel.RobotViewModel
 import com.hydraumc.control.R
 import com.hydraumc.control.ui.theme.metallicIndustrial
 import com.hydraumc.control.ui.theme.StatusLed
 import java.util.Locale
+import kotlin.math.absoluteValue
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardScreen(viewModel: RobotViewModel) {
     val robots = viewModel.robots.value
     val connectionStatus = viewModel.connectionStatus.value
+    val isConnected = connectionStatus == stringResource(R.string.status_connected)
 
     Column(
-        modifier = Modifier.fillMaxSize().padding(16.dp).verticalScroll(rememberScrollState())
+        modifier = Modifier.fillMaxSize().padding(16.dp).verticalScroll(rememberScrollState()),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             StatusLed(
-                isOn = connectionStatus == stringResource(R.string.status_connected),
+                isOn = isConnected,
                 activeColor = com.hydraumc.control.ui.theme.MetallicCyan,
-                size = 16.dp
+                size = 16.dp,
             )
             Text(stringResource(R.string.dashboard_title), style = MaterialTheme.typography.headlineMedium)
         }
-        Text(stringResource(R.string.server_status, connectionStatus), style = MaterialTheme.typography.bodyMedium, color = if(connectionStatus == stringResource(R.string.status_connected)) com.hydraumc.control.ui.theme.MetallicCyan else Color.Red)
+        
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(stringResource(R.string.server_status, "").trim(), style = MaterialTheme.typography.bodyMedium)
+            Text(
+                text = " $connectionStatus",
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Bold,
+                color = if (isConnected) Color(0xFF00C853) else Color.Red
+            )
+        }
         
         Spacer(modifier = Modifier.height(24.dp))
         
         if (robots.isEmpty()) {
             Text(stringResource(R.string.no_robots), style = MaterialTheme.typography.bodyLarge)
         } else {
-            robots.forEach { robot ->
+            val pagerState = rememberPagerState(pageCount = { robots.size })
+            
+            HorizontalPager(
+                state = pagerState,
+                contentPadding = PaddingValues(horizontal = 32.dp),
+                modifier = Modifier.fillMaxWidth().height(450.dp)
+            ) { page ->
+                val robot = robots[page]
+                
                 Box(
                     modifier = Modifier
+                        .graphicsLayer {
+                            val pageOffset = (
+                                    (pagerState.currentPage - page) + pagerState
+                                        .currentPageOffsetFraction
+                                    ).absoluteValue
+                            
+                            // 3D fashion effect: scale and alpha
+                            alpha = lerp(
+                                start = 0.5f,
+                                stop = 1f,
+                                fraction = 1f - pageOffset.coerceIn(0f, 1f)
+                            )
+                            scaleX = lerp(
+                                start = 0.8f,
+                                stop = 1f,
+                                fraction = 1f - pageOffset.coerceIn(0f, 1f)
+                            )
+                            scaleY = lerp(
+                                start = 0.8f,
+                                stop = 1f,
+                                fraction = 1f - pageOffset.coerceIn(0f, 1f)
+                            )
+                        }
                         .fillMaxWidth()
-                        .padding(bottom = 16.dp)
+                        .padding(8.dp)
                         .metallicIndustrial()
                 ) {
                     Column {

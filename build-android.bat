@@ -2,7 +2,7 @@
 setlocal
 
 echo =================================================
-echo    HYDRA-UMC STUDIO - ANDROID DEPLOYMENT TOOL
+echo    HYDRA-UMC CONTROL - ANDROID DEPLOYMENT TOOL
 echo =================================================
 echo.
 
@@ -36,7 +36,7 @@ if not exist "local.properties" if "%ANDROID_HOME%"=="" if "%ANDROID_SDK_ROOT%"=
     echo.
 )
 
-:: AGP 8.2.0 (build.gradle.kts) needs JDK 17+ to run Gradle - a plain
+:: AGP 9.3.1 (build.gradle.kts) needs JDK 21+ to run Gradle - a plain
 :: JDK 8 (what many Windows machines have by default) isn't enough, and
 :: the real Gradle error if you don't have it ^("no variants... compatible
 :: with Java 8"^) never mentions the JDK at all, so this is checked here
@@ -44,7 +44,7 @@ if not exist "local.properties" if "%ANDROID_HOME%"=="" if "%ANDROID_SDK_ROOT%"=
 java -version 2>&1 | findstr /r "1\.[5-8]\." >nul
 if %ERRORLEVEL% equ 0 (
     echo [!] Atencion: el JDK activo parece ser Java 8 o anterior.
-    echo     AGP 8.2.0 necesita JDK 17 o superior para ejecutar Gradle.
+    echo     AGP 9.3.1 necesita JDK 21 o superior para ejecutar Gradle.
     echo     Instala un JDK 17+ ^(o usa el que trae Android Studio en
     echo     ...\Android Studio\jbr^) y define JAVA_HOME apuntando a el.
     echo.

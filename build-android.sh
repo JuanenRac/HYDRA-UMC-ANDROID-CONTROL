@@ -1,7 +1,7 @@
 #!/bin/bash
 
 echo "================================================="
-echo "   HYDRA-UMC STUDIO - ANDROID DEPLOYMENT TOOL    "
+echo "   HYDRA-UMC CONTROL - ANDROID DEPLOYMENT TOOL    "
 echo "================================================="
 echo ""
 
@@ -34,14 +34,14 @@ if [ ! -f "./local.properties" ] && [ -z "$ANDROID_HOME" ] && [ -z "$ANDROID_SDK
     echo ""
 fi
 
-# AGP 8.2.0 (build.gradle.kts) needs JDK 17+ to run Gradle - the real
+# AGP 9.3.1 (build.gradle.kts) needs JDK 21+ to run Gradle - the real
 # Gradle error if you don't have it ("no variants... compatible with
-# Java 8") never mentions the JDK at all, so this is checked here up
-# front instead of letting it fail with that cryptic message.
-if java -version 2>&1 | grep -qE '1\.[5-8]\.'; then
-    echo "⚠️  Atención: el JDK activo parece ser Java 8 o anterior."
-    echo "   AGP 8.2.0 necesita JDK 17 o superior para ejecutar Gradle."
-    echo "   Instala un JDK 17+ (o usa el que trae Android Studio en"
+# Java 8" or similar) never mentions the JDK clearly, so this is checked
+# here up front instead of letting it fail with that cryptic message.
+if java -version 2>&1 | grep -qE '1\.[5-8]\.|1[0-9]\.'; then
+    echo "⚠️  Atención: el JDK activo parece ser anterior a JDK 21."
+    echo "   AGP 9.3.1 necesita JDK 21 o superior para ejecutar Gradle."
+    echo "   Instala un JDK 21+ (o usa el que trae Android Studio en"
     echo "   .../Android Studio/jbr) y exporta JAVA_HOME apuntando a él."
     echo ""
 fi

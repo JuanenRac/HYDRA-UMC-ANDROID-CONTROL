@@ -1,6 +1,7 @@
 package com.hydraumc.control
 
 import androidx.annotation.StringRes
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ControlCamera
@@ -12,6 +13,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
@@ -19,6 +21,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.hydraumc.control.ui.*
+import com.hydraumc.control.ui.theme.metallicIndustrial
 import com.hydraumc.control.viewmodel.RobotViewModel
 
 sealed class Screen(val route: String, @StringRes val titleRes: Int, val icon: androidx.compose.ui.graphics.vector.ImageVector) {
@@ -38,11 +41,30 @@ fun MainScreen(viewModel: RobotViewModel, onEnableBluetooth: () -> Unit = {}) {
         topBar = {
             TopAppBar(
                 title = { 
-                    Text(
-                        "HYDRA-UMC ANDROID CONTROL", 
-                        style = MaterialTheme.typography.titleLarge,
-                        fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
-                    ) 
+                    Box(
+                        modifier = Modifier
+                            .padding(vertical = 4.dp)
+                            .metallicIndustrial(
+                                backgroundColor = MaterialTheme.colorScheme.surfaceVariant,
+                                borderColor = MaterialTheme.colorScheme.primary
+                            )
+                            .padding(horizontal = 16.dp, vertical = 4.dp)
+                    ) {
+                        Text(
+                            "HYDRA-UMC CONTROL", 
+                            style = MaterialTheme.typography.titleLarge.copy(
+                                shadow = androidx.compose.ui.graphics.Shadow(
+                                    color = androidx.compose.ui.graphics.Color.Black,
+                                    offset = androidx.compose.ui.geometry.Offset(2f, 2f),
+                                    blurRadius = 4f
+                                ),
+                                letterSpacing = 2.sp
+                            ),
+                            fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                            fontWeight = androidx.compose.ui.text.font.FontWeight.ExtraBold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background,

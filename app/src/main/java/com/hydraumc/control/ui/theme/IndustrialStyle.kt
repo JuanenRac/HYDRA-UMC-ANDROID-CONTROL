@@ -24,7 +24,7 @@ fun Modifier.metallicIndustrial(
         elevation = 8.dp,
         shape = RoundedCornerShape(12.dp),
         ambientColor = Color.Black.copy(alpha = 0.5f),
-        spotColor = Color.Black
+        spotColor = Color.Black,
     )
     .border(
         width = 1.dp,
@@ -50,21 +50,37 @@ fun Modifier.metallicIndustrial(
     .padding(12.dp)
 
 /**
- * A modifier for buttons to give them a "pressed" or "beveled" industrial look.
+ * A modifier that applies a 3D metallic industrial look to a button.
  */
 @Composable
-fun Modifier.industrialButton(
-    primaryColor: Color = DarkPrimary
+fun Modifier.metallicButton(
+    backgroundColor: Color = DarkPrimary,
+    borderColor: Color = Color.White.copy(alpha = 0.3f),
+    pressed: Boolean = false
 ): Modifier = this
-    .shadow(4.dp, RoundedCornerShape(8.dp))
-    .background(
+    .shadow(
+        elevation = if (pressed) 2.dp else 6.dp,
+        shape = RoundedCornerShape(8.dp)
+    )
+    .border(
+        width = 1.dp,
         brush = Brush.verticalGradient(
             colors = listOf(
-                primaryColor,
-                primaryColor.copy(alpha = 0.8f)
+                borderColor,
+                Color.Transparent,
+                Color.Black.copy(alpha = 0.5f)
             )
         ),
         shape = RoundedCornerShape(8.dp)
     )
-    .border(1.dp, Color.White.copy(alpha = 0.2f), RoundedCornerShape(8.dp))
+    .clip(RoundedCornerShape(8.dp))
+    .background(
+        brush = Brush.verticalGradient(
+            colors = if (pressed) {
+                listOf(backgroundColor.copy(alpha = 0.8f), backgroundColor)
+            } else {
+                listOf(backgroundColor, backgroundColor.copy(alpha = 0.7f))
+            }
+        )
+    )
     .padding(horizontal = 16.dp, vertical = 8.dp)

@@ -358,6 +358,11 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         ) { message -> lastError.value = message }.also { it.connect() }
     }
 
+    fun disconnectBle() {
+        bleClient?.disconnect()
+        bleClient = null
+    }
+
     private fun portValue(): Int = port.value.toIntOrNull() ?: 3000
 
     fun connectToDiscovered(server: ServerInfo) {

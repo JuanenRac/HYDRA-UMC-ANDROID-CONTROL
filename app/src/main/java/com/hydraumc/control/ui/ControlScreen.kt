@@ -15,6 +15,8 @@ import com.hydraumc.control.viewmodel.RobotViewModel
 import com.hydraumc.control.R
 import com.hydraumc.control.ui.theme.metallicIndustrial
 import com.hydraumc.control.ui.theme.StatusLed
+import com.hydraumc.control.ui.theme.HydraButton
+import com.hydraumc.control.ui.theme.IndustrialDanger
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -24,15 +26,15 @@ fun ControlScreen(viewModel: RobotViewModel) {
     val connectionStatus = viewModel.connectionStatus.value
     val lastError = viewModel.lastError.value
 
-    var expandedRobot by remember { mutableStateOf(false) }
-    var expandedTool by remember { mutableStateOf(false) }
-    var stepSize by remember { mutableStateOf(10.0) }
+    var expandedRobot by remember { mutableStateOf(value = false) }
+    var expandedTool by remember { mutableStateOf(value = false) }
+    var stepSize by remember { mutableDoubleStateOf(10.0) }
     var activeTarget by remember { mutableStateOf("robot") }
     
     val selectedRobot = robots.find { it.id == selectedId }
     
-    var speedState by remember(selectedRobot?.speed) { mutableStateOf(selectedRobot?.speed?.toFloat() ?: 100f) }
-    var accelState by remember(selectedRobot?.acceleration) { mutableStateOf(selectedRobot?.acceleration?.toFloat() ?: 500f) }
+    var speedState by remember(selectedRobot?.speed) { mutableFloatStateOf(selectedRobot?.speed?.toFloat() ?: 100f) }
+    var accelState by remember(selectedRobot?.acceleration) { mutableFloatStateOf(selectedRobot?.acceleration?.toFloat() ?: 500f) }
 
     LaunchedEffect(selectedRobot) {
         if (selectedRobot?.hasXYTable == false) {
@@ -42,20 +44,20 @@ fun ControlScreen(viewModel: RobotViewModel) {
 
     Column(
         modifier = Modifier.fillMaxSize().padding(16.dp).verticalScroll(rememberScrollState()),
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             StatusLed(
                 isOn = connectionStatus == stringResource(R.string.status_connected),
                 activeColor = com.hydraumc.control.ui.theme.MetallicCyan,
-                size = 16.dp
+                size = 16.dp,
             )
             Text(stringResource(R.string.control_robots), style = MaterialTheme.typography.headlineMedium)
         }
         Text(stringResource(R.string.status_label) + connectionStatus, style = MaterialTheme.typography.bodyMedium, color = if(connectionStatus == stringResource(R.string.status_connected)) com.hydraumc.control.ui.theme.MetallicCyan else Color.Red)
-        if (lastError != null) {
-            Text(lastError, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
-        }
+            lastError?.let {
+                Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+            }
 
         Spacer(modifier = Modifier.height(16.dp))
         
@@ -70,7 +72,7 @@ fun ControlScreen(viewModel: RobotViewModel) {
                 onValueChange = {},
                 readOnly = true,
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedRobot) },
-                modifier = Modifier.menuAnchor().fillMaxWidth(),
+                modifier = Modifier.menuAnchor(type = MenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
                 colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
             )
             ExposedDropdownMenu(
@@ -95,8 +97,20 @@ fun ControlScreen(viewModel: RobotViewModel) {
             Box(modifier = Modifier.fillMaxWidth().metallicIndustrial()) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                        Button(onClick = { viewModel.sendCommand("enable") }, enabled = !selectedRobot.online) { Text(stringResource(R.string.enable)) }
-                        Button(onClick = { viewModel.sendCommand("disable") }, enabled = selectedRobot.online, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)) { Text(stringResource(R.string.disable)) }
+                        HydraButton(
+                            text = stringResource(R.string.enable),
+                            onClick = { viewModel.sendCommand("enable") },
+                            enabled = !selectedRobot.online,
+                            backgroundColor = Color(0xFF2E7D32),
+                            modifier = Modifier.weight(1f)
+                        )
+                        HydraButton(
+                            text = stringResource(R.string.disable),
+                            onClick = { viewModel.sendCommand("disable") },
+                            enabled = selectedRobot.online,
+                            backgroundColor = IndustrialDanger,
+                            modifier = Modifier.weight(1f)
+                        )
                     }
                 }
             }
@@ -124,18 +138,18 @@ fun ControlScreen(viewModel: RobotViewModel) {
                     Spacer(modifier = Modifier.height(16.dp))
                     Row(horizontalArrangement = Arrangement.SpaceEvenly, modifier = Modifier.fillMaxWidth()) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Button(onClick = { viewModel.jog(activeTarget, "y", stepSize) }, enabled = selectedRobot.online) { Text("Y+") }
-                            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                                Button(onClick = { viewModel.jog(activeTarget, "x", -stepSize) }, enabled = selectedRobot.online) { Text("X-") }
-                                Button(onClick = { viewModel.jog(activeTarget, "x", stepSize) }, enabled = selectedRobot.online) { Text("X+") }
+                            HydraButton(text = "Y+", onClick = { viewModel.jog(activeTarget, "y", stepSize) }, enabled = selectedRobot.online)
+                            Row(horizontalArrangement = Arrangement.spacedBy(16.dp), modifier = Modifier.padding(vertical = 8.dp)) {
+                                HydraButton(text = "X-", onClick = { viewModel.jog(activeTarget, "x", -stepSize) }, enabled = selectedRobot.online)
+                                HydraButton(text = "X+", onClick = { viewModel.jog(activeTarget, "x", stepSize) }, enabled = selectedRobot.online)
                             }
-                            Button(onClick = { viewModel.jog(activeTarget, "y", -stepSize) }, enabled = selectedRobot.online) { Text("Y-") }
+                            HydraButton(text = "Y-", onClick = { viewModel.jog(activeTarget, "y", -stepSize) }, enabled = selectedRobot.online)
                         }
                         if (activeTarget == "robot") {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Button(onClick = { viewModel.jog(activeTarget, "z", stepSize) }, enabled = selectedRobot.online) { Text("Z+") }
-                                Spacer(modifier = Modifier.height(16.dp))
-                                Button(onClick = { viewModel.jog(activeTarget, "z", -stepSize) }, enabled = selectedRobot.online) { Text("Z-") }
+                                HydraButton(text = "Z+", onClick = { viewModel.jog(activeTarget, "z", stepSize) }, enabled = selectedRobot.online)
+                                Spacer(modifier = Modifier.height(24.dp))
+                                HydraButton(text = "Z-", onClick = { viewModel.jog(activeTarget, "z", -stepSize) }, enabled = selectedRobot.online)
                             }
                         }
                     }
@@ -188,8 +202,8 @@ fun ControlScreen(viewModel: RobotViewModel) {
                                 onValueChange = {},
                                 readOnly = true,
                                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedTool) },
-                                modifier = Modifier.menuAnchor().fillMaxWidth(),
-                                colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
+                                modifier = Modifier.menuAnchor(type = MenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
+                                colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
                             )
                             ExposedDropdownMenu(
                                 expanded = expandedTool,
@@ -217,10 +231,32 @@ fun ControlScreen(viewModel: RobotViewModel) {
             Box(modifier = Modifier.fillMaxWidth().metallicIndustrial()) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(stringResource(R.string.auto_playback), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 8.dp)) {
-                        Button(onClick = { viewModel.sendCommand("play") }, enabled = selectedRobot.online && !selectedRobot.isPlaying) { Text("▶ " + stringResource(R.string.play)) }
-                        Button(onClick = { viewModel.sendCommand("pause") }, enabled = selectedRobot.online && selectedRobot.isPlaying) { Text("⏸ " + stringResource(R.string.pause)) }
-                        Button(onClick = { viewModel.sendCommand("stop") }, enabled = selectedRobot.online) { Text("⏹ " + stringResource(R.string.stop)) }
+                    Column(
+                        modifier = Modifier.padding(top = 16.dp).fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        HydraButton(
+                            text = "▶ " + stringResource(R.string.play),
+                            onClick = { viewModel.sendCommand("play") },
+                            enabled = selectedRobot.online && !selectedRobot.isPlaying,
+                            backgroundColor = Color(0xFF2E7D32),
+                            modifier = Modifier.fillMaxWidth(0.8f)
+                        )
+                        HydraButton(
+                            text = "⏸ " + stringResource(R.string.pause),
+                            onClick = { viewModel.sendCommand("pause") },
+                            enabled = selectedRobot.online && selectedRobot.isPlaying,
+                            backgroundColor = Color(0xFFF9A825),
+                            modifier = Modifier.fillMaxWidth(0.8f)
+                        )
+                        HydraButton(
+                            text = "⏹ " + stringResource(R.string.stop),
+                            onClick = { viewModel.sendCommand("stop") },
+                            enabled = selectedRobot.online,
+                            backgroundColor = IndustrialDanger,
+                            modifier = Modifier.fillMaxWidth(0.8f)
+                        )
                     }
                 }
             }

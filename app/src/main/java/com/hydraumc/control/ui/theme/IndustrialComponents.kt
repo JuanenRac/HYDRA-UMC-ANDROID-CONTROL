@@ -27,7 +27,7 @@ fun StatusLed(
     activeColor: Color = MetallicCyan,
     inactiveColor: Color = Color(0xFF222222),
     label: String? = null,
-    size: Dp = 12.dp
+    size: Dp = 12.dp,
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -60,9 +60,9 @@ fun StatusLed(
             }
         }
         
-        if (label != null) {
+        label?.let {
             Text(
-                text = label,
+                text = it,
                 style = MaterialTheme.typography.labelSmall,
                 color = if (isOn) activeColor else MaterialTheme.colorScheme.onSurfaceVariant,
                 fontSize = 10.sp

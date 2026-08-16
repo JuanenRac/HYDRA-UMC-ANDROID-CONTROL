@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">HYDRA-UMC ANDROID CONTROL APP</string>
-    <string name="tab_dashboard">Visión General</string>
+    <string name="app_name">HYDRA-UMC CONTROL</string>
+    <string name="tab_dashboard">Dashboard</string>
     <string name="tab_control">Control</string>
     <string name="tab_3d_view">Vista 3D</string>
     <string name="tab_settings">Ajustes</string>
-    <string name="dashboard_title">Dashboard (Visión General)</string>
+    <string name="dashboard_title">Dashboard</string>
     <string name="server_status">Estado del Servidor: %s</string>
     <string name="no_robots">No hay robots conectados o configurados.</string>
     <string name="online">ONLINE</string>
@@ -89,4 +89,5 @@
     <string name="bt_unnamed_device">Dispositivo sin nombre</string>
     <string name="bt_permission_required">Se requieren permisos de Bluetooth para escanear dispositivos.</string>
     <string name="bt_grant_permission">Conceder Permisos</string>
+    <string name="bt_disconnect_button">Desconectar Bluetooth</string>
 </resources>

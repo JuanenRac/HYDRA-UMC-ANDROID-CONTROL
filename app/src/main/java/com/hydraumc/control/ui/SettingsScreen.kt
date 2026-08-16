@@ -23,6 +23,8 @@ import com.hydraumc.control.R
 import com.hydraumc.control.model.BleDevice
 import com.hydraumc.control.model.ServerInfo
 import com.hydraumc.control.ui.theme.metallicIndustrial
+import com.hydraumc.control.ui.theme.HydraButton
+import com.hydraumc.control.ui.theme.IndustrialDanger
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
 @Composable
@@ -40,7 +42,7 @@ fun SettingsScreen(viewModel: RobotViewModel, onEnableBluetooth: () -> Unit = {}
                     selected = selectedTabIndex == index,
                     onClick = { selectedTabIndex = index },
                     text = { Text(tab.title) },
-                    icon = { Icon(tab.icon, contentDescription = null) }
+                    icon = { Icon(tab.icon, contentDescription = null) },
                 )
             }
         }
@@ -83,16 +85,15 @@ private fun WifiSettings(viewModel: RobotViewModel) {
             modifier = Modifier.fillMaxWidth()
         )
         Spacer(modifier = Modifier.height(16.dp))
-        Button(
+        HydraButton(
+            text = stringResource(R.string.save_and_connect),
             onClick = {
                 viewModel.ipAddress.value = ipAddress
                 viewModel.port.value = port
                 viewModel.connect()
             },
             modifier = Modifier.fillMaxWidth()
-        ) {
-            Text(stringResource(R.string.save_and_connect))
-        }
+        )
 
         if (lastError != null) {
             Spacer(modifier = Modifier.height(8.dp))
@@ -112,13 +113,12 @@ private fun WifiSettings(viewModel: RobotViewModel) {
             if (isScanning) {
                 CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
             } else {
-                TextButton(onClick = { viewModel.scanNetwork() }) { Text(stringResource(R.string.scan_button)) }
+                HydraButton(
+                    text = stringResource(R.string.scan_button),
+                    onClick = { viewModel.scanNetwork() }
+                )
             }
         }
-        Text(
-            stringResource(R.string.scan_description),
-            style = MaterialTheme.typography.bodySmall
-        )
         Spacer(modifier = Modifier.height(8.dp))
 
         if (discoveredServers.isEmpty() && !isScanning) {
@@ -158,7 +158,10 @@ private fun ServerCard(server: ServerInfo, onConnect: () -> Unit) {
                     style = MaterialTheme.typography.bodySmall
                 )
             }
-            TextButton(onClick = onConnect) { Text(stringResource(R.string.connect_button)) }
+            HydraButton(
+                text = stringResource(R.string.connect_button),
+                onClick = onConnect
+            )
         }
     }
 }
@@ -166,6 +169,8 @@ private fun ServerCard(server: ServerInfo, onConnect: () -> Unit) {
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 private fun BluetoothSettings(viewModel: RobotViewModel, onEnableBluetooth: () -> Unit) {
+    var isBtFeatureEnabled by remember { mutableStateOf(true) }
+    
     val bluetoothPermissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
         listOf(Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH_CONNECT)
     } else {
@@ -179,15 +184,37 @@ private fun BluetoothSettings(viewModel: RobotViewModel, onEnableBluetooth: () -
     val lastError = viewModel.lastError.value
 
     Column {
-        Text(stringResource(R.string.tab_bluetooth), style = MaterialTheme.typography.titleLarge)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(stringResource(R.string.tab_bluetooth), style = MaterialTheme.typography.titleLarge)
+            Switch(
+                checked = isBtFeatureEnabled,
+                onCheckedChange = { 
+                    isBtFeatureEnabled = it 
+                    if (!it) viewModel.disconnectBle()
+                }
+            )
+        }
+        
         Spacer(modifier = Modifier.height(16.dp))
 
-        if (!permissionState.allPermissionsGranted) {
-            BluetoothPermissionSection(permissionState)
-        } else if (!isBtEnabled) {
-            BluetoothEnableSection(onEnableBluetooth)
+        if (isBtFeatureEnabled) {
+            if (!permissionState.allPermissionsGranted) {
+                BluetoothPermissionSection(permissionState)
+            } else if (!isBtEnabled) {
+                BluetoothEnableSection(onEnableBluetooth)
+            } else {
+                BluetoothScanSection(viewModel, isBtScanning, discoveredDevices)
+            }
         } else {
-            BluetoothScanSection(viewModel, isBtScanning, discoveredDevices)
+            Text(
+                "Bluetooth feature is disabled. Enable it to search for nearby robots.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.Gray
+            )
         }
 
         if (lastError != null) {
@@ -207,9 +234,11 @@ private fun BluetoothEnableSection(onEnableBluetooth: () -> Unit) {
             Text(stringResource(R.string.bt_enable_title), style = MaterialTheme.typography.titleMedium)
             Text(stringResource(R.string.bt_enable_description), style = MaterialTheme.typography.bodyMedium)
             Spacer(modifier = Modifier.height(8.dp))
-            Button(onClick = onEnableBluetooth) {
-                Text(stringResource(R.string.bt_enable_button))
-            }
+            HydraButton(
+                text = stringResource(R.string.bt_enable_button),
+                onClick = onEnableBluetooth,
+                modifier = Modifier.fillMaxWidth()
+            )
         }
     }
 }
@@ -226,9 +255,11 @@ private fun BluetoothPermissionSection(permissionState: com.google.accompanist.p
             Text(stringResource(R.string.bt_enable_title), style = MaterialTheme.typography.titleMedium)
             Text(stringResource(R.string.bt_permission_required), style = MaterialTheme.typography.bodyMedium)
             Spacer(modifier = Modifier.height(8.dp))
-            Button(onClick = { permissionState.launchMultiplePermissionRequest() }) {
-                Text(stringResource(R.string.bt_grant_permission))
-            }
+            HydraButton(
+                text = stringResource(R.string.bt_grant_permission),
+                onClick = { permissionState.launchMultiplePermissionRequest() },
+                modifier = Modifier.fillMaxWidth()
+            )
         }
     }
 }
@@ -239,16 +270,31 @@ private fun BluetoothScanSection(
     isScanning: Boolean,
     devices: List<BleDevice>
 ) {
+    val connectionStatus = viewModel.connectionStatus.value
+    val isConnected = connectionStatus == stringResource(R.string.status_connected)
+
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(stringResource(R.string.auto_discovery), style = MaterialTheme.typography.titleMedium)
-        if (isScanning) {
-            CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
-        } else {
-            TextButton(onClick = { viewModel.scanBluetooth() }) { Text(stringResource(R.string.bt_scan_button)) }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            if (isConnected) {
+                HydraButton(
+                    text = stringResource(R.string.bt_disconnect_button),
+                    onClick = { viewModel.disconnectBle() },
+                    backgroundColor = IndustrialDanger
+                )
+            }
+            if (isScanning) {
+                CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+            } else if (!isConnected) {
+                HydraButton(
+                    text = stringResource(R.string.bt_scan_button),
+                    onClick = { viewModel.scanBluetooth() }
+                )
+            }
         }
     }
     
@@ -293,7 +339,10 @@ private fun DeviceCard(device: BleDevice, onConnect: () -> Unit) {
                     style = MaterialTheme.typography.bodySmall
                 )
             }
-            TextButton(onClick = onConnect) { Text(stringResource(R.string.connect_button)) }
+            HydraButton(
+                text = stringResource(R.string.connect_button),
+                onClick = onConnect
+            )
         }
     }
 }
