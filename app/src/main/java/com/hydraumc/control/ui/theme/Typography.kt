@@ -1,3 +1,8 @@
+// =============================================================================
+// HYDRA-UMC CONTROL - Typography definitions for an industrial/technical feel
+// Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
+// GPL-3.0 - see LICENSE
+// =============================================================================
 package com.hydraumc.control.ui.theme
 
 import androidx.compose.material3.Typography
@@ -6,7 +11,10 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
-// Industrial typography - clean and bold
+/** 
+ * Custom typography settings for the HYDRA-UMC industrial theme.
+ * Uses Monospace for technical data and SansSerif for UI labels.
+ */
 val Typography = Typography(
     bodyLarge = TextStyle(
         fontFamily = FontFamily.Monospace, // Industrial/Technical feel

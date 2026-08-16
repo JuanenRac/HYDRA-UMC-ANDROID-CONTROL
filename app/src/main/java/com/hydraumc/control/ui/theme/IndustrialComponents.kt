@@ -1,3 +1,8 @@
+// =============================================================================
+// HYDRA-UMC CONTROL - Reusable industrial-themed UI components
+// Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
+// GPL-3.0 - see LICENSE
+// =============================================================================
 package com.hydraumc.control.ui.theme
 
 import androidx.compose.foundation.background
@@ -19,7 +24,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 /**
- * An industrial-style LED indicator.
+ * An industrial-style LED indicator for status reporting.
+ * 
+ * @param isOn Whether the LED is illuminated.
+ * @param activeColor The color when the LED is ON.
+ * @param inactiveColor The color when the LED is OFF.
+ * @param label Optional text label to display next to the LED.
+ * @param size The diameter of the LED.
  */
 @Composable
 fun StatusLed(

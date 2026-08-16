@@ -1,3 +1,8 @@
+// =============================================================================
+// HYDRA-UMC CONTROL - Custom animated splash screen for brand identity
+// Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
+// GPL-3.0 - see LICENSE
+// =============================================================================
 package com.hydraumc.control.ui
 
 import androidx.compose.animation.core.animateFloatAsState
@@ -15,17 +20,24 @@ import androidx.compose.ui.res.painterResource
 import com.hydraumc.control.R
 import kotlinx.coroutines.delay
 
+/**
+ * Composable that renders a custom splash screen with a fade-out animation.
+ * 
+ * @param onTimeout Callback triggered when the splash animation completes.
+ */
 @Composable
 fun CustomSplashScreen(onTimeout: () -> Unit) {
+    /** State flag to initiate the fade-out effect. */
     var startFadeOut by remember { mutableStateOf(false) }
 
-    // El fade out durará 2500ms (2.5s)
+    /** Animated alpha value for the splash screen transition. */
     val alphaAnim by animateFloatAsState(
         targetValue = if (startFadeOut) 0f else 1f,
         animationSpec = tween(durationMillis = 2500),
         label = "splashAlpha"
     )
 
+    /** Effect to manage the splash screen timing and transitions. */
     LaunchedEffect(Unit) {
         delay(5000) // Mostrar durante 5 segundos
         startFadeOut = true

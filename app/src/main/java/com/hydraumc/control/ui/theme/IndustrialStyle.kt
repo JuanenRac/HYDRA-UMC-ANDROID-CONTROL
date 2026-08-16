@@ -1,3 +1,8 @@
+// =============================================================================
+// HYDRA-UMC CONTROL - Custom modifiers for industrial-themed 3D effects
+// Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
+// GPL-3.0 - see LICENSE
+// =============================================================================
 package com.hydraumc.control.ui.theme
 
 import androidx.compose.foundation.background
@@ -13,7 +18,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
 /**
- * A modifier that applies a 3D metallic industrial look to a component.
+ * A modifier that applies a 3D metallic industrial look to a container.
+ * @param backgroundColor The primary background color.
+ * @param borderColor The border accent color.
+ * @return The modified Modifier chain.
  */
 @Composable
 fun Modifier.metallicIndustrial(
@@ -50,7 +58,11 @@ fun Modifier.metallicIndustrial(
     .padding(12.dp)
 
 /**
- * A modifier that applies a 3D metallic industrial look to a button.
+ * A modifier that applies a 3D metallic industrial look to a button, with press states.
+ * @param backgroundColor The primary background color.
+ * @param borderColor The border highlight color.
+ * @param pressed Whether the button is currently being pressed.
+ * @return The modified Modifier chain.
  */
 @Composable
 fun Modifier.metallicButton(

@@ -1,5 +1,5 @@
 // =============================================================================
-// HYDRA-UMC Android Control - model/HydraState.kt
+// HYDRA-UMC CONTROL - Core state model wrapping the remote API JSON structure
 // Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
 // GPL-3.0 - see LICENSE
 //
@@ -27,58 +27,80 @@ package com.hydraumc.control.model
 import org.json.JSONArray
 import org.json.JSONObject
 
-/** The 6-axis joint names every robot model in this ecosystem uses - see
- * HYDRA-UMC-STUDIO's own src/store.tsx RobotState.joints shape. */
+/** 
+ * The 6-axis joint names every robot model in this ecosystem uses. 
+ */
 val JOINT_NAMES = listOf("j1", "j2", "j3", "j4", "j5", "j6")
 
-/** Thin, mutation-friendly view over one entry of controllers[].robots[]
- * (src/store.tsx RobotState). Reads/writes go straight through to the
- * underlying JSONObject - there is no detached copy to fall out of sync
- * with what actually gets sent back to the server. */
+/** 
+ * Thin, mutation-friendly view over one entry of controllers[].robots[].
+ * @property raw The underlying JSONObject holding the robot data.
+ */
 class RobotView(val raw: JSONObject) {
+    /** Unique identifier for the robot. */
     val id: Int get() = raw.optInt("id", 0)
+    /** Human-readable name of the robot. */
     val name: String get() = raw.optString("name", "Robot ${id}")
+    /** Connection status of the robot. */
     val online: Boolean get() = raw.optBoolean("online", false)
+    /** The mechanical model type of the robot. */
     val model: String get() = raw.optString("model", "Generic (6-DOF)")
+    /** Current operational role assigned to the robot. */
     val role: String get() = raw.optString("role", "Idle")
+    /** Currently attached tool. */
     val tool: String get() = raw.optString("tool", "None")
+    /** Whether the robot is mounted on an independent XY table. */
     val hasXYTable: Boolean get() = raw.optBoolean("hasXYTable", false)
 
+    /** Updates the online status in the raw JSON. */
     fun setOnline(value: Boolean) {
         raw.put("online", value)
     }
 
+    /** Updates the attached tool in the raw JSON. */
     fun setTool(value: String) {
         raw.put("tool", value)
     }
 
-    // pos: { x, y, z, a, b, c, ... } - cartesian position, RobotState.pos in store.tsx.
+    /** The Cartesian position object {x, y, z, a, b, c}. */
     val pos: JSONObject get() = raw.optJSONObject("pos") ?: JSONObject().also { raw.put("pos", it) }
+    
+    /** Gets the value of a specific position axis. */
     fun posAxis(axis: String): Double = pos.optDouble(axis, 0.0)
+    
+    /** Sets the value of a specific position axis. */
     fun setPosAxis(axis: String, value: Double) {
         pos.put(axis, value)
     }
 
-    // xyTable.pos: { x, y } - independent XY table, only meaningful when hasXYTable.
+    /** The Cartesian position of the XY table, if present. */
     val xyTablePos: JSONObject
         get() {
             val xyTable = raw.optJSONObject("xyTable") ?: JSONObject().also { raw.put("xyTable", it) }
             return xyTable.optJSONObject("pos") ?: JSONObject().also { xyTable.put("pos", it) }
         }
+    
+    /** Sets the value of a specific axis for the XY table. */
     fun setXyTableAxis(axis: String, value: Double) {
         xyTablePos.put(axis, value)
     }
 
-    // playbackState: { isPlaying, isPaused, isFinished, isLooping, activeStep, speed, acceleration }
+    /** The playback state object for robot movements. */
     val playbackState: JSONObject
         get() = raw.optJSONObject("playbackState") ?: JSONObject().also { raw.put("playbackState", it) }
+    
+    /** Whether a movement sequence is currently playing. */
     val isPlaying: Boolean get() = playbackState.optBoolean("isPlaying", false)
+    /** Whether the current movement sequence is paused. */
     val isPaused: Boolean get() = playbackState.optBoolean("isPaused", false)
+    /** Playback speed percentage. */
     val speed: Double get() = playbackState.optDouble("speed", 100.0)
+    /** Playback acceleration percentage. */
     val acceleration: Double get() = playbackState.optDouble("acceleration", 100.0)
 
-    /** Mirrors HYDRA-UMC-STUDIO's own RobotDetail.tsx play button: sets isPlaying,
-     * resets activeStep to 0, clears isFinished - keeps speed/acceleration as-is. */
+    /** 
+     * Controls the playback state, resetting markers when starting. 
+     */
     fun setPlaying(playing: Boolean) {
         val pb = playbackState
         pb.put("isPlaying", playing)
@@ -91,10 +113,12 @@ class RobotView(val raw: JSONObject) {
         }
     }
 
+    /** Toggles the pause state of playback. */
     fun togglePaused() {
         playbackState.put("isPaused", !isPaused)
     }
 
+    /** Stops playback and resets state. */
     fun stop() {
         val pb = playbackState
         pb.put("isPlaying", false)
@@ -102,17 +126,24 @@ class RobotView(val raw: JSONObject) {
         pb.put("activeStep", -1)
     }
 
+    /** Sets the playback speed percentage. */
     fun setSpeed(value: Double) {
         playbackState.put("speed", value)
     }
 
+    /** Sets the playback acceleration percentage. */
     fun setAcceleration(value: Double) {
         playbackState.put("acceleration", value)
     }
 
-    // atc.tools[]: { slot, tool } - see store.tsx ATCConfig.tools.
+    /** 
+     * Represents a tool configured in the Automatic Tool Changer. 
+     * @property slot The ATC slot number.
+     * @property tool The name of the tool in that slot.
+     */
     data class AtcTool(val slot: Int, val tool: String)
 
+    /** List of tools available in the Automatic Tool Changer. */
     val atcTools: List<AtcTool>
         get() {
             val atc = raw.optJSONObject("atc") ?: return emptyList()
@@ -122,51 +153,64 @@ class RobotView(val raw: JSONObject) {
                 AtcTool(t.optInt("slot", 0), t.optString("tool", "None"))
             }
         }
+    
+    /** Whether the robot has an Automatic Tool Changer configured. */
     val hasAtc: Boolean get() = atcTools.isNotEmpty()
 
     override fun toString() = "RobotView(id=$id, name=$name, online=$online)"
 }
 
-/** Thin view over one entry of the top-level controllers[] array
- * (src/store.tsx HydraController). */
+/** 
+ * Thin view over one entry of the top-level controllers[] array.
+ * @property raw The underlying JSONObject holding the controller data.
+ */
 class ControllerView(val raw: JSONObject) {
+    /** Unique ID of the controller. */
     val id: String get() = raw.optString("id", "")
+    /** Human-readable name of the controller. */
     val name: String get() = raw.optString("name", id)
+    /** Network IP address of the controller. */
     val ip: String get() = raw.optString("ip", "")
 
+    /** List of robots managed by this controller. */
     val robots: List<RobotView>
         get() {
             val arr = raw.optJSONArray("robots") ?: return emptyList()
             return (0 until arr.length()).mapNotNull { i -> arr.optJSONObject(i)?.let(::RobotView) }
         }
 
+    /** Finds a robot by its ID within this controller. */
     fun robotById(robotId: Int): RobotView? = robots.find { it.id == robotId }
 }
 
-/** Wraps one server's full {settings, controllers, activeControllerId} payload -
- * exactly the shape GET /api/settings returns and POST /api/settings expects
- * back, per HYDRA-UMC-STUDIO/docs/REMOTE_API.md section 2, and the same
- * envelope a WebSocket "settings" message carries as its payload (section 3). */
+/** 
+ * Wraps the full system state payload received from the server.
+ * @property raw The full JSONObject representing the entire system settings.
+ */
 class HydraState(val raw: JSONObject) {
+    /** List of all controllers in the system. */
     val controllers: List<ControllerView>
         get() {
             val arr = raw.optJSONArray("controllers") ?: return emptyList()
             return (0 until arr.length()).mapNotNull { i -> arr.optJSONObject(i)?.let(::ControllerView) }
         }
 
+    /** The ID of the currently active controller. */
     val activeControllerId: String get() = raw.optString("activeControllerId", "")
 
+    /** Flattened list of all robots across all controllers. */
     val allRobots: List<RobotView> get() = controllers.flatMap { it.robots }
 
+    /** Finds a robot by its ID across the entire system. */
     fun robotById(robotId: Int): RobotView? = allRobots.find { it.id == robotId }
 
-    /** The exact JSON to POST back / send over the settings WebSocket message -
-     * just the raw payload, since every accessor above mutates it in place
-     * rather than a detached copy (same approach as HYDRA-UMC-SUITE's own
-     * HydraState.to_json_dict()). */
+    /** 
+     * Returns the raw JSONObject for serialization back to the server. 
+     */
     fun toJson(): JSONObject = raw
 
     companion object {
+        /** Creates an empty system state. */
         fun empty(): HydraState = HydraState(
             JSONObject()
                 .put("settings", JSONObject())
@@ -176,10 +220,18 @@ class HydraState(val raw: JSONObject) {
     }
 }
 
-/** One entry in the discovery/connection list - see
- * HYDRA-UMC-STUDIO/docs/REMOTE_API.md section 1 (GET /api/hydra-info)
- * for the wire shape this is built from. Mirrors HYDRA-UMC-SUITE's own
- * hydra_suite/models.py ServerInfo. */
+/** 
+ * Metadata for a discovered Hydra server.
+ * @property host The network host/IP.
+ * @property port The network port (default 3000).
+ * @property product Product identifier.
+ * @property remoteApiVersion Supported API version.
+ * @property appVersion Software version string.
+ * @property hostname System hostname.
+ * @property controllerCount Number of active controllers.
+ * @property robotCount Total number of robots.
+ * @property uptimeSeconds System uptime in seconds.
+ */
 data class ServerInfo(
     val host: String,
     val port: Int = 3000,
@@ -191,11 +243,17 @@ data class ServerInfo(
     val robotCount: Int = 0,
     val uptimeSeconds: Int = 0,
 ) {
+    /** Base HTTP URL for API calls. */
     val baseUrl: String get() = "http://$host:$port"
+    /** WebSocket URL for real-time updates. */
     val wsUrl: String get() = "ws://$host:$port/ws"
+    /** Display name for the server list. */
     val displayName: String get() = hostname.ifBlank { host }
 
     companion object {
+        /** 
+         * Factory method to create ServerInfo from a discovery payload. 
+         */
         fun fromHydraInfo(host: String, port: Int, payload: JSONObject): ServerInfo = ServerInfo(
             host = host,
             port = port,

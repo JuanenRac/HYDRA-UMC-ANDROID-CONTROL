@@ -1,5 +1,5 @@
 // =============================================================================
-// HYDRA-UMC Android Control - network/HydraWebSocket.kt
+// HYDRA-UMC CONTROL - WebSocket client for real-time state synchronization
 // Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
 // GPL-3.0 - see LICENSE
 //
@@ -39,10 +39,30 @@ import okhttp3.WebSocket
 import okhttp3.WebSocketListener
 import org.json.JSONObject
 
+/** Delay before attempting to reconnect a dropped WebSocket. */
 private const val RECONNECT_DELAY_MS = 3_000L
 
-enum class WsStatus { CONNECTING, CONNECTED, DISCONNECTED }
+/** 
+ * Enumeration of possible WebSocket connection statuses. 
+ */
+enum class WsStatus { 
+    /** The socket is attempting to establish a connection. */
+    CONNECTING, 
+    /** The socket is connected and ready for communication. */
+    CONNECTED, 
+    /** The socket is currently disconnected. */
+    DISCONNECTED 
+}
 
+/**
+ * Manages the WebSocket connection for live bidirectional sync.
+ * @property host The server host.
+ * @property port The server port.
+ * @property client The shared OkHttpClient instance.
+ * @property onStatus Callback for connection status updates.
+ * @property onSettings Callback for received settings payloads.
+ * @property onError Callback for error messages.
+ */
 class HydraWebSocket(
     private val host: String,
     private val port: Int,
@@ -51,19 +71,29 @@ class HydraWebSocket(
     private val onSettings: (JSONObject) -> Unit,
     private val onError: (String) -> Unit,
 ) {
+    /** The underlying OkHttp WebSocket instance. */
     private var webSocket: WebSocket? = null
+    /** Flag to prevent auto-reconnect when the user manually disconnects. */
     private var closingByUser = false
+    /** Active coroutine job handling reconnection delays. */
     private var reconnectJob: Job? = null
+    /** Coroutine scope for management tasks. */
     private val scope = CoroutineScope(Dispatchers.IO)
 
-    // Mirrors client.py's own _last_payload_json guard (see this file's header).
+    /** Rationale: The server broadcasts every write back to the sender too. */
     private var lastPayloadJson: String? = null
 
+    /** 
+     * Initiates the WebSocket connection. 
+     */
     fun connect() {
         closingByUser = false
         openSocket()
     }
 
+    /** 
+     * Opens a new WebSocket to the server. 
+     */
     private fun openSocket() {
         onStatus(WsStatus.CONNECTING)
         val request = Request.Builder().url("ws://$host:$port/ws").build()
@@ -93,14 +123,20 @@ class HydraWebSocket(
         })
     }
 
+    /** 
+     * Processes an incoming raw WebSocket message. 
+     * @param text The received message text.
+     */
     private fun handleMessage(text: String) {
+        /** Parsed JSON envelope. */
         val json = try {
             JSONObject(text)
         } catch (e: Exception) {
             onError("Mensaje WebSocket no es JSON válido: ${e.message}")
             return
         }
-        if (json.optString("type") != "settings") return // only "type" this app knows about (REMOTE_API.md section 3)
+        if (json.optString("type") != "settings") return 
+        /** The settings payload within the envelope. */
         val payload = json.optJSONObject("payload") ?: return
         val payloadJson = payload.toString()
         if (payloadJson == lastPayloadJson) return // our own echoed-back write
@@ -108,22 +144,25 @@ class HydraWebSocket(
         onSettings(payload)
     }
 
-    /** Sends the full state over the open socket - functionally identical to
-     * POST /api/settings, offered by the server as a convenience so a client
-     * that already holds the socket open doesn't need a second HTTP round
-     * trip (REMOTE_API.md section 3). Returns false if the socket isn't open,
-     * so the caller can fall back to a REST POST (mirrors client.py's
-     * push_state()). */
+    /** 
+     * Sends the current state to the server via WebSocket.
+     * @param payload The state payload to send.
+     * @return True if the message was sent, false if the socket is closed.
+     */
     fun send(payload: JSONObject): Boolean {
         val payloadJson = payload.toString()
-        if (payloadJson == lastPayloadJson) return true // unchanged since our own last send/receive
+        if (payloadJson == lastPayloadJson) return true 
         val socket = webSocket ?: return false
+        /** Envelope following the REMOTE_API.md contract. */
         val envelope = JSONObject().put("type", "settings").put("payload", payload)
         val sent = socket.send(envelope.toString())
         if (sent) lastPayloadJson = payloadJson
         return sent
     }
 
+    /** 
+     * Schedules a reconnection attempt after a delay. 
+     */
     private fun scheduleReconnect() {
         if (closingByUser) return
         reconnectJob?.cancel()
@@ -133,6 +172,9 @@ class HydraWebSocket(
         }
     }
 
+    /** 
+     * Disconnects the WebSocket and stops auto-reconnection. 
+     */
     fun disconnect() {
         closingByUser = true
         reconnectJob?.cancel()

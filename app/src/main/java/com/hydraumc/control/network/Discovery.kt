@@ -1,5 +1,5 @@
 // =============================================================================
-// HYDRA-UMC Android Control - network/Discovery.kt
+// HYDRA-UMC CONTROL - Network discovery for locating Hydra servers on the LAN
 // Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
 // GPL-3.0 - see LICENSE
 //
@@ -33,13 +33,17 @@ import java.net.Inet4Address
 import java.net.NetworkInterface
 import java.util.concurrent.TimeUnit
 
+/** Default port for HYDRA-UMC servers. */
 private const val DEFAULT_PORT = 3000
+/** Timeout for each individual host probe. */
 private const val SCAN_TIMEOUT_MS = 600L
+/** Maximum number of concurrent probes to run. */
 private const val SCAN_CONCURRENCY = 64
 
-/** Every non-loopback IPv4 address this device currently has - a phone on
- * more than one network (Wi-Fi + a VPN tunnel) gets a candidate subnet per
- * address. Mirrors discovery.py's local_ipv4_addresses(). */
+/** 
+ * Every non-loopback IPv4 address this device currently has.
+ * @return List of IPv4 address strings.
+ */
 private fun localIpv4Addresses(): List<String> {
     val addrs = mutableListOf<String>()
     try {
@@ -59,8 +63,11 @@ private fun localIpv4Addresses(): List<String> {
     return addrs
 }
 
-/** Every other host in localIp's own /24 - the common case for a home/lab
- * Wi-Fi network. Mirrors discovery.py's candidate_hosts_for(). */
+/** 
+ * Every other host in localIp's own /24 subnet.
+ * @param localIp The local IP address to derive the subnet from.
+ * @return List of candidate IP addresses in the same subnet.
+ */
 private fun candidateHostsFor(localIp: String): List<String> {
     val parts = localIp.split(".")
     if (parts.size != 4) return emptyList()
@@ -68,11 +75,13 @@ private fun candidateHostsFor(localIp: String): List<String> {
     return (1..254).map { "$prefix.$it" }.filter { it != localIp }
 }
 
-/** One GET /api/hydra-info - returns null for anything that doesn't answer
- * or doesn't answer with a recognizable HYDRA-UMC STUDIO payload (closed
- * port, different service, remote access disabled - all "not a real
- * server" from here, not worth surfacing per-host during a broad scan).
- * Mirrors discovery.py's probe_host(). */
+/** 
+ * Probes a single host to see if it hosts a HYDRA-UMC server.
+ * @param client The OkHttpClient to use.
+ * @param host The host IP address.
+ * @param port The port number.
+ * @return ServerInfo if found, null otherwise.
+ */
 private fun probeHost(client: OkHttpClient, host: String, port: Int): ServerInfo? {
     return try {
         val request = Request.Builder()
@@ -90,25 +99,22 @@ private fun probeHost(client: OkHttpClient, host: String, port: Int): ServerInfo
     }
 }
 
-/** Scans every candidate host across every local subnet concurrently
- * (bounded by SCAN_CONCURRENCY), emitting each real HYDRA-UMC found as soon
- * as it answers rather than waiting for the whole scan to finish - the
- * Settings screen can start listing results immediately. Mirrors
- * discovery.py's scan_subnets(), including its own "always probe 127.0.0.1
- * first" fix: the single most common real setup is HYDRA-UMC STUDIO's dev
- * server running on the same machine as the phone would never reach
- * (obviously - a phone isn't "the same machine" as a dev server the way
- * SUITE can be), so what matters here is the phone's own LAN IP itself,
- * which localIpv4Addresses() intentionally does NOT filter out (unlike
- * loopback), since a server bound to that exact address (not just
- * "localhost") should still answer a probe sent to it. */
+/** 
+ * Scans all available local subnets for HYDRA-UMC servers.
+ * @param client The shared OkHttpClient.
+ * @param port The port to scan on (default 3000).
+ * @return A Flow that emits discovered ServerInfo objects.
+ */
 fun scanSubnets(client: OkHttpClient, port: Int = DEFAULT_PORT): Flow<ServerInfo> = callbackFlow {
+    /** Specialized client with shorter timeouts for scanning. */
     val timedClient = client.newBuilder()
         .connectTimeout(SCAN_TIMEOUT_MS, TimeUnit.MILLISECONDS)
         .readTimeout(SCAN_TIMEOUT_MS, TimeUnit.MILLISECONDS)
         .build()
 
+    /** List of all local IPs across all interfaces. */
     val localIps = localIpv4Addresses()
+    /** Set of all unique hosts to probe. */
     val hosts = linkedSetOf<String>()
     for (localIp in localIps) {
         hosts.add(localIp) // the phone's own LAN IP - a server bound to it (not just localhost) answers here too
@@ -120,7 +126,9 @@ fun scanSubnets(client: OkHttpClient, port: Int = DEFAULT_PORT): Flow<ServerInfo
         return@callbackFlow
     }
 
+    /** Semaphore to limit concurrency and avoid overloading the network. */
     val semaphore = Semaphore(SCAN_CONCURRENCY)
+    /** List of active probe jobs. */
     val jobs = hosts.map { host ->
         launch(Dispatchers.IO) {
             semaphore.withPermit {

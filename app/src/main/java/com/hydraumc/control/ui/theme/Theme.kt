@@ -1,3 +1,8 @@
+// =============================================================================
+// HYDRA-UMC CONTROL - Main application theme using a dark industrial style
+// Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
+// GPL-3.0 - see LICENSE
+// =============================================================================
 package com.hydraumc.control.ui.theme
 
 import android.app.Activity
@@ -9,6 +14,9 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
+/** 
+ * Default dark color scheme for the HYDRA-UMC industrial theme. 
+ */
 private val DarkColorScheme = darkColorScheme(
     primary = DarkPrimary,
     secondary = DarkSecondary,
@@ -24,14 +32,24 @@ private val DarkColorScheme = darkColorScheme(
     onSurfaceVariant = MetallicBlueHighlight,
 )
 
+/**
+ * Main theme composable for the application.
+ * Forces a dark industrial theme across the UI.
+ * 
+ * @param darkTheme Whether to use dark theme (defaults to true).
+ * @param content The composable content to be themed.
+ */
 @Composable
 fun HydraTheme(
     darkTheme: Boolean = true, // Forced dark theme
     content: @Composable () -> Unit
 ) {
+    /** The selected color scheme for the theme. */
     val colorScheme = DarkColorScheme // Forced dark industrial theme
+    /** The current view instance. */
     val view = LocalView.current
     
+    /** Rationale: Apply status bar color based on the theme. */
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window

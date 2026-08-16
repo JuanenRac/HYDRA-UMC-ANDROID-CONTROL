@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">HYDRA-UMC ANDROID CONTROL APP</string>
+    <string name="app_name">HYDRA-UMC CONTROL</string>
     <string name="tab_dashboard">Dashboard</string>
     <string name="tab_control">Steuerung</string>
+    <string name="tab_camera">Kamera</string>
     <string name="tab_3d_view">3D-Ansicht</string>
     <string name="tab_settings">Einstellungen</string>
-    <string name="dashboard_title">Dashboard (Übersicht)</string>
+    <string name="dashboard_title">Dashboard</string>
     <string name="server_status">Server-Status: %s</string>
     <string name="no_robots">Keine Roboter verbunden oder konfiguriert.</string>
     <string name="online">ONLINE</string>
@@ -71,8 +72,22 @@
     <string name="save_and_connect">Speichern und verbinden</string>
     <string name="search_local">Im lokalen Netzwerk suchen</string>
     <string name="scan_button">Scannen</string>
-    <string name="scan_description">Testet GET /api/hydra-info bei jeder Subnetz-IP.</string>
     <string name="no_results_yet">Noch keine Ergebnisse.</string>
     <string name="connect_button">Verbinden</string>
     <string name="server_info">%1$s:%2$d · %3$d Controller, %4$d Roboter</string>
+
+    <!-- Bluetooth Strings -->
+    <string name="tab_wifi">Wi-Fi</string>
+    <string name="tab_bluetooth">Bluetooth</string>
+    <string name="bt_enable_title">Bluetooth erforderlich</string>
+    <string name="bt_enable_description">Bluetooth wird benötigt, um HYDRA-UMC Geräte in der Nähe zu suchen und zu verbinden.</string>
+    <string name="bt_enable_button">Bluetooth aktivieren</string>
+    <string name="bt_scan_button">Geräte suchen</string>
+    <string name="bt_scanning">Suche nach Geräten...</string>
+    <string name="bt_no_devices">Keine Bluetooth-Geräte gefunden.</string>
+    <string name="bt_device_info">%1$s · %2$s</string>
+    <string name="bt_unnamed_device">Unbenanntes Gerät</string>
+    <string name="bt_permission_required">Bluetooth-Berechtigungen sind zum Scannen nach Geräten erforderlich.</string>
+    <string name="bt_grant_permission">Berechtigungen erteilen</string>
+    <string name="bt_disconnect_button">Bluetooth trennen</string>
 </resources>

@@ -1,3 +1,8 @@
+// =============================================================================
+// HYDRA-UMC CONTROL - Main entry point activity for the application
+// Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
+// GPL-3.0 - see LICENSE
+// =============================================================================
 package com.hydraumc.control
 
 import android.os.Bundle
@@ -18,9 +23,15 @@ import com.hydraumc.control.ui.CustomSplashScreen
 import com.hydraumc.control.ui.theme.HydraTheme
 import com.hydraumc.control.viewmodel.RobotViewModel
 
+/**
+ * Main activity that initializes the application, handles the splash screen,
+ * and sets up the primary Compose UI content.
+ */
 class MainActivity : ComponentActivity() {
+    /** The shared ViewModel that manages robot state and connectivity. */
     private val robotViewModel: RobotViewModel by viewModels()
 
+    /** Activity result launcher for enabling Bluetooth. */
     private val enableBluetoothLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
@@ -29,8 +40,12 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    /**
+     * Called when the activity is starting. This is where most initialization should go.
+     */
     override fun onCreate(savedInstanceState: Bundle?) {
         val splashScreen = installSplashScreen()
+        /** Flag to control the native splash screen visibility. */
         var keepNativeSplash = true
         splashScreen.setKeepOnScreenCondition { keepNativeSplash }
         
@@ -42,6 +57,7 @@ class MainActivity : ComponentActivity() {
                 keepNativeSplash = false
             }
 
+            /** State to manage the visibility of the custom Compose splash screen. */
             var showSplash by remember { mutableStateOf(true) }
 
             HydraTheme {
@@ -53,6 +69,7 @@ class MainActivity : ComponentActivity() {
                         CustomSplashScreen(onTimeout = { showSplash = false })
                     } else {
                         MainScreen(robotViewModel, onEnableBluetooth = {
+                            /** Intent to request enabling Bluetooth. */
                             val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
                             enableBluetoothLauncher.launch(enableBtIntent)
                         })

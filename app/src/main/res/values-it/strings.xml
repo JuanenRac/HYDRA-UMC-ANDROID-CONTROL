@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">HYDRA-UMC ANDROID CONTROL APP</string>
+    <string name="app_name">HYDRA-UMC CONTROL</string>
     <string name="tab_dashboard">Dashboard</string>
     <string name="tab_control">Controllo</string>
+    <string name="tab_camera">Fotocamera</string>
     <string name="tab_3d_view">Vista 3D</string>
     <string name="tab_settings">Impostazioni</string>
-    <string name="dashboard_title">Dashboard (Panoramica)</string>
+    <string name="dashboard_title">Dashboard</string>
     <string name="server_status">Stato del server: %s</string>
     <string name="no_robots">Nessun robot connesso o configurato.</string>
     <string name="online">ONLINE</string>
@@ -51,7 +52,7 @@
     <string name="example_port">Es: 3000</string>
     <string name="error_enter_ip_port">Inserisci un IP e una porta.</string>
     <string name="error_invalid_port">Porta non valida: %s</string>
-    <string name="error_robot_not_found">Il robot selezionato non esiste più sul server.</string>
+    <string name="error_robot_not_found">Il robot selezionado non esiste più sul server.</string>
     <string name="error_unknown_command">Comando sconosciuto: %s</string>
     <string name="error_no_tool_in_slot">Nessuno strumento presente nello slot %d.</string>
     <string name="control_robots">Controllo Robot</string>
@@ -71,8 +72,22 @@
     <string name="save_and_connect">Salva e connetti</string>
     <string name="search_local">Cerca nella rete locale</string>
     <string name="scan_button">Scansiona</string>
-    <string name="scan_description">Verifica GET /api/hydra-info su ogni IP della sottorete.</string>
     <string name="no_results_yet">Nessun risultato ancora.</string>
     <string name="connect_button">Connetti</string>
     <string name="server_info">%1$s:%2$d · %3$d controller, %4$d robot</string>
+
+    <!-- Bluetooth Strings -->
+    <string name="tab_wifi">Wi-Fi</string>
+    <string name="tab_bluetooth">Bluetooth</string>
+    <string name="bt_enable_title">Bluetooth richiesto</string>
+    <string name="bt_enable_description">Bluetooth è necessario per cercare e connettersi ai dispositivi HYDRA-UMC nelle vicinanze.</string>
+    <string name="bt_enable_button">Abilita Bluetooth</string>
+    <string name="bt_scan_button">Cerca dispositivi</string>
+    <string name="bt_scanning">Ricerca dispositivi...</string>
+    <string name="bt_no_devices">Nessun dispositivo Bluetooth trovato.</string>
+    <string name="bt_device_info">%1$s · %2$s</string>
+    <string name="bt_unnamed_device">Dispositivo senza nome</string>
+    <string name="bt_permission_required">Le autorizzazioni Bluetooth sono necessarie per cercare dispositivi.</string>
+    <string name="bt_grant_permission">Concedi autorizzazioni</string>
+    <string name="bt_disconnect_button">Disconnetti Bluetooth</string>
 </resources>

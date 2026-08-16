@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">HYDRA-UMC ANDROID CONTROL APP</string>
+    <string name="app_name">HYDRA-UMC CONTROL</string>
     <string name="tab_dashboard">Tableau de bord</string>
     <string name="tab_control">Contrôle</string>
+    <string name="tab_camera">Caméra</string>
     <string name="tab_3d_view">Vue 3D</string>
     <string name="tab_settings">Paramètres</string>
-    <string name="dashboard_title">Tableau de bord (Aperçu)</string>
+    <string name="dashboard_title">Dashboard</string>
     <string name="server_status">État du serveur : %s</string>
     <string name="no_robots">Aucun robot connecté ou configuré.</string>
     <string name="online">EN LIGNE</string>
@@ -71,8 +72,22 @@
     <string name="save_and_connect">Enregistrer et connecter</string>
     <string name="search_local">Rechercher sur le réseau local</string>
     <string name="scan_button">Analyser</string>
-    <string name="scan_description">Teste GET /api/hydra-info sur chaque adresse IP du sous-réseau.</string>
     <string name="no_results_yet">Aucun résultat pour le moment.</string>
     <string name="connect_button">Connecter</string>
     <string name="server_info">%1$s:%2$d · %3$d contrôleur(s), %4$d robot(s)</string>
+
+    <!-- Bluetooth Strings -->
+    <string name="tab_wifi">Wi-Fi</string>
+    <string name="tab_bluetooth">Bluetooth</string>
+    <string name="bt_enable_title">Bluetooth requis</string>
+    <string name="bt_enable_description">Bluetooth est nécessaire pour rechercher et se connecter aux appareils HYDRA-UMC à proximité.</string>
+    <string name="bt_enable_button">Activer Bluetooth</string>
+    <string name="bt_scan_button">Rechercher des appareils</string>
+    <string name="bt_scanning">Recherche d\'appareils...</string>
+    <string name="bt_no_devices">Aucun appareil Bluetooth trouvé.</string>
+    <string name="bt_device_info">%1$s · %2$s</string>
+    <string name="bt_unnamed_device">Appareil sans nom</string>
+    <string name="bt_permission_required">Les autorisations Bluetooth sont requises pour rechercher des appareils.</string>
+    <string name="bt_grant_permission">Accorder les autorisations</string>
+    <string name="bt_disconnect_button">Déconnecter Bluetooth</string>
 </resources>

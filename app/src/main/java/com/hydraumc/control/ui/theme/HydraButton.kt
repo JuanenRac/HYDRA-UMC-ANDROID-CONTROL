@@ -1,3 +1,8 @@
+// =============================================================================
+// HYDRA-UMC CONTROL - Custom button component with industrial styling
+// Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
+// GPL-3.0 - see LICENSE
+// =============================================================================
 package com.hydraumc.control.ui.theme
 
 import androidx.compose.foundation.clickable
@@ -17,6 +22,17 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
+/**
+ * A custom industrial-styled button for the HYDRA-UMC ecosystem.
+ * 
+ * @param text The text label for the button.
+ * @param onClick The callback to execute when clicked.
+ * @param modifier Optional modifier for the button.
+ * @param enabled Whether the button is interactable.
+ * @param backgroundColor The base background color of the button.
+ * @param icon Optional icon to display before the text.
+ * @param textColor The color of the text and icon.
+ */
 @Composable
 fun HydraButton(
     text: String,
@@ -27,7 +43,9 @@ fun HydraButton(
     icon: ImageVector? = null,
     textColor: Color = Color.White
 ) {
+    /** Rationale: Manage interaction source to track press states for 3D effects. */
     val interactionSource = remember { MutableInteractionSource() }
+    /** Boolean state tracking if the button is currently being pressed. */
     val isPressed by interactionSource.collectIsPressedAsState()
 
     Box(

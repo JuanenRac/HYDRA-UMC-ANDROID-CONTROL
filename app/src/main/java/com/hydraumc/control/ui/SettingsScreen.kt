@@ -1,3 +1,8 @@
+// =============================================================================
+// HYDRA-UMC CONTROL - Configuration screen for managing connectivity settings
+// Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
+// GPL-3.0 - see LICENSE
+// =============================================================================
 package com.hydraumc.control.ui
 
 import android.Manifest
@@ -24,12 +29,19 @@ import com.hydraumc.control.model.BleDevice
 import com.hydraumc.control.model.ServerInfo
 import com.hydraumc.control.ui.theme.metallicIndustrial
 import com.hydraumc.control.ui.theme.HydraButton
-import com.hydraumc.control.ui.theme.IndustrialDanger
 
+/**
+ * Screen that handles Wi-Fi and Bluetooth connectivity settings.
+ * 
+ * @param viewModel The shared RobotViewModel.
+ * @param onEnableBluetooth Callback to request Bluetooth activation.
+ */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
 @Composable
 fun SettingsScreen(viewModel: RobotViewModel, onEnableBluetooth: () -> Unit = {}) {
+    /** Index of the currently selected settings tab. */
     var selectedTabIndex by remember { mutableIntStateOf(0) }
+    /** List of tab items for Wi-Fi and Bluetooth. */
     val tabs = listOf(
         TabItem(stringResource(R.string.tab_wifi), Icons.Default.Wifi),
         TabItem(stringResource(R.string.tab_bluetooth), Icons.Default.Bluetooth),
@@ -56,15 +68,29 @@ fun SettingsScreen(viewModel: RobotViewModel, onEnableBluetooth: () -> Unit = {}
     }
 }
 
+/** 
+ * Data class representing a tab item in the Settings screen.
+ * @property title The display title of the tab.
+ * @property icon The icon associated with the tab.
+ */
 data class TabItem(val title: String, val icon: ImageVector)
 
+/** 
+ * Composable for managing Wi-Fi/Network connection settings.
+ * @param viewModel The shared RobotViewModel.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun WifiSettings(viewModel: RobotViewModel) {
+    /** Local state for the target IP address input. */
     var ipAddress by remember { mutableStateOf(viewModel.ipAddress.value) }
+    /** Local state for the target port input. */
     var port by remember { mutableStateOf(viewModel.port.value) }
+    /** List of discovered HYDRA-UMC servers on the LAN. */
     val discoveredServers = viewModel.discoveredServers.value
+    /** Flag indicating if a network scan is in progress. */
     val isScanning = viewModel.isScanning.value
+    /** Last reported connection error message. */
     val lastError = viewModel.lastError.value
 
     Column {
@@ -137,6 +163,11 @@ private fun WifiSettings(viewModel: RobotViewModel) {
     }
 }
 
+/** 
+ * UI component representing a discovered server in a list.
+ * @param server The ServerInfo data.
+ * @param onConnect Callback for when the user wants to connect to this server.
+ */
 @Composable
 private fun ServerCard(server: ServerInfo, onConnect: () -> Unit) {
     Box(
@@ -166,21 +197,33 @@ private fun ServerCard(server: ServerInfo, onConnect: () -> Unit) {
     }
 }
 
+/** 
+ * Composable for managing Bluetooth settings and scanning.
+ * @param viewModel The shared RobotViewModel.
+ * @param onEnableBluetooth Callback to trigger system Bluetooth dialog.
+ */
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 private fun BluetoothSettings(viewModel: RobotViewModel, onEnableBluetooth: () -> Unit) {
+    /** Local state to toggle the Bluetooth feature visibility in the app. */
     var isBtFeatureEnabled by remember { mutableStateOf(true) }
     
+    /** Rationale: Determine required Bluetooth permissions based on Android version. */
     val bluetoothPermissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
         listOf(Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH_CONNECT)
     } else {
         listOf(Manifest.permission.ACCESS_FINE_LOCATION)
     }
 
+    /** State to manage multiple runtime permissions. */
     val permissionState = rememberMultiplePermissionsState(permissions = bluetoothPermissions)
+    /** List of discovered Bluetooth devices. */
     val discoveredDevices = viewModel.discoveredBtDevices.value
+    /** Flag indicating if a BLE scan is in progress. */
     val isBtScanning = viewModel.isBtScanning.value
+    /** Current status of Bluetooth on the device. */
     val isBtEnabled = viewModel.isBtEnabled.value
+    /** Last reported error message. */
     val lastError = viewModel.lastError.value
 
     Column {
@@ -224,6 +267,10 @@ private fun BluetoothSettings(viewModel: RobotViewModel, onEnableBluetooth: () -
     }
 }
 
+/** 
+ * UI section to prompt the user to enable Bluetooth.
+ * @param onEnableBluetooth Callback to request Bluetooth activation.
+ */
 @Composable
 private fun BluetoothEnableSection(onEnableBluetooth: () -> Unit) {
     Card(
@@ -243,6 +290,10 @@ private fun BluetoothEnableSection(onEnableBluetooth: () -> Unit) {
     }
 }
 
+/** 
+ * UI section to prompt the user for necessary Bluetooth permissions.
+ * @param permissionState The permission state object.
+ */
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 private fun BluetoothPermissionSection(permissionState: com.google.accompanist.permissions.MultiplePermissionsState) {
@@ -264,15 +315,18 @@ private fun BluetoothPermissionSection(permissionState: com.google.accompanist.p
     }
 }
 
+/** 
+ * UI section for performing and displaying results of a Bluetooth scan.
+ * @param viewModel The shared RobotViewModel.
+ * @param isScanning Flag indicating if scanning is active.
+ * @param devices List of discovered devices.
+ */
 @Composable
 private fun BluetoothScanSection(
     viewModel: RobotViewModel,
     isScanning: Boolean,
     devices: List<BleDevice>
 ) {
-    val connectionStatus = viewModel.connectionStatus.value
-    val isConnected = connectionStatus == stringResource(R.string.status_connected)
-
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -280,16 +334,9 @@ private fun BluetoothScanSection(
     ) {
         Text(stringResource(R.string.auto_discovery), style = MaterialTheme.typography.titleMedium)
         Row(verticalAlignment = Alignment.CenterVertically) {
-            if (isConnected) {
-                HydraButton(
-                    text = stringResource(R.string.bt_disconnect_button),
-                    onClick = { viewModel.disconnectBle() },
-                    backgroundColor = IndustrialDanger
-                )
-            }
             if (isScanning) {
                 CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
-            } else if (!isConnected) {
+            } else {
                 HydraButton(
                     text = stringResource(R.string.bt_scan_button),
                     onClick = { viewModel.scanBluetooth() }
@@ -318,6 +365,11 @@ private fun BluetoothScanSection(
     }
 }
 
+/** 
+ * UI component representing a discovered BLE device in a list.
+ * @param device The BleDevice data.
+ * @param onConnect Callback for when the user wants to connect via BLE.
+ */
 @Composable
 private fun DeviceCard(device: BleDevice, onConnect: () -> Unit) {
     Box(

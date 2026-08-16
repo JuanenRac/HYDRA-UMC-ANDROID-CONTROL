@@ -1,3 +1,8 @@
+// =============================================================================
+// HYDRA-UMC CONTROL - Main dashboard providing an overview of all robots
+// Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
+// GPL-3.0 - see LICENSE
+// =============================================================================
 package com.hydraumc.control.ui
 
 import androidx.compose.foundation.layout.*
@@ -22,11 +27,19 @@ import com.hydraumc.control.ui.theme.StatusLed
 import java.util.Locale
 import kotlin.math.absoluteValue
 
+/**
+ * Main dashboard screen displaying a summary of all connected robots in a carousel.
+ * 
+ * @param viewModel The shared RobotViewModel.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardScreen(viewModel: RobotViewModel) {
+    /** Current list of robots fetched from the system state. */
     val robots = viewModel.robots.value
+    /** Current server connection status. */
     val connectionStatus = viewModel.connectionStatus.value
+    /** Boolean flag indicating if the app is successfully connected to a server. */
     val isConnected = connectionStatus == stringResource(R.string.status_connected)
 
     Column(
@@ -56,6 +69,7 @@ fun DashboardScreen(viewModel: RobotViewModel) {
         if (robots.isEmpty()) {
             Text(stringResource(R.string.no_robots), style = MaterialTheme.typography.bodyLarge)
         } else {
+            /** State for the horizontal pager (carousel). */
             val pagerState = rememberPagerState(pageCount = { robots.size })
             
             HorizontalPager(
@@ -63,11 +77,13 @@ fun DashboardScreen(viewModel: RobotViewModel) {
                 contentPadding = PaddingValues(horizontal = 32.dp),
                 modifier = Modifier.fillMaxWidth().height(450.dp)
             ) { page ->
+                /** The specific robot data for this pager item. */
                 val robot = robots[page]
                 
                 Box(
                     modifier = Modifier
                         .graphicsLayer {
+                            /** Calculate offset for 3D transition effect. */
                             val pageOffset = (
                                     (pagerState.currentPage - page) + pagerState
                                         .currentPageOffsetFraction
@@ -137,6 +153,11 @@ fun DashboardScreen(viewModel: RobotViewModel) {
     }
 }
 
+/** 
+ * Helper function to format coordinate values to two decimal places.
+ * @param value The double value to format.
+ * @return Formatted string.
+ */
 fun formatCoord(value: Double): String {
     return String.format(Locale.US, "%.2f", value)
 }

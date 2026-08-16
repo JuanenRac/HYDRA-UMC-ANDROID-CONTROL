@@ -1,5 +1,5 @@
 // =============================================================================
-// HYDRA-UMC Android Control - viewmodel/RobotViewModel.kt
+// HYDRA-UMC CONTROL - Primary ViewModel managing robot state and connectivity
 // Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
 // GPL-3.0 - see LICENSE
 //
@@ -14,11 +14,6 @@
 // mutates the local RobotView in place, then pushState() sends the WHOLE
 // object back (over the WebSocket if open, REST POST otherwise) - exactly
 // like HYDRA-UMC-STUDIO's own browser UI (RobotDetail.tsx's updateRobot()).
-//
-// Previously this class called 4 REST endpoints
-// (POST /api/robots/{id}/command|jog|speed|atc) that do not exist on any
-// real server, and every failure was swallowed with e.printStackTrace() -
-// both fixed here.
 // =============================================================================
 package com.hydraumc.control.viewmodel
 
@@ -45,11 +40,32 @@ import android.bluetooth.le.ScanResult
 import android.content.Context
 import android.annotation.SuppressLint
 
+/** 
+ * Data class for ATC tools with slot and name. 
+ * @property slot The ATC slot number.
+ * @property name The name of the tool.
+ */
 data class AtcTool(val slot: Int, val name: String)
 
-/** Flat, display-friendly snapshot of one RobotView - Compose reads this,
- * mutations go through RobotViewModel's action methods instead (which
- * mutate the underlying HydraState and push it back to the server). */
+/** 
+ * Flat, display-friendly snapshot of one RobotView.
+ * @property id Robot unique ID.
+ * @property name Robot name.
+ * @property online Connection status.
+ * @property isPlaying Movement status.
+ * @property isPaused Pause status.
+ * @property hasXYTable Presence of XY table.
+ * @property hasAtc Presence of ATC.
+ * @property currentTool Attached tool.
+ * @property atcTools List of available tools.
+ * @property speed Current speed.
+ * @property acceleration Current acceleration.
+ * @property posX X coordinate.
+ * @property posY Y coordinate.
+ * @property posZ Z coordinate.
+ * @property xyPosX XY Table X coordinate.
+ * @property xyPosY XY Table Y coordinate.
+ */
 data class RobotState(
     val id: Int,
     val name: String,
@@ -69,6 +85,9 @@ data class RobotState(
     val xyPosY: Double,
 )
 
+/** 
+ * Extension function to convert a RobotView model into a displayable RobotState. 
+ */
 private fun RobotView.toDisplay(): RobotState = RobotState(
     id = id,
     name = name,
@@ -88,35 +107,53 @@ private fun RobotView.toDisplay(): RobotState = RobotState(
     xyPosY = xyTablePos.optDouble("y", 0.0),
 )
 
+/**
+ * Shared ViewModel responsible for robot orchestration, networking, and UI state management.
+ * @param application The Android application context.
+ */
 class RobotViewModel(application: Application) : AndroidViewModel(application) {
+    /** Current list of robots available for display. */
     val robots = mutableStateOf<List<RobotState>>(emptyList())
+    /** ID of the currently selected robot in the Control screen. */
     val selectedRobotId = mutableStateOf<Int?>(null)
 
+    /** User-defined target IP address. */
     val ipAddress = mutableStateOf("192.168.1.100")
+    /** User-defined target port. */
     val port = mutableStateOf("3000")
+    /** Overall network connection status string. */
     val connectionStatus = mutableStateOf(application.getString(R.string.status_disconnected))
 
-    /** Real, user-visible error state - every failed API/WS call lands here
-     * instead of a silent printStackTrace(). Screens should show this near
-     * connectionStatus and let the user dismiss/retry. */
+    /** Latest error message for user feedback. */
     val lastError = mutableStateOf<String?>(null)
 
+    /** List of servers found during LAN discovery. */
     val discoveredServers = mutableStateOf<List<ServerInfo>>(emptyList())
+    /** Boolean flag for network scanning activity. */
     val isScanning = mutableStateOf(value = false)
 
-    // Bluetooth state
+    /** List of BLE devices found during scanning. */
     val discoveredBtDevices = mutableStateOf<List<BleDevice>>(emptyList())
+    /** Boolean flag for BLE scanning activity. */
     val isBtScanning = mutableStateOf(value = false)
+    /** Status of the Bluetooth adapter on the device. */
     val isBtEnabled = mutableStateOf(value = false)
+    /** Active Bluetooth LE scan callback. */
     private var bleScanCallback: ScanCallback? = null
 
+    /** Internal core state container. */
     private var state = HydraState.empty()
+    /** Active REST API client. */
     private var apiClient: HydraApiClient? = null
+    /** Active WebSocket connection. */
     private var ws: HydraWebSocket? = null
+    /** Active Bluetooth LE client. */
     private var bleClient: HydraBleClient? = null
+    /** Persistent connection preferences manager. */
     private val prefs = ConnectionPrefs(application)
 
     init {
+        /** Load saved connection settings on initialization. */
         viewModelScope.launch {
             prefs.load()?.let { (savedIp, savedPort) ->
                 ipAddress.value = savedIp
@@ -124,15 +161,14 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
         
-        // Initial Bluetooth check
+        /** Rationale: Initial check for Bluetooth adapter status. */
         val bluetoothManager = getApplication<Application>().getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
         isBtEnabled.value = bluetoothManager.adapter?.isEnabled ?: false
     }
 
-    /** GET /api/settings once + open /ws - mirrors HydraConnection.connect()
-     * in HYDRA-UMC SUITE's own client.py: the initial REST fetch and the
-     * WebSocket are independent, so a server that's up but whose REST fetch
-     * raced a restart isn't given up on immediately. */
+    /** 
+     * Connects to a HYDRA-UMC server using the configured IP and Port.
+     */
     fun connect() {
         val host = ipAddress.value.trim()
         val portValue = port.value.trim()
@@ -166,7 +202,6 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                 applyState(HydraState(settings))
             } catch (e: HydraApiException) {
                 lastError.value = e.message
-                // Still try the WebSocket below - see this function's own header comment.
             }
         }
 
@@ -184,6 +219,10 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         ) { message -> lastError.value = message }.also { it.connect() }
     }
 
+    /** 
+     * Internal helper to update the UI models when a new core state arrives.
+     * @param newState The fresh HydraState object.
+     */
     private fun applyState(newState: HydraState) {
         state = newState
         robots.value = newState.allRobots.map { it.toDisplay() }
@@ -192,15 +231,14 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    /** Sends the WHOLE current state back - over the WebSocket if it's open
-     * (avoids a second HTTP round trip), REST POST otherwise. Mirrors
-     * HydraConnection.push_state() in client.py. Every action method below
-     * goes through this. */
+    /** 
+     * Pushes the current local state back to the server.
+     * Priority: BLE -> WebSocket -> REST API.
+     */
     private fun pushState() {
-        robots.value = state.allRobots.map { it.toDisplay() } // keep the UI list in sync with the local mutation immediately
+        robots.value = state.allRobots.map { it.toDisplay() } 
         val payload = state.toJson()
         
-        // Try BLE first, then WS, then REST
         val sentOverBle = bleClient?.send(payload.toString()) ?: false
         if (sentOverBle) return
         
@@ -218,6 +256,10 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    /** 
+     * Helper to mutate a property of the selected robot and trigger a sync.
+     * @param mutate Lambda that performs the mutation on a RobotView.
+     */
     private fun mutateSelected(mutate: (RobotView) -> Unit) {
         val robotId = selectedRobotId.value ?: return
         val robotView = state.robotById(robotId) ?: run {
@@ -228,6 +270,10 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         pushState()
     }
 
+    /** 
+     * Sends a top-level command to the selected robot.
+     * @param command Command string (enable, disable, play, pause, stop).
+     */
     fun sendCommand(command: String) {
         when (command) {
             "enable" -> mutateSelected { it.setOnline(value = true) }
@@ -239,6 +285,12 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    /** 
+     * Moves the robot or XY table along a specific axis.
+     * @param target Either "robot" or "xytable".
+     * @param axis The axis name (x, y, z).
+     * @param amount The distance to move.
+     */
     fun jog(target: String, axis: String, amount: Double) {
         mutateSelected { robot ->
             if (target == "xytable") {
@@ -249,6 +301,11 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    /** 
+     * Updates the movement speed and acceleration for the selected robot.
+     * @param speed Speed percentage.
+     * @param acceleration Acceleration percentage.
+     */
     fun setSpeed(speed: Double, acceleration: Double) {
         mutateSelected { robot ->
             robot.setSpeed(speed)
@@ -256,6 +313,10 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    /** 
+     * Triggers a tool change operation via the ATC.
+     * @param slot The target ATC slot.
+     */
     fun changeTool(slot: Int) {
         mutateSelected { robot ->
             val tool = robot.atcTools.find { it.slot == slot }
@@ -267,8 +328,9 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    /** GET /api/hydra-info subnet scan (REMOTE_API.md section 1) - mirrors
-     * HYDRA-UMC SUITE's own hydra_suite/net/discovery.py scan_subnets(). */
+    /** 
+     * Starts a subnet scan to find active HYDRA-UMC servers.
+     */
     fun scanNetwork() {
         if (isScanning.value) return
         isScanning.value = true
@@ -284,7 +346,9 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    /** Bluetooth Discovery */
+    /** 
+     * Starts a Bluetooth LE scan to find nearby robots.
+     */
     @SuppressLint("MissingPermission")
     fun scanBluetooth() {
         if (isBtScanning.value) return
@@ -318,6 +382,9 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    /** 
+     * Stops an active Bluetooth LE scan.
+     */
     @SuppressLint("MissingPermission")
     private fun stopBtScan() {
         if (!isBtScanning.value) return
@@ -330,6 +397,10 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         isBtScanning.value = false
     }
 
+    /** 
+     * Connects to a robot using Bluetooth LE GATT.
+     * @param device The BleDevice to connect to.
+     */
     fun connectBle(device: BleDevice) {
         ws?.disconnect()
         bleClient?.disconnect()
@@ -358,13 +429,24 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         ) { message -> lastError.value = message }.also { it.connect() }
     }
 
+    /** 
+     * Disconnects the active Bluetooth LE client.
+     */
     fun disconnectBle() {
         bleClient?.disconnect()
         bleClient = null
     }
 
+    /** 
+     * Internal helper to parse the port string safely.
+     * @return The port number.
+     */
     private fun portValue(): Int = port.value.toIntOrNull() ?: 3000
 
+    /** 
+     * Sets the target server details from discovery results and connects.
+     * @param server The selected ServerInfo.
+     */
     fun connectToDiscovered(server: ServerInfo) {
         ipAddress.value = server.host
         port.value = server.port.toString()

@@ -1,5 +1,5 @@
 // =============================================================================
-// HYDRA-UMC Android Control - network/HydraApiClient.kt
+// HYDRA-UMC CONTROL - REST API client for communication with HYDRA-UMC STUDIO
 // Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
 // GPL-3.0 - see LICENSE
 //
@@ -35,25 +35,31 @@ import org.json.JSONObject
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 
+/** Media type for JSON request bodies. */
 private val JSON_MEDIA_TYPE = "application/json; charset=utf-8".toMediaType()
 
-/** Thrown for anything that isn't a clean 2xx/JSON round-trip - the ViewModel
- * turns this into a real, user-visible error state instead of a swallowed
- * printStackTrace() (the old behaviour this class replaces). */
+/** 
+ * Custom exception for errors occurring during API communication.
+ * @param message Human-readable error description.
+ * @param cause The underlying cause of the exception.
+ */
 class HydraApiException(message: String, cause: Throwable? = null) : IOException(message, cause)
 
+/**
+ * Client class responsible for making HTTP requests to a HYDRA-UMC server.
+ * @property host The target host address.
+ * @property port The target port number.
+ * @property client The OkHttpClient instance to use.
+ */
 class HydraApiClient(host: String, port: Int, private val client: OkHttpClient = sharedHttpClient) {
 
+    /** Base URL of the target HYDRA-UMC server. */
     val baseUrl: String = "http://$host:$port"
 
-    /** GET /api/hydra-info (REMOTE_API.md section 1). Returns null - not an
-     * exception - for a 404 (remote access disabled, mirrors the server's
-     * own "indistinguishable from not running HYDRA-UMC STUDIO" behaviour)
-     * or for anything that doesn't look like a real HYDRA-UMC STUDIO server,
-     * exactly like HYDRA-UMC-SUITE's own discovery.py probe_host(): a closed
-     * port, a different service, and a disabled remote-access gate all look
-     * the same from here ("not a usable server"), not an error worth
-     * surfacing per-host during a scan. */
+    /** 
+     * Performs a one-shot probe to identify a HYDRA-UMC server. 
+     * @return The JSON response if successful and identified, null otherwise.
+     */
     suspend fun getHydraInfo(): JSONObject? = withContext(Dispatchers.IO) {
         try {
             val request = Request.Builder().url("$baseUrl/api/hydra-info").get().build()
@@ -70,22 +76,21 @@ class HydraApiClient(host: String, port: Int, private val client: OkHttpClient =
         }
     }
 
-    /** GET /api/settings - one-shot full-state read (REMOTE_API.md section 2).
-     * Used for the initial load before the WebSocket connects, and as a
-     * manual refresh independent of live sync (mirrors SUITE's
-     * HydraConnection.fetch_state()). Throws HydraApiException on anything
-     * that isn't a clean 2xx JSON object - unreachable host, wrong port,
-     * malformed body - so the caller can surface a real error instead of
-     * silently hanging on "Conectando...". */
+    /** 
+     * Fetches the full system settings from the server.
+     * @return The current state as a JSONObject.
+     * @throws HydraApiException if the request fails.
+     */
     suspend fun getSettings(): JSONObject = withContext(Dispatchers.IO) {
         val request = Request.Builder().url("$baseUrl/api/settings").get().build()
         executeExpectingJson(request)
     }
 
-    /** POST /api/settings - overwrites the whole state (REMOTE_API.md section 2).
-     * Mirrors SUITE's HydraConnection.push_state() REST fallback path (used
-     * here whenever the WebSocket isn't open; HydraWebSocket.send() is used
-     * instead when it is, to avoid the extra round trip). */
+    /** 
+     * Overwrites the full system settings on the server.
+     * @param payload The new state to upload.
+     * @throws HydraApiException if the request fails.
+     */
     suspend fun postSettings(payload: JSONObject): Unit = withContext(Dispatchers.IO) {
         val body = payload.toString().toRequestBody(JSON_MEDIA_TYPE)
         val request = Request.Builder().url("$baseUrl/api/settings").post(body).build()
@@ -93,6 +98,11 @@ class HydraApiClient(host: String, port: Int, private val client: OkHttpClient =
         Unit
     }
 
+    /** 
+     * Internal helper to execute a request and ensure the response is a JSON object.
+     * @param request The OkHttp Request to execute.
+     * @return The response body parsed as a JSONObject.
+     */
     private fun executeExpectingJson(request: Request): JSONObject {
         val response = try {
             client.newCall(request).execute()
@@ -114,12 +124,9 @@ class HydraApiClient(host: String, port: Int, private val client: OkHttpClient =
     }
 
     companion object {
-        /** One shared client (connection pool + dispatcher threads) for the whole
-         * app instead of a new OkHttpClient() per connect() attempt - the old
-         * WebSocketManager/RobotViewModel created a fresh client on every
-         * "Guardar y Conectar" tap, which is wasteful (each OkHttpClient owns
-         * its own thread pool) and non-idiomatic. Shared by HydraApiClient and
-         * HydraWebSocket alike. */
+        /** 
+         * Shared OkHttpClient instance with optimized timeouts. 
+         */
         val sharedHttpClient: OkHttpClient = OkHttpClient.Builder()
             .connectTimeout(5, TimeUnit.SECONDS)
             .readTimeout(10, TimeUnit.SECONDS)
