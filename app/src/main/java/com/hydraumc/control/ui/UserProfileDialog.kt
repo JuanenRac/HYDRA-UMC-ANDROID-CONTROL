@@ -85,6 +85,15 @@ fun UserProfileDialog(viewModel: RobotViewModel, onDismiss: () -> Unit) {
                             modifier = Modifier.weight(1f)
                         )
                         HydraButton(
+                            text = stringResource(R.string.logout_button),
+                            onClick = {
+                                viewModel.logout()
+                                onDismiss()
+                            },
+                            backgroundColor = Color(0xFFD32F2F),
+                            modifier = Modifier.weight(1f)
+                        )
+                        HydraButton(
                             text = stringResource(R.string.accept_button),
                             onClick = {
                                 viewModel.saveUserProfile(username, password, email)

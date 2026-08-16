@@ -202,7 +202,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
      * Attempts to login with demo credentials.
      */
     fun login(user: String, pass: String, remember: Boolean) {
-        if (user == "demo" && pass == "demo") {
+        if ((user == "demo") && (pass == "demo")) {
             isLoggedIn.value = true
             loginUsername.value = user
             loginPassword.value = pass
@@ -214,8 +214,8 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                         password = pass,
                         email = loginEmail.value,
                         rememberMe = remember,
-                        isLoggedIn = true
-                    )
+                        isLoggedIn = true,
+                    ),
                 )
             }
         } else {
@@ -237,8 +237,8 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                     password = pass,
                     email = email,
                     rememberMe = loginRememberMe.value,
-                    isLoggedIn = isLoggedIn.value
-                )
+                    isLoggedIn = isLoggedIn.value,
+                ),
             )
         }
     }
@@ -310,7 +310,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                 if (info != null) {
                     val server = ServerInfo.fromHydraInfo(host, portInt, info)
                     logTelemetry("Server verified: ${server.displayName}")
-                    if (discoveredServers.value.none { it.host == host && it.port == portInt }) {
+                    if (discoveredServers.value.none { (it.host == host) && (it.port == portInt) }) {
                         discoveredServers.value += server
                     }
                 }

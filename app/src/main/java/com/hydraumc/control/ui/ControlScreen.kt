@@ -42,7 +42,15 @@ import com.hydraumc.control.ui.theme.IndustrialDanger
 @Composable
 fun ControlScreen(viewModel: RobotViewModel) {
     val context = LocalContext.current
-    val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+    val vibrator = remember {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+            val vibratorManager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as android.os.VibratorManager
+            vibratorManager.defaultVibrator
+        } else {
+            @Suppress("DEPRECATION")
+            context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+        }
+    }
     
     @SuppressLint("MissingPermission")
     fun vibrate() {
@@ -50,9 +58,10 @@ fun ControlScreen(viewModel: RobotViewModel) {
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                 vibrator.vibrate(VibrationEffect.createOneShot(50, VibrationEffect.DEFAULT_AMPLITUDE))
             } else {
+                @Suppress("DEPRECATION")
                 vibrator.vibrate(50)
             }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             // Vibrate failed, ignore
         }
     }
@@ -110,7 +119,7 @@ fun ControlScreen(viewModel: RobotViewModel) {
                 Text(
                     text = stringResource(R.string.status_label),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = Color.White
+                    color = Color.White,
                 )
                 val statusColor = when (connectionStatus) {
                     stringResource(R.string.status_connected) -> Color(0xFF00C853)
@@ -140,7 +149,7 @@ fun ControlScreen(viewModel: RobotViewModel) {
                         viewModel.sendCommand("stop")
                     },
                     backgroundColor = Color.Red,
-                    modifier = Modifier.fillMaxWidth().height(64.dp)
+                    modifier = Modifier.fillMaxWidth().height(64.dp),
                 )
                 Spacer(modifier = Modifier.height(16.dp))
             }
@@ -149,7 +158,7 @@ fun ControlScreen(viewModel: RobotViewModel) {
             ExposedDropdownMenuBox(
                 expanded = expandedRobot,
                 onExpandedChange = { expandedRobot = !expandedRobot },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
             ) {
                 OutlinedTextField(
                     value = selectedRobot?.name ?: stringResource(R.string.select_robot),
@@ -157,11 +166,11 @@ fun ControlScreen(viewModel: RobotViewModel) {
                     readOnly = true,
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedRobot) },
                     modifier = Modifier.menuAnchor(type = MenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
-                    colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
+                    colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
                 )
                 ExposedDropdownMenu(
                     expanded = expandedRobot,
-                    onDismissRequest = { expandedRobot = false }
+                    onDismissRequest = { expandedRobot = false },
                 ) {
                     robots.forEach { robot ->
                         DropdownMenuItem(
@@ -169,7 +178,7 @@ fun ControlScreen(viewModel: RobotViewModel) {
                             onClick = {
                                 viewModel.selectedRobotId.value = robot.id
                                 expandedRobot = false
-                            }
+                            },
                         )
                     }
                 }
@@ -186,15 +195,15 @@ fun ControlScreen(viewModel: RobotViewModel) {
                                 onClick = { viewModel.sendCommand("enable") },
                                 enabled = !selectedRobot.online,
                                 backgroundColor = Color(0xFF2E7D32),
-                                modifier = Modifier.weight(1f)
-                            )
-                            HydraButton(
-                                text = stringResource(R.string.disable),
-                                onClick = { viewModel.sendCommand("disable") },
-                                enabled = selectedRobot.online,
-                                backgroundColor = IndustrialDanger,
-                                modifier = Modifier.weight(1f)
-                            )
+                                modifier = Modifier.weight(1f),
+                        )
+                        HydraButton(
+                            text = stringResource(R.string.disable),
+                            onClick = { viewModel.sendCommand("disable") },
+                            enabled = selectedRobot.online,
+                            backgroundColor = IndustrialDanger,
+                            modifier = Modifier.weight(1f),
+                        )
                         }
                     }
                 }
@@ -257,15 +266,15 @@ fun ControlScreen(viewModel: RobotViewModel) {
                             value = speedState,
                             onValueChange = { speedState = it },
                             onValueChangeFinished = { viewModel.setSpeed(speedState.toDouble(), accelState.toDouble()) },
-                            valueRange = 10f..500f
-                        )
-                        Text(stringResource(R.string.accel, accelState.toInt().toString()), style = MaterialTheme.typography.bodyMedium)
-                        Slider(
-                            value = accelState,
-                            onValueChange = { accelState = it },
-                            onValueChangeFinished = { viewModel.setSpeed(speedState.toDouble(), accelState.toDouble()) },
-                            valueRange = 100f..2000f
-                        )
+                        valueRange = 10f..500f,
+                    )
+                    Text(stringResource(R.string.accel, accelState.toInt().toString()), style = MaterialTheme.typography.bodyMedium)
+                    Slider(
+                        value = accelState,
+                        onValueChange = { accelState = it },
+                        onValueChangeFinished = { viewModel.setSpeed(speedState.toDouble(), accelState.toDouble()) },
+                        valueRange = 100f..2000f,
+                    )
                     }
                 }
 

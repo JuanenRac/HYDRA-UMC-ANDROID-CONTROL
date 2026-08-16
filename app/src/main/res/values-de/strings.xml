@@ -99,6 +99,7 @@
     <string name="email_label">E-Mail-Adresse</string>
     <string name="cancel_button">ABBRECHEN</string>
     <string name="accept_button">AKZEPTIEREN</string>
+    <string name="logout_button">ABMELDEN</string>
     <string name="about_title">Über HYDRA-UMC CONTROL</string>
     <string name="app_version">Version 1.0.0</string>
     <string name="developed_by">Entwickelt von JuanenRac</string>
