@@ -75,4 +75,18 @@
     <string name="no_results_yet">Sin resultados todavía.</string>
     <string name="connect_button">Conectar</string>
     <string name="server_info">%1$s:%2$d · %3$d controlador(es), %4$d robot(s)</string>
+
+    <!-- Bluetooth Strings -->
+    <string name="tab_wifi">Wi-Fi</string>
+    <string name="tab_bluetooth">Bluetooth</string>
+    <string name="bt_enable_title">Se requiere Bluetooth</string>
+    <string name="bt_enable_description">Se necesita Bluetooth para buscar y conectarse a dispositivos HYDRA-UMC cercanos.</string>
+    <string name="bt_enable_button">Activar Bluetooth</string>
+    <string name="bt_scan_button">Buscar Dispositivos</string>
+    <string name="bt_scanning">Buscando dispositivos...</string>
+    <string name="bt_no_devices">No se encontraron dispositivos Bluetooth.</string>
+    <string name="bt_device_info">%1$s · %2$s</string>
+    <string name="bt_unnamed_device">Dispositivo sin nombre</string>
+    <string name="bt_permission_required">Se requieren permisos de Bluetooth para escanear dispositivos.</string>
+    <string name="bt_grant_permission">Conceder Permisos</string>
 </resources>

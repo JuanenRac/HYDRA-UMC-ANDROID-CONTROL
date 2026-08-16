@@ -5,6 +5,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
@@ -12,7 +13,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.hydraumc.control.viewmodel.RobotViewModel
 import com.hydraumc.control.R
-import kotlin.math.round
+import com.hydraumc.control.ui.theme.metallicIndustrial
+import com.hydraumc.control.ui.theme.StatusLed
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -23,8 +26,15 @@ fun DashboardScreen(viewModel: RobotViewModel) {
     Column(
         modifier = Modifier.fillMaxSize().padding(16.dp).verticalScroll(rememberScrollState())
     ) {
-        Text(stringResource(R.string.dashboard_title), style = MaterialTheme.typography.headlineMedium)
-        Text(stringResource(R.string.server_status, connectionStatus), style = MaterialTheme.typography.bodyMedium, color = if(connectionStatus == stringResource(R.string.status_connected)) Color(0xFF2E7D32) else Color.Red)
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            StatusLed(
+                isOn = connectionStatus == stringResource(R.string.status_connected),
+                activeColor = com.hydraumc.control.ui.theme.MetallicCyan,
+                size = 16.dp
+            )
+            Text(stringResource(R.string.dashboard_title), style = MaterialTheme.typography.headlineMedium)
+        }
+        Text(stringResource(R.string.server_status, connectionStatus), style = MaterialTheme.typography.bodyMedium, color = if(connectionStatus == stringResource(R.string.status_connected)) com.hydraumc.control.ui.theme.MetallicCyan else Color.Red)
         
         Spacer(modifier = Modifier.height(24.dp))
         
@@ -32,18 +42,25 @@ fun DashboardScreen(viewModel: RobotViewModel) {
             Text(stringResource(R.string.no_robots), style = MaterialTheme.typography.bodyLarge)
         } else {
             robots.forEach { robot ->
-                OutlinedCard(modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text(robot.name, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                            Badge(containerColor = if (robot.online) Color(0xFF2E7D32) else Color.Red) {
-                                Text(if (robot.online) stringResource(R.string.online) else stringResource(R.string.offline), color = Color.White)
-                            }
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp)
+                        .metallicIndustrial()
+                ) {
+                    Column {
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                            Text(robot.name, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                            StatusLed(
+                                isOn = robot.online,
+                                activeColor = Color(0xFF2E7D32),
+                                label = if (robot.online) stringResource(R.string.online) else stringResource(R.string.offline)
+                            )
                         }
                         
                         Spacer(modifier = Modifier.height(16.dp))
                         
-                        Text(stringResource(R.string.tool, robot.currentTool), style = MaterialTheme.typography.bodyMedium)
+                        Text(stringResource(R.string.tool, robot.currentTool), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         
                         Spacer(modifier = Modifier.height(8.dp))
                         
@@ -64,8 +81,8 @@ fun DashboardScreen(viewModel: RobotViewModel) {
                         
                         if (robot.isPlaying) {
                             Spacer(modifier = Modifier.height(8.dp))
-                            LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-                            Text(stringResource(R.string.playing_status), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
+                            LinearProgressIndicator(modifier = Modifier.fillMaxWidth(), color = MaterialTheme.colorScheme.tertiary)
+                            Text(stringResource(R.string.playing_status), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.tertiary)
                         }
                     }
                 }
@@ -75,5 +92,5 @@ fun DashboardScreen(viewModel: RobotViewModel) {
 }
 
 fun formatCoord(value: Double): String {
-    return String.format("%.2f", value)
+    return String.format(Locale.US, "%.2f", value)
 }

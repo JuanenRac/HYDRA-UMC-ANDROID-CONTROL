@@ -11,6 +11,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
@@ -31,20 +32,29 @@ val items = listOf(Screen.Dashboard, Screen.Control, Screen.ThreeD, Screen.Setti
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen(viewModel: RobotViewModel) {
+fun MainScreen(viewModel: RobotViewModel, onEnableBluetooth: () -> Unit = {}) {
     val navController = rememberNavController()
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("HYDRA-UMC ANDROID CONTROL") },
+                title = { 
+                    Text(
+                        "HYDRA-UMC ANDROID CONTROL", 
+                        style = MaterialTheme.typography.titleLarge,
+                        fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
+                    ) 
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    containerColor = MaterialTheme.colorScheme.background,
+                    titleContentColor = MaterialTheme.colorScheme.primary
                 )
             )
         },
         bottomBar = {
-            NavigationBar {
+            NavigationBar(
+                containerColor = MaterialTheme.colorScheme.surface,
+                tonalElevation = 8.dp
+            ) {
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
                 val currentDestination = navBackStackEntry?.destination
                 items.forEach { screen ->
@@ -68,7 +78,7 @@ fun MainScreen(viewModel: RobotViewModel) {
             composable(Screen.Dashboard.route) { DashboardScreen(viewModel) }
             composable(Screen.Control.route) { ControlScreen(viewModel) }
             composable(Screen.ThreeD.route) { ThreeDScreen(viewModel) }
-            composable(Screen.Settings.route) { SettingsScreen(viewModel) }
+            composable(Screen.Settings.route) { SettingsScreen(viewModel, onEnableBluetooth) }
         }
     }
 }

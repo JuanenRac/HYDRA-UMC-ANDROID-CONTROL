@@ -26,6 +26,7 @@ import android.app.Application
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.hydraumc.control.model.BleDevice
 import com.hydraumc.control.model.HydraState
 import com.hydraumc.control.model.RobotView
 import com.hydraumc.control.model.ServerInfo
@@ -34,9 +35,15 @@ import com.hydraumc.control.network.ConnectionPrefs
 import com.hydraumc.control.network.HydraApiClient
 import com.hydraumc.control.network.HydraApiException
 import com.hydraumc.control.network.HydraWebSocket
+import com.hydraumc.control.network.HydraBleClient
 import com.hydraumc.control.network.WsStatus
 import com.hydraumc.control.network.scanSubnets
 import kotlinx.coroutines.launch
+import android.bluetooth.BluetoothManager
+import android.bluetooth.le.ScanCallback
+import android.bluetooth.le.ScanResult
+import android.content.Context
+import android.annotation.SuppressLint
 
 data class AtcTool(val slot: Int, val name: String)
 
@@ -59,7 +66,7 @@ data class RobotState(
     val posY: Double,
     val posZ: Double,
     val xyPosX: Double,
-    val xyPosY: Double
+    val xyPosY: Double,
 )
 
 private fun RobotView.toDisplay(): RobotState = RobotState(
@@ -95,11 +102,18 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
     val lastError = mutableStateOf<String?>(null)
 
     val discoveredServers = mutableStateOf<List<ServerInfo>>(emptyList())
-    val isScanning = mutableStateOf(false)
+    val isScanning = mutableStateOf(value = false)
+
+    // Bluetooth state
+    val discoveredBtDevices = mutableStateOf<List<BleDevice>>(emptyList())
+    val isBtScanning = mutableStateOf(value = false)
+    val isBtEnabled = mutableStateOf(value = false)
+    private var bleScanCallback: ScanCallback? = null
 
     private var state = HydraState.empty()
     private var apiClient: HydraApiClient? = null
     private var ws: HydraWebSocket? = null
+    private var bleClient: HydraBleClient? = null
     private val prefs = ConnectionPrefs(application)
 
     init {
@@ -109,6 +123,10 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                 port.value = savedPort
             }
         }
+        
+        // Initial Bluetooth check
+        val bluetoothManager = getApplication<Application>().getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
+        isBtEnabled.value = bluetoothManager.adapter?.isEnabled ?: false
     }
 
     /** GET /api/settings once + open /ws - mirrors HydraConnection.connect()
@@ -132,6 +150,9 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         lastError.value = null
 
         ws?.disconnect()
+        bleClient?.disconnect()
+        bleClient = null
+        
         val client = HydraApiClient(host, portInt)
         apiClient = client
 
@@ -160,14 +181,13 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                 }
             },
             onSettings = { payload -> applyState(HydraState(payload)) },
-            onError = { message -> lastError.value = message },
-        ).also { it.connect() }
+        ) { message -> lastError.value = message }.also { it.connect() }
     }
 
     private fun applyState(newState: HydraState) {
         state = newState
         robots.value = newState.allRobots.map { it.toDisplay() }
-        if (selectedRobotId.value == null || robots.value.none { it.id == selectedRobotId.value }) {
+        if (selectedRobotId.value == null || ((robots.value.none { it.id == selectedRobotId.value }))) {
             selectedRobotId.value = robots.value.firstOrNull()?.id
         }
     }
@@ -179,8 +199,14 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
     private fun pushState() {
         robots.value = state.allRobots.map { it.toDisplay() } // keep the UI list in sync with the local mutation immediately
         val payload = state.toJson()
+        
+        // Try BLE first, then WS, then REST
+        val sentOverBle = bleClient?.send(payload.toString()) ?: false
+        if (sentOverBle) return
+        
         val sentOverWs = ws?.send(payload) ?: false
         if (sentOverWs) return
+        
         val client = apiClient ?: return
         viewModelScope.launch {
             try {
@@ -204,9 +230,9 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
 
     fun sendCommand(command: String) {
         when (command) {
-            "enable" -> mutateSelected { it.setOnline(true) }
-            "disable" -> mutateSelected { it.setOnline(false) }
-            "play" -> mutateSelected { it.setPlaying(true) }
+            "enable" -> mutateSelected { it.setOnline(value = true) }
+            "disable" -> mutateSelected { it.setOnline(value = false) }
+            "play" -> mutateSelected { it.setPlaying(playing = true) }
             "pause" -> mutateSelected { it.togglePaused() }
             "stop" -> mutateSelected { it.stop() }
             else -> lastError.value = getApplication<Application>().getString(R.string.error_unknown_command, command)
@@ -250,12 +276,86 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             try {
                 scanSubnets(HydraApiClient.sharedHttpClient, portValue()).collect { server ->
-                    discoveredServers.value = discoveredServers.value + server
+                    discoveredServers.value += server
                 }
             } finally {
                 isScanning.value = false
             }
         }
+    }
+
+    /** Bluetooth Discovery */
+    @SuppressLint("MissingPermission")
+    fun scanBluetooth() {
+        if (isBtScanning.value) return
+        
+        val bluetoothManager = getApplication<Application>().getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
+        val adapter = bluetoothManager.adapter
+        if (adapter == null || !adapter.isEnabled) {
+            isBtEnabled.value = false
+            return
+        }
+        isBtEnabled.value = true
+
+        isBtScanning.value = true
+        discoveredBtDevices.value = emptyList()
+        
+        val scanner = adapter.bluetoothLeScanner
+        val callback = object : ScanCallback() {
+            override fun onScanResult(callbackType: Int, result: ScanResult) {
+                val device = BleDevice(result.device.name, result.device.address, result.rssi)
+                if (discoveredBtDevices.value.none { it.address == device.address }) {
+                    discoveredBtDevices.value += device
+                }
+            }
+        }
+        bleScanCallback = callback
+
+        viewModelScope.launch {
+            scanner.startScan(callback)
+            kotlinx.coroutines.delay(kotlin.time.Duration.parse("5s"))
+            stopBtScan()
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun stopBtScan() {
+        if (!isBtScanning.value) return
+        val bluetoothManager = getApplication<Application>().getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
+        val scanner = bluetoothManager.adapter?.bluetoothLeScanner
+        bleScanCallback?.let { 
+            scanner?.stopScan(it)
+        }
+        bleScanCallback = null
+        isBtScanning.value = false
+    }
+
+    fun connectBle(device: BleDevice) {
+        ws?.disconnect()
+        bleClient?.disconnect()
+        apiClient = null
+        
+        lastError.value = null
+        connectionStatus.value = getApplication<Application>().getString(R.string.status_connecting)
+        
+        bleClient = HydraBleClient(
+            context = getApplication(),
+            deviceAddress = device.address,
+            onStatus = { status ->
+                connectionStatus.value = when (status) {
+                    WsStatus.CONNECTING -> getApplication<Application>().getString(R.string.status_connecting)
+                    WsStatus.CONNECTED -> getApplication<Application>().getString(R.string.status_connected)
+                    WsStatus.DISCONNECTED -> getApplication<Application>().getString(R.string.status_disconnected)
+                }
+            },
+            onSettings = { payload -> 
+                try {
+                    applyState(HydraState(org.json.JSONObject(payload)))
+                } catch (e: Exception) {
+                    lastError.value = e.message
+                }
+            },
+        ) { message -> lastError.value = message }.also { it.connect() }
     }
 
     private fun portValue(): Int = port.value.toIntOrNull() ?: 3000
@@ -269,5 +369,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
     override fun onCleared() {
         super.onCleared()
         ws?.disconnect()
+        bleClient?.disconnect()
+        stopBtScan()
     }
 }

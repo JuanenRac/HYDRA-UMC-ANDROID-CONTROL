@@ -1,13 +1,12 @@
 # HYDRA-UMC Android Control - Architecture
 
-**Status: Wi-Fi transport implemented.** `app/src/` now contains a real
-implementation of section 2 below (discovery, `GET`/`POST /api/settings`,
-`/ws` live sync, jog/speed/tool/playback controls) - see
-`network/HydraApiClient.kt`, `network/HydraWebSocket.kt`,
-`network/Discovery.kt`, `model/HydraState.kt` and
-`viewmodel/RobotViewModel.kt` for the real code and their own header
-comments for the contract each speaks. Bluetooth transport (section 3)
-remains unimplemented, as described below.
+**Status: Wi-Fi and Bluetooth transport implemented (Android-side).** `app/src/` now contains a real
+implementation of section 2 (discovery, `GET`/`POST /api/settings`,
+`/ws` live sync) and the Android-side groundwork for section 3
+(BLE scanning, GATT connection, and state sync via BLE). See
+`network/HydraBleClient.kt`, `network/HydraApiClient.kt`,
+`network/HydraWebSocket.kt`, and `viewmodel/RobotViewModel.kt` for the
+real code.
 
 ## 1. What this app is
 
@@ -98,6 +97,7 @@ app/src/main/java/com/hydraumc/control/
 ├── MainActivity.kt            # Entry point - installs the splash screen, hosts MainScreen
 ├── MainScreen.kt               # Bottom-nav Scaffold wiring the 4 screens below together
 ├── ui/
+│   ├── SplashScreen.kt         # Custom Compose splash screen (logo + progress)
 │   ├── DashboardScreen.kt      # Per-robot overview: online state, position, speed/accel, playback
 │   ├── ControlScreen.kt        # Jog joystick, speed/accel sliders, ATC tool change, play/pause/stop
 │   ├── ThreeDScreen.kt         # WebView embedding the full HYDRA-UMC STUDIO web UI at http://<host>:<port>
@@ -116,39 +116,36 @@ app/src/main/java/com/hydraumc/control/
 Bluetooth transport (section 3) has no source files yet - there's nothing
 real to build against on the CM5 side (see that section above).
 
-**UI toolkit:** Jetpack Compose (Google's current recommended Android UI
-toolkit, not the legacy XML View system) - matches "latest technology"
-the same way the rest of this ecosystem's own newer projects (React 19,
-Vite, PySide6 for HYDRA-UMC SUITE) lean current rather than
-legacy-compatible.
+**UI toolkit:** Jetpack Compose with a custom **3D Industrial Theme**.
+Uses a custom styling engine (`ui/theme/IndustrialStyle.kt`) that
+applies metallic gradients and beveled borders to components,
+providing a high-tech machinery dashboard feel.
 
 ## 5. Build tooling
 
 The Gradle wrapper (`gradlew`, `gradlew.bat`, `gradle/wrapper/*`) is
-checked into this repo, pinned to Gradle 8.2 - the exact minimum AGP
-8.2.0 (`build.gradle.kts`) itself requires, per Google's own AGP 8.2.0
-release notes. AGP is 8.2.0 rather than 8.1.0 specifically because
-`compose-bom 2024.02.00` (`app/build.gradle.kts`) pulls in Compose/
-AndroidX artifacts that require compiling against API 34
-(`compileSdk = 34`) - 8.1.0's own max-recommended `compileSdk` is 33.
-`targetSdk` is 34 too (Android 14) - initially left at 33 on the
-reasoning that only the compile-time API surface needed to move, not
-runtime behavior, but Android 14 itself shows an install-time "this app
-was built for an older Android version" warning based on `targetSdk`
-(not `compileSdk`), so matching the two avoids that regardless of the
-exact enforcement threshold on a given device. Building needs a JDK
-17+ to run Gradle itself (independent of `app/build.gradle.kts`'s own
-`sourceCompatibility`/`jvmTarget`, which target 1.8 for the compiled
-app code) and the Android SDK (`local.properties` with
-`sdk.dir=...`, generated automatically the first time Android Studio
-opens this project, or `ANDROID_HOME`/`ANDROID_SDK_ROOT`).
-`build-android.sh` / `build-android.bat` at the repo root wrap `gradlew
-assembleDebug` + `adb install` into one step, with pre-flight checks
-for the wrapper, the SDK location, and the JDK version, since Gradle's
-own errors for each are unhelpfully generic or, in the JDK case, don't
-mention the JDK at all. `README.md`'s own "Troubleshooting" table has
-the actual error text for every one of these, since Gradle's own
-wording for most of them isn't self-explanatory.
+checked into this repo, pinned to Gradle 9.7.0 - the exact minimum AGP
+9.3.1 (`build.gradle.kts`) itself requires. AGP is 9.3.1 rather than
+earlier versions because `compose-bom 2024.09.00` (`app/build.gradle.kts`)
+pulls in Compose/AndroidX artifacts that require compiling against API 36
+(`compileSdk = 36`). `targetSdk` is 36 too (Android 15) - initially left
+at 33 on the reasoning that only the compile-time API surface needed to
+move, not runtime behavior, but Android 14+ itself shows an install-time
+"this app was built for an older Android version" warning based on
+`targetSdk` (not `compileSdk`), so matching the two avoids that
+regardless of the exact enforcement threshold on a given device.
+Building needs a JDK 21+ to run Gradle itself (independent of
+`app/build.gradle.kts`'s own `sourceCompatibility`/`jvmTarget`, which
+target 17 for the compiled app code) and the Android SDK
+(`local.properties` with `sdk.dir=...`, generated automatically the first
+time Android Studio opens this project, or `ANDROID_HOME`/
+`ANDROID_SDK_ROOT`). `build-android.sh` / `build-android.bat` at the repo
+root wrap `gradlew assembleDebug` + `adb install` into one step, with
+pre-flight checks for the wrapper, the SDK location, and the JDK version,
+since Gradle's own errors for each are unhelpfully generic or, in the JDK
+case, don't mention the JDK at all. `README.md`'s own "Troubleshooting"
+table has the actual error text for every one of these, since Gradle's
+own wording for most of them isn't self-explanatory.
 
 ## 6. Relationship to the rest of the ecosystem
 
