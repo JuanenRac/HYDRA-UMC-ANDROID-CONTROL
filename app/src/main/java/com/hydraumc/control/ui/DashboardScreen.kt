@@ -55,12 +55,21 @@ fun DashboardScreen(viewModel: RobotViewModel) {
         }
         
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(stringResource(R.string.server_status, "").trim(), style = MaterialTheme.typography.bodyMedium)
+            Text(
+                text = stringResource(R.string.server_status, "").trim(),
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.White
+            )
+            val statusColor = when (connectionStatus) {
+                stringResource(R.string.status_connected) -> Color(0xFF00C853)
+                stringResource(R.string.status_connecting) -> Color(0xFFFFA000)
+                else -> Color.Red
+            }
             Text(
                 text = " $connectionStatus",
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Bold,
-                color = if (isConnected) Color(0xFF00C853) else Color.Red
+                color = statusColor,
             )
         }
         
@@ -70,12 +79,12 @@ fun DashboardScreen(viewModel: RobotViewModel) {
             Text(stringResource(R.string.no_robots), style = MaterialTheme.typography.bodyLarge)
         } else {
             /** State for the horizontal pager (carousel). */
-            val pagerState = rememberPagerState(pageCount = { robots.size })
+            val pagerState = rememberPagerState { robots.size }
             
             HorizontalPager(
                 state = pagerState,
                 contentPadding = PaddingValues(horizontal = 32.dp),
-                modifier = Modifier.fillMaxWidth().height(450.dp)
+                modifier = Modifier.fillMaxWidth().height(450.dp),
             ) { page ->
                 /** The specific robot data for this pager item. */
                 val robot = robots[page]
@@ -93,22 +102,22 @@ fun DashboardScreen(viewModel: RobotViewModel) {
                             alpha = lerp(
                                 start = 0.5f,
                                 stop = 1f,
-                                fraction = 1f - pageOffset.coerceIn(0f, 1f)
+                                fraction = 1f - pageOffset.coerceIn(0f, 1f),
                             )
                             scaleX = lerp(
                                 start = 0.8f,
                                 stop = 1f,
-                                fraction = 1f - pageOffset.coerceIn(0f, 1f)
+                                fraction = 1f - pageOffset.coerceIn(0f, 1f),
                             )
                             scaleY = lerp(
                                 start = 0.8f,
                                 stop = 1f,
-                                fraction = 1f - pageOffset.coerceIn(0f, 1f)
+                                fraction = 1f - pageOffset.coerceIn(0f, 1f),
                             )
                         }
                         .fillMaxWidth()
                         .padding(8.dp)
-                        .metallicIndustrial()
+                        .metallicIndustrial(),
                 ) {
                     Column {
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
@@ -116,7 +125,7 @@ fun DashboardScreen(viewModel: RobotViewModel) {
                             StatusLed(
                                 isOn = robot.online,
                                 activeColor = Color(0xFF2E7D32),
-                                label = if (robot.online) stringResource(R.string.online) else stringResource(R.string.offline)
+                                label = if (robot.online) stringResource(R.string.online) else stringResource(R.string.offline),
                             )
                         }
                         

@@ -26,6 +26,7 @@ import com.hydraumc.control.model.HydraState
 import com.hydraumc.control.model.RobotView
 import com.hydraumc.control.model.ServerInfo
 import com.hydraumc.control.R
+import com.hydraumc.control.network.AuthPrefs
 import com.hydraumc.control.network.ConnectionPrefs
 import com.hydraumc.control.network.HydraApiClient
 import com.hydraumc.control.network.HydraApiException
@@ -124,8 +125,11 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
     /** Overall network connection status string. */
     val connectionStatus = mutableStateOf(application.getString(R.string.status_disconnected))
 
-    /** Latest error message for user feedback. */
+    /** Latest Wi-Fi error message for user feedback. */
     val lastError = mutableStateOf<String?>(null)
+
+    /** Latest Bluetooth error message. */
+    val lastBtError = mutableStateOf<String?>(null)
 
     /** List of servers found during LAN discovery. */
     val discoveredServers = mutableStateOf<List<ServerInfo>>(emptyList())
@@ -151,6 +155,13 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
     private var bleClient: HydraBleClient? = null
     /** Persistent connection preferences manager. */
     private val prefs = ConnectionPrefs(application)
+    /** Persistent authentication preferences manager. */
+    private val authPrefs = AuthPrefs(application)
+
+    /** Login state */
+    val isLoggedIn = mutableStateOf(value = false)
+    val loginUsername = mutableStateOf(value = "")
+    val loginRememberMe = mutableStateOf(value = false)
 
     init {
         /** Load saved connection settings on initialization. */
@@ -159,9 +170,50 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                 ipAddress.value = savedIp
                 port.value = savedPort
             }
+            
+            // Load auth
+            val (user, remember, logged) = authPrefs.loadAuth()
+            loginUsername.value = user ?: ""
+            loginRememberMe.value = remember
+            if (remember && logged) {
+                // Auto login
+                isLoggedIn.value = true
+            }
         }
         
         /** Rationale: Initial check for Bluetooth adapter status. */
+        val bluetoothManager = getApplication<Application>().getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
+        isBtEnabled.value = bluetoothManager.adapter?.isEnabled ?: false
+    }
+
+    /**
+     * Attempts to login with demo credentials.
+     */
+    fun login(user: String, pass: String, remember: Boolean) {
+        if (user == "demo" && pass == "demo") {
+            isLoggedIn.value = true
+            viewModelScope.launch {
+                authPrefs.saveAuth(user, remember, isLoggedIn = true)
+            }
+        } else {
+            lastError.value = "Invalid credentials"
+        }
+    }
+
+    /**
+     * Logs out and clears session.
+     */
+    fun logout() {
+        isLoggedIn.value = false
+        viewModelScope.launch {
+            authPrefs.clearAuth()
+        }
+    }
+
+    /** 
+     * Refreshes the current Bluetooth adapter status.
+     */
+    fun refreshBtStatus() {
         val bluetoothManager = getApplication<Application>().getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
         isBtEnabled.value = bluetoothManager.adapter?.isEnabled ?: false
     }
@@ -212,7 +264,11 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                 connectionStatus.value = when (status) {
                     WsStatus.CONNECTING -> getApplication<Application>().getString(R.string.status_connecting)
                     WsStatus.CONNECTED -> getApplication<Application>().getString(R.string.status_connected)
-                    WsStatus.DISCONNECTED -> getApplication<Application>().getString(R.string.status_disconnected)
+                    WsStatus.DISCONNECTED -> {
+                        // Clear discovered servers if connection lost as per user request
+                        discoveredServers.value = emptyList()
+                        getApplication<Application>().getString(R.string.status_disconnected)
+                    }
                 }
             },
             onSettings = { payload -> applyState(HydraState(payload)) },
@@ -226,7 +282,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
     private fun applyState(newState: HydraState) {
         state = newState
         robots.value = newState.allRobots.map { it.toDisplay() }
-        if (selectedRobotId.value == null || ((robots.value.none { it.id == selectedRobotId.value }))) {
+        if ((selectedRobotId.value == null) || (robots.value.none { it.id == selectedRobotId.value })) {
             selectedRobotId.value = robots.value.firstOrNull()?.id
         }
     }
@@ -355,7 +411,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         
         val bluetoothManager = getApplication<Application>().getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
         val adapter = bluetoothManager.adapter
-        if (adapter == null || !adapter.isEnabled) {
+        if ((adapter == null) || (!adapter.isEnabled)) {
             isBtEnabled.value = false
             return
         }
@@ -365,6 +421,12 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         discoveredBtDevices.value = emptyList()
         
         val scanner = adapter.bluetoothLeScanner
+        if (scanner == null) {
+            lastBtError.value = "Bluetooth LE Scanner not available"
+            isBtScanning.value = false
+            return
+        }
+        
         val callback = object : ScanCallback() {
             override fun onScanResult(callbackType: Int, result: ScanResult) {
                 val device = BleDevice(result.device.name, result.device.address, result.rssi)

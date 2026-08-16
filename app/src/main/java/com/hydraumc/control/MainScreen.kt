@@ -6,16 +6,14 @@
 package com.hydraumc.control
 
 import androidx.annotation.StringRes
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ControlCamera
-import androidx.compose.material.icons.filled.Dashboard
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.ViewInAr
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -28,10 +26,10 @@ import androidx.navigation.compose.rememberNavController
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
-import androidx.compose.material.icons.filled.CameraAlt
 import com.hydraumc.control.ui.*
 import com.hydraumc.control.ui.theme.metallicIndustrial
 import com.hydraumc.control.viewmodel.RobotViewModel
+import com.hydraumc.control.model.ServerInfo
 
 /**
  * Sealed class defining the different screens available for navigation.
@@ -39,7 +37,7 @@ import com.hydraumc.control.viewmodel.RobotViewModel
  * @property titleRes The string resource ID for the tab label.
  * @property icon The icon representing the tab.
  */
-sealed class Screen(val route: String, @StringRes val titleRes: Int, val icon: androidx.compose.ui.graphics.vector.ImageVector) {
+sealed class Screen(val route: String, @param:StringRes val titleRes: Int, val icon: androidx.compose.ui.graphics.vector.ImageVector) {
     /** The Dashboard screen. */
     object Dashboard : Screen("dashboard", R.string.tab_dashboard, Icons.Filled.Dashboard)
     /** The Manual Control screen. */
@@ -65,52 +63,122 @@ val items = listOf(Screen.Dashboard, Screen.Control, Screen.Camera, Screen.Three
 fun MainScreen(viewModel: RobotViewModel, onEnableBluetooth: () -> Unit = {}) {
     /** The navigation controller for the entire app. */
     val navController = rememberNavController()
+    var showAboutDialog by remember { mutableStateOf(false) }
+    var serverDropdownExpanded by remember { mutableStateOf(false) }
+    val discoveredServers = viewModel.discoveredServers.value
+
+    if (showAboutDialog) {
+        AboutDialog(onDismiss = { showAboutDialog = false })
+    }
+
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
-                title = { 
-                    Box(
-                        modifier = Modifier
-                            .padding(vertical = 4.dp)
-                            .metallicIndustrial(
-                                backgroundColor = MaterialTheme.colorScheme.surfaceVariant,
-                                borderColor = MaterialTheme.colorScheme.primary
-                            )
-                            .padding(horizontal = 16.dp, vertical = 4.dp)
-                    ) {
-                        Text(
-                            text = buildAnnotatedString {
-                                withStyle(style = SpanStyle(color = androidx.compose.ui.graphics.Color.White)) {
-                                    append("HYDRA")
-                                }
-                                withStyle(style = SpanStyle(color = androidx.compose.ui.graphics.Color(0xFF00C853))) {
-                                    append("-UM")
-                                }
-                                withStyle(style = SpanStyle(color = androidx.compose.ui.graphics.Color.Red)) {
-                                    append("C")
-                                }
-                                withStyle(style = SpanStyle(color = androidx.compose.ui.graphics.Color.LightGray)) {
-                                    append(" CONTROL")
-                                }
-                            },
-                            style = MaterialTheme.typography.titleLarge.copy(
-                                shadow = androidx.compose.ui.graphics.Shadow(
-                                    color = androidx.compose.ui.graphics.Color.Black,
-                                    offset = androidx.compose.ui.geometry.Offset(2f, 2f),
-                                    blurRadius = 4f
+            Column {
+                CenterAlignedTopAppBar(
+                    title = { 
+                        Box(
+                            modifier = Modifier
+                                .padding(vertical = 4.dp)
+                                .metallicIndustrial(
+                                    backgroundColor = MaterialTheme.colorScheme.surfaceVariant,
+                                    borderColor = MaterialTheme.colorScheme.primary,
+                                )
+                                .padding(horizontal = 16.dp, vertical = 4.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(
+                                text = buildAnnotatedString {
+                                    withStyle(style = SpanStyle(color = Color.White)) {
+                                        append("HYDRA")
+                                    }
+                                    withStyle(style = SpanStyle(color = Color(0xFF00C853))) {
+                                        append("-UM")
+                                    }
+                                    withStyle(style = SpanStyle(color = Color.Red)) {
+                                        append("C")
+                                    }
+                                    withStyle(style = SpanStyle(color = Color.LightGray)) {
+                                        append(" CONTROL")
+                                    }
+                                },
+                                style = MaterialTheme.typography.titleLarge.copy(
+                                    shadow = androidx.compose.ui.graphics.Shadow(
+                                        color = Color.Black,
+                                        offset = androidx.compose.ui.geometry.Offset(2f, 2f),
+                                        blurRadius = 4f,
+                                    ),
+                                    letterSpacing = 2.sp,
                                 ),
-                                letterSpacing = 2.sp
-                            ),
-                            fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
-                            fontWeight = androidx.compose.ui.text.font.FontWeight.ExtraBold
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background,
-                    titleContentColor = MaterialTheme.colorScheme.primary
+                                fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                                fontWeight = androidx.compose.ui.text.font.FontWeight.ExtraBold,
+                            )
+                        }
+                    },
+                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.background,
+                        titleContentColor = MaterialTheme.colorScheme.primary
+                    )
                 )
-            )
+
+                // Sub-header Row with Server Selector and Icons
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Server Selector (Left)
+                    Box {
+                        OutlinedButton(
+                            onClick = { serverDropdownExpanded = true },
+                            modifier = Modifier.height(40.dp),
+                            contentPadding = PaddingValues(horizontal = 8.dp)
+                        ) {
+                            Icon(Icons.Default.Dns, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = if (discoveredServers.isNotEmpty()) "Servers (${discoveredServers.size})" else "No Servers",
+                                style = MaterialTheme.typography.labelMedium
+                            )
+                            Icon(Icons.Default.ArrowDropDown, contentDescription = null)
+                        }
+
+                        DropdownMenu(
+                            expanded = serverDropdownExpanded,
+                            onDismissRequest = { serverDropdownExpanded = false }
+                        ) {
+                            if (discoveredServers.isEmpty()) {
+                                DropdownMenuItem(
+                                    text = { Text("No se encontraron servidores") },
+                                    onClick = { serverDropdownExpanded = false }
+                                )
+                            } else {
+                                discoveredServers.forEach { server ->
+                                    DropdownMenuItem(
+                                        text = { Text("${server.displayName} (${server.host})") },
+                                        onClick = {
+                                            viewModel.connectToDiscovered(server)
+                                            serverDropdownExpanded = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    // Icons (Right)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        IconButton(onClick = { /* TODO: User profile */ }) {
+                            Icon(Icons.Default.Person, contentDescription = "Usuario", tint = MaterialTheme.colorScheme.primary)
+                        }
+                        IconButton(onClick = { showAboutDialog = true }) {
+                            Icon(Icons.Default.Info, contentDescription = "Acerca de", tint = MaterialTheme.colorScheme.primary)
+                        }
+                    }
+                }
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+            }
         },
         bottomBar = {
             NavigationBar(

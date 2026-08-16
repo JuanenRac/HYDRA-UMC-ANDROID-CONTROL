@@ -1,12 +1,9 @@
 # HYDRA-UMC Android Control - Architecture
 
-**Status: Wi-Fi and Bluetooth transport implemented (Android-side).** `app/src/` now contains a real
-implementation of section 2 (discovery, `GET`/`POST /api/settings`,
-`/ws` live sync) and the Android-side groundwork for section 3
-(BLE scanning, GATT connection, and state sync via BLE). See
-`network/HydraBleClient.kt`, `network/HydraApiClient.kt`,
-`network/HydraWebSocket.kt`, and `viewmodel/RobotViewModel.kt` for the
-real code.
+**Status: Authentication, Wi-Fi, and Bluetooth transport implemented (Android-side).**
+`app/src/` now contains a complete implementation including access control
+(Login, Auth persistence), section 2 (discovery, live sync via WebSockets),
+and section 3 groundwork (BLE scanning, GATT).
 
 ## 1. What this app is
 
@@ -97,20 +94,25 @@ app/src/main/java/com/hydraumc/control/
 ├── MainActivity.kt            # Entry point - installs the splash screen, hosts MainScreen
 ├── MainScreen.kt               # Bottom-nav Scaffold wiring the 4 screens below together
 ├── ui/
+│   ├── LoginScreen.kt         # Entry access control (demo/demo)
 │   ├── SplashScreen.kt         # Custom Compose splash screen (logo + progress)
-│   ├── DashboardScreen.kt      # Per-robot overview: online state, position, speed/accel, playback
-│   ├── ControlScreen.kt        # Jog joystick, speed/accel sliders, ATC tool change, play/pause/stop
-│   ├── ThreeDScreen.kt         # WebView embedding the full HYDRA-UMC STUDIO web UI at http://<host>:<port>
-│   └── SettingsScreen.kt       # IP/port entry, connect, and the subnet-scan results list
+│   ├── DashboardScreen.kt      # 3D Carousel overview of all robots
+│   ├── ControlScreen.kt        # Vertical industrial control panel
+│   ├── ThreeDScreen.kt         # WebView embedding the full HYDRA-UMC STUDIO web UI
+│   ├── SettingsScreen.kt       # Wi-Fi/Bluetooth tabs with real status reading
+│   └── AboutDialog.kt          # Professional information dialog
 ├── model/
-│   └── HydraState.kt           # Thin JSONObject-backed views (HydraState/ControllerView/RobotView/ServerInfo) - see section 2
+│   ├── HydraState.kt           # Thin JSONObject-backed views
+│   └── BleDevice.kt            # BLE device data model
 ├── network/
-│   ├── HydraApiClient.kt       # GET/POST /api/settings, GET /api/hydra-info (REMOTE_API.md sections 1-2)
-│   ├── HydraWebSocket.kt       # /ws live sync with echo-guard + auto-reconnect (REMOTE_API.md section 3)
-│   ├── Discovery.kt            # Concurrent subnet scan against /api/hydra-info
-│   └── ConnectionPrefs.kt      # Persists the last IP/port (Preferences DataStore)
+│   ├── HydraApiClient.kt       # REST API implementation
+│   ├── HydraWebSocket.kt       # Live WebSocket sync
+│   ├── HydraBleClient.kt       # BLE GATT transport layer
+│   ├── Discovery.kt            # Network subnet discovery
+│   ├── ConnectionPrefs.kt      # Network persistence
+│   └── AuthPrefs.kt            # Authentication persistence
 └── viewmodel/
-    └── RobotViewModel.kt       # Holds the HydraState mirror, drives every screen, pushes mutations back to the server
+    └── RobotViewModel.kt       # Global state orchestration and connectivity management
 ```
 
 Bluetooth transport (section 3) has no source files yet - there's nothing

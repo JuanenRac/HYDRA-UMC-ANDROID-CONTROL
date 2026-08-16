@@ -77,12 +77,24 @@ fun ControlScreen(viewModel: RobotViewModel) {
             )
             Text(stringResource(R.string.control_robots), style = MaterialTheme.typography.headlineMedium)
         }
-        Text(
-            text = stringResource(R.string.status_label) + connectionStatus,
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.Bold,
-            color = if (connectionStatus == stringResource(R.string.status_connected)) Color(0xFF00C853) else Color.Red
-        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = stringResource(R.string.status_label),
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.White
+            )
+            val statusColor = when (connectionStatus) {
+                stringResource(R.string.status_connected) -> Color(0xFF00C853)
+                stringResource(R.string.status_connecting) -> Color(0xFFFFA000)
+                else -> Color.Red
+            }
+            Text(
+                text = connectionStatus,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Bold,
+                color = statusColor,
+            )
+        }
             lastError?.let {
                 Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
             }

@@ -101,14 +101,14 @@ private fun WifiSettings(viewModel: RobotViewModel) {
             value = ipAddress,
             onValueChange = { ipAddress = it },
             label = { Text(stringResource(R.string.ip_label)) },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
         )
         Spacer(modifier = Modifier.height(8.dp))
         OutlinedTextField(
             value = port,
             onValueChange = { port = it },
             label = { Text(stringResource(R.string.port_label)) },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
         )
         Spacer(modifier = Modifier.height(16.dp))
         HydraButton(
@@ -118,7 +118,7 @@ private fun WifiSettings(viewModel: RobotViewModel) {
                 viewModel.port.value = port
                 viewModel.connect()
             },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
         )
 
         if (lastError != null) {
@@ -133,7 +133,7 @@ private fun WifiSettings(viewModel: RobotViewModel) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(stringResource(R.string.search_local), style = MaterialTheme.typography.titleMedium)
             if (isScanning) {
@@ -180,7 +180,7 @@ private fun ServerCard(server: ServerInfo, onConnect: () -> Unit) {
             modifier = Modifier
                 .fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Column {
                 Text(server.displayName, style = MaterialTheme.typography.titleSmall)
@@ -217,20 +217,21 @@ private fun BluetoothSettings(viewModel: RobotViewModel, onEnableBluetooth: () -
 
     /** State to manage multiple runtime permissions. */
     val permissionState = rememberMultiplePermissionsState(permissions = bluetoothPermissions)
-    /** List of discovered Bluetooth devices. */
     val discoveredDevices = viewModel.discoveredBtDevices.value
-    /** Flag indicating if a BLE scan is in progress. */
     val isBtScanning = viewModel.isBtScanning.value
-    /** Current status of Bluetooth on the device. */
     val isBtEnabled = viewModel.isBtEnabled.value
-    /** Last reported error message. */
-    val lastError = viewModel.lastError.value
+    val lastBtError = viewModel.lastBtError.value
+
+    /** Periodically refresh status or when appearing */
+    LaunchedEffect(Unit) {
+        viewModel.refreshBtStatus()
+    }
 
     Column {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(stringResource(R.string.tab_bluetooth), style = MaterialTheme.typography.titleLarge)
             Switch(
@@ -245,47 +246,32 @@ private fun BluetoothSettings(viewModel: RobotViewModel, onEnableBluetooth: () -
         Spacer(modifier = Modifier.height(16.dp))
 
         if (isBtFeatureEnabled) {
-            if (!permissionState.allPermissionsGranted) {
-                BluetoothPermissionSection(permissionState)
-            } else if (!isBtEnabled) {
-                BluetoothEnableSection(onEnableBluetooth)
+            if (isBtEnabled) {
+                if (!permissionState.allPermissionsGranted) {
+                    BluetoothPermissionSection(permissionState)
+                } else {
+                    BluetoothScanSection(viewModel, isBtScanning, discoveredDevices)
+                }
             } else {
-                BluetoothScanSection(viewModel, isBtScanning, discoveredDevices)
+                Box(modifier = Modifier.metallicIndustrial(backgroundColor = MaterialTheme.colorScheme.surfaceVariant)) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
+                        Text("Bluetooth is physically disabled on your device.", color = Color.White)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        HydraButton(text = "ENABLE IN SYSTEM", onClick = onEnableBluetooth)
+                    }
+                }
             }
         } else {
             Text(
-                "Bluetooth feature is disabled. Enable it to search for nearby robots.",
+                "Bluetooth feature is disabled in the app settings.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = Color.Gray
             )
         }
 
-        if (lastError != null) {
+        if (lastBtError != null) {
             Spacer(modifier = Modifier.height(8.dp))
-            Text(lastError, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
-        }
-    }
-}
-
-/** 
- * UI section to prompt the user to enable Bluetooth.
- * @param onEnableBluetooth Callback to request Bluetooth activation.
- */
-@Composable
-private fun BluetoothEnableSection(onEnableBluetooth: () -> Unit) {
-    Card(
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(stringResource(R.string.bt_enable_title), style = MaterialTheme.typography.titleMedium)
-            Text(stringResource(R.string.bt_enable_description), style = MaterialTheme.typography.bodyMedium)
-            Spacer(modifier = Modifier.height(8.dp))
-            HydraButton(
-                text = stringResource(R.string.bt_enable_button),
-                onClick = onEnableBluetooth,
-                modifier = Modifier.fillMaxWidth()
-            )
+            Text(lastBtError, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
         }
     }
 }
@@ -309,7 +295,7 @@ private fun BluetoothPermissionSection(permissionState: com.google.accompanist.p
             HydraButton(
                 text = stringResource(R.string.bt_grant_permission),
                 onClick = { permissionState.launchMultiplePermissionRequest() },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
             )
         }
     }
@@ -327,38 +313,45 @@ private fun BluetoothScanSection(
     isScanning: Boolean,
     devices: List<BleDevice>
 ) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(stringResource(R.string.auto_discovery), style = MaterialTheme.typography.titleMedium)
-        Row(verticalAlignment = Alignment.CenterVertically) {
+    Column {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(stringResource(R.string.auto_discovery), style = MaterialTheme.typography.titleMedium)
             if (isScanning) {
                 CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
-            } else {
-                HydraButton(
-                    text = stringResource(R.string.bt_scan_button),
-                    onClick = { viewModel.scanBluetooth() }
-                )
             }
         }
-    }
-    
-    Text(
-        stringResource(R.string.bt_enable_description),
-        style = MaterialTheme.typography.bodySmall
-    )
-    
-    Spacer(modifier = Modifier.height(16.dp))
+        
+        Spacer(modifier = Modifier.height(8.dp))
+        
+        if (!isScanning) {
+            HydraButton(
+                text = stringResource(R.string.bt_scan_button),
+                onClick = { viewModel.scanBluetooth() },
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+        
+        Spacer(modifier = Modifier.height(8.dp))
+        
+        Text(
+            stringResource(R.string.bt_enable_description),
+            style = MaterialTheme.typography.bodySmall
+        )
+        
+        Spacer(modifier = Modifier.height(16.dp))
 
-    if (devices.isEmpty() && !isScanning) {
-        Text(stringResource(R.string.bt_no_devices), style = MaterialTheme.typography.bodySmall, color = Color.Gray)
-    } else {
-        LazyColumn(modifier = Modifier.fillMaxWidth()) {
-            items(devices) { device ->
-                DeviceCard(device) {
-                    viewModel.connectBle(device)
+        if (devices.isEmpty() && !isScanning) {
+            Text(stringResource(R.string.bt_no_devices), style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+        } else {
+            LazyColumn(modifier = Modifier.fillMaxWidth()) {
+                items(devices) { device ->
+                    DeviceCard(device) {
+                        viewModel.connectBle(device)
+                    }
                 }
             }
         }
@@ -382,7 +375,7 @@ private fun DeviceCard(device: BleDevice, onConnect: () -> Unit) {
             modifier = Modifier
                 .fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Column {
                 Text(device.displayName, style = MaterialTheme.typography.titleSmall)

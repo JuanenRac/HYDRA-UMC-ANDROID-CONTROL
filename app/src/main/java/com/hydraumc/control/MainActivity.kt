@@ -20,6 +20,7 @@ import android.bluetooth.BluetoothAdapter
 import android.content.Intent
 import androidx.activity.result.contract.ActivityResultContracts
 import com.hydraumc.control.ui.CustomSplashScreen
+import com.hydraumc.control.ui.LoginScreen
 import com.hydraumc.control.ui.theme.HydraTheme
 import com.hydraumc.control.viewmodel.RobotViewModel
 
@@ -57,16 +58,18 @@ class MainActivity : ComponentActivity() {
                 keepNativeSplash = false
             }
 
-            /** State to manage the visibility of the custom Compose splash screen. */
-            var showSplash by remember { mutableStateOf(true) }
+            var showSplash by remember { mutableStateOf(value = true) }
+            val isLoggedIn = robotViewModel.isLoggedIn.value
 
             HydraTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
+                    color = MaterialTheme.colorScheme.background,
                 ) {
                     if (showSplash) {
                         CustomSplashScreen(onTimeout = { showSplash = false })
+                    } else if (!isLoggedIn) {
+                        LoginScreen(robotViewModel)
                     } else {
                         MainScreen(robotViewModel, onEnableBluetooth = {
                             /** Intent to request enabling Bluetooth. */
