@@ -5,6 +5,7 @@
 // =============================================================================
 package com.hydraumc.control
 
+import android.content.res.Configuration
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -14,6 +15,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -68,6 +70,17 @@ fun MainScreen(viewModel: RobotViewModel, onEnableBluetooth: () -> Unit = {}) {
     var showProfileDialog by remember { mutableStateOf(value = false) }
     var serverDropdownExpanded by remember { mutableStateOf(value = false) }
     val discoveredServers = viewModel.discoveredServers.value
+
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+
+    if (isLandscape) {
+        // Full screen 3D in landscape mode
+        Surface(modifier = Modifier.fillMaxSize(), color = Color.Black) {
+            ThreeDScreen(viewModel)
+        }
+        return
+    }
 
     if (showAboutDialog) {
         AboutDialog { showAboutDialog = false }

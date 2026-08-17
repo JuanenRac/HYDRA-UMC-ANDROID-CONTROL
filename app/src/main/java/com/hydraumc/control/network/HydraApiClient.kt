@@ -67,7 +67,8 @@ class HydraApiClient(host: String, port: Int, private val client: OkHttpClient =
                 if (!response.isSuccessful) return@withContext null
                 val body = response.body?.string() ?: return@withContext null
                 val json = JSONObject(body)
-                if (json.optString("product") != "HYDRA-UMC STUDIO") return@withContext null
+                // Check if it's a valid HYDRA-UMC server by looking for the remote API version
+                if (!json.has("remoteApiVersion")) return@withContext null
                 json
             }
         } catch (e: Exception) {

@@ -53,16 +53,8 @@ class MainActivity : FragmentActivity() {
         splashScreen.setKeepOnScreenCondition { keepNativeSplash }
         
         super.onCreate(savedInstanceState)
-
-        // Handle Global E-STOP from notification
-        if (intent?.action == "ACTION_GLOBAL_ESTOP") {
-            robotViewModel.robots.value.forEach { robot ->
-                robotViewModel.selectedRobotId.value = robot.id
-                robotViewModel.sendCommand("stop")
-            }
-        }
-
         enableEdgeToEdge()
+        handleIntent(intent)
         
         // Auto-enable WiFi and search for servers on startup
         try {
@@ -106,6 +98,20 @@ class MainActivity : FragmentActivity() {
                         }
                     }
                 }
+            }
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        handleIntent(intent)
+    }
+
+    private fun handleIntent(intent: Intent?) {
+        if (intent?.action == "ACTION_GLOBAL_ESTOP") {
+            robotViewModel.robots.value.forEach { robot ->
+                robotViewModel.selectedRobotId.value = robot.id
+                robotViewModel.sendCommand("stop")
             }
         }
     }

@@ -18,6 +18,9 @@
 // =============================================================================
 package com.hydraumc.control.network
 
+import android.content.Context
+import android.net.nsd.NsdManager
+import android.net.nsd.NsdServiceInfo
 import com.hydraumc.control.model.ServerInfo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
@@ -101,11 +104,33 @@ private fun probeHost(client: OkHttpClient, host: String, port: Int): ServerInfo
 
 /** 
  * Scans all available local subnets for HYDRA-UMC servers.
- * @param client The shared OkHttpClient.
- * @param port The port to scan on (default 3000).
- * @return A Flow that emits discovered ServerInfo objects.
  */
-fun scanSubnets(client: OkHttpClient, port: Int = DEFAULT_PORT): Flow<ServerInfo> = callbackFlow {
+fun scanSubnets(context: Context, client: OkHttpClient, port: Int = DEFAULT_PORT): Flow<ServerInfo> = callbackFlow {
+    val nsdManager = context.getSystemService(Context.NSD_SERVICE) as NsdManager
+    
+    val nsdListener = object : NsdManager.DiscoveryListener {
+        override fun onDiscoveryStarted(regType: String) {}
+        override fun onServiceFound(service: NsdServiceInfo) {
+            if (service.serviceType == "_hydra._tcp.") {
+                nsdManager.resolveService(service, object : NsdManager.ResolveListener {
+                    override fun onResolveFailed(serviceInfo: NsdServiceInfo, errorCode: Int) {}
+                    override fun onServiceResolved(serviceInfo: NsdServiceInfo) {
+                        val host = serviceInfo.host.hostAddress ?: return
+                        launch {
+                            probeHost(client, host, serviceInfo.port)?.let { trySend(it) }
+                        }
+                    }
+                })
+            }
+        }
+        override fun onServiceLost(service: NsdServiceInfo) {}
+        override fun onDiscoveryStopped(regType: String) {}
+        override fun onStartDiscoveryFailed(regType: String, errorCode: Int) { nsdManager.stopServiceDiscovery(this) }
+        override fun onStopDiscoveryFailed(regType: String, errorCode: Int) { nsdManager.stopServiceDiscovery(this) }
+    }
+
+    nsdManager.discoverServices("_hydra._tcp.", NsdManager.PROTOCOL_DNS_SD, nsdListener)
+
     /** Specialized client with shorter timeouts for scanning. */
     val timedClient = client.newBuilder()
         .connectTimeout(SCAN_TIMEOUT_MS, TimeUnit.MILLISECONDS)
@@ -144,5 +169,8 @@ fun scanSubnets(client: OkHttpClient, port: Int = DEFAULT_PORT): Flow<ServerInfo
         close()
     }
 
-    awaitClose { jobs.forEach { it.cancel() } }
+    awaitClose { 
+        try { nsdManager.stopServiceDiscovery(nsdListener) } catch (e: Exception) {}
+        jobs.forEach { it.cancel() } 
+    }
 }

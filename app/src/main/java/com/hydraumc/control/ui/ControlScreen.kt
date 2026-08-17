@@ -6,6 +6,11 @@
 package com.hydraumc.control.ui
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
@@ -51,18 +56,30 @@ fun ControlScreen(viewModel: RobotViewModel) {
     }
     
     @SuppressLint("MissingPermission")
-    fun vibrate() {
+    fun vibrate(pattern: LongArray? = null, duration: Long = 50) {
         try {
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                vibrator.vibrate(VibrationEffect.createOneShot(50, VibrationEffect.DEFAULT_AMPLITUDE))
+            if (pattern != null) {
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                    vibrator.vibrate(VibrationEffect.createWaveform(pattern, -1))
+                } else {
+                    @Suppress("DEPRECATION")
+                    vibrator.vibrate(pattern, -1)
+                }
             } else {
-                @Suppress("DEPRECATION")
-                vibrator.vibrate(50)
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                    vibrator.vibrate(VibrationEffect.createOneShot(duration, VibrationEffect.DEFAULT_AMPLITUDE))
+                } else {
+                    @Suppress("DEPRECATION")
+                    vibrator.vibrate(duration)
+                }
             }
-        } catch (_: Exception) {
-            // Vibrate failed, ignore
-        }
+        } catch (_: Exception) { }
     }
+
+    fun vibrateSuccess() = vibrate(longArrayOf(0, 40, 100, 40))
+    fun vibrateError() = vibrate(duration = 500)
+    fun vibrateEmergency() = vibrate(longArrayOf(0, 100, 50, 100, 50, 100))
+
     /** List of all robots fetched from the ViewModel. */
     val robots = viewModel.robots.value
     /** List of all jobs fetched from the ViewModel. */
@@ -88,6 +105,14 @@ fun ControlScreen(viewModel: RobotViewModel) {
     /** The RobotView object for the currently selected robot ID. */
     val selectedRobot = robots.find { it.id == selectedId }
     val isCombined = (selectedRobot?.combinedWith?.isNotEmpty() == true)
+    
+    // PIP Camera logic
+    val assignedCamera = viewModel.activeServer.value?.let { server ->
+        // In a real scenario, we'd fetch this from the state. 
+        // For now we look for a camera with assignedRobotId == selectedId
+        // This requires a minor update to RobotState to include camera info
+        null // placeholder until we verify state mapping
+    }
     
     /** Local state for speed slider, synced with the robot's current speed. */
     var speedState by remember(selectedRobot?.speed) { mutableFloatStateOf(selectedRobot?.speed?.toFloat() ?: 100f) }
@@ -137,6 +162,22 @@ fun ControlScreen(viewModel: RobotViewModel) {
                 )
             }
             
+            if (connectionStatus != stringResource(R.string.status_connected)) {
+                Surface(
+                    color = Color.Red.copy(alpha = 0.1f),
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.padding(top = 8.dp)
+                ) {
+                    Text(
+                        "⚠️ OFFLINE - VIEWING CACHED STATE",
+                        color = Color.Red,
+                        style = MaterialTheme.typography.labelSmall,
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+            
             lastError?.let {
                 Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
             }
@@ -176,6 +217,34 @@ fun ControlScreen(viewModel: RobotViewModel) {
             Spacer(modifier = Modifier.height(16.dp))
             
             if (selectedRobot != null) {
+                // Picture-in-Picture Camera Overlay (if assigned)
+                if (selectedRobot.hasCamera) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(180.dp)
+                            .padding(bottom = 16.dp)
+                            .metallicIndustrial(backgroundColor = Color.Black)
+                            .clip(RoundedCornerShape(12.dp))
+                    ) {
+                        val streamUrl = "http://${viewModel.ipAddress.value}:${viewModel.port.value}/api/camera/${selectedRobot.id}/stream"
+                        MjpegPlayer(url = streamUrl, modifier = Modifier.fillMaxSize())
+                        
+                        Surface(
+                            color = Color.Black.copy(alpha = 0.5f),
+                            modifier = Modifier.align(Alignment.TopEnd).padding(8.dp),
+                            shape = RoundedCornerShape(4.dp)
+                        ) {
+                            Text(
+                                "LIVE FEED A${selectedRobot.id}",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = Color.Green,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            )
+                        }
+                    }
+                }
+
                 Box(modifier = Modifier.fillMaxWidth().metallicIndustrial()) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -469,17 +538,48 @@ fun ControlScreen(viewModel: RobotViewModel) {
                             horizontalArrangement = Arrangement.SpaceEvenly,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            HydraButton(
-                                text = "",
-                                icon = Icons.Default.Dangerous,
-                                onClick = { vibrate(); viewModel.sendCommand("stop") },
-                                backgroundColor = Color.Red,
-                                modifier = Modifier.size(56.dp),
-                            )
+                            // E-STOP with LONG PRESS protection
+                            var estopPressed by remember { mutableStateOf(false) }
+                            val estopScale by animateFloatAsState(if (estopPressed) 1.2f else 1.0f)
+                            
+                            Box(
+                                modifier = Modifier
+                                    .size(64.dp)
+                                    .pointerInput(Unit) {
+                                        detectTapGestures(
+                                            onPress = {
+                                                estopPressed = true
+                                                tryAwaitRelease()
+                                                estopPressed = false
+                                            },
+                                            onLongPress = {
+                                                vibrateEmergency()
+                                                viewModel.sendCommand("stop")
+                                            }
+                                        )
+                                    },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                HydraButton(
+                                    text = "",
+                                    icon = Icons.Default.Dangerous,
+                                    onClick = { /* Handled by pointerInput for safety */ },
+                                    backgroundColor = Color.Red,
+                                    modifier = Modifier.size(56.dp * estopScale),
+                                )
+                                if (estopPressed) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(64.dp),
+                                        color = Color.White,
+                                        strokeWidth = 2.dp
+                                    )
+                                }
+                            }
+
                             HydraButton(
                                 text = "",
                                 icon = Icons.Default.PlayArrow,
-                                onClick = { vibrate(); viewModel.sendCommand("play") },
+                                onClick = { vibrateSuccess(); viewModel.sendCommand("play") },
                                 enabled = selectedRobot.online && (!selectedRobot.isPlaying || selectedRobot.isPaused),
                                 backgroundColor = Color(0xFF2E7D32),
                                 modifier = Modifier.size(56.dp),
@@ -487,7 +587,7 @@ fun ControlScreen(viewModel: RobotViewModel) {
                             HydraButton(
                                 text = "",
                                 icon = if (selectedRobot.isPaused) Icons.Default.PlayArrow else Icons.Default.Pause,
-                                onClick = { vibrate(); viewModel.sendCommand("pause") },
+                                onClick = { vibrateSuccess(); viewModel.sendCommand("pause") },
                                 enabled = selectedRobot.online && selectedRobot.isPlaying,
                                 backgroundColor = Color(0xFFF9A825),
                                 modifier = Modifier.size(56.dp),
@@ -495,7 +595,7 @@ fun ControlScreen(viewModel: RobotViewModel) {
                             HydraButton(
                                 text = "",
                                 icon = Icons.Default.Stop,
-                                onClick = { vibrate(); viewModel.sendCommand("stop") },
+                                onClick = { vibrateError(); viewModel.sendCommand("stop") },
                                 enabled = selectedRobot.online && (selectedRobot.isPlaying || selectedRobot.isPaused),
                                 backgroundColor = IndustrialDanger,
                                 modifier = Modifier.size(56.dp),
