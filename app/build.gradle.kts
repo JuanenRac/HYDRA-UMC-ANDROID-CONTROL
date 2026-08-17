@@ -72,6 +72,7 @@ dependencies {
     implementation(libs.filament.android)
     implementation(libs.filament.gltfio)
     implementation(libs.filament.filamat)
+    implementation(libs.filament.utils)
 
     // Glance Widgets
     implementation(libs.glance.appwidget)
