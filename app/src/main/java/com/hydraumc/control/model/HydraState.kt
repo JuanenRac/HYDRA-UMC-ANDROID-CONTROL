@@ -113,14 +113,21 @@ class RobotView(val raw: JSONObject) {
             pb.put("paused", false)
         } else {
             pb.put("activeStep", -1)
+            pb.put("isFinished", false)
+            pb.put("finished", false)
         }
     }
 
     /** Toggles the pause state of playback. */
     fun togglePaused() {
         val newVal = !isPaused
-        playbackState.put("isPaused", newVal)
-        playbackState.put("paused", newVal)
+        val pb = playbackState
+        pb.put("isPaused", newVal)
+        pb.put("paused", newVal)
+        pb.put("isPlaying", true)
+        pb.put("playing", true)
+        pb.put("isFinished", false)
+        pb.put("finished", false)
     }
 
     /** Stops playback and resets state. */

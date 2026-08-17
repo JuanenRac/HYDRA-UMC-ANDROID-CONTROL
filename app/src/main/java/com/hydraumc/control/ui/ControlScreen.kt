@@ -380,20 +380,16 @@ fun ControlScreen(viewModel: RobotViewModel) {
                     horizontalArrangement = Arrangement.SpaceEvenly,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // E-STOP (Situado a la izquierda)
+                    // Playback & Safety Row
                     HydraButton(
                         text = "",
                         icon = Icons.Default.Dangerous,
-                        onClick = { 
-                            vibrate()
-                            viewModel.sendCommand("stop")
-                        },
+                        onClick = { vibrate(); viewModel.sendCommand("stop") },
                         backgroundColor = Color.Red,
                         modifier = Modifier.size(56.dp),
                     )
-                    
                     HydraButton(
-                        text = "", // Icon only
+                        text = "",
                         icon = Icons.Default.PlayArrow,
                         onClick = { vibrate(); viewModel.sendCommand("play") },
                         enabled = selectedRobot.online && (!selectedRobot.isPlaying || selectedRobot.isPaused),
@@ -401,7 +397,7 @@ fun ControlScreen(viewModel: RobotViewModel) {
                         modifier = Modifier.size(56.dp),
                     )
                     HydraButton(
-                        text = "", // Icon only
+                        text = "",
                         icon = if (selectedRobot.isPaused) Icons.Default.PlayArrow else Icons.Default.Pause,
                         onClick = { vibrate(); viewModel.sendCommand("pause") },
                         enabled = selectedRobot.online && selectedRobot.isPlaying,
@@ -409,10 +405,10 @@ fun ControlScreen(viewModel: RobotViewModel) {
                         modifier = Modifier.size(56.dp),
                     )
                     HydraButton(
-                        text = "", // Icon only
+                        text = "",
                         icon = Icons.Default.Stop,
                         onClick = { vibrate(); viewModel.sendCommand("stop") },
-                        enabled = selectedRobot.online && selectedRobot.isPlaying,
+                        enabled = selectedRobot.online && (selectedRobot.isPlaying || selectedRobot.isPaused),
                         backgroundColor = IndustrialDanger,
                         modifier = Modifier.size(56.dp),
                     )

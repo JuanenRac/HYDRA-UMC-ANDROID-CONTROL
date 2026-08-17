@@ -82,13 +82,17 @@ fun LoginScreen(viewModel: RobotViewModel) {
                 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Checkbox(
                         checked = rememberMe,
-                        onCheckedChange = { rememberMe = it }
+                        onCheckedChange = { rememberMe = it },
                     )
-                    Text(stringResource(R.string.remember_me_label), style = MaterialTheme.typography.bodyMedium)
+                    Text(
+                        text = stringResource(R.string.remember_me_label),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.White,
+                    )
                 }
                 
                 Spacer(modifier = Modifier.height(24.dp))

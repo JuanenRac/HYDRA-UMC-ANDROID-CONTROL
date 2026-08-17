@@ -64,13 +64,13 @@ val items = listOf(Screen.Dashboard, Screen.Control, Screen.Camera, Screen.Three
 fun MainScreen(viewModel: RobotViewModel, onEnableBluetooth: () -> Unit = {}) {
     /** The navigation controller for the entire app. */
     val navController = rememberNavController()
-    var showAboutDialog by remember { mutableStateOf(false) }
-    var showProfileDialog by remember { mutableStateOf(false) }
-    var serverDropdownExpanded by remember { mutableStateOf(false) }
+    var showAboutDialog by remember { mutableStateOf(value = false) }
+    var showProfileDialog by remember { mutableStateOf(value = false) }
+    var serverDropdownExpanded by remember { mutableStateOf(value = false) }
     val discoveredServers = viewModel.discoveredServers.value
 
     if (showAboutDialog) {
-        AboutDialog(onDismiss = { showAboutDialog = false })
+        AboutDialog { showAboutDialog = false }
     }
     
     if (showProfileDialog) {
@@ -122,7 +122,7 @@ fun MainScreen(viewModel: RobotViewModel, onEnableBluetooth: () -> Unit = {}) {
                     },
                     colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                         containerColor = MaterialTheme.colorScheme.background,
-                        titleContentColor = MaterialTheme.colorScheme.primary
+                        titleContentColor = MaterialTheme.colorScheme.primary,
                     )
                 )
 
@@ -178,13 +178,15 @@ fun MainScreen(viewModel: RobotViewModel, onEnableBluetooth: () -> Unit = {}) {
                         IconButton(onClick = { showProfileDialog = true }) {
                             Icon(Icons.Default.Person, contentDescription = "Usuario", tint = MaterialTheme.colorScheme.primary)
                         }
-                        IconButton(onClick = { 
-                            navController.navigate(Screen.Telemetry.route) {
-                                popUpTo(navController.graph.findStartDestination().id) { saveState = true }
-                                launchSingleTop = true
-                                restoreState = true
+                        IconButton(
+                            onClick = { 
+                                navController.navigate(Screen.Telemetry.route) {
+                                    popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
                             }
-                        }) {
+                        ) {
                             Icon(Icons.Default.Terminal, contentDescription = "Telemetría", tint = MaterialTheme.colorScheme.primary)
                         }
                         IconButton(onClick = { 
