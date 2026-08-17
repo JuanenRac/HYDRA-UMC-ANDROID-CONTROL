@@ -42,12 +42,13 @@ fun ThreeDScreen(viewModel: RobotViewModel) {
                 WebView(context).apply {
                     settings.javaScriptEnabled = true
                     settings.domStorageEnabled = true
+                    @Suppress("DEPRECATION")
                     settings.databaseEnabled = true
                     settings.allowFileAccess = true
                     settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
                     settings.userAgentString = "HYDRA-UMC-ANDROID-CONTROL"
                     
-                    // Hardware Acceleration fixes for older/budget Samsung devices
+                    // Hardware Acceleration is essential for WebGL
                     setLayerType(android.view.View.LAYER_TYPE_HARDWARE, null)
                     
                     webViewClient = WebViewClient()
