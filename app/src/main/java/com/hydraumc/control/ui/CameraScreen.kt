@@ -5,9 +5,6 @@
 // =============================================================================
 package com.hydraumc.control.ui
 
-import android.webkit.WebSettings
-import android.webkit.WebView
-import android.webkit.WebViewClient
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -15,7 +12,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import com.hydraumc.control.viewmodel.RobotViewModel
 import com.hydraumc.control.ui.theme.metallicIndustrial
 
@@ -87,20 +83,8 @@ fun CameraScreen(viewModel: RobotViewModel) {
                 .metallicIndustrial(backgroundColor = Color.Black),
             contentAlignment = Alignment.Center
         ) {
-            AndroidView(
-                factory = { context ->
-                    WebView(context).apply {
-                        settings.javaScriptEnabled = true
-                        settings.domStorageEnabled = true
-                        settings.cacheMode = WebSettings.LOAD_NO_CACHE
-                        webViewClient = WebViewClient()
-                        // This loads the MJPEG stream. Webview natively supports MJPEG in most Android versions.
-                        loadUrl(streamUrl)
-                    }
-                },
-                update = { webView ->
-                    webView.loadUrl(streamUrl)
-                },
+            MjpegPlayer(
+                url = streamUrl,
                 modifier = Modifier.fillMaxSize()
             )
             

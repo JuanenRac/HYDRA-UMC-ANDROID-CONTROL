@@ -68,6 +68,14 @@ dependencies {
     implementation(libs.androidx.biometric)
     implementation(libs.androidx.media)
     
+    // Filament 3D engine
+    implementation(libs.filament.android)
+    implementation(libs.filament.gltfio)
+    implementation(libs.filament.filamat)
+
+    // Glance Widgets
+    implementation(libs.glance.appwidget)
+
     // Navigation
     implementation(libs.androidx.navigation.compose)
 
