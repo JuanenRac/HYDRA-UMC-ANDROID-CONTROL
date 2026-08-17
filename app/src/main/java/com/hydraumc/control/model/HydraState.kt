@@ -77,7 +77,7 @@ class RobotView(val raw: JSONObject) {
     val hasLaser: Boolean get() = isModuleEnabled("juanenLaser")
     val hasHeatedBed: Boolean get() = isModuleEnabled("heatedBed")
     val hasVacuumTable: Boolean get() = isModuleEnabled("vacuumTable")
-    val hasCamera: Boolean get() = raw.has("cameraView") || raw.has("camera")
+    val hasCamera: Boolean get() = raw.optBoolean("visionEnabled", false) || raw.has("cameraView") || raw.has("camera")
     val hasAtc: Boolean get() = raw.has("atc")
     val hasRack: Boolean get() = isModuleEnabled("rackSystem")
 

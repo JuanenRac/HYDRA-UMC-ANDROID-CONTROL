@@ -90,6 +90,7 @@ fun ControlScreen(viewModel: RobotViewModel) {
     
     /** The RobotView object for the currently selected robot ID. */
     val selectedRobot = robots.find { it.id == selectedId }
+    val isCombined = (selectedRobot?.combinedWith?.isNotEmpty() == true)
     
     /** Local state for speed slider, synced with the robot's current speed. */
     var speedState by remember(selectedRobot?.speed) { mutableFloatStateOf(selectedRobot?.speed?.toFloat() ?: 100f) }
@@ -411,38 +412,57 @@ fun ControlScreen(viewModel: RobotViewModel) {
                     horizontalArrangement = Arrangement.SpaceEvenly,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Playback & Safety Row
-                    HydraButton(
-                        text = "",
-                        icon = Icons.Default.Dangerous,
-                        onClick = { vibrate(); viewModel.sendCommand("stop") },
-                        backgroundColor = Color.Red,
-                        modifier = Modifier.size(56.dp),
-                    )
-                    HydraButton(
-                        text = "",
-                        icon = Icons.Default.PlayArrow,
-                        onClick = { vibrate(); viewModel.sendCommand("play") },
-                        enabled = selectedRobot.online && (!selectedRobot.isPlaying || selectedRobot.isPaused),
-                        backgroundColor = Color(0xFF2E7D32),
-                        modifier = Modifier.size(56.dp),
-                    )
-                    HydraButton(
-                        text = "",
-                        icon = if (selectedRobot.isPaused) Icons.Default.PlayArrow else Icons.Default.Pause,
-                        onClick = { vibrate(); viewModel.sendCommand("pause") },
-                        enabled = selectedRobot.online && selectedRobot.isPlaying,
-                        backgroundColor = Color(0xFFF9A825),
-                        modifier = Modifier.size(56.dp),
-                    )
-                    HydraButton(
-                        text = "",
-                        icon = Icons.Default.Stop,
-                        onClick = { vibrate(); viewModel.sendCommand("stop") },
-                        enabled = selectedRobot.online && (selectedRobot.isPlaying || selectedRobot.isPaused),
-                        backgroundColor = IndustrialDanger,
-                        modifier = Modifier.size(56.dp),
-                    )
+                    // Playback & Safety Row (Dynamic Icons based on combined status)
+                    val combinedSuffix = if (isCombined) " ALL" else ""
+                    
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceEvenly,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            HydraButton(
+                                text = "",
+                                icon = Icons.Default.Dangerous,
+                                onClick = { vibrate(); viewModel.sendCommand("stop") },
+                                backgroundColor = Color.Red,
+                                modifier = Modifier.size(56.dp),
+                            )
+                            HydraButton(
+                                text = "",
+                                icon = Icons.Default.PlayArrow,
+                                onClick = { vibrate(); viewModel.sendCommand("play") },
+                                enabled = selectedRobot.online && (!selectedRobot.isPlaying || selectedRobot.isPaused),
+                                backgroundColor = Color(0xFF2E7D32),
+                                modifier = Modifier.size(56.dp),
+                            )
+                            HydraButton(
+                                text = "",
+                                icon = if (selectedRobot.isPaused) Icons.Default.PlayArrow else Icons.Default.Pause,
+                                onClick = { vibrate(); viewModel.sendCommand("pause") },
+                                enabled = selectedRobot.online && selectedRobot.isPlaying,
+                                backgroundColor = Color(0xFFF9A825),
+                                modifier = Modifier.size(56.dp),
+                            )
+                            HydraButton(
+                                text = "",
+                                icon = Icons.Default.Stop,
+                                onClick = { vibrate(); viewModel.sendCommand("stop") },
+                                enabled = selectedRobot.online && (selectedRobot.isPlaying || selectedRobot.isPaused),
+                                backgroundColor = IndustrialDanger,
+                                modifier = Modifier.size(56.dp),
+                            )
+                        }
+                        if (isCombined) {
+                            Text(
+                                text = "OPERATING IN 'ALL' MODE (COMBINED)",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = Color.White.copy(alpha = 0.7f),
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(top = 4.dp)
+                            )
+                        }
+                    }
                 }
             }
         }

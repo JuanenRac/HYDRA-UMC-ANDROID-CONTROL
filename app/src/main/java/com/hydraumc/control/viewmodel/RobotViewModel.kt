@@ -94,6 +94,7 @@ data class RobotState(
     val hasHeatedBed: Boolean,
     val hasVacuumTable: Boolean,
     val hasRack: Boolean,
+    val combinedWith: List<Int>,
     val currentTool: String,
     val atcTools: List<AtcTool>,
     val speed: Double,
@@ -126,6 +127,12 @@ private fun RobotView.toDisplay(): RobotState = RobotState(
     hasHeatedBed = hasHeatedBed,
     hasVacuumTable = hasVacuumTable,
     hasRack = hasRack,
+    combinedWith = mutableListOf<Int>().apply {
+        val arr = raw.optJSONArray("combinedWith")
+        if (arr != null) {
+            for (i in 0 until arr.length()) add(arr.getInt(i))
+        }
+    },
     currentTool = tool,
     atcTools = atcTools.map { AtcTool(it.slot, it.tool) },
     speed = speed,
@@ -449,27 +456,40 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
      * Pushes the current local state back to the server.
      * Priority: BLE -> WebSocket -> REST API.
      */
-    private fun pushState() {
+    private fun pushState(command: String? = null, params: org.json.JSONObject? = null) {
+        val robotId = selectedRobotId.value
         robots.value = state.allRobots.map { it.toDisplay() } 
-        val payload = state.toJson()
         
+        // 1. Try BLE
+        val payload = state.toJson()
         val sentOverBle = bleClient?.send(payload.toString()) ?: false
         if (sentOverBle) {
             logTelemetry("TX [BLE]: Payload sent")
             return
         }
         
+        // 2. Try WebSocket (Real-time Full Sync)
         val sentOverWs = ws?.send(payload) ?: false
         if (sentOverWs) {
             logTelemetry("TX [WS]: State synchronized")
             return
         }
         
+        // 3. Try Industrial Atomic API (REST) - New & Faster
         val client = apiClient ?: return
         viewModelScope.launch {
             try {
-                client.postSettings(payload)
-                logTelemetry("TX [REST]: State updated")
+                if (command != null && robotId != null) {
+                    val cmdPayload = org.json.JSONObject()
+                        .put("command", command)
+                        .put("params", params ?: org.json.JSONObject())
+                    
+                    client.postRobotCommand(robotId, cmdPayload)
+                    logTelemetry("TX [REST]: Atomic Command '$command' sent")
+                } else {
+                    client.postSettings(payload)
+                    logTelemetry("TX [REST]: Full state updated")
+                }
                 lastError.value = null
             } catch (e: HydraApiException) {
                 logTelemetry("TX Error [REST]: ${e.message}")
@@ -500,11 +520,24 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         when (command) {
             "enable" -> mutateSelected { it.setOnline(value = true) }
             "disable" -> mutateSelected { it.setOnline(value = false) }
-            "play" -> mutateSelected { it.setPlaying(playing = true) }
-            "pause" -> mutateSelected { it.togglePaused() }
-            "stop" -> mutateSelected { it.stop() }
+            "play" -> {
+                mutateSelected { it.setPlaying(playing = true) }
+                pushState("play")
+                return
+            }
+            "pause" -> {
+                mutateSelected { it.togglePaused() }
+                pushState("pause")
+                return
+            }
+            "stop" -> {
+                mutateSelected { it.stop() }
+                pushState("stop")
+                return
+            }
             else -> lastError.value = getApplication<Application>().getString(R.string.error_unknown_command, command)
         }
+        pushState()
     }
 
     /** 
@@ -526,14 +559,17 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                 // ALSO update Controller-level stage for hardware sync
                 controller?.setKbXyTableAxis(axis, newVal)
                 logTelemetry("JOG [XY]: $axis -> $newVal")
+                
+                val params = org.json.JSONObject().put("axis", axis).put("amount", amount)
+                pushState("jog", params)
             } else {
                 val currentPos = robot.posAxis(axis)
                 val newVal = currentPos + amount
                 robot.setPosAxis(axis, newVal)
                 
-                // NOTE: Robot Arm movement requires IK calculation usually done in browser.
-                // We update Cartesian pos and hope browser tab is open to sync joints.
-                logTelemetry("JOG [ARM]: $axis -> $newVal (IK sync pending)")
+                logTelemetry("JOG [ARM]: $axis -> $newVal (Server IK)")
+                val params = org.json.JSONObject().put("axis", axis).put("amount", amount)
+                pushState("jog", params)
             }
         }
     }

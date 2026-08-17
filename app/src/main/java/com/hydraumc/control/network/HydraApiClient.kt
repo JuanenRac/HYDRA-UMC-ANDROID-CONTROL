@@ -98,6 +98,14 @@ class HydraApiClient(host: String, port: Int, private val client: OkHttpClient =
         Unit
     }
 
+    fun postRobotCommand(robotId: Int, payload: JSONObject) {
+        val request = Request.Builder()
+            .url("$baseUrl/api/robot/$robotId/command")
+            .post(payload.toString().toRequestBody(JSON_MEDIA_TYPE))
+            .build()
+        executeExpectingJson(request)
+    }
+
     /** 
      * Internal helper to execute a request and ensure the response is a JSON object.
      * @param request The OkHttp Request to execute.
