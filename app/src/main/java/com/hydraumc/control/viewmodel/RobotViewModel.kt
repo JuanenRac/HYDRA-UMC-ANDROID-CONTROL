@@ -687,6 +687,11 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
             try {
                 scanSubnets(HydraApiClient.sharedHttpClient, portValue()).collect { server ->
                     discoveredServers.value += server
+                    // Auto-connect to the first found server if not already connected
+                    if (connectionStatus.value == getApplication<Application>().getString(R.string.status_disconnected) && discoveredServers.value.size == 1) {
+                        logTelemetry("Auto-connecting to first discovered server: ${server.displayName}")
+                        connectToDiscovered(server)
+                    }
                 }
             } finally {
                 isScanning.value = false

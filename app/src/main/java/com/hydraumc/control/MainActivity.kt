@@ -17,7 +17,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import android.bluetooth.BluetoothAdapter
+import android.content.Context
 import android.content.Intent
+import android.net.wifi.WifiManager
 import androidx.activity.result.contract.ActivityResultContracts
 import com.hydraumc.control.ui.CustomSplashScreen
 import com.hydraumc.control.ui.LoginScreen
@@ -61,10 +63,27 @@ class MainActivity : FragmentActivity() {
         }
 
         enableEdgeToEdge()
+        
+        // Auto-enable WiFi and search for servers on startup
+        try {
+            val wifiManager = applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
+            if (!wifiManager.isWifiEnabled) {
+                // Rationale: Modern Android (Q+) doesn't allow setWifiEnabled(true).
+                // We attempt it as a best-effort for older industrial tablets, 
+                // but discovery will still prompt the user if needed.
+                @Suppress("DEPRECATION")
+                wifiManager.isWifiEnabled = true
+            }
+        } catch (e: Exception) {
+            // fail silently if permissions are missing for this action
+        }
+
         setContent {
             // Remove native splash right away to show our custom Compose splash screen
             LaunchedEffect(Unit) {
                 keepNativeSplash = false
+                // Initial scan
+                robotViewModel.scanNetwork()
             }
 
             var showSplash by remember { mutableStateOf(value = true) }
