@@ -57,6 +57,16 @@ data class AtcTool(val slot: Int, val name: String)
  */
 data class JobState(val name: String)
 
+/**
+ * System metrics for industrial monitoring.
+ */
+data class SystemMetrics(
+    val cpuLoad: Int,
+    val memoryUsage: Int,
+    val temp: Double,
+    val uptime: Int
+)
+
 /** 
  * Flat, display-friendly snapshot of one RobotView.
  * @property id Robot unique ID.
@@ -153,6 +163,8 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
     val robots = mutableStateOf<List<RobotState>>(emptyList())
     /** List of jobs/trajectories available on the server. */
     val jobs = mutableStateOf<List<JobState>>(emptyList())
+    /** System metrics */
+    val metrics = mutableStateOf<SystemMetrics?>(null)
     /** ID of the currently selected robot in the Control screen. */
     val selectedRobotId = mutableStateOf<Int?>(null)
 
@@ -379,6 +391,24 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                 val settings = client.getSettings()
                 logTelemetry("Initial state synchronized via REST")
                 applyState(HydraState(settings))
+                
+                // Fetch metrics periodically
+                viewModelScope.launch {
+                    while(connectionStatus.value == getApplication<Application>().getString(R.string.status_connected)) {
+                        try {
+                            val m = client.getSystemMetrics()
+                            metrics.value = SystemMetrics(
+                                cpuLoad = m.optInt("cpu_load"),
+                                memoryUsage = m.optInt("memory_usage"),
+                                temp = m.optDouble("temp"),
+                                uptime = m.optInt("uptime")
+                            )
+                        } catch (e: Exception) {
+                            // ignore metric failures
+                        }
+                        kotlinx.coroutines.delay(5000)
+                    }
+                }
             } catch (e: HydraApiException) {
                 logTelemetry("REST Sync Error: ${e.message}")
                 lastError.value = e.message
@@ -398,10 +428,12 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                     }
                     WsStatus.CONNECTED -> {
                         logTelemetry("WebSocket CONNECTED")
+                        NotificationHelper.showSafetyNotification(getApplication())
                         getApplication<Application>().getString(R.string.status_connected)
                     }
                     WsStatus.DISCONNECTED -> {
                         logTelemetry("WebSocket DISCONNECTED")
+                        NotificationHelper.hideSafetyNotification(getApplication())
                         // Only clear if NOT an intentional switch
                         if (!isSwitchingServer) {
                             discoveredServers.value = emptyList()
@@ -571,6 +603,42 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                 val params = org.json.JSONObject().put("axis", axis).put("amount", amount)
                 pushState("jog", params)
             }
+        }
+    }
+
+    fun toggleValve(index: Int) {
+        mutateSelected { robot ->
+            val valves = robot.raw.optJSONArray("valves") ?: org.json.JSONArray(listOf(false, false))
+            val currentState = valves.optBoolean(index, false)
+            val newState = !currentState
+            
+            val newArr = org.json.JSONArray()
+            for (i in 0 until valves.length()) {
+                newArr.put(if (i == index) newState else valves.getBoolean(i))
+            }
+            robot.raw.put("valves", newArr)
+            
+            logTelemetry("TX [REST]: Valve $index -> $newState")
+            val params = org.json.JSONObject().put("index", index).put("state", newState)
+            pushState("valve", params)
+        }
+    }
+
+    fun togglePump(index: Int) {
+        mutateSelected { robot ->
+            val pumps = robot.raw.optJSONArray("pumps") ?: org.json.JSONArray(listOf(false, false))
+            val currentState = pumps.optBoolean(index, false)
+            val newState = !currentState
+
+            val newArr = org.json.JSONArray()
+            for (i in 0 until pumps.length()) {
+                newArr.put(if (i == index) newState else pumps.getBoolean(i))
+            }
+            robot.raw.put("pumps", newArr)
+
+            logTelemetry("TX [REST]: Pump $index -> $newState")
+            val params = org.json.JSONObject().put("index", index).put("state", newState)
+            pushState("pump", params)
         }
     }
 

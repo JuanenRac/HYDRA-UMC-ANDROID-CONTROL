@@ -66,6 +66,7 @@ dependencies {
     implementation(libs.splashscreen)
     implementation(libs.accompanist.permissions)
     implementation(libs.androidx.biometric)
+    implementation(libs.androidx.media)
     
     // Navigation
     implementation(libs.androidx.navigation.compose)

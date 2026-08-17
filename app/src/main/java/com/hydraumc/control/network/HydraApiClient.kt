@@ -106,8 +106,16 @@ class HydraApiClient(host: String, port: Int, private val client: OkHttpClient =
         executeExpectingJson(request)
     }
 
-    /** 
-     * Internal helper to execute a request and ensure the response is a JSON object.
+    /**
+     * Fetches real-time system metrics from the CM5.
+     */
+    fun getSystemMetrics(): JSONObject {
+        val request = Request.Builder().url("$baseUrl/api/system/metrics").build()
+        return executeExpectingJson(request)
+    }
+
+    /**
+     * Executes a network request and expects a JSON object.
      * @param request The OkHttp Request to execute.
      * @return The response body parsed as a JSONObject.
      */

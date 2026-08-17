@@ -5,6 +5,9 @@
 // =============================================================================
 package com.hydraumc.control.ui
 
+import android.webkit.WebSettings
+import android.webkit.WebView
+import android.webkit.WebViewClient
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -12,20 +15,25 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import com.hydraumc.control.viewmodel.RobotViewModel
 import com.hydraumc.control.ui.theme.metallicIndustrial
 
 /**
  * Composable that displays the Camera screen.
  * Allows selecting between 8 different robot camera feeds.
- * 
- * @param viewModel The shared RobotViewModel.
+ * Uses a real MJPEG stream from the CM5 server.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CameraScreen(viewModel: RobotViewModel) {
     var expanded by remember { mutableStateOf(false) }
     val selectedCameraId by viewModel.selectedCameraId
+    val ip = viewModel.ipAddress.value
+    val port = viewModel.port.value
+    
+    // Industrial MJPEG stream URL
+    val streamUrl = "http://$ip:$port/api/camera/$selectedCameraId/stream"
 
     Column(
         modifier = Modifier
@@ -71,23 +79,38 @@ fun CameraScreen(viewModel: RobotViewModel) {
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        /** Placeholder box representing the video feed area. */
+        /** Real MJPEG Stream Viewer */
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f)
-                .metallicIndustrial(),
+                .metallicIndustrial(backgroundColor = Color.Black),
             contentAlignment = Alignment.Center
         ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(
-                    text = "FEED: ROBOT $selectedCameraId",
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = MaterialTheme.colorScheme.primary
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                CircularProgressIndicator(color = MaterialTheme.colorScheme.secondary)
-            }
+            AndroidView(
+                factory = { context ->
+                    WebView(context).apply {
+                        settings.javaScriptEnabled = true
+                        settings.domStorageEnabled = true
+                        settings.cacheMode = WebSettings.LOAD_NO_CACHE
+                        webViewClient = WebViewClient()
+                        // This loads the MJPEG stream. Webview natively supports MJPEG in most Android versions.
+                        loadUrl(streamUrl)
+                    }
+                },
+                update = { webView ->
+                    webView.loadUrl(streamUrl)
+                },
+                modifier = Modifier.fillMaxSize()
+            )
+            
+            // Overlay label
+            Text(
+                text = "LIVE: ROBOT $selectedCameraId",
+                style = MaterialTheme.typography.labelSmall,
+                color = Color.Green.copy(alpha = 0.7f),
+                modifier = Modifier.align(Alignment.TopStart).padding(8.dp)
+            )
         }
     }
 }

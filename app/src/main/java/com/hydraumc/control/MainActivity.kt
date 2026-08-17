@@ -51,6 +51,15 @@ class MainActivity : FragmentActivity() {
         splashScreen.setKeepOnScreenCondition { keepNativeSplash }
         
         super.onCreate(savedInstanceState)
+
+        // Handle Global E-STOP from notification
+        if (intent?.action == "ACTION_GLOBAL_ESTOP") {
+            robotViewModel.robots.value.forEach { robot ->
+                robotViewModel.selectedRobotId.value = robot.id
+                robotViewModel.sendCommand("stop")
+            }
+        }
+
         enableEdgeToEdge()
         setContent {
             // Remove native splash right away to show our custom Compose splash screen

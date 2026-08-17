@@ -41,6 +41,8 @@ fun DashboardScreen(viewModel: RobotViewModel) {
     val connectionStatus = viewModel.connectionStatus.value
     /** Current active server info. */
     val activeServer = viewModel.activeServer.value
+    /** Current system metrics. */
+    val metrics = viewModel.metrics.value
     /** Boolean flag indicating if the app is successfully connected to a server. */
     val isConnected = connectionStatus == stringResource(R.string.status_connected)
 
@@ -101,6 +103,20 @@ fun DashboardScreen(viewModel: RobotViewModel) {
                         Column(horizontalAlignment = Alignment.End) {
                             Text(stringResource(R.string.controllers_label, activeServer.controllerCount), style = MaterialTheme.typography.bodySmall)
                             Text(stringResource(R.string.robots_label, activeServer.robotCount), style = MaterialTheme.typography.bodySmall)
+                        }
+                    }
+
+                    if (metrics != null) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            MetricItem(label = "CPU", value = "${metrics.cpuLoad}%", color = if (metrics.cpuLoad > 80) Color.Red else Color.Green)
+                            MetricItem(label = "MEM", value = "${metrics.memoryUsage}%", color = if (metrics.memoryUsage > 80) Color.Red else Color.Green)
+                            MetricItem(label = "TEMP", value = "${metrics.temp.toInt()}°C", color = if (metrics.temp > 70) Color.Red else Color.Green)
                         }
                     }
                 }
@@ -236,6 +252,17 @@ fun DashboardScreen(viewModel: RobotViewModel) {
  */
 fun formatCoord(value: Double): String {
     return String.format(Locale.US, "%.2f", value)
+}
+
+/**
+ * Small metric indicator for the system health panel.
+ */
+@Composable
+fun MetricItem(label: String, value: String, color: Color) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(text = label, style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+        Text(text = value, style = MaterialTheme.typography.bodySmall, color = color, fontWeight = FontWeight.Bold)
+    }
 }
 
 /**

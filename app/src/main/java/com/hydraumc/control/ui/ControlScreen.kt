@@ -22,10 +22,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Dangerous
-import androidx.compose.material.icons.filled.Pause
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material.icons.filled.*
 import com.hydraumc.control.viewmodel.RobotViewModel
 import com.hydraumc.control.R
 import com.hydraumc.control.ui.theme.metallicIndustrial
@@ -388,6 +385,57 @@ fun ControlScreen(viewModel: RobotViewModel) {
                                     }
                                 }
                             }
+                        }
+                    }
+                }
+
+                // New Industrial I/O Section
+                Spacer(modifier = Modifier.height(24.dp))
+                HorizontalDivider()
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Box(modifier = Modifier.fillMaxWidth().metallicIndustrial()) {
+                    Column {
+                        Text(
+                            text = "INDUSTRIAL I/O CONTROLS",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                            HydraButton(
+                                text = "VALVE 1",
+                                icon = Icons.Default.WaterDrop,
+                                onClick = { vibrate(); viewModel.toggleValve(0) },
+                                modifier = Modifier.weight(1f),
+                                backgroundColor = Color(0xFF00ACC1)
+                            )
+                            HydraButton(
+                                text = "VALVE 2",
+                                icon = Icons.Default.WaterDrop,
+                                onClick = { vibrate(); viewModel.toggleValve(1) },
+                                modifier = Modifier.weight(1f),
+                                backgroundColor = Color(0xFF00ACC1)
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                            HydraButton(
+                                text = "VACUUM 1",
+                                icon = Icons.Default.PowerSettingsNew,
+                                onClick = { vibrate(); viewModel.togglePump(0) },
+                                modifier = Modifier.weight(1f),
+                                backgroundColor = Color(0xFFFB8C00)
+                            )
+                            HydraButton(
+                                text = "VACUUM 2",
+                                icon = Icons.Default.PowerSettingsNew,
+                                onClick = { vibrate(); viewModel.togglePump(1) },
+                                modifier = Modifier.weight(1f),
+                                backgroundColor = Color(0xFFFB8C00)
+                            )
                         }
                     }
                 }
