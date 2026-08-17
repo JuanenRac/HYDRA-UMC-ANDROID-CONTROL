@@ -52,6 +52,31 @@ class RobotView(val raw: JSONObject) {
     /** Whether the robot is mounted on an independent XY table. */
     val hasXYTable: Boolean get() = raw.optBoolean("hasXYTable", false)
 
+    /** Returns the manufacturer based on the robot model. */
+    val manufacturer: String get() {
+        val m = model
+        return when {
+            m.contains("Parol6") || m.contains("Faze4") -> "Source Robotics"
+            m.contains("AR3") || m.contains("AR4") -> "Annin Robotics"
+            m.contains("UR") || m.contains("Universal") -> "Universal Robots"
+            m.contains("xArm") || m.contains("Lite 6") -> "UFACTORY"
+            m.contains("Gen3") || m.contains("Gen2") -> "Kinova"
+            m.contains("ViperX") || m.contains("WidowX") -> "Trossen Robotics"
+            m.contains("e.DO") -> "Comau"
+            m.contains("Z1") -> "Unitree"
+            m.contains("PiPER") -> "AgileX"
+            else -> "Generic"
+        }
+    }
+
+    /** Module flags */
+    val hasPnP: Boolean get() = raw.has("juanenPnP") || raw.has("lumenPnP")
+    val hasCNC: Boolean get() = raw.has("juanenCNC")
+    val hasLaser: Boolean get() = raw.has("juanenLaser")
+    val hasHeatedBed: Boolean get() = raw.has("heatedBed")
+    val hasVacuumTable: Boolean get() = raw.has("vacuumTable")
+    val hasCamera: Boolean get() = raw.has("cameraView")
+
     /** Updates the online status in the raw JSON. */
     fun setOnline(value: Boolean) {
         raw.put("online", value)
@@ -60,6 +85,14 @@ class RobotView(val raw: JSONObject) {
     /** Updates the attached tool in the raw JSON. */
     fun setTool(value: String) {
         raw.put("tool", value)
+    }
+
+    /** Robot-level joints {j1, j2, j3, j4, j5, j6}. */
+    val joints: JSONObject get() = raw.optJSONObject("joints") ?: JSONObject().also { raw.put("joints", it) }
+    
+    /** Sets a specific joint angle. */
+    fun setJoint(joint: String, value: Double) {
+        joints.put(joint, value)
     }
 
     /** The Cartesian position object {x, y, z, a, b, c}. */
@@ -82,7 +115,12 @@ class RobotView(val raw: JSONObject) {
     
     /** Sets the value of a specific axis for the XY table. */
     fun setXyTableAxis(axis: String, value: Double) {
+        // Update Robot-level xyTable (for UI/Browser sync)
         xyTablePos.put(axis, value)
+        
+        // Coordinated update: Mirror to pos.tx/ty for kinematic consistency
+        if (axis == "x") pos.put("tx", value)
+        if (axis == "y") pos.put("ty", value)
     }
 
     /** The playback state object for robot movements. */
@@ -105,12 +143,14 @@ class RobotView(val raw: JSONObject) {
         val pb = playbackState
         pb.put("isPlaying", playing)
         pb.put("playing", playing)
+        pb.put("requestStop", !playing) // Explicit stop request for browser sync
         if (playing) {
             pb.put("activeStep", 0)
             pb.put("isFinished", false)
             pb.put("finished", false)
             pb.put("isPaused", false)
             pb.put("paused", false)
+            pb.put("requestPause", false)
         } else {
             pb.put("activeStep", -1)
             pb.put("isFinished", false)
@@ -124,6 +164,7 @@ class RobotView(val raw: JSONObject) {
         val pb = playbackState
         pb.put("isPaused", newVal)
         pb.put("paused", newVal)
+        pb.put("requestPause", newVal) // Explicit pause request for browser sync
         pb.put("isPlaying", true)
         pb.put("playing", true)
         pb.put("isFinished", false)
@@ -135,8 +176,10 @@ class RobotView(val raw: JSONObject) {
         val pb = playbackState
         pb.put("isPlaying", false)
         pb.put("playing", false)
+        pb.put("requestStop", true) // Trigger browser-side globalPlaybacks[id] = false
         pb.put("isPaused", false)
         pb.put("paused", false)
+        pb.put("requestPause", false)
         pb.put("activeStep", -1)
     }
 
@@ -185,6 +228,24 @@ class ControllerView(val raw: JSONObject) {
     val name: String get() = raw.optString("name", id)
     /** Network IP address of the controller. */
     val ip: String get() = raw.optString("ip", "")
+
+    /** Kinematic Brain Stage (Controller-level XY table) */
+    val kinematicBrainStage: JSONObject 
+        get() = raw.optJSONObject("kinematicBrainStage") ?: JSONObject().also { raw.put("kinematicBrainStage", it) }
+    
+    val kbXyTable: JSONObject
+        get() = kinematicBrainStage.optJSONObject("xyTable") ?: JSONObject().also { kinematicBrainStage.put("xyTable", it) }
+
+    /** Sets controller-level XY table axis. */
+    fun setKbXyTableAxis(axis: String, value: Double) {
+        // KB Stage uses x, y1, y2, z directly
+        if (axis == "x") kbXyTable.put("x", value)
+        if (axis == "y") {
+            kbXyTable.put("y1", value)
+            kbXyTable.put("y2", value)
+        }
+        if (axis == "z") kbXyTable.put("z", value)
+    }
 
     /** List of robots managed by this controller. */
     val robots: List<RobotView>

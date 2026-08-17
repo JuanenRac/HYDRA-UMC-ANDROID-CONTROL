@@ -221,22 +221,23 @@ fun ControlScreen(viewModel: RobotViewModel) {
                         }
                         Spacer(modifier = Modifier.height(16.dp))
                         
-                        // Movement Buttons (50% larger: base size ~60dp -> 90dp)
+                        // Movement Buttons (Large Blue Industrial Buttons)
                         val btnSize = 90.dp
+                        val jogColor = Color(0xFF0288D1) // Industrial Blue
                         Row(horizontalArrangement = Arrangement.SpaceEvenly, modifier = Modifier.fillMaxWidth()) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                HydraButton(text = "Y+", onClick = { vibrate(); viewModel.jog(activeTarget, "y", stepSize) }, enabled = selectedRobot.online, modifier = Modifier.size(btnSize))
+                                HydraButton(text = "Y+", onClick = { vibrate(); viewModel.jog(activeTarget, "y", stepSize) }, enabled = selectedRobot.online, modifier = Modifier.size(btnSize), backgroundColor = jogColor)
                                 Row(horizontalArrangement = Arrangement.spacedBy(16.dp), modifier = Modifier.padding(vertical = 8.dp)) {
-                                    HydraButton(text = "X-", onClick = { vibrate(); viewModel.jog(activeTarget, "x", -stepSize) }, enabled = selectedRobot.online, modifier = Modifier.size(btnSize))
-                                    HydraButton(text = "X+", onClick = { vibrate(); viewModel.jog(activeTarget, "x", stepSize) }, enabled = selectedRobot.online, modifier = Modifier.size(btnSize))
+                                    HydraButton(text = "X-", onClick = { vibrate(); viewModel.jog(activeTarget, "x", -stepSize) }, enabled = selectedRobot.online, modifier = Modifier.size(btnSize), backgroundColor = jogColor)
+                                    HydraButton(text = "X+", onClick = { vibrate(); viewModel.jog(activeTarget, "x", stepSize) }, enabled = selectedRobot.online, modifier = Modifier.size(btnSize), backgroundColor = jogColor)
                                 }
-                                HydraButton(text = "Y-", onClick = { vibrate(); viewModel.jog(activeTarget, "y", -stepSize) }, enabled = selectedRobot.online, modifier = Modifier.size(btnSize))
+                                HydraButton(text = "Y-", onClick = { vibrate(); viewModel.jog(activeTarget, "y", -stepSize) }, enabled = selectedRobot.online, modifier = Modifier.size(btnSize), backgroundColor = jogColor)
                             }
                             if (activeTarget == "robot") {
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    HydraButton(text = "Z+", onClick = { vibrate(); viewModel.jog(activeTarget, "z", stepSize) }, enabled = selectedRobot.online, modifier = Modifier.size(btnSize))
+                                    HydraButton(text = "Z+", onClick = { vibrate(); viewModel.jog(activeTarget, "z", stepSize) }, enabled = selectedRobot.online, modifier = Modifier.size(btnSize), backgroundColor = jogColor)
                                     Spacer(modifier = Modifier.height(24.dp))
-                                    HydraButton(text = "Z-", onClick = { vibrate(); viewModel.jog(activeTarget, "z", -stepSize) }, enabled = selectedRobot.online, modifier = Modifier.size(btnSize))
+                                    HydraButton(text = "Z-", onClick = { vibrate(); viewModel.jog(activeTarget, "z", -stepSize) }, enabled = selectedRobot.online, modifier = Modifier.size(btnSize), backgroundColor = jogColor)
                                 }
                             }
                         }

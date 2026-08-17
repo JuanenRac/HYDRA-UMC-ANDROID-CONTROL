@@ -32,7 +32,7 @@ import kotlin.math.absoluteValue
  * 
  * @param viewModel The shared RobotViewModel.
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun DashboardScreen(viewModel: RobotViewModel) {
     /** Current list of robots fetched from the system state. */
@@ -76,7 +76,7 @@ fun DashboardScreen(viewModel: RobotViewModel) {
         }
         
         if (isConnected && (activeServer != null)) {
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -107,7 +107,7 @@ fun DashboardScreen(viewModel: RobotViewModel) {
             }
         }
         
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(12.dp))
         
         if (robots.isEmpty()) {
             Text(stringResource(R.string.no_robots), style = MaterialTheme.typography.bodyLarge)
@@ -118,7 +118,7 @@ fun DashboardScreen(viewModel: RobotViewModel) {
             HorizontalPager(
                 state = pagerState,
                 contentPadding = PaddingValues(horizontal = 32.dp),
-                modifier = Modifier.fillMaxWidth().height(450.dp),
+                modifier = Modifier.fillMaxWidth().height(550.dp), // Increased height for more info
             ) { page ->
                 /** The specific robot data for this pager item. */
                 val robot = robots[page]
@@ -154,8 +154,20 @@ fun DashboardScreen(viewModel: RobotViewModel) {
                         .metallicIndustrial(),
                 ) {
                     Column {
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                            Text(robot.name, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                        Text(robot.name, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                        
+                        Text(
+                            text = "${robot.manufacturer} | ${robot.model}",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        
+                        Spacer(modifier = Modifier.height(8.dp))
+                        
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("Role: ", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
+                            Text(robot.role, style = MaterialTheme.typography.bodySmall)
+                            Spacer(modifier = Modifier.weight(1f))
                             StatusLed(
                                 isOn = robot.online,
                                 activeColor = Color(0xFF2E7D32),
@@ -163,6 +175,26 @@ fun DashboardScreen(viewModel: RobotViewModel) {
                             )
                         }
                         
+                        Spacer(modifier = Modifier.height(12.dp))
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        // Modules Row
+                        FlowRow(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            ModuleIndicator(label = "CAM", active = robot.hasCamera)
+                            ModuleIndicator(label = "XY", active = robot.hasXYTable)
+                            ModuleIndicator(label = "ATC", active = robot.hasAtc)
+                            ModuleIndicator(label = "PNP", active = robot.hasPnP)
+                            ModuleIndicator(label = "CNC", active = robot.hasCNC)
+                            ModuleIndicator(label = "LSR", active = robot.hasLaser)
+                            ModuleIndicator(label = "BED", active = robot.hasHeatedBed)
+                            ModuleIndicator(label = "VAC", active = robot.hasVacuumTable)
+                        }
+
                         Spacer(modifier = Modifier.height(16.dp))
                         
                         Text(stringResource(R.string.tool, robot.currentTool), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -215,4 +247,27 @@ fun formatUptime(seconds: Int): String {
     val h = (seconds % 86400) / 3600
     val m = (seconds % 3600) / 60
     return if (d > 0) "${d}d ${h}h ${m}m" else if (h > 0) "${h}h ${m}m" else "${m}m"
+}
+
+/**
+ * Small indicator for active/inactive modules.
+ */
+@Composable
+fun ModuleIndicator(label: String, active: Boolean) {
+    Surface(
+        color = if (active) MaterialTheme.colorScheme.primary.copy(alpha = 0.2f) else Color.Transparent,
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(4.dp),
+        border = androidx.compose.foundation.BorderStroke(
+            1.dp, 
+            if (active) MaterialTheme.colorScheme.primary else Color.Gray.copy(alpha = 0.5f)
+        )
+    ) {
+        Text(
+            text = label,
+            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+            style = MaterialTheme.typography.labelSmall,
+            color = if (active) MaterialTheme.colorScheme.primary else Color.Gray,
+            fontWeight = if (active) FontWeight.Bold else FontWeight.Normal
+        )
+    }
 }

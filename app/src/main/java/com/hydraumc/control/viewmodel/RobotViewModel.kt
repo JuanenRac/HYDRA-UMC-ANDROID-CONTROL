@@ -77,11 +77,20 @@ data class JobState(val name: String)
 data class RobotState(
     val id: Int,
     val name: String,
+    val model: String,
+    val manufacturer: String,
+    val role: String,
     val online: Boolean,
     val isPlaying: Boolean,
     val isPaused: Boolean,
     val hasXYTable: Boolean,
     val hasAtc: Boolean,
+    val hasCamera: Boolean,
+    val hasPnP: Boolean,
+    val hasCNC: Boolean,
+    val hasLaser: Boolean,
+    val hasHeatedBed: Boolean,
+    val hasVacuumTable: Boolean,
     val currentTool: String,
     val atcTools: List<AtcTool>,
     val speed: Double,
@@ -99,11 +108,20 @@ data class RobotState(
 private fun RobotView.toDisplay(): RobotState = RobotState(
     id = id,
     name = name,
+    model = model,
+    manufacturer = manufacturer,
+    role = role,
     online = online,
     isPlaying = isPlaying,
     isPaused = isPaused,
     hasXYTable = hasXYTable,
     hasAtc = hasAtc,
+    hasCamera = hasCamera,
+    hasPnP = hasPnP,
+    hasCNC = hasCNC,
+    hasLaser = hasLaser,
+    hasHeatedBed = hasHeatedBed,
+    hasVacuumTable = hasVacuumTable,
     currentTool = tool,
     atcTools = atcTools.map { AtcTool(it.slot, it.tool) },
     speed = speed,
@@ -397,17 +415,25 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         val payload = state.toJson()
         
         val sentOverBle = bleClient?.send(payload.toString()) ?: false
-        if (sentOverBle) return
+        if (sentOverBle) {
+            logTelemetry("TX [BLE]: Payload sent")
+            return
+        }
         
         val sentOverWs = ws?.send(payload) ?: false
-        if (sentOverWs) return
+        if (sentOverWs) {
+            logTelemetry("TX [WS]: State synchronized")
+            return
+        }
         
         val client = apiClient ?: return
         viewModelScope.launch {
             try {
                 client.postSettings(payload)
+                logTelemetry("TX [REST]: State updated")
                 lastError.value = null
             } catch (e: HydraApiException) {
+                logTelemetry("TX Error [REST]: ${e.message}")
                 lastError.value = e.message
             }
         }
@@ -449,11 +475,26 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
      * @param amount The distance to move.
      */
     fun jog(target: String, axis: String, amount: Double) {
+        val robotId = selectedRobotId.value ?: return
+        val controller = state.controllers.find { c -> c.robots.any { it.id == robotId } }
+        
         mutateSelected { robot ->
             if (target == "xytable") {
-                robot.setXyTableAxis(axis, robot.xyTablePos.optDouble(axis, 0.0) + amount)
+                val currentXy = robot.xyTablePos.optDouble(axis, 0.0)
+                val newVal = currentXy + amount
+                robot.setXyTableAxis(axis, newVal)
+                
+                // ALSO update Controller-level stage for hardware sync
+                controller?.setKbXyTableAxis(axis, newVal)
+                logTelemetry("JOG [XY]: $axis -> $newVal")
             } else {
-                robot.setPosAxis(axis, robot.posAxis(axis) + amount)
+                val currentPos = robot.posAxis(axis)
+                val newVal = currentPos + amount
+                robot.setPosAxis(axis, newVal)
+                
+                // NOTE: Robot Arm movement requires IK calculation usually done in browser.
+                // We update Cartesian pos and hope browser tab is open to sync joints.
+                logTelemetry("JOG [ARM]: $axis -> $newVal (IK sync pending)")
             }
         }
     }

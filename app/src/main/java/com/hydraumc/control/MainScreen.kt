@@ -189,13 +189,15 @@ fun MainScreen(viewModel: RobotViewModel, onEnableBluetooth: () -> Unit = {}) {
                         ) {
                             Icon(Icons.Default.Terminal, contentDescription = "Telemetría", tint = MaterialTheme.colorScheme.primary)
                         }
-                        IconButton(onClick = { 
-                            navController.navigate(Screen.Settings.route) {
-                                popUpTo(navController.graph.findStartDestination().id) { saveState = true }
-                                launchSingleTop = true
-                                restoreState = true
+                        IconButton(
+                            onClick = { 
+                                navController.navigate(Screen.Settings.route) {
+                                    popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
                             }
-                        }) {
+                        ) {
                             Icon(Icons.Default.Settings, contentDescription = "Ajustes", tint = MaterialTheme.colorScheme.primary)
                         }
                         IconButton(onClick = { showAboutDialog = true }) {
