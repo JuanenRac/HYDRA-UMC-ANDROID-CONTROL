@@ -55,6 +55,9 @@ class HydraApiClient(host: String, port: Int, private val client: OkHttpClient =
 
     /** Base URL of the target HYDRA-UMC server. */
     val baseUrl: String = "http://$host:$port"
+    
+    /** Current authentication token. */
+    var authToken: String? = null
 
     /** 
      * Performs a one-shot probe to identify a HYDRA-UMC server. 
@@ -83,18 +86,24 @@ class HydraApiClient(host: String, port: Int, private val client: OkHttpClient =
      * @throws HydraApiException if the request fails.
      */
     suspend fun getSettings(): JSONObject = withContext(Dispatchers.IO) {
-        val request = Request.Builder().url("$baseUrl/api/settings").get().build()
+        val request = Request.Builder()
+            .url("$baseUrl/api/settings")
+            .header("Authorization", "Bearer ${authToken ?: ""}")
+            .get()
+            .build()
         executeExpectingJson(request)
     }
 
     /** 
      * Overwrites the full system settings on the server.
-     * @param payload The new state to upload.
-     * @throws HydraApiException if the request fails.
      */
     suspend fun postSettings(payload: JSONObject): Unit = withContext(Dispatchers.IO) {
         val body = payload.toString().toRequestBody(JSON_MEDIA_TYPE)
-        val request = Request.Builder().url("$baseUrl/api/settings").post(body).build()
+        val request = Request.Builder()
+            .url("$baseUrl/api/settings")
+            .header("Authorization", "Bearer ${authToken ?: ""}")
+            .post(body)
+            .build()
         executeExpectingJson(request)
         Unit
     }
@@ -102,6 +111,7 @@ class HydraApiClient(host: String, port: Int, private val client: OkHttpClient =
     fun postRobotCommand(robotId: Int, payload: JSONObject) {
         val request = Request.Builder()
             .url("$baseUrl/api/robot/$robotId/command")
+            .header("Authorization", "Bearer ${authToken ?: ""}")
             .post(payload.toString().toRequestBody(JSON_MEDIA_TYPE))
             .build()
         executeExpectingJson(request)
