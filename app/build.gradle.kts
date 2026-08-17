@@ -5,13 +5,13 @@ plugins {
 
 android {
     namespace = "com.hydraumc.control"
-    // 35, not 36 - Android 15 is the current stable target.
-    compileSdk = 35
+    // 36 required by androidx.core 1.18.0
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.hydraumc.control"
         minSdk = 24
-        // 35 (Android 15), matches compileSdk above.
+        // 35 (Android 15) for stable runtime behavior.
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
