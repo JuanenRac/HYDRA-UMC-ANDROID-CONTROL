@@ -49,8 +49,8 @@ fun TelemetryScreen(viewModel: RobotViewModel) {
             IconButton(onClick = { viewModel.clearLogs() }) {
                 Icon(
                     imageVector = Icons.Default.DeleteSweep,
-                    contentDescription = "Clear Logs",
-                    tint = Color.Red
+                    contentDescription = stringResource(R.string.clear_logs_desc),
+                    tint = Color.Red,
                 )
             }
         }
@@ -61,12 +61,12 @@ fun TelemetryScreen(viewModel: RobotViewModel) {
             modifier = Modifier
                 .fillMaxSize()
                 .metallicIndustrial(backgroundColor = Color.Black)
-                .padding(8.dp)
+                .padding(8.dp),
         ) {
             if (logs.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text(
-                        text = "NO TELEMETRY DATA RECEIVED",
+                        text = stringResource(R.string.no_telemetry_data),
                         color = Color.DarkGray,
                         style = MaterialTheme.typography.bodyMedium,
                     )

@@ -70,12 +70,16 @@ class RobotView(val raw: JSONObject) {
     }
 
     /** Module flags */
-    val hasPnP: Boolean get() = raw.has("juanenPnP") || raw.has("lumenPnP")
-    val hasCNC: Boolean get() = raw.has("juanenCNC")
-    val hasLaser: Boolean get() = raw.has("juanenLaser")
-    val hasHeatedBed: Boolean get() = raw.has("heatedBed")
-    val hasVacuumTable: Boolean get() = raw.has("vacuumTable")
-    val hasCamera: Boolean get() = raw.has("cameraView")
+    private fun isModuleEnabled(key: String): Boolean = raw.optJSONObject(key)?.optBoolean("enabled", false) ?: false
+
+    val hasPnP: Boolean get() = isModuleEnabled("juanenPnP") || isModuleEnabled("lumenPnP")
+    val hasCNC: Boolean get() = isModuleEnabled("juanenCNC")
+    val hasLaser: Boolean get() = isModuleEnabled("juanenLaser")
+    val hasHeatedBed: Boolean get() = isModuleEnabled("heatedBed")
+    val hasVacuumTable: Boolean get() = isModuleEnabled("vacuumTable")
+    val hasCamera: Boolean get() = raw.has("cameraView") || raw.has("camera")
+    val hasAtc: Boolean get() = raw.has("atc")
+    val hasRack: Boolean get() = isModuleEnabled("rackSystem")
 
     /** Updates the online status in the raw JSON. */
     fun setOnline(value: Boolean) {
@@ -212,7 +216,7 @@ class RobotView(val raw: JSONObject) {
         }
     
     /** Whether the robot has an Automatic Tool Changer configured. */
-    val hasAtc: Boolean get() = atcTools.isNotEmpty()
+    // Logic moved to hasAtc flag for better UI consistency
 
     override fun toString() = "RobotView(id=$id, name=$name, online=$online)"
 }

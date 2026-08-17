@@ -76,40 +76,39 @@ fun DashboardScreen(viewModel: RobotViewModel) {
         }
         
         if (isConnected && (activeServer != null)) {
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(8.dp))
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .metallicIndustrial(backgroundColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-                    .padding(12.dp)
+                    .padding(8.dp)
             ) {
                 Column {
                     Text(
-                        text = "SYSTEM HEALTH",
+                        text = stringResource(R.string.system_health),
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.ExtraBold,
-                        color = MaterialTheme.colorScheme.primary
+                        color = MaterialTheme.colorScheme.primary,
                     )
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                        horizontalArrangement = Arrangement.SpaceBetween,
                     ) {
                         Column {
-                            Text("Host: ${activeServer.hostname}", style = MaterialTheme.typography.bodySmall)
-                            Text("Uptime: ${formatUptime(activeServer.uptimeSeconds)}", style = MaterialTheme.typography.bodySmall)
+                            Text(stringResource(R.string.host_label, activeServer.hostname), style = MaterialTheme.typography.bodySmall)
+                            Text(stringResource(R.string.uptime_label, formatUptime(activeServer.uptimeSeconds)), style = MaterialTheme.typography.bodySmall)
                         }
                         Column(horizontalAlignment = Alignment.End) {
-                            Text("Controllers: ${activeServer.controllerCount}", style = MaterialTheme.typography.bodySmall)
-                            Text("Robots: ${activeServer.robotCount}", style = MaterialTheme.typography.bodySmall)
+                            Text(stringResource(R.string.controllers_label, activeServer.controllerCount), style = MaterialTheme.typography.bodySmall)
+                            Text(stringResource(R.string.robots_label, activeServer.robotCount), style = MaterialTheme.typography.bodySmall)
                         }
                     }
                 }
             }
         }
         
-        Spacer(modifier = Modifier.height(12.dp))
-        
         if (robots.isEmpty()) {
+            Spacer(modifier = Modifier.height(24.dp))
             Text(stringResource(R.string.no_robots), style = MaterialTheme.typography.bodyLarge)
         } else {
             /** State for the horizontal pager (carousel). */
@@ -118,7 +117,9 @@ fun DashboardScreen(viewModel: RobotViewModel) {
             HorizontalPager(
                 state = pagerState,
                 contentPadding = PaddingValues(horizontal = 32.dp),
-                modifier = Modifier.fillMaxWidth().height(550.dp), // Increased height for more info
+                modifier = Modifier.fillMaxWidth().height(450.dp), // Snug height
+                beyondViewportPageCount = 1,
+                verticalAlignment = Alignment.Top, // Align cards to the top of the pager
             ) { page ->
                 /** The specific robot data for this pager item. */
                 val robot = robots[page]
@@ -159,14 +160,13 @@ fun DashboardScreen(viewModel: RobotViewModel) {
                         Text(
                             text = "${robot.manufacturer} | ${robot.model}",
                             style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.primary
+                            color = MaterialTheme.colorScheme.primary,
                         )
                         
                         Spacer(modifier = Modifier.height(8.dp))
                         
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text("Role: ", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
-                            Text(robot.role, style = MaterialTheme.typography.bodySmall)
+                            Text(stringResource(R.string.role_label, robot.role), style = MaterialTheme.typography.bodySmall)
                             Spacer(modifier = Modifier.weight(1f))
                             StatusLed(
                                 isOn = robot.online,
@@ -193,6 +193,7 @@ fun DashboardScreen(viewModel: RobotViewModel) {
                             ModuleIndicator(label = "LSR", active = robot.hasLaser)
                             ModuleIndicator(label = "BED", active = robot.hasHeatedBed)
                             ModuleIndicator(label = "VAC", active = robot.hasVacuumTable)
+                            ModuleIndicator(label = "RCK", active = robot.hasRack)
                         }
 
                         Spacer(modifier = Modifier.height(16.dp))

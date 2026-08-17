@@ -25,8 +25,11 @@ fun ThreeDScreen(viewModel: RobotViewModel) {
     val ip = viewModel.ipAddress.value
     /** Target server port. */
     val port = viewModel.port.value
-    /** Full URL to load the 3D visualization from the server. */
-    val url = "http://$ip:$port"
+    /** Full URL to load the 3D visualization from the server. 
+     * We add ?hideUI=true to request the server to hide headers/sidebars
+     * for a native-like experience. 
+     */
+    val url = "http://$ip:$port/?hideUI=true"
 
     AndroidView(
         factory = { context ->
@@ -34,7 +37,9 @@ fun ThreeDScreen(viewModel: RobotViewModel) {
                 settings.javaScriptEnabled = true
                 settings.domStorageEnabled = true
                 settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
-                // Habilitamos WebGL / Hardware Acceleration forzando settings
+                // Set a custom User-Agent to help the server identify mobile control app
+                settings.userAgentString = "HYDRA-UMC-ANDROID-CONTROL"
+                // Enable WebGL / Hardware Acceleration
                 setLayerType(android.view.View.LAYER_TYPE_HARDWARE, null)
                 webViewClient = WebViewClient()
                 loadUrl(url)
