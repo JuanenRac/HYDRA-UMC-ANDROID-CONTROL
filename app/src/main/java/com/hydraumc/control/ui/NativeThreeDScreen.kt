@@ -15,7 +15,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import com.google.android.filament.*
-import com.google.android.filament.utils.*
 
 /**
  * High-performance native 3D visor.

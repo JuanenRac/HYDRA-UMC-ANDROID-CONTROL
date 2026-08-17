@@ -106,14 +106,6 @@ fun ControlScreen(viewModel: RobotViewModel) {
     val selectedRobot = robots.find { it.id == selectedId }
     val isCombined = (selectedRobot?.combinedWith?.isNotEmpty() == true)
     
-    // PIP Camera logic
-    val assignedCamera = viewModel.activeServer.value?.let { server ->
-        // In a real scenario, we'd fetch this from the state. 
-        // For now we look for a camera with assignedRobotId == selectedId
-        // This requires a minor update to RobotState to include camera info
-        null // placeholder until we verify state mapping
-    }
-    
     /** Local state for speed slider, synced with the robot's current speed. */
     var speedState by remember(selectedRobot?.speed) { mutableFloatStateOf(selectedRobot?.speed?.toFloat() ?: 100f) }
     /** Local state for acceleration slider, synced with the robot's current acceleration. */
@@ -293,18 +285,18 @@ fun ControlScreen(viewModel: RobotViewModel) {
                         val jogColor = Color(0xFF0288D1) // Industrial Blue
                         Row(horizontalArrangement = Arrangement.SpaceEvenly, modifier = Modifier.fillMaxWidth()) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                HydraButton(text = "Y+", onClick = { vibrate(); viewModel.jog(activeTarget, "y", stepSize) }, enabled = selectedRobot.online, modifier = Modifier.size(btnSize), backgroundColor = jogColor)
+                                HydraButton(text = "Y+", onClick = { vibrate(); viewModel.jog("y", stepSize) }, enabled = selectedRobot.online, modifier = Modifier.size(btnSize), backgroundColor = jogColor)
                                 Row(horizontalArrangement = Arrangement.spacedBy(16.dp), modifier = Modifier.padding(vertical = 8.dp)) {
-                                    HydraButton(text = "X-", onClick = { vibrate(); viewModel.jog(activeTarget, "x", -stepSize) }, enabled = selectedRobot.online, modifier = Modifier.size(btnSize), backgroundColor = jogColor)
-                                    HydraButton(text = "X+", onClick = { vibrate(); viewModel.jog(activeTarget, "x", stepSize) }, enabled = selectedRobot.online, modifier = Modifier.size(btnSize), backgroundColor = jogColor)
+                                    HydraButton(text = "X-", onClick = { vibrate(); viewModel.jog("x", -stepSize) }, enabled = selectedRobot.online, modifier = Modifier.size(btnSize), backgroundColor = jogColor)
+                                    HydraButton(text = "X+", onClick = { vibrate(); viewModel.jog("x", stepSize) }, enabled = selectedRobot.online, modifier = Modifier.size(btnSize), backgroundColor = jogColor)
                                 }
-                                HydraButton(text = "Y-", onClick = { vibrate(); viewModel.jog(activeTarget, "y", -stepSize) }, enabled = selectedRobot.online, modifier = Modifier.size(btnSize), backgroundColor = jogColor)
+                                HydraButton(text = "Y-", onClick = { vibrate(); viewModel.jog("y", -stepSize) }, enabled = selectedRobot.online, modifier = Modifier.size(btnSize), backgroundColor = jogColor)
                             }
                             if (activeTarget == "robot") {
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    HydraButton(text = "Z+", onClick = { vibrate(); viewModel.jog(activeTarget, "z", stepSize) }, enabled = selectedRobot.online, modifier = Modifier.size(btnSize), backgroundColor = jogColor)
+                                    HydraButton(text = "Z+", onClick = { vibrate(); viewModel.jog("z", stepSize) }, enabled = selectedRobot.online, modifier = Modifier.size(btnSize), backgroundColor = jogColor)
                                     Spacer(modifier = Modifier.height(24.dp))
-                                    HydraButton(text = "Z-", onClick = { vibrate(); viewModel.jog(activeTarget, "z", -stepSize) }, enabled = selectedRobot.online, modifier = Modifier.size(btnSize), backgroundColor = jogColor)
+                                    HydraButton(text = "Z-", onClick = { vibrate(); viewModel.jog("z", -stepSize) }, enabled = selectedRobot.online, modifier = Modifier.size(btnSize), backgroundColor = jogColor)
                                 }
                             }
                         }

@@ -467,9 +467,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun jog(target: String, axis: String, amount: Double) {
-        val robotId = selectedRobotId.value ?: return
-        
+    fun jog(axis: String, amount: Double) {
         // Send as Atomic Command, let server broadcast position back
         val params = org.json.JSONObject().put("axis", axis).put("amount", amount)
         pushState("jog", params)

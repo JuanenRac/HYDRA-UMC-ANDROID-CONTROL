@@ -17,7 +17,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import android.bluetooth.BluetoothAdapter
-import android.content.Context
 import android.content.Intent
 import android.net.wifi.WifiManager
 import androidx.activity.result.contract.ActivityResultContracts
@@ -58,7 +57,7 @@ class MainActivity : FragmentActivity() {
         
         // Auto-enable WiFi and search for servers on startup
         try {
-            val wifiManager = applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
+            val wifiManager = applicationContext.getSystemService(WIFI_SERVICE) as WifiManager
             if (!wifiManager.isWifiEnabled) {
                 // Rationale: Modern Android (Q+) doesn't allow setWifiEnabled(true).
                 // We attempt it as a best-effort for older industrial tablets, 
@@ -66,7 +65,7 @@ class MainActivity : FragmentActivity() {
                 @Suppress("DEPRECATION")
                 wifiManager.isWifiEnabled = true
             }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             // fail silently if permissions are missing for this action
         }
 

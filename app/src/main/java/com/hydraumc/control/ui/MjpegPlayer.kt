@@ -7,7 +7,6 @@ package com.hydraumc.control.ui
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Rect
 import android.util.Log
@@ -55,7 +54,7 @@ fun MjpegPlayer(url: String, modifier: Modifier = Modifier) {
         }
     }
 
-    androidx.compose.foundation.Canvas(modifier = modifier.fillMaxSize()) {
+    Canvas(modifier = modifier.fillMaxSize()) {
         bitmap?.let { b ->
             drawIntoCanvas { canvas ->
                 val drawRect = Rect(0, 0, size.width.toInt(), size.height.toInt())
