@@ -123,5 +123,6 @@
     <string name="biometric_prompt_title">Autenticación Industrial</string>
     <string name="biometric_prompt_subtitle">Verifica tu identidad para acceder al control</string>
     <string name="biometric_setting_label">Activar Login Biométrico</string>
+    <string name="biometric_hint">Biometría disponible. Actívala en el Perfil de Usuario.</string>
     <string name="e_stop">PARADA DE EMERGENCIA</string>
 </resources>

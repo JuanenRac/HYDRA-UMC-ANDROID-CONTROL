@@ -122,5 +122,6 @@
     <string name="biometric_prompt_title">Autenticazione Industriale</string>
     <string name="biometric_prompt_subtitle">Verifica la tua identità per accedere al controllo</string>
     <string name="biometric_setting_label">Abilita accesso biometrico</string>
+    <string name="biometric_hint">Biometria disponibile. Abilita nel Profilo Utente.</string>
     <string name="e_stop">ARRESTO D\'EMERGENZA</string>
 </resources>

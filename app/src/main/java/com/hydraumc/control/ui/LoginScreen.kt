@@ -37,6 +37,7 @@ fun LoginScreen(viewModel: RobotViewModel) {
     val lastError = viewModel.lastError.value
 
     val showBiometric = isBiometricEnabled && BiometricHelper.isBiometricAvailable(context)
+    val biometricSupportedButDisabled = !isBiometricEnabled && BiometricHelper.isBiometricAvailable(context)
 
     Column(
         modifier = Modifier
@@ -125,14 +126,23 @@ fun LoginScreen(viewModel: RobotViewModel) {
                                     viewModel.login(
                                         viewModel.loginUsername.value,
                                         viewModel.loginPassword.value,
-                                        viewModel.loginRememberMe.value
+                                        viewModel.loginRememberMe.value,
                                     )
                                 },
-                                onError = { /* User cancelled or failed */ }
+                                onError = { /* User cancelled or failed */ },
                             )
                         },
                         modifier = Modifier.fillMaxWidth(),
-                        backgroundColor = Color(0xFF455A64) // Grey-Blue
+                        backgroundColor = Color(0xFF455A64), // Grey-Blue
+                    )
+                }
+
+                if (biometricSupportedButDisabled) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = stringResource(R.string.biometric_hint),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Color.Gray,
                     )
                 }
                 

@@ -122,5 +122,6 @@
     <string name="biometric_prompt_title">Industrielle Authentifizierung</string>
     <string name="biometric_prompt_subtitle">Identität bestätigen</string>
     <string name="biometric_setting_label">Biometrisches Login aktivieren</string>
+    <string name="biometric_hint">Biometrie verfügbar. Im Benutzerprofil aktivieren.</string>
     <string name="e_stop">NOT-AUS</string>
 </resources>

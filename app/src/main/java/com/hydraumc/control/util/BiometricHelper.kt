@@ -21,7 +21,9 @@ object BiometricHelper {
      */
     fun isBiometricAvailable(context: Context): Boolean {
         val biometricManager = BiometricManager.from(context)
-        return when (biometricManager.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_STRONG)) {
+        val authenticators = BiometricManager.Authenticators.BIOMETRIC_STRONG or 
+                           BiometricManager.Authenticators.BIOMETRIC_WEAK
+        return when (biometricManager.canAuthenticate(authenticators)) {
             BiometricManager.BIOMETRIC_SUCCESS -> true
             else -> false
         }
@@ -63,7 +65,8 @@ object BiometricHelper {
             .setTitle(title)
             .setSubtitle(subtitle)
             .setNegativeButtonText("Cancel")
-            .setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_STRONG)
+            .setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_STRONG or 
+                                     BiometricManager.Authenticators.BIOMETRIC_WEAK)
             .build()
 
         biometricPrompt.authenticate(promptInfo)
