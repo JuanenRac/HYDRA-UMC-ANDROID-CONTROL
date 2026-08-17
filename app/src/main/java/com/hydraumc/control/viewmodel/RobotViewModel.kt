@@ -408,9 +408,9 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                     client.postRobotCommand(robotId, cmdPayload)
                     logTelemetry("TX [REST]: Atomic Command '$command' sent")
                     lastError.value = null
-                } catch (e: HydraApiException) {
+                } catch (e: Exception) {
                     logTelemetry("TX Error [REST]: ${e.message}")
-                    lastError.value = e.message
+                    // Don't set lastError here to avoid UI flickering, just log it
                 }
             }
             return
@@ -467,9 +467,12 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun jog(axis: String, amount: Double) {
+    fun jog(target: String, axis: String, amount: Double) {
         // Send as Atomic Command, let server broadcast position back
-        val params = org.json.JSONObject().put("axis", axis).put("amount", amount)
+        val params = org.json.JSONObject()
+            .put("target", target)
+            .put("axis", axis)
+            .put("amount", amount)
         pushState("jog", params)
     }
 

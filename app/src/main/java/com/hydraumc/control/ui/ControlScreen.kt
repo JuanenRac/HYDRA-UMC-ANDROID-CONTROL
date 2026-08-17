@@ -45,32 +45,37 @@ import com.hydraumc.control.ui.theme.IndustrialDanger
 @Composable
 fun ControlScreen(viewModel: RobotViewModel) {
     val context = LocalContext.current
-    val vibrator = remember {
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
-            val vibratorManager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as android.os.VibratorManager
-            vibratorManager.defaultVibrator
-        } else {
-            @Suppress("DEPRECATION")
-            context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+    val vibrator: Vibrator? = remember {
+        try {
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+                val vibratorManager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as? android.os.VibratorManager
+                vibratorManager?.defaultVibrator
+            } else {
+                @Suppress("DEPRECATION")
+                context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
+            }
+        } catch (_: Exception) {
+            null
         }
     }
     
     @SuppressLint("MissingPermission")
     fun vibrate(pattern: LongArray? = null, duration: Long = 50) {
+        val v = vibrator ?: return
         try {
             if (pattern != null) {
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                    vibrator.vibrate(VibrationEffect.createWaveform(pattern, -1))
+                    v.vibrate(VibrationEffect.createWaveform(pattern, -1))
                 } else {
                     @Suppress("DEPRECATION")
-                    vibrator.vibrate(pattern, -1)
+                    v.vibrate(pattern, -1)
                 }
             } else {
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                    vibrator.vibrate(VibrationEffect.createOneShot(duration, VibrationEffect.DEFAULT_AMPLITUDE))
+                    v.vibrate(VibrationEffect.createOneShot(duration, VibrationEffect.DEFAULT_AMPLITUDE))
                 } else {
                     @Suppress("DEPRECATION")
-                    vibrator.vibrate(duration)
+                    v.vibrate(duration)
                 }
             }
         } catch (_: Exception) { }
@@ -285,18 +290,18 @@ fun ControlScreen(viewModel: RobotViewModel) {
                         val jogColor = Color(0xFF0288D1) // Industrial Blue
                         Row(horizontalArrangement = Arrangement.SpaceEvenly, modifier = Modifier.fillMaxWidth()) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                HydraButton(text = "Y+", onClick = { vibrate(); viewModel.jog("y", stepSize) }, enabled = selectedRobot.online, modifier = Modifier.size(btnSize), backgroundColor = jogColor)
+                                HydraButton(text = "Y+", onClick = { vibrate(); viewModel.jog(activeTarget, "y", stepSize) }, enabled = selectedRobot.online, modifier = Modifier.size(btnSize), backgroundColor = jogColor)
                                 Row(horizontalArrangement = Arrangement.spacedBy(16.dp), modifier = Modifier.padding(vertical = 8.dp)) {
-                                    HydraButton(text = "X-", onClick = { vibrate(); viewModel.jog("x", -stepSize) }, enabled = selectedRobot.online, modifier = Modifier.size(btnSize), backgroundColor = jogColor)
-                                    HydraButton(text = "X+", onClick = { vibrate(); viewModel.jog("x", stepSize) }, enabled = selectedRobot.online, modifier = Modifier.size(btnSize), backgroundColor = jogColor)
+                                    HydraButton(text = "X-", onClick = { vibrate(); viewModel.jog(activeTarget, "x", -stepSize) }, enabled = selectedRobot.online, modifier = Modifier.size(btnSize), backgroundColor = jogColor)
+                                    HydraButton(text = "X+", onClick = { vibrate(); viewModel.jog(activeTarget, "x", stepSize) }, enabled = selectedRobot.online, modifier = Modifier.size(btnSize), backgroundColor = jogColor)
                                 }
-                                HydraButton(text = "Y-", onClick = { vibrate(); viewModel.jog("y", -stepSize) }, enabled = selectedRobot.online, modifier = Modifier.size(btnSize), backgroundColor = jogColor)
+                                HydraButton(text = "Y-", onClick = { vibrate(); viewModel.jog(activeTarget, "y", -stepSize) }, enabled = selectedRobot.online, modifier = Modifier.size(btnSize), backgroundColor = jogColor)
                             }
                             if (activeTarget == "robot") {
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    HydraButton(text = "Z+", onClick = { vibrate(); viewModel.jog("z", stepSize) }, enabled = selectedRobot.online, modifier = Modifier.size(btnSize), backgroundColor = jogColor)
+                                    HydraButton(text = "Z+", onClick = { vibrate(); viewModel.jog(activeTarget, "z", stepSize) }, enabled = selectedRobot.online, modifier = Modifier.size(btnSize), backgroundColor = jogColor)
                                     Spacer(modifier = Modifier.height(24.dp))
-                                    HydraButton(text = "Z-", onClick = { vibrate(); viewModel.jog("z", -stepSize) }, enabled = selectedRobot.online, modifier = Modifier.size(btnSize), backgroundColor = jogColor)
+                                    HydraButton(text = "Z-", onClick = { vibrate(); viewModel.jog(activeTarget, "z", -stepSize) }, enabled = selectedRobot.online, modifier = Modifier.size(btnSize), backgroundColor = jogColor)
                                 }
                             }
                         }

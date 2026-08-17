@@ -5,21 +5,14 @@ plugins {
 
 android {
     namespace = "com.hydraumc.control"
-    // 34, not 33 - compose-bom 2024.02.00 below pulls in Compose/AndroidX
-    // artifacts (material3 1.2.0, core-ktx 1.12.0, etc.) that require
-    // compiling against API 34 (AAR metadata check), independent of
-    // targetSdk - see build.gradle.kts's own AGP version comment.
-    compileSdk = 36
+    // 35, not 36 - Android 15 is the current stable target.
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.hydraumc.control"
         minSdk = 24
-        // 34 (Android 14), not 33 - matches compileSdk above. Real-device
-        // testing on Android 14 (project owner's own phone) is the actual
-        // target platform, so there's no reason to sit one API level
-        // behind it - see README.md's own Troubleshooting entry for why
-        // this was left at 33 initially and what changed.
-        targetSdk = 36
+        // 35 (Android 15), matches compileSdk above.
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
     }
