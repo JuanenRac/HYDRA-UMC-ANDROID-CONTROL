@@ -326,13 +326,13 @@ fun ControlScreen(viewModel: RobotViewModel) {
                     
                     Box(modifier = Modifier.fillMaxWidth().metallicIndustrial()) {
                         Column {
-                            Text(stringResource(R.string.current_tool_atc), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                            Text(stringResource(R.string.current_tool_urtc), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface,)
                             Spacer(modifier = Modifier.height(8.dp))
                             
                             ExposedDropdownMenuBox(
                                 expanded = expandedTool,
                                 onExpandedChange = { expandedTool = !expandedTool },
-                                modifier = Modifier.fillMaxWidth()
+                                modifier = Modifier.fillMaxWidth(),
                             ) {
                                 OutlinedTextField(
                                     value = selectedRobot.currentTool,
@@ -344,15 +344,45 @@ fun ControlScreen(viewModel: RobotViewModel) {
                                 )
                                 ExposedDropdownMenu(
                                     expanded = expandedTool,
-                                    onDismissRequest = { expandedTool = false }
+                                    onDismissRequest = { expandedTool = false },
                                 ) {
-                                    selectedRobot.atcTools.forEach { tool ->
+                                    // Map the 26 professional tools from HYDRA-UMC STUDIO
+                                    val toolTypes = listOf(
+                                        "None",
+                                        "Soldering Station (T12)",
+                                        "SMT Solder Paste Dispenser",
+                                        "Thermal Paste / Liquid Dispenser",
+                                        "Smart Electric Screwdriver",
+                                        "Vacuum / Pneumatic Gripper",
+                                        "Drill (BL4260)",
+                                        "Gimbal Gripper",
+                                        "NEMA Gripper",
+                                        "AOI (Automated Optical Inspection) System",
+                                        "Engraving Laser Diode (10W optical)",
+                                        "3D Printing Hotend",
+                                        "3D Scanner Probe",
+                                        "SMT Pick & Place Head",
+                                        "Heavy-Duty Electromagnet",
+                                        "Spot Welder Head",
+                                        "Conformal Coating Airbrush",
+                                        "Large-Format Vacuum Gripper",
+                                        "Functional Testing Head",
+                                        "UV Curing Head",
+                                        "Hot Air Rework Nozzle",
+                                        "Pneumatic Press-Fit Inserter",
+                                        "Wire Harnessing / Crimping Actuator",
+                                        "PCB Advanced Inspection",
+                                        "Solder Paste Jetting Valve",
+                                        "Ultrasonic Welder / Packaging Sealer",
+                                    )
+                                    
+                                    toolTypes.forEach { toolName ->
                                         DropdownMenuItem(
-                                            text = { Text("[${stringResource(R.string.slot_label, tool.slot)}] ${tool.name}") },
+                                            text = { Text(toolName) },
                                             onClick = {
-                                                viewModel.changeTool(tool.slot)
+                                                viewModel.mutateSelectedTool(toolName)
                                                 expandedTool = false
-                                            }
+                                            },
                                         )
                                     }
                                 }

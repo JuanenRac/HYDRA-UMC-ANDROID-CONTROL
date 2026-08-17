@@ -63,7 +63,7 @@
     <string name="xy_table">Tavolo XY</string>
     <string name="step_label">Passo:</string>
     <string name="kinematics">Cinematica</string>
-    <string name="current_tool_atc">Strumento Attuale (ATC)</string>
+    <string name="current_tool_urtc">Strumento Attuale (URTC)</string>
     <string name="slot_label">Slot %d</string>
     <string name="auto_playback">Riproduzione Automatica</string>
     <string name="connect_server_to_see">Connettiti al server (in Impostazioni) per vedere i robot.</string>

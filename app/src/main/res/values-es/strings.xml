@@ -63,7 +63,7 @@
     <string name="xy_table">Mesa XY</string>
     <string name="step_label">Paso:</string>
     <string name="kinematics">Cinemática</string>
-    <string name="current_tool_atc">Herramienta Actual (ATC)</string>
+    <string name="current_tool_urtc">Herramienta Actual (URTC)</string>
     <string name="slot_label">Slot %d</string>
     <string name="auto_playback">Reproducción Automática</string>
     <string name="connect_server_to_see">Conéctese al servidor (en Ajustes) para ver robots.</string>

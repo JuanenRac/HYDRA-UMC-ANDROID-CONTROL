@@ -565,6 +565,13 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    /**
+     * Directly updates the tool name for the selected robot (URTC style).
+     */
+    fun mutateSelectedTool(toolName: String) {
+        mutateSelected { it.setTool(toolName) }
+    }
+
     /** 
      * Starts a subnet scan to find active HYDRA-UMC servers.
      */

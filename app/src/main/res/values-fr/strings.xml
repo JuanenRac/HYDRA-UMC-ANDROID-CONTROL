@@ -63,7 +63,7 @@
     <string name="xy_table">Table XY</string>
     <string name="step_label">Pas :</string>
     <string name="kinematics">Cinématique</string>
-    <string name="current_tool_atc">Outil Actuel (ATC)</string>
+    <string name="current_tool_urtc">Outil Actuel (URTC)</string>
     <string name="slot_label">Emplacement %d</string>
     <string name="auto_playback">Lecture Automatique</string>
     <string name="connect_server_to_see">Connectez-vous au serveur (dans Paramètres) pour voir les robots.</string>

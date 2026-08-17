@@ -63,7 +63,7 @@
     <string name="xy_table">XY Table</string>
     <string name="step_label">Step:</string>
     <string name="kinematics">Kinematics</string>
-    <string name="current_tool_atc">Current Tool (ATC)</string>
+    <string name="current_tool_urtc">Current Tool (URTC)</string>
     <string name="slot_label">Slot %d</string>
     <string name="auto_playback">Auto Playback</string>
     <string name="connect_server_to_see">Connect to server (in Settings) to see robots.</string>
