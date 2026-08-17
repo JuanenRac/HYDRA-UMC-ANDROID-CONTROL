@@ -6,8 +6,13 @@
 package com.hydraumc.control.ui
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
@@ -76,30 +81,34 @@ fun UserProfileDialog(viewModel: RobotViewModel, onDismiss: () -> Unit) {
                     
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        horizontalArrangement = Arrangement.SpaceEvenly,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         HydraButton(
-                            text = stringResource(R.string.cancel_button),
+                            text = "",
+                            icon = Icons.Default.Close,
                             onClick = onDismiss,
                             backgroundColor = Color.Gray,
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.size(56.dp),
                         )
                         HydraButton(
-                            text = stringResource(R.string.logout_button),
+                            text = "",
+                            icon = Icons.AutoMirrored.Filled.Logout,
                             onClick = {
                                 viewModel.logout()
                                 onDismiss()
                             },
                             backgroundColor = Color(0xFFD32F2F),
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.size(56.dp),
                         )
                         HydraButton(
-                            text = stringResource(R.string.accept_button),
+                            text = "",
+                            icon = Icons.Default.Check,
                             onClick = {
                                 viewModel.saveUserProfile(username, password, email)
                                 onDismiss()
                             },
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.size(56.dp),
                         )
                     }
                 }

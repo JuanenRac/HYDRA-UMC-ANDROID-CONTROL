@@ -22,6 +22,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Dangerous
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Stop
@@ -67,6 +68,8 @@ fun ControlScreen(viewModel: RobotViewModel) {
     }
     /** List of all robots fetched from the ViewModel. */
     val robots = viewModel.robots.value
+    /** List of all jobs fetched from the ViewModel. */
+    val jobs = viewModel.jobs.value
     /** ID of the currently selected robot. */
     val selectedId = viewModel.selectedRobotId.value
     /** Current connection status string. */
@@ -76,6 +79,8 @@ fun ControlScreen(viewModel: RobotViewModel) {
 
     /** State to manage the robot selection dropdown expansion. */
     var expandedRobot by remember { mutableStateOf(value = false) }
+    /** State to manage the job selection dropdown expansion. */
+    var expandedJob by remember { mutableStateOf(value = false) }
     /** State to manage the tool selection dropdown expansion. */
     var expandedTool by remember { mutableStateOf(value = false) }
     /** Currently selected step size for jogging. */
@@ -139,20 +144,6 @@ fun ControlScreen(viewModel: RobotViewModel) {
             }
 
             Spacer(modifier = Modifier.height(16.dp))
-            
-            // EMERGENCY STOP BUTTON
-            if (selectedRobot != null) {
-                HydraButton(
-                    text = stringResource(R.string.e_stop),
-                    onClick = { 
-                        vibrate()
-                        viewModel.sendCommand("stop")
-                    },
-                    backgroundColor = Color.Red,
-                    modifier = Modifier.fillMaxWidth().height(64.dp),
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-            }
             
             // Robot Selection
             ExposedDropdownMenuBox(
@@ -252,6 +243,55 @@ fun ControlScreen(viewModel: RobotViewModel) {
                     }
                 }
 
+                Spacer(modifier = Modifier.height(16.dp))
+                HorizontalDivider()
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Job / Trajectory Selector
+                Box(modifier = Modifier.fillMaxWidth().metallicIndustrial()) {
+                    Column {
+                        Text(
+                            text = stringResource(R.string.file_control),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        ExposedDropdownMenuBox(
+                            expanded = expandedJob,
+                            onExpandedChange = { expandedJob = !expandedJob },
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            OutlinedTextField(
+                                value = stringResource(R.string.selected_file, "None"),
+                                onValueChange = {},
+                                readOnly = true,
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedJob) },
+                                modifier = Modifier.menuAnchor(type = MenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
+                                colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
+                            )
+                            ExposedDropdownMenu(
+                                expanded = expandedJob,
+                                onDismissRequest = { expandedJob = false },
+                            ) {
+                                if (jobs.isEmpty()) {
+                                    DropdownMenuItem(text = { Text("No files on server") }, onClick = {})
+                                } else {
+                                    jobs.forEach { job ->
+                                        DropdownMenuItem(
+                                            text = { Text(job.name) },
+                                            onClick = {
+                                                // TODO: viewModel.selectJob(job.name)
+                                                expandedJob = false
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
                 Spacer(modifier = Modifier.height(24.dp))
                 HorizontalDivider()
                 Spacer(modifier = Modifier.height(16.dp))
@@ -340,29 +380,41 @@ fun ControlScreen(viewModel: RobotViewModel) {
                     horizontalArrangement = Arrangement.SpaceEvenly,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    // E-STOP (Situado a la izquierda)
+                    HydraButton(
+                        text = "",
+                        icon = Icons.Default.Dangerous,
+                        onClick = { 
+                            vibrate()
+                            viewModel.sendCommand("stop")
+                        },
+                        backgroundColor = Color.Red,
+                        modifier = Modifier.size(56.dp),
+                    )
+                    
                     HydraButton(
                         text = "", // Icon only
                         icon = Icons.Default.PlayArrow,
-                        onClick = { viewModel.sendCommand("play") },
-                        enabled = selectedRobot.online && !selectedRobot.isPlaying,
+                        onClick = { vibrate(); viewModel.sendCommand("play") },
+                        enabled = selectedRobot.online && (!selectedRobot.isPlaying || selectedRobot.isPaused),
                         backgroundColor = Color(0xFF2E7D32),
-                        modifier = Modifier.size(56.dp)
+                        modifier = Modifier.size(56.dp),
                     )
                     HydraButton(
                         text = "", // Icon only
-                        icon = Icons.Default.Pause,
-                        onClick = { viewModel.sendCommand("pause") },
+                        icon = if (selectedRobot.isPaused) Icons.Default.PlayArrow else Icons.Default.Pause,
+                        onClick = { vibrate(); viewModel.sendCommand("pause") },
                         enabled = selectedRobot.online && selectedRobot.isPlaying,
                         backgroundColor = Color(0xFFF9A825),
-                        modifier = Modifier.size(56.dp)
+                        modifier = Modifier.size(56.dp),
                     )
                     HydraButton(
                         text = "", // Icon only
                         icon = Icons.Default.Stop,
-                        onClick = { viewModel.sendCommand("stop") },
-                        enabled = selectedRobot.online,
+                        onClick = { vibrate(); viewModel.sendCommand("stop") },
+                        enabled = selectedRobot.online && selectedRobot.isPlaying,
                         backgroundColor = IndustrialDanger,
-                        modifier = Modifier.size(56.dp)
+                        modifier = Modifier.size(56.dp),
                     )
                 }
             }

@@ -108,5 +108,8 @@
     <string name="app_description">Professional native control for HYDRA-UMC robotic platforms.</string>
     <string name="close_button">CLOSE</string>
     <string name="telemetry_title">Industrial Telemetry</string>
+    <string name="login_title">ACCESS CONTROL</string>
+    <string name="remember_me_label">Remember me</string>
+    <string name="login_button_label">LOGIN</string>
     <string name="e_stop">EMERGENCY STOP</string>
 </resources>

@@ -39,6 +39,8 @@ fun DashboardScreen(viewModel: RobotViewModel) {
     val robots = viewModel.robots.value
     /** Current server connection status. */
     val connectionStatus = viewModel.connectionStatus.value
+    /** Current active server info. */
+    val activeServer = viewModel.activeServer.value
     /** Boolean flag indicating if the app is successfully connected to a server. */
     val isConnected = connectionStatus == stringResource(R.string.status_connected)
 
@@ -58,7 +60,7 @@ fun DashboardScreen(viewModel: RobotViewModel) {
             Text(
                 text = stringResource(R.string.server_status, "").trim(),
                 style = MaterialTheme.typography.bodyMedium,
-                color = Color.White
+                color = Color.White,
             )
             val statusColor = when (connectionStatus) {
                 stringResource(R.string.status_connected) -> Color(0xFF00C853)
@@ -71,6 +73,38 @@ fun DashboardScreen(viewModel: RobotViewModel) {
                 fontWeight = FontWeight.Bold,
                 color = statusColor,
             )
+        }
+        
+        if (isConnected && (activeServer != null)) {
+            Spacer(modifier = Modifier.height(16.dp))
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .metallicIndustrial(backgroundColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                    .padding(12.dp)
+            ) {
+                Column {
+                    Text(
+                        text = "SYSTEM HEALTH",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column {
+                            Text("Host: ${activeServer.hostname}", style = MaterialTheme.typography.bodySmall)
+                            Text("Uptime: ${formatUptime(activeServer.uptimeSeconds)}", style = MaterialTheme.typography.bodySmall)
+                        }
+                        Column(horizontalAlignment = Alignment.End) {
+                            Text("Controllers: ${activeServer.controllerCount}", style = MaterialTheme.typography.bodySmall)
+                            Text("Robots: ${activeServer.robotCount}", style = MaterialTheme.typography.bodySmall)
+                        }
+                    }
+                }
+            }
         }
         
         Spacer(modifier = Modifier.height(24.dp))
@@ -169,4 +203,16 @@ fun DashboardScreen(viewModel: RobotViewModel) {
  */
 fun formatCoord(value: Double): String {
     return String.format(Locale.US, "%.2f", value)
+}
+
+/**
+ * Formats seconds into a human-readable uptime string.
+ * @param seconds Total uptime in seconds.
+ * @return Formatted uptime (e.g., "2d 4h 15m").
+ */
+fun formatUptime(seconds: Int): String {
+    val d = seconds / 86400
+    val h = (seconds % 86400) / 3600
+    val m = (seconds % 3600) / 60
+    return if (d > 0) "${d}d ${h}h ${m}m" else if (h > 0) "${h}h ${m}m" else "${m}m"
 }

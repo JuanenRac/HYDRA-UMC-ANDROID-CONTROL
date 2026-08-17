@@ -29,7 +29,6 @@ import androidx.compose.ui.text.withStyle
 import com.hydraumc.control.ui.*
 import com.hydraumc.control.ui.theme.metallicIndustrial
 import com.hydraumc.control.viewmodel.RobotViewModel
-import com.hydraumc.control.model.ServerInfo
 
 /**
  * Sealed class defining the different screens available for navigation.
@@ -46,6 +45,8 @@ sealed class Screen(val route: String, @param:StringRes val titleRes: Int, val i
     object Camera : Screen("camera", R.string.tab_camera, Icons.Filled.CameraAlt)
     /** The 3D Simulation screen. */
     object ThreeD : Screen("threed", R.string.tab_3d_view, Icons.Filled.ViewInAr)
+    /** The Industrial Telemetry screen. */
+    object Telemetry : Screen("telemetry", R.string.tab_telemetry, Icons.Filled.Terminal)
     /** The Application Settings screen. */
     object Settings : Screen("settings", R.string.tab_settings, Icons.Filled.Settings)
 }
@@ -178,6 +179,15 @@ fun MainScreen(viewModel: RobotViewModel, onEnableBluetooth: () -> Unit = {}) {
                             Icon(Icons.Default.Person, contentDescription = "Usuario", tint = MaterialTheme.colorScheme.primary)
                         }
                         IconButton(onClick = { 
+                            navController.navigate(Screen.Telemetry.route) {
+                                popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        }) {
+                            Icon(Icons.Default.Terminal, contentDescription = "Telemetría", tint = MaterialTheme.colorScheme.primary)
+                        }
+                        IconButton(onClick = { 
                             navController.navigate(Screen.Settings.route) {
                                 popUpTo(navController.graph.findStartDestination().id) { saveState = true }
                                 launchSingleTop = true
@@ -232,6 +242,7 @@ fun MainScreen(viewModel: RobotViewModel, onEnableBluetooth: () -> Unit = {}) {
             composable(Screen.Control.route) { ControlScreen(viewModel) }
             composable(Screen.Camera.route) { CameraScreen(viewModel) }
             composable(Screen.ThreeD.route) { ThreeDScreen(viewModel) }
+            composable(Screen.Telemetry.route) { TelemetryScreen(viewModel) }
             composable(Screen.Settings.route) { SettingsScreen(viewModel, onEnableBluetooth) }
         }
     }

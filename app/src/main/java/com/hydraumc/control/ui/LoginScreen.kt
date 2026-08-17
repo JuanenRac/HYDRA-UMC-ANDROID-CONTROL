@@ -14,6 +14,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
+import com.hydraumc.control.R
 import com.hydraumc.control.viewmodel.RobotViewModel
 import com.hydraumc.control.ui.theme.*
 
@@ -43,7 +45,7 @@ fun LoginScreen(viewModel: RobotViewModel) {
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = "ACCESS CONTROL",
+                    text = stringResource(R.string.login_title),
                     style = MaterialTheme.typography.headlineSmall,
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.ExtraBold
@@ -54,7 +56,7 @@ fun LoginScreen(viewModel: RobotViewModel) {
                 OutlinedTextField(
                     value = username,
                     onValueChange = { username = it },
-                    label = { Text("Username") },
+                    label = { Text(stringResource(R.string.username_label)) },
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedTextColor = Color.White,
@@ -67,7 +69,7 @@ fun LoginScreen(viewModel: RobotViewModel) {
                 OutlinedTextField(
                     value = password,
                     onValueChange = { password = it },
-                    label = { Text("Password") },
+                    label = { Text(stringResource(R.string.password_label)) },
                     visualTransformation = PasswordVisualTransformation(),
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
@@ -86,13 +88,13 @@ fun LoginScreen(viewModel: RobotViewModel) {
                         checked = rememberMe,
                         onCheckedChange = { rememberMe = it }
                     )
-                    Text("Remember me", style = MaterialTheme.typography.bodyMedium)
+                    Text(stringResource(R.string.remember_me_label), style = MaterialTheme.typography.bodyMedium)
                 }
                 
                 Spacer(modifier = Modifier.height(24.dp))
                 
                 HydraButton(
-                    text = "LOGIN",
+                    text = stringResource(R.string.login_button_label),
                     onClick = { viewModel.login(username, password, rememberMe) },
                     modifier = Modifier.fillMaxWidth()
                 )

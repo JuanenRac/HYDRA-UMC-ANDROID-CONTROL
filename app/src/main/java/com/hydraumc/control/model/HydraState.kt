@@ -90,9 +90,9 @@ class RobotView(val raw: JSONObject) {
         get() = raw.optJSONObject("playbackState") ?: JSONObject().also { raw.put("playbackState", it) }
     
     /** Whether a movement sequence is currently playing. */
-    val isPlaying: Boolean get() = playbackState.optBoolean("isPlaying", false)
+    val isPlaying: Boolean get() = playbackState.optBoolean("isPlaying", false) || playbackState.optBoolean("playing", false)
     /** Whether the current movement sequence is paused. */
-    val isPaused: Boolean get() = playbackState.optBoolean("isPaused", false)
+    val isPaused: Boolean get() = playbackState.optBoolean("isPaused", false) || playbackState.optBoolean("paused", false)
     /** Playback speed percentage. */
     val speed: Double get() = playbackState.optDouble("speed", 100.0)
     /** Playback acceleration percentage. */
@@ -104,10 +104,13 @@ class RobotView(val raw: JSONObject) {
     fun setPlaying(playing: Boolean) {
         val pb = playbackState
         pb.put("isPlaying", playing)
+        pb.put("playing", playing)
         if (playing) {
             pb.put("activeStep", 0)
             pb.put("isFinished", false)
+            pb.put("finished", false)
             pb.put("isPaused", false)
+            pb.put("paused", false)
         } else {
             pb.put("activeStep", -1)
         }
@@ -115,14 +118,18 @@ class RobotView(val raw: JSONObject) {
 
     /** Toggles the pause state of playback. */
     fun togglePaused() {
-        playbackState.put("isPaused", !isPaused)
+        val newVal = !isPaused
+        playbackState.put("isPaused", newVal)
+        playbackState.put("paused", newVal)
     }
 
     /** Stops playback and resets state. */
     fun stop() {
         val pb = playbackState
         pb.put("isPlaying", false)
+        pb.put("playing", false)
         pb.put("isPaused", false)
+        pb.put("paused", false)
         pb.put("activeStep", -1)
     }
 
@@ -184,6 +191,19 @@ class ControllerView(val raw: JSONObject) {
 }
 
 /** 
+ * Thin view over a job/trajectory file.
+ * @property raw Underlying JSONObject for the job.
+ */
+class JobView(val raw: JSONObject) {
+    /** Unique name of the job file. */
+    val name: String get() = raw.optString("name", "Unknown Job")
+    /** File size in bytes. */
+    val size: Long get() = raw.optLong("size", 0)
+    /** Last modification timestamp. */
+    val lastModified: String get() = raw.optString("lastModified", "")
+}
+
+/** 
  * Wraps the full system state payload received from the server.
  * @property raw The full JSONObject representing the entire system settings.
  */
@@ -200,6 +220,13 @@ class HydraState(val raw: JSONObject) {
 
     /** Flattened list of all robots across all controllers. */
     val allRobots: List<RobotView> get() = controllers.flatMap { it.robots }
+
+    /** List of all jobs/trajectories available on the server. */
+    val allJobs: List<JobView>
+        get() {
+            val arr = raw.optJSONArray("jobs") ?: return emptyList()
+            return (0 until arr.length()).mapNotNull { i -> arr.optJSONObject(i)?.let(::JobView) }
+        }
 
     /** Finds a robot by its ID across the entire system. */
     fun robotById(robotId: Int): RobotView? = allRobots.find { it.id == robotId }

@@ -50,6 +50,12 @@ import android.annotation.SuppressLint
 data class AtcTool(val slot: Int, val name: String)
 
 /** 
+ * Flat, display-friendly snapshot of one Job.
+ * @property name Job name.
+ */
+data class JobState(val name: String)
+
+/** 
  * Flat, display-friendly snapshot of one RobotView.
  * @property id Robot unique ID.
  * @property name Robot name.
@@ -116,6 +122,8 @@ private fun RobotView.toDisplay(): RobotState = RobotState(
 class RobotViewModel(application: Application) : AndroidViewModel(application) {
     /** Current list of robots available for display. */
     val robots = mutableStateOf<List<RobotState>>(emptyList())
+    /** List of jobs/trajectories available on the server. */
+    val jobs = mutableStateOf<List<JobState>>(emptyList())
     /** ID of the currently selected robot in the Control screen. */
     val selectedRobotId = mutableStateOf<Int?>(null)
 
@@ -134,6 +142,8 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
 
     /** List of servers found during LAN discovery. */
     val discoveredServers = mutableStateOf<List<ServerInfo>>(emptyList())
+    /** Currently connected server info. */
+    val activeServer = mutableStateOf<ServerInfo?>(null)
     /** Boolean flag for network scanning activity. */
     val isScanning = mutableStateOf(value = false)
 
@@ -244,6 +254,13 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     /**
+     * Clears all telemetry logs.
+     */
+    fun clearLogs() {
+        telemetryLogs.value = emptyList()
+    }
+
+    /**
      * Logs out and clears session.
      */
     fun logout() {
@@ -309,6 +326,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                 val info = client.getHydraInfo()
                 if (info != null) {
                     val server = ServerInfo.fromHydraInfo(host, portInt, info)
+                    activeServer.value = server
                     logTelemetry("Server verified: ${server.displayName}")
                     if (discoveredServers.value.none { (it.host == host) && (it.port == portInt) }) {
                         discoveredServers.value += server
@@ -364,6 +382,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
     private fun applyState(newState: HydraState) {
         state = newState
         robots.value = newState.allRobots.map { it.toDisplay() }
+        jobs.value = newState.allJobs.map { JobState(it.name) }
         if ((selectedRobotId.value == null) || (robots.value.none { it.id == selectedRobotId.value })) {
             selectedRobotId.value = robots.value.firstOrNull()?.id
         }
