@@ -65,6 +65,7 @@ dependencies {
     implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.splashscreen)
     implementation(libs.accompanist.permissions)
+    implementation(libs.androidx.biometric)
     
     // Navigation
     implementation(libs.androidx.navigation.compose)

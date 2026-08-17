@@ -33,8 +33,10 @@ import com.hydraumc.control.network.HydraApiClient
 import com.hydraumc.control.network.HydraApiException
 import com.hydraumc.control.network.HydraWebSocket
 import com.hydraumc.control.network.HydraBleClient
+import com.hydraumc.control.network.StateCache
 import com.hydraumc.control.network.WsStatus
 import com.hydraumc.control.network.scanSubnets
+import com.hydraumc.control.util.NotificationHelper
 import kotlinx.coroutines.launch
 import android.bluetooth.BluetoothManager
 import android.bluetooth.le.ScanCallback
@@ -190,6 +192,8 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
     private val prefs = ConnectionPrefs(application)
     /** Persistent authentication preferences manager. */
     private val authPrefs = AuthPrefs(application)
+    /** Persistent state cache manager. */
+    private val stateCache = StateCache(application)
     /** Flag to prevent clearing server list during intentional reconnection. */
     private var isSwitchingServer = false
 
@@ -199,11 +203,15 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
     val loginPassword = mutableStateOf(value = "")
     val loginEmail = mutableStateOf(value = "")
     val loginRememberMe = mutableStateOf(value = false)
+    val isBiometricEnabled = mutableStateOf(value = false)
 
     /** Camera selection */
     val selectedCameraId = mutableIntStateOf(1)
 
     init {
+        connectionStatus.value = application.getString(R.string.status_disconnected)
+        NotificationHelper.createChannel(application)
+
         /** Load saved connection settings on initialization. */
         viewModelScope.launch {
             prefs.load()?.let { (savedIp, savedPort) ->
@@ -217,9 +225,15 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
             loginPassword.value = profile.password
             loginEmail.value = profile.email
             loginRememberMe.value = profile.rememberMe
+            isBiometricEnabled.value = profile.isBiometricEnabled
             if (profile.rememberMe && profile.isLoggedIn) {
                 // Auto login
                 isLoggedIn.value = true
+            }
+
+            // Load cached state
+            stateCache.loadState()?.let { cached ->
+                applyState(HydraState(cached), isFromCache = true)
             }
         }
         
@@ -256,10 +270,11 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
     /**
      * Updates and persists the user profile.
      */
-    fun saveUserProfile(user: String, pass: String, email: String) {
+    fun saveUserProfile(user: String, pass: String, email: String, biometric: Boolean = isBiometricEnabled.value) {
         loginUsername.value = user
         loginPassword.value = pass
         loginEmail.value = email
+        isBiometricEnabled.value = biometric
         viewModelScope.launch {
             authPrefs.saveAuth(
                 com.hydraumc.control.network.UserProfile(
@@ -268,6 +283,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                     email = email,
                     rememberMe = loginRememberMe.value,
                     isLoggedIn = isLoggedIn.value,
+                    isBiometricEnabled = biometric,
                 ),
             )
         }
@@ -398,11 +414,32 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
     /** 
      * Internal helper to update the UI models when a new core state arrives.
      * @param newState The fresh HydraState object.
+     * @param isFromCache Whether this update is from persistent storage.
      */
-    private fun applyState(newState: HydraState) {
+    private fun applyState(newState: HydraState, isFromCache: Boolean = false) {
+        val oldState = state
         state = newState
         robots.value = newState.allRobots.map { it.toDisplay() }
         jobs.value = newState.allJobs.map { JobState(it.name) }
+        
+        if (!isFromCache) {
+            viewModelScope.launch {
+                stateCache.saveState(newState.toJson())
+            }
+            
+            // Industrial Notification Logic: Alert on job completion
+            newState.allRobots.forEach { robot ->
+                val oldRobot = oldState.robotById(robot.id)
+                if ((oldRobot != null) && oldRobot.isPlaying && !robot.isPlaying) {
+                    NotificationHelper.sendAlert(
+                        getApplication(), 
+                        "Robot ${robot.name}", 
+                        "Job sequence completed successfully.",
+                    )
+                }
+            }
+        }
+
         if ((selectedRobotId.value == null) || (robots.value.none { it.id == selectedRobotId.value })) {
             selectedRobotId.value = robots.value.firstOrNull()?.id
         }

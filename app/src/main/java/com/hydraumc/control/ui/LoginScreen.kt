@@ -15,6 +15,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.platform.LocalContext
+import androidx.fragment.app.FragmentActivity
+import com.hydraumc.control.util.BiometricHelper
 import com.hydraumc.control.R
 import com.hydraumc.control.viewmodel.RobotViewModel
 import com.hydraumc.control.ui.theme.*
@@ -25,10 +28,15 @@ import com.hydraumc.control.ui.theme.*
  */
 @Composable
 fun LoginScreen(viewModel: RobotViewModel) {
+    val context = LocalContext.current
+    val activity = context as? FragmentActivity
     var username by remember { mutableStateOf(viewModel.loginUsername.value) }
     var password by remember { mutableStateOf("") }
     var rememberMe by remember { mutableStateOf(viewModel.loginRememberMe.value) }
+    val isBiometricEnabled = viewModel.isBiometricEnabled.value
     val lastError = viewModel.lastError.value
+
+    val showBiometric = isBiometricEnabled && BiometricHelper.isBiometricAvailable(context)
 
     Column(
         modifier = Modifier
@@ -102,6 +110,31 @@ fun LoginScreen(viewModel: RobotViewModel) {
                     onClick = { viewModel.login(username, password, rememberMe) },
                     modifier = Modifier.fillMaxWidth()
                 )
+
+                if (showBiometric && activity != null) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    HydraButton(
+                        text = stringResource(R.string.biometric_login_button),
+                        onClick = {
+                            BiometricHelper.showBiometricPrompt(
+                                activity = activity,
+                                title = context.getString(R.string.biometric_prompt_title),
+                                subtitle = context.getString(R.string.biometric_prompt_subtitle),
+                                onSuccess = {
+                                    // Use stored credentials for biometric login
+                                    viewModel.login(
+                                        viewModel.loginUsername.value,
+                                        viewModel.loginPassword.value,
+                                        viewModel.loginRememberMe.value
+                                    )
+                                },
+                                onError = { /* User cancelled or failed */ }
+                            )
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        backgroundColor = Color(0xFF455A64) // Grey-Blue
+                    )
+                }
                 
                 lastError?.let { error ->
                     Spacer(modifier = Modifier.height(16.dp))

@@ -8,18 +8,19 @@ A native Android app (Kotlin + Jetpack Compose) that controls a robot on the [HY
 
 ## 🏗️ What's implemented
 
-- **Access Control & Authentication** (`ui/LoginScreen.kt`, `network/AuthPrefs.kt`) - Professional login system with "Remember me" functionality and persistent session storage. Includes a comprehensive **User Profile** manager for account details and a secure **Logout** mechanism. Fully synchronized in **5 languages** (EN, ES, DE, FR, IT).
-- **Industrial Telemetry Terminal** (`ui/TelemetryScreen.kt`) - A dedicated real-time log viewer with a terminal-style interface. Tracks system events, REST/WebSocket synchronization, and provides color-coded diagnostics (Matrix Green for success, Industrial Red for errors). Accessible globally via the top header bar.
-- **Advanced Dashboard** (`ui/DashboardScreen.kt`) - High-fidelity **3D Horizontal Carousel** with perspective swipe effects. Now displays enriched robot metadata: **Manufacturer** (Source Robotics, Annin, Universal Robots, AgileX, etc.), **Robot Role** (CNC, Laser, PnP), and an **Industrial Module Matrix** (live indicators for CAM, XY, ATC, PNP, CNC, LSR, BED, VAC modules).
+- **Access Control & Biometrics** (`ui/LoginScreen.kt`, `util/BiometricHelper.kt`) - Professional login system with **Fingerprint and Face Unlock** support (`androidx.biometric`). Includes "Remember me" functionality, persistent session storage, and a secure **Logout** mechanism. Fully localized in **5 languages**.
+- **Offline Mode & State Cache** (`network/StateCache.kt`) - Integrated persistence engine using **DataStore**. The app automatically caches the last known system state, allowing for instant dashboard viewing and configuration audits even without an active Wi-Fi connection.
+- **Mission Notifications & Alerts** (`util/NotificationHelper.kt`) - Industrial-grade alerting system. Sends high-priority push notifications when a robot completes a job sequence or if critical hardware events occur, ensuring the operator is informed even when the app is in the background.
+- **Industrial Telemetry Terminal** (`ui/TelemetryScreen.kt`) - A dedicated real-time log viewer with a terminal-style interface. Tracks system events, REST/WebSocket synchronization, and provides color-coded diagnostics (Matrix Green for success, Industrial Red for errors).
+- **Advanced Dashboard** (`ui/DashboardScreen.kt`) - High-fidelity **3D Horizontal Carousel** with perspective swipe effects. Displays enriched robot metadata: **Manufacturer** (Source Robotics, Annin, Universal Robots, AgileX, etc.), **Robot Role** (CNC, Laser, PnP), and an **Industrial Module Matrix** with live status for CAM, XY, ATC, PNP, CNC, LSR, BED, VAC, and RCK modules.
 - **System Health Monitor** (`ui/DashboardScreen.kt`) - Real-time metrics for the connected Compute Module 5, including **Hostname**, **Formatted Uptime** (e.g., "2d 4h 15m"), and active counts for controllers and robots.
 - **Enhanced Manual Control** (`ui/ControlScreen.kt`) - Features a professional vertical layout with **50% larger Joystick buttons** for maximum precision. Includes a **Job/Trajectory Selector** to browse and execute files directly from the server.
-- **Safety & Playback Panel** (`ui/ControlScreen.kt`) - Fixed bottom control bar housing the **E-STOP (Emergency Stop)**, **Start**, **Pause**, and **Stop** buttons. These controls are always visible regardless of scrolling and feature **Haptic Feedback** (physical vibration) for sensory confirmation of every command.
-- **Discovery & Connection** (`network/Discovery.kt`, `network/HydraApiClient.kt`, `network/HydraWebSocket.kt`, `network/HydraBleClient.kt`) - Dual-transport system: **Wi-Fi Subnet Scanning** and **Bluetooth Low Energy (BLE)** scanning with real-time hardware status detection. Features a **Global Server Selector** in the header for rapid switching between robotic cells.
-- **Kinematic Sync Logic** (`model/HydraState.kt`) - Advanced state mapping that handles double-level synchronization. Updates coordinate mirrors (`pos.tx`/`pos.ty`) and controller-level gantry stages (`kinematicBrainStage`) to ensure direct hardware response and seamless browser-to-mobile parity.
-- **Industrial 3D Theme** (`ui/theme/`) - A metallic visual engine providing a machinery dashboard feel. Components feature beveled borders, gradients, and **Status LEDs**.
+- **Safety & Playback Panel** (`ui/ControlScreen.kt`) - Fixed bottom control bar housing the **E-STOP (Emergency Stop)**, **Start**, **Pause**, and **Stop** buttons. These controls are always visible and feature **Haptic Feedback** for physical sensory confirmation.
+- **Improved 3D View** (`ui/ThreeDScreen.kt`) - Embedded WebView optimized with hardware acceleration and a "Native Headless" mode (`?hideUI=true`), prepared to show only the 3D scene when the server supports UI-hiding flags.
+- **Discovery & Connection** (`network/Discovery.kt`, `network/HydraApiClient.kt`, `network/HydraWebSocket.kt`, `network/HydraBleClient.kt`) - Dual-transport system: **Wi-Fi Subnet Scanning** and **Bluetooth Low Energy (BLE)** scanning with real-time hardware status detection. Features a **Global Server Selector** in the header.
 - **Toolchain & Project Quality** - AGP 9.3.1, Kotlin 2.2.10, compileSdk 36. Clean build output with zero warnings, optimized R8 production variants, and advanced **Roborazzi** screenshot testing.
 
-**Status: Wi-Fi and Bluetooth (Android-side) implemented.** The app is a high-grade industrial console ready for mission-critical robot operation.
+**Status: Wi-Fi, Bluetooth, Biometrics, and Notifications implemented.** The app is a high-grade industrial console ready for mission-critical robot operation.
 
 ## 🚀 Building
 
@@ -42,33 +43,31 @@ build-android.bat      # Windows
 1. Run the server: `cd HYDRA-UMC-STUDIO && npm run dev` (Port 3000).
 2. Connect your Android device to the same Wi-Fi.
 3. Use the **Global Server Selector** or enter the IP manually in the header.
-4. **Haptics Note:** Ensure vibration is enabled in your device settings to experience the physical command confirmation.
+4. **Biometrics:** Enable "Biometric Login" in your User Profile to skip the password screen on the next launch.
 
 ## 🩺 Troubleshooting
 
 | Symptom | Cause | Fix |
 |---|---|---|
-| No Haptics | System vibration off | Enable "Touch Feedback" in Android Sound/Vibration settings |
+| No Notifications | Permission denied | Grant "Notifications" permission in Android settings for this app |
+| No Biometrics | Hardware not set | Ensure you have a Fingerprint/Face registered in your Android System Security |
 | Robot won't move | Browser cerebral link | Keep a HYDRA-UMC STUDIO browser tab open for IK processing |
 | Bluetooth disabled | Physical chip off | Use the "ENABLE SYSTEM BT" 3D button in the app |
-| Stale Server List | WebSocket Drop | The app clears servers on real network loss for safety |
 
 ## 🔗 Related Projects
 
-This project is part of a larger robotics ecosystem by the same author (JuanenRac / Electro Hobby 3D). Worth knowing about, since a request might actually be about one of these rather than this repository:
+This project is part of a larger robotics ecosystem by the same author (JuanenRac / Electro Hobby 3D):
 
 **HYDRA-UMC platform** — the multi-robot micro-factory cell
-- **[HYDRA-UMC](https://github.com/JuanenRac/HYDRA-UMC)** — the motherboard itself: Raspberry Pi CM5 host + dual-core STM32H745 real-time co-processor, orchestrating up to 8 distributed robot arms over CAN-OTA/SPI-OTA. Own hardware + firmware, GPL-3.0/CERN-OHL-S v2/CC BY-SA 4.0.
-- **[HYDRA-UMC STUDIO](https://github.com/JuanenRac/HYDRA-UMC-STUDIO)** — web-based control dashboard for HYDRA-UMC: multi-robot 3D visualization, kinematics/trajectory recording, CAN-OTA flashing and testing for the whole platform. React + Vite + Three.js. Also the server this app talks to (`server.ts`, `docs/REMOTE_API.md`).
-- **HYDRA-UMC-CONTROL** *(this repository)* — Android control app for HYDRA-UMC over Wi-Fi and Bluetooth.
-- **[HYDRA-UMC-IOS-CONTROL](https://github.com/JuanenRac/HYDRA-UMC-IOS-CONTROL)** — iOS control app for HYDRA-UMC, same contract, direct counterpart to this app.
-- **[HYDRA-UMC-SUITE](https://github.com/JuanenRac/HYDRA-UMC-SUITE)** — desktop (Python/PySide6) swarm command center: multi-controller network discovery, live bidirectional sync, real 3D robot viewport, Photoshop-style dockable workspace.
+- **[HYDRA-UMC](https://github.com/JuanenRac/HYDRA-UMC)** — Motherboard: Raspberry Pi CM5 host + STM32H745.
+- **[HYDRA-UMC STUDIO](https://github.com/JuanenRac/HYDRA-UMC-STUDIO)** — Web-based control dashboard and core server.
+- **HYDRA-UMC-CONTROL** *(this repository)* — Android control app over Wi-Fi and Bluetooth.
+- **[HYDRA-UMC-IOS-CONTROL](https://github.com/JuanenRac/HYDRA-UMC-IOS-CONTROL)** — iOS counterpart.
+- **[HYDRA-UMC-SUITE](https://github.com/JuanenRac/HYDRA-UMC-SUITE)** — Desktop swarm command center.
 
-**URTC platform** — the tool head controller every HYDRA-UMC robot arm carries
-- **[URTC](https://github.com/JuanenRac/URTC)** — Universal Robot Tool Controller: STM32F303-based CAN bus tool head controller, 25 fully-implemented tool profiles, CAN-OTA firmware update.
-- **[URTC Flasher](https://github.com/JuanenRac/URTC-FLASHER)** — desktop CAN-OTA + full-chip SWD/JTAG flashing tool for URTC boards (Windows/Linux).
-- **[URTC Tester](https://github.com/JuanenRac/URTC-TESTER)** — desktop live CAN-bus diagnostic tool for URTC boards, one panel per tool profile (Windows/Linux).
-- **[URTC Web Studio](https://github.com/JuanenRac/URTC-WEB-STUDIO)** — browser-based alternative to the 2 desktop tools above (Web Serial API + SLCAN), no local install needed.
+**URTC platform** — robot tool head controllers
+- **[URTC](https://github.com/JuanenRac/URTC)** — Universal Robot Tool Controller (STM32F303).
+- **[URTC Flasher](https://github.com/JuanenRac/URTC-FLASHER)** / **[URTC Tester](https://github.com/JuanenRac/URTC-TESTER)** / **[URTC Web Studio](https://github.com/JuanenRac/URTC-WEB-STUDIO)**.
 
 ## 👤 Author
 

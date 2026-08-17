@@ -6,7 +6,7 @@
 package com.hydraumc.control
 
 import android.os.Bundle
-import androidx.activity.ComponentActivity
+import androidx.fragment.app.FragmentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
@@ -28,13 +28,13 @@ import com.hydraumc.control.viewmodel.RobotViewModel
  * Main activity that initializes the application, handles the splash screen,
  * and sets up the primary Compose UI content.
  */
-class MainActivity : ComponentActivity() {
+class MainActivity : FragmentActivity() {
     /** The shared ViewModel that manages robot state and connectivity. */
     private val robotViewModel: RobotViewModel by viewModels()
 
     /** Activity result launcher for enabling Bluetooth. */
     private val enableBluetoothLauncher = registerForActivityResult(
-        ActivityResultContracts.StartActivityForResult()
+        ActivityResultContracts.StartActivityForResult(),
     ) { result ->
         if (result.resultCode == RESULT_OK) {
             robotViewModel.scanBluetooth()
@@ -67,15 +67,15 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background,
                 ) {
                     if (showSplash) {
-                        CustomSplashScreen(onTimeout = { showSplash = false })
+                        CustomSplashScreen { showSplash = false }
                     } else if (!isLoggedIn) {
                         LoginScreen(robotViewModel)
                     } else {
-                        MainScreen(robotViewModel, onEnableBluetooth = {
+                        MainScreen(robotViewModel) {
                             /** Intent to request enabling Bluetooth. */
                             val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
                             enableBluetoothLauncher.launch(enableBtIntent)
-                        })
+                        }
                     }
                 }
             }

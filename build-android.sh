@@ -10,12 +10,11 @@ echo ""
 # directory this script happens to be invoked from.
 cd "$(dirname "$0")" || exit 1
 
-# The Gradle project lives at the repo root (app/ is the Android module) -
-# there's no separate android-app/ folder anymore, consolidated in August 2026.
+# The Gradle project lives at the repo root (app/ is the Android module).
 if [ ! -f "./gradlew" ]; then
-    echo "❌ Error: no se encuentra ./gradlew en $(pwd)."
-    echo "El wrapper de Gradle (gradlew, gradlew.bat, gradle/wrapper/*) debe estar"
-    echo "commiteado en el repo - si falta, vuelve a clonar o restaura esos archivos."
+    echo "❌ Error: ./gradlew not found in $(pwd)."
+    echo "The Gradle wrapper (gradlew, gradlew.bat, gradle/wrapper/*) must be"
+    echo "committed in the repo - if missing, please re-clone or restore these files."
     exit 1
 fi
 
@@ -25,12 +24,12 @@ fi
 # a terminal without ever having opened it there needs ANDROID_HOME/
 # ANDROID_SDK_ROOT instead.
 if [ ! -f "./local.properties" ] && [ -z "$ANDROID_HOME" ] && [ -z "$ANDROID_SDK_ROOT" ]; then
-    echo "⚠️  Atención: no se encuentra local.properties ni la variable de entorno"
-    echo "   ANDROID_HOME/ANDROID_SDK_ROOT. Gradle probablemente falle al no saber"
-    echo "   dónde está el Android SDK."
-    echo "   Solución más simple: abre este proyecto una vez con Android Studio"
-    echo "   (genera local.properties automáticamente), o exporta ANDROID_HOME"
-    echo "   apuntando a tu instalación del SDK antes de reintentar."
+    echo "⚠️  Attention: local.properties not found and ANDROID_HOME/ANDROID_SDK_ROOT"
+    echo "   environment variables are not set. Gradle will likely fail as it"
+    echo "   won't know where the Android SDK is located."
+    echo "   Simplest solution: open this project once with Android Studio"
+    echo "   (generates local.properties automatically), or export ANDROID_HOME"
+    echo "   pointing to your SDK installation before retrying."
     echo ""
 fi
 
@@ -38,52 +37,53 @@ fi
 # Gradle error if you don't have it ("no variants... compatible with
 # Java 8" or similar) never mentions the JDK clearly, so this is checked
 # here up front instead of letting it fail with that cryptic message.
-if java -version 2>&1 | grep -qE '1\.[5-8]\.|1[0-9]\.'; then
-    echo "⚠️  Atención: el JDK activo parece ser anterior a JDK 21."
-    echo "   AGP 9.3.1 necesita JDK 21 o superior para ejecutar Gradle."
-    echo "   Instala un JDK 21+ (o usa el que trae Android Studio en"
-    echo "   .../Android Studio/jbr) y exporta JAVA_HOME apuntando a él."
+# This regex catches 1.x (Java 8 and below) and 10-20.
+if java -version 2>&1 | grep -qE '1\.[5-8]\.| (1[0-9]|20)\.'; then
+    echo "⚠️  Attention: The active JDK appears to be older than JDK 21."
+    echo "   AGP 9.3.1 requires JDK 21 or higher to run Gradle."
+    echo "   Please install JDK 21+ (or use the one bundled with Android Studio in"
+    echo "   .../Android Studio/jbr) and export JAVA_HOME pointing to it."
     echo ""
 fi
 
-echo "[1/3] 🛠️  Compilando aplicación (APK Debug)..."
+echo "[1/3] 🛠️  Building application (APK Debug)..."
 # Make gradlew executable in case it isn't already
 chmod +x gradlew
 ./gradlew assembleDebug
 
 # Check whether the build failed
 if [ $? -ne 0 ]; then
-    echo "❌ Error: La compilación del APK ha fallado."
+    echo "❌ Error: APK build failed."
     exit 1
 fi
-echo "✅ APK generado correctamente."
+echo "✅ APK generated successfully."
 echo ""
 
-echo "[2/3] 📱 Buscando dispositivos conectados por USB/WiFi..."
+echo "[2/3] 📱 Searching for connected devices via USB/WiFi..."
 # Check whether adb is installed
 if ! command -v adb &> /dev/null; then
-    echo "⚠️  Atención: No se ha encontrado el comando 'adb'."
-    echo "El APK se ha generado en: app/build/outputs/apk/debug/app-debug.apk"
-    echo "Instala Android Platform Tools (adb) para instalarlo automáticamente."
+    echo "⚠️  Attention: 'adb' command not found."
+    echo "The APK was generated at: app/build/outputs/apk/debug/app-debug.apk"
+    echo "Please install Android Platform Tools (adb) to install it automatically."
     exit 1
 fi
 
 adb devices
 echo ""
 
-echo "[3/3] 🚀 Instalando HYDRA-UMC en el dispositivo..."
+echo "[3/3] 🚀 Installing HYDRA-UMC on the device..."
 # Install the APK (-r replaces an existing install, -d allows a downgrade)
 adb install -r -d app/build/outputs/apk/debug/app-debug.apk
 
 if [ $? -eq 0 ]; then
     echo ""
-    echo "✨ ¡ÉXITO! La aplicación se ha instalado correctamente en tu móvil."
-    echo "Ya puedes desconectar el cable y abrir HYDRA-UMC Control."
+    echo "✨ SUCCESS! The application was installed correctly on your device."
+    echo "You can now disconnect the cable and open HYDRA-UMC Control."
 else
     echo ""
-    echo "❌ Error en la instalación."
-    echo "Asegúrate de que:"
-    echo " 1. Tu teléfono está conectado al PC."
-    echo " 2. Tienes activadas las 'Opciones de desarrollador'."
-    echo " 3. Tienes activada la 'Depuración por USB'."
+    echo "❌ Error during installation."
+    echo "Make sure that:"
+    echo " 1. Your phone is connected to the PC."
+    echo " 2. 'Developer options' are enabled."
+    echo " 3. 'USB debugging' is enabled."
 fi

@@ -15,6 +15,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -23,6 +24,7 @@ import com.hydraumc.control.R
 import com.hydraumc.control.viewmodel.RobotViewModel
 import com.hydraumc.control.ui.theme.metallicIndustrial
 import com.hydraumc.control.ui.theme.HydraButton
+import com.hydraumc.control.util.BiometricHelper
 
 /**
  * Dialog that allows the user to view and edit their profile information.
@@ -31,9 +33,13 @@ import com.hydraumc.control.ui.theme.HydraButton
  */
 @Composable
 fun UserProfileDialog(viewModel: RobotViewModel, onDismiss: () -> Unit) {
+    val context = LocalContext.current
     var username by remember { mutableStateOf(viewModel.loginUsername.value) }
     var password by remember { mutableStateOf(viewModel.loginPassword.value) }
     var email by remember { mutableStateOf(viewModel.loginEmail.value) }
+    var biometricEnabled by remember { mutableStateOf(viewModel.isBiometricEnabled.value) }
+
+    val hasBiometricHardware = BiometricHelper.isBiometricAvailable(context)
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -77,6 +83,25 @@ fun UserProfileDialog(viewModel: RobotViewModel, onDismiss: () -> Unit) {
                             unfocusedTextColor = Color.White
                         )
                     )
+
+                    if (hasBiometricHardware) {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = stringResource(R.string.biometric_setting_label),
+                                style = MaterialTheme.typography.bodyMedium,
+                                modifier = Modifier.weight(1f)
+                            )
+                            Switch(
+                                checked = biometricEnabled,
+                                onCheckedChange = { biometricEnabled = it }
+                            )
+                        }
+                    }
+
                     Spacer(modifier = Modifier.height(24.dp))
                     
                     Row(
@@ -105,7 +130,7 @@ fun UserProfileDialog(viewModel: RobotViewModel, onDismiss: () -> Unit) {
                             text = "",
                             icon = Icons.Default.Check,
                             onClick = {
-                                viewModel.saveUserProfile(username, password, email)
+                                viewModel.saveUserProfile(username, password, email, biometricEnabled)
                                 onDismiss()
                             },
                             modifier = Modifier.size(56.dp),

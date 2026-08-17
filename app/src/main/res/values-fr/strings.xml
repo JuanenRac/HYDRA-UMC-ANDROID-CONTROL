@@ -118,5 +118,9 @@
     <string name="login_title">CONTRÔLE D\'ACCÈS</string>
     <string name="remember_me_label">Se souvenir de moi</string>
     <string name="login_button_label">CONNEXION</string>
+    <string name="biometric_login_button">UTILISER LA BIOMÉTRIE</string>
+    <string name="biometric_prompt_title">Authentification Industrielle</string>
+    <string name="biometric_prompt_subtitle">Vérifiez votre identité pour accéder au contrôle</string>
+    <string name="biometric_setting_label">Activer l\'authentification biométrique</string>
     <string name="e_stop">ARRÊT D\'URGENCE</string>
 </resources>
