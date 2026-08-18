@@ -66,6 +66,7 @@ enum class WsStatus {
 class HydraWebSocket(
     private val host: String,
     private val port: Int,
+    private val token: String? = null,
     private val client: OkHttpClient = HydraApiClient.sharedHttpClient,
     private val onStatus: (WsStatus) -> Unit,
     private val onSettings: (JSONObject) -> Unit,
@@ -96,7 +97,13 @@ class HydraWebSocket(
      */
     private fun openSocket() {
         onStatus(WsStatus.CONNECTING)
-        val request = Request.Builder().url("ws://$host:$port/ws").build()
+        // Pass the token in the query string so the server can authenticate the upgrade
+        val url = if (token != null) {
+            "ws://$host:$port/ws?token=$token"
+        } else {
+            "ws://$host:$port/ws"
+        }
+        val request = Request.Builder().url(url).build()
         webSocket = client.newWebSocket(request, object : WebSocketListener() {
             override fun onOpen(webSocket: WebSocket, response: Response) {
                 onStatus(WsStatus.CONNECTED)
@@ -128,18 +135,18 @@ class HydraWebSocket(
      * @param text The received message text.
      */
     private fun handleMessage(text: String) {
-        /** Parsed JSON envelope. */
         val json = try {
             JSONObject(text)
         } catch (e: Exception) {
             onError("Mensaje WebSocket no es JSON válido: ${e.message}")
             return
         }
-        if (json.optString("type") != "settings") return 
-        /** The settings payload within the envelope. */
+        val type = json.optString("type")
+        if (type != "settings" && type != "delta") return 
+        
         val payload = json.optJSONObject("payload") ?: return
         val payloadJson = payload.toString()
-        if (payloadJson == lastPayloadJson) return // our own echoed-back write
+        if (payloadJson == lastPayloadJson) return 
         lastPayloadJson = payloadJson
         onSettings(payload)
     }

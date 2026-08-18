@@ -324,6 +324,32 @@ class HydraState(val raw: JSONObject) {
      */
     fun toJson(): JSONObject = raw
 
+    /**
+     * Performs a deep merge of a delta update into the current state.
+     * This is critical for real-time telemetry (type: "delta" messages).
+     */
+    fun merge(delta: JSONObject) {
+        deepMerge(raw, delta)
+    }
+
+    private fun deepMerge(target: JSONObject, source: JSONObject) {
+        val keys = source.keys()
+        while (keys.hasNext()) {
+            val key = keys.next()
+            val value = source.get(key)
+            if (value is JSONObject && target.has(key) && target.get(key) is JSONObject) {
+                deepMerge(target.getJSONObject(key), value)
+            } else if (value is JSONArray && target.has(key) && target.get(key) is JSONArray) {
+                // For arrays like 'controllers' or 'robots', we usually want to replace 
+                // but for industrial efficiency we could merge by ID. 
+                // For now, replacing the array is safer for 'delta' consistency.
+                target.put(key, value)
+            } else {
+                target.put(key, value)
+            }
+        }
+    }
+
     companion object {
         /** Creates an empty system state. */
         fun empty(): HydraState = HydraState(

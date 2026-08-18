@@ -141,4 +141,10 @@
     <string name="enable_node">ENABLE NODE</string>
     <string name="arm_label">ARM</string>
     <string name="coordinates">COORDINATES</string>
+    <string name="hardware_id">Hardware ID</string>
+    <string name="firmware">Firmware</string>
+    <string name="can_node">CAN Node</string>
+    <string name="controller_status">Controller Status</string>
+    <string name="handshake_waiting">Waiting for board handshake...</string>
+    <string name="dynamics_config">DYNAMICS CONFIGURATION</string>
 </resources>

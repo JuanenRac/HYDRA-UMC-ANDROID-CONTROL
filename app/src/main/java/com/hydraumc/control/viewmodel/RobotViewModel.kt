@@ -410,36 +410,44 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private fun setupWebSocket(host: String, port: Int) {
-        ws = HydraWebSocket(
-            host = host,
-            port = port,
-            onStatus = { status ->
-                connectionStatus.value = when (status) {
-                    WsStatus.CONNECTING -> {
-                        logTelemetry("WebSocket connecting...")
-                        getApplication<Application>().getString(R.string.status_connecting)
-                    }
-                    WsStatus.CONNECTED -> {
-                        logTelemetry("WebSocket CONNECTED")
-                        NotificationHelper.showSafetyNotification(getApplication())
-                        getApplication<Application>().getString(R.string.status_connected)
-                    }
-                    WsStatus.DISCONNECTED -> {
-                        logTelemetry("WebSocket DISCONNECTED")
-                        NotificationHelper.hideSafetyNotification(getApplication())
-                        if (!isSwitchingServer) {
-                            discoveredServers.value = emptyList()
+        viewModelScope.launch {
+            val token = authPrefs.loadAuth().token
+            ws = HydraWebSocket(
+                host = host,
+                port = port,
+                token = if (token.isNotEmpty()) token else null,
+                onStatus = { status ->
+                    connectionStatus.value = when (status) {
+                        WsStatus.CONNECTING -> {
+                            logTelemetry("WebSocket connecting...")
+                            getApplication<Application>().getString(R.string.status_connecting)
                         }
-                        getApplication<Application>().getString(R.string.status_disconnected)
+                        WsStatus.CONNECTED -> {
+                            logTelemetry("WebSocket CONNECTED")
+                            NotificationHelper.showSafetyNotification(getApplication())
+                            getApplication<Application>().getString(R.string.status_connected)
+                        }
+                        WsStatus.DISCONNECTED -> {
+                            logTelemetry("WebSocket DISCONNECTED")
+                            NotificationHelper.hideSafetyNotification(getApplication())
+                            if (!isSwitchingServer) {
+                                discoveredServers.value = emptyList()
+                            }
+                            getApplication<Application>().getString(R.string.status_disconnected)
+                        }
                     }
+                },
+                onSettings = { payload -> 
+                    // CRITICAL FIX: Merge delta instead of replacing whole state
+                    state.merge(payload)
+                    applyState(state) 
+                },
+            ) { message -> 
+                if (!isSwitchingServer) {
+                    lastError.value = message 
                 }
-            },
-            onSettings = { payload -> applyState(HydraState(payload)) },
-        ) { message -> 
-            if (!isSwitchingServer) {
-                lastError.value = message 
-            }
-        }.also { it.connect() }
+            }.also { it.connect() }
+        }
     }
 
     private fun applyState(newState: HydraState, isFromCache: Boolean = false) {
@@ -470,7 +478,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    private fun pushState(command: String? = null, params: org.json.JSONObject? = null) {
+    private fun pushState(command: String? = null) {
         val robotId = selectedRobotId.value
         
         // 1. Instant local feedback
@@ -494,52 +502,28 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                         }
                     }
                 }
-                applyState(state) // Refresh UI
+                applyState(state) // Refresh UI instantly
             }
         }
 
         val client = apiClient ?: return
-        
-        // 2. Try Industrial Atomic API (REST) - Higher performance for commands
-        if (command != null && robotId != null) {
-            viewModelScope.launch {
-                try {
-                    val cmdPayload = org.json.JSONObject()
-                        .put("command", command)
-                        .put("params", params ?: org.json.JSONObject())
-                    
-                    client.postRobotCommand(robotId, cmdPayload)
-                    logTelemetry("TX [REST]: Command '$command' success")
-                    lastError.value = null
-                } catch (e: HydraApiException) {
-                    logTelemetry("TX Error [REST Command]: ${e.message}")
-                    // Fallback to Full Sync if Command API fails (e.g. older Studio version)
-                    performFullSync()
-                }
-            }
-        } else {
-            performFullSync()
-        }
-
-        // 3. Parallel WebSocket Sync
-        ws?.send(state.toJson())
-    }
-
-    private fun performFullSync() {
         val payload = state.toJson()
-        val client = apiClient ?: return
+
+        // 2. Dual-Layer Sync Strategy
+        // We always perform a Full Sync via REST to ensure the server disk matches.
         viewModelScope.launch {
             try {
                 client.postSettings(payload)
                 logTelemetry("TX [REST]: Full State Sync")
                 lastError.value = null
             } catch (e: HydraApiException) {
-                logTelemetry("TX Error [REST Full]: ${e.message}")
-                if (e.message?.contains("401") == true) {
-                    lastError.value = "Unauthorized: Session expired"
-                }
+                logTelemetry("TX Error [REST Sync]: ${e.message}")
+                if (e.message?.contains("401") == true) lastError.value = "Unauthorized: Session expired"
             }
         }
+
+        // Parallel high-speed WebSocket broadcast
+        ws?.send(payload)
     }
 
     private fun mutateSelected(mutate: (RobotView) -> Unit) {
@@ -558,7 +542,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
             "enable" -> mutateSelected { it.setOnline(value = true) }
             "disable" -> mutateSelected { it.setOnline(value = false) }
             "play", "pause", "stop" -> {
-                // Send as Atomic Command, let server broadcast state back
+                // Sincronización total agresiva para estas acciones críticas
                 pushState(command)
             }
             else -> lastError.value = getApplication<Application>().getString(R.string.error_unknown_command, command)
@@ -566,37 +550,46 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun jog(target: String, axis: String, amount: Double) {
-        // Send as Atomic Command, let server broadcast position back
-        val params = org.json.JSONObject()
-            .put("target", target)
-            .put("axis", axis)
-            .put("amount", amount)
-        pushState("jog", params)
+        mutateSelected { r ->
+            if (target == "robot") {
+                r.setPosAxis(axis, r.posAxis(axis) + amount)
+            } else if (target == "xytable") {
+                r.setXyTableAxis(axis, (r.xyTablePos.optDouble(axis, 0.0) + amount))
+            }
+        }
     }
 
     fun toggleValve(index: Int) {
-        val params = org.json.JSONObject().put("index", index).put("state", true) // server toggles
-        pushState("valve", params)
+        mutateSelected { r ->
+            val current = r.valves.optBoolean(index, false)
+            r.setValve(index, !current)
+        }
     }
 
     fun togglePump(index: Int) {
-        val params = org.json.JSONObject().put("index", index).put("state", true) // server toggles
-        pushState("pump", params)
+        mutateSelected { r ->
+            val current = r.pumps.optBoolean(index, false)
+            r.setPump(index, !current)
+        }
     }
 
     fun setSpeed(speed: Double, acceleration: Double) {
-        val params = org.json.JSONObject().put("speed", speed).put("acceleration", acceleration)
-        pushState("speed", params)
+        mutateSelected { r ->
+            r.setSpeed(speed)
+            r.setAcceleration(acceleration)
+        }
     }
 
     fun changeTool(slot: Int) {
-        val params = org.json.JSONObject().put("slot", slot)
-        pushState("tool", params) // assuming server handles slot to tool mapping
+        // assuming server handles slot to tool mapping, but we can do it locally too
+        mutateSelected { r ->
+            val tool = r.atcTools.find { it.slot == slot }?.tool ?: "None"
+            r.setTool(tool)
+        }
     }
 
     fun mutateSelectedTool(toolName: String) {
-        val params = org.json.JSONObject().put("tool", toolName)
-        pushState("tool", params)
+        mutateSelected { it.setTool(toolName) }
     }
 
     fun scanNetwork() {

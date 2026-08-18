@@ -123,11 +123,11 @@
     <string name="biometric_prompt_subtitle">Identität bestätigen</string>
     <string name="biometric_setting_label">Biometrisches Login aktivieren</string>
     <string name="biometric_hint">Biometrie verfügbar. Im Benutzerprofil aktivieren.</string>
-    <string name="robot_control_title">ROBOTER-STEUERUNGSZENTRUM</string>
+    <string name="robot_control_title">ROBOTER-STEUERZENTRALE</string>
     <string name="industrial_io_hub">INDUSTRIELLES E/A-HUB</string>
     <string name="real_time_telemetry">ECHTZEIT-TELEMETRIE</string>
     <string name="vector_steps">Vektorschritte</string>
-    <string name="buffer_empty">Knotenpuffer leer</string>
+    <string name="buffer_empty">Knotenpuffer Leer</string>
     <string name="feedrate_override">VORSCHUB-OVERRIDE</string>
     <string name="acceleration_ramp">BESCHLEUNIGUNGSRAMPE</string>
     <string name="precision_xy_gantry">Präzisions-XY-Gantry-Tisch</string>
@@ -140,5 +140,11 @@
     <string name="enable_node">KNOTEN AKTIVIEREN</string>
     <string name="arm_label">ARM</string>
     <string name="coordinates">KOORDINATEN</string>
+    <string name="hardware_id">Hardware-ID</string>
+    <string name="firmware">Firmware</string>
+    <string name="can_node">CAN-Knoten</string>
+    <string name="controller_status">Controller-Status</string>
+    <string name="handshake_waiting">Warten auf Board-Handshake...</string>
+    <string name="dynamics_config">DYNAMIK-KONFIGURATION</string>
     <string name="e_stop">NOT-AUS</string>
 </resources>

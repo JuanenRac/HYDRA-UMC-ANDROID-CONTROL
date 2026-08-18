@@ -140,5 +140,11 @@
     <string name="enable_node">ABILITA NODO</string>
     <string name="arm_label">BRACCIO</string>
     <string name="coordinates">COORDINATE</string>
+    <string name="hardware_id">ID Hardware</string>
+    <string name="firmware">Firmware</string>
+    <string name="can_node">Nodo CAN</string>
+    <string name="controller_status">Stato del Controller</string>
+    <string name="handshake_waiting">In attesa dell\'handshake della scheda...</string>
+    <string name="dynamics_config">CONFIGURAZIONE DINAMICA</string>
     <string name="e_stop">ARRESTO D\'EMERGENZA</string>
 </resources>

@@ -151,9 +151,9 @@ fun ControlScreen(viewModel: RobotViewModel) {
                         )
                         val isConnected = connectionStatus.contains("Connected", ignoreCase = true)
                         Text(
-                            text = if (isConnected) stringResource(R.string.status_connected).uppercase() else connectionStatus.uppercase(),
+                            text = (if (isConnected) stringResource(R.string.status_connected) else connectionStatus).uppercase(),
                             style = MaterialTheme.typography.labelSmall,
-                            color = if (isConnected) Color(0xFF00C853) else Color.Red,
+                            color = if (isConnected) Color(0xFF10B981) else Color(0xFFF43F5E),
                             fontWeight = FontWeight.Black
                         )
                     }
@@ -230,18 +230,18 @@ fun ControlScreen(viewModel: RobotViewModel) {
                         
                         // Joint DRO 1
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            DigitalReadout("J1", selectedRobot.j1, "°", Color(0xFF87CEEB))
-                            DigitalReadout("J2", selectedRobot.j2, "°", Color(0xFF87CEEB))
-                            DigitalReadout("J3", selectedRobot.j3, "°", Color(0xFF87CEEB))
-                            DigitalReadout("J4", selectedRobot.j4, "°", Color(0xFF87CEEB))
+                            DigitalReadout("J1", selectedRobot.j1, "°", Color(0xFF0EA5E9))
+                            DigitalReadout("J2", selectedRobot.j2, "°", Color(0xFF0EA5E9))
+                            DigitalReadout("J3", selectedRobot.j3, "°", Color(0xFF0EA5E9))
                         }
 
                         Spacer(modifier = Modifier.height(8.dp))
 
-                        // Joint DRO 2 (J5, J6)
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            DigitalReadout("J5", selectedRobot.j5, "°", Color(0xFF87CEEB))
-                            DigitalReadout("J6", selectedRobot.j6, "°", Color(0xFF87CEEB))
+                        // Joint DRO 2
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                            DigitalReadout("J4", selectedRobot.j4, "°", Color(0xFF0EA5E9))
+                            DigitalReadout("J5", selectedRobot.j5, "°", Color(0xFF0EA5E9))
+                            DigitalReadout("J6", selectedRobot.j6, "°", Color(0xFF0EA5E9))
                         }
                         
                         Spacer(modifier = Modifier.height(8.dp))
@@ -433,10 +433,13 @@ fun ControlScreen(viewModel: RobotViewModel) {
                 ) {
                     // EMERGENCY STOP
                     IconButton(
-                        onClick = { vibrate(longArrayOf(0, 100, 50, 100)); viewModel.sendCommand("stop") },
-                        modifier = Modifier.size(60.dp).background(Color.Red.copy(alpha = 0.2f), CircleShape).border(2.dp, Color.Red, CircleShape)
+                        onClick = { 
+                            vibrate(longArrayOf(0, 150, 50, 150, 50, 150))
+                            viewModel.sendCommand("stop") 
+                        },
+                        modifier = Modifier.size(64.dp).background(Color.Red.copy(alpha = 0.15f), CircleShape).border(2.dp, Color.Red, CircleShape)
                     ) {
-                        Icon(Icons.Default.Dangerous, contentDescription = "E-STOP", tint = Color.Red, modifier = Modifier.size(32.dp))
+                        Icon(Icons.Default.Dangerous, contentDescription = "E-STOP", tint = Color.Red, modifier = Modifier.size(36.dp))
                     }
 
                     // PLAY
