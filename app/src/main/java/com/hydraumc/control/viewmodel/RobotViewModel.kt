@@ -64,6 +64,7 @@ data class RobotState(
     val online: Boolean,
     val isPlaying: Boolean,
     val isPaused: Boolean,
+    val activeStep: Int,
     val hasXYTable: Boolean,
     val hasAtc: Boolean,
     val hasCamera: Boolean,
@@ -83,6 +84,16 @@ data class RobotState(
     val posZ: Double,
     val xyPosX: Double,
     val xyPosY: Double,
+    val j1: Double,
+    val j2: Double,
+    val j3: Double,
+    val j4: Double,
+    val j5: Double,
+    val j6: Double,
+    val endstops: Map<String, Boolean>,
+    val valves: List<Boolean>,
+    val pumps: List<Boolean>,
+    val recordedPointsCount: Int
 )
 
 /** 
@@ -97,6 +108,7 @@ private fun RobotView.toDisplay(): RobotState = RobotState(
     online = online,
     isPlaying = isPlaying,
     isPaused = isPaused,
+    activeStep = playbackState.optInt("activeStep", -1),
     hasXYTable = hasXYTable,
     hasAtc = hasAtc,
     hasCamera = hasCamera,
@@ -121,6 +133,37 @@ private fun RobotView.toDisplay(): RobotState = RobotState(
     posZ = posAxis("z"),
     xyPosX = xyTablePos.optDouble("x", 0.0),
     xyPosY = xyTablePos.optDouble("y", 0.0),
+    j1 = joints.optDouble("j1", 0.0),
+    j2 = joints.optDouble("j2", 0.0),
+    j3 = joints.optDouble("j3", 0.0),
+    j4 = joints.optDouble("j4", 0.0),
+    j5 = joints.optDouble("j5", 0.0),
+    j6 = joints.optDouble("j6", 0.0),
+    endstops = mutableMapOf<String, Boolean>().apply {
+        val obj = raw.optJSONObject("endstops")
+        if (obj != null) {
+            listOf("x1", "x2", "y1", "y2", "z0").forEach { axis ->
+                put(axis, obj.optBoolean(axis, false))
+            }
+        }
+    },
+    valves = mutableListOf<Boolean>().apply {
+        val arr = raw.optJSONArray("valves")
+        if (arr != null) {
+            for (i in 0 until arr.length()) add(arr.getBoolean(i))
+        } else {
+            add(false); add(false)
+        }
+    },
+    pumps = mutableListOf<Boolean>().apply {
+        val arr = raw.optJSONArray("pumps")
+        if (arr != null) {
+            for (i in 0 until arr.length()) add(arr.getBoolean(i))
+        } else {
+            add(false); add(false)
+        }
+    },
+    recordedPointsCount = raw.optJSONArray("recordedPoints")?.length() ?: 0
 )
 
 /**
@@ -149,8 +192,8 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
     val isBtEnabled = mutableStateOf(value = false)
     private var bleScanCallback: ScanCallback? = null
 
-    private var state = HydraState.empty()
-    private var apiClient: HydraApiClient? = null
+    var state = HydraState.empty()
+    var apiClient: HydraApiClient? = null
     private var ws: HydraWebSocket? = null
     private var bleClient: HydraBleClient? = null
     private val prefs = ConnectionPrefs(application)
@@ -183,6 +226,13 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
             loginEmail.value = profile.email
             loginRememberMe.value = profile.rememberMe
             isBiometricEnabled.value = profile.isBiometricEnabled
+            
+            if (profile.token.isNotEmpty()) {
+                val client = HydraApiClient(ipAddress.value, port.value.toIntOrNull() ?: 3000)
+                client.authToken = profile.token
+                apiClient = client
+            }
+
             if (profile.rememberMe && profile.isLoggedIn) {
                 isLoggedIn.value = true
             }
@@ -197,24 +247,44 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun login(user: String, pass: String, remember: Boolean) {
-        if ((user == "demo") && (pass == "demo")) {
-            isLoggedIn.value = true
-            loginUsername.value = user
-            loginPassword.value = pass
-            loginRememberMe.value = remember
-            viewModelScope.launch {
-                authPrefs.saveAuth(
-                    com.hydraumc.control.network.UserProfile(
-                        username = user,
-                        password = pass,
-                        email = loginEmail.value,
-                        rememberMe = remember,
-                        isLoggedIn = true,
-                    ),
-                )
+        val host = ipAddress.value.trim()
+        val portValue = port.value.trim()
+        val portInt = portValue.toIntOrNull() ?: 3000
+        
+        val client = HydraApiClient(host, portInt)
+        apiClient = client
+        
+        viewModelScope.launch {
+            try {
+                logTelemetry("Logging in to $host:$portInt...")
+                val response = client.login(user, pass)
+                if (response.optBoolean("success")) {
+                    val token = response.optString("token")
+                    client.authToken = token
+                    isLoggedIn.value = true
+                    loginUsername.value = user
+                    loginPassword.value = pass
+                    loginRememberMe.value = remember
+                    
+                    authPrefs.saveAuth(
+                        com.hydraumc.control.network.UserProfile(
+                            username = user,
+                            password = pass,
+                            email = loginEmail.value,
+                            rememberMe = remember,
+                            isLoggedIn = true,
+                            token = token
+                        ),
+                    )
+                    logTelemetry("Login successful")
+                    connect() // Proceed to full sync
+                } else {
+                    lastError.value = "Login failed: Server rejected credentials"
+                }
+            } catch (e: Exception) {
+                logTelemetry("Login error: ${e.message}")
+                lastError.value = e.message
             }
-        } else {
-            lastError.value = "Invalid credentials"
         }
     }
 
@@ -284,15 +354,16 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         ws?.disconnect()
         bleClient?.disconnect()
         bleClient = null
-        
-        val client = HydraApiClient(host, portInt)
-        apiClient = client
 
         viewModelScope.launch {
+            // Ensure token is carried over or reloaded from persistence
+            val token = apiClient?.authToken ?: authPrefs.loadAuth().token
+            val client = HydraApiClient(host, portInt)
+            client.authToken = token
+            apiClient = client
+
             prefs.save(host, portValue)
-        }
 
-        viewModelScope.launch {
             try {
                 logTelemetry("Connecting to $host:$portInt...")
                 val info = client.getHydraInfo()
@@ -309,33 +380,39 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                 logTelemetry("Initial state synchronized via REST")
                 applyState(HydraState(settings))
                 
-                viewModelScope.launch {
-                    while(connectionStatus.value == getApplication<Application>().getString(R.string.status_connected)) {
-                        try {
-                            val m = client.getSystemMetrics()
-                            metrics.value = SystemMetrics(
-                                cpuLoad = m.optInt("cpu_load"),
-                                memoryUsage = m.optInt("memory_usage"),
-                                temp = m.optDouble("temp"),
-                                uptime = m.optInt("uptime")
-                            )
-                        } catch (e: Exception) {
-                            // ignore metric failures
-                        }
-                        kotlinx.coroutines.delay(5000)
-                    }
-                }
+                startMetricsLoop(client)
             } catch (e: HydraApiException) {
                 logTelemetry("REST Sync Error: ${e.message}")
                 lastError.value = e.message
             } finally {
                 isSwitchingServer = false
             }
-        }
 
+            setupWebSocket(host, portInt)
+        }
+    }
+
+    private fun startMetricsLoop(client: HydraApiClient) {
+        viewModelScope.launch {
+            while(connectionStatus.value == getApplication<Application>().getString(R.string.status_connected)) {
+                try {
+                    val m = client.getSystemMetrics()
+                    metrics.value = SystemMetrics(
+                        cpuLoad = m.optInt("cpu_load"),
+                        memoryUsage = m.optInt("memory_usage"),
+                        temp = m.optDouble("temp"),
+                        uptime = m.optInt("uptime")
+                    )
+                } catch (_: Exception) { }
+                kotlinx.coroutines.delay(5000)
+            }
+        }
+    }
+
+    private fun setupWebSocket(host: String, port: Int) {
         ws = HydraWebSocket(
             host = host,
-            port = portInt,
+            port = port,
             onStatus = { status ->
                 connectionStatus.value = when (status) {
                     WsStatus.CONNECTING -> {
@@ -396,9 +473,35 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
     private fun pushState(command: String? = null, params: org.json.JSONObject? = null) {
         val robotId = selectedRobotId.value
         
-        // 1. Try Industrial Atomic API (REST) - Priority for commands
+        // 1. Instant local feedback
         if (command != null && robotId != null) {
-            val client = apiClient ?: return
+            val targetRobot = state.robotById(robotId)
+            if (targetRobot != null) {
+                val affectedIds = mutableListOf(robotId)
+                val combinedArr = targetRobot.raw.optJSONArray("combinedWith")
+                if (combinedArr != null) {
+                    for (i in 0 until combinedArr.length()) affectedIds.add(combinedArr.getInt(i))
+                }
+                
+                affectedIds.forEach { id ->
+                    state.robotById(id)?.let { r ->
+                        when (command) {
+                            "play" -> r.setPlaying(true)
+                            "stop" -> r.stop()
+                            "pause" -> r.togglePaused()
+                            "enable" -> r.setOnline(true)
+                            "disable" -> r.setOnline(false)
+                        }
+                    }
+                }
+                applyState(state) // Refresh UI
+            }
+        }
+
+        val client = apiClient ?: return
+        
+        // 2. Try Industrial Atomic API (REST) - Higher performance for commands
+        if (command != null && robotId != null) {
             viewModelScope.launch {
                 try {
                     val cmdPayload = org.json.JSONObject()
@@ -406,41 +509,35 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                         .put("params", params ?: org.json.JSONObject())
                     
                     client.postRobotCommand(robotId, cmdPayload)
-                    logTelemetry("TX [REST]: Atomic Command '$command' sent")
+                    logTelemetry("TX [REST]: Command '$command' success")
                     lastError.value = null
-                } catch (e: Exception) {
-                    logTelemetry("TX Error [REST]: ${e.message}")
-                    // Don't set lastError here to avoid UI flickering, just log it
+                } catch (e: HydraApiException) {
+                    logTelemetry("TX Error [REST Command]: ${e.message}")
+                    // Fallback to Full Sync if Command API fails (e.g. older Studio version)
+                    performFullSync()
                 }
             }
-            return
+        } else {
+            performFullSync()
         }
-        
-        // 2. Try BLE
+
+        // 3. Parallel WebSocket Sync
+        ws?.send(state.toJson())
+    }
+
+    private fun performFullSync() {
         val payload = state.toJson()
-        val sentOverBle = bleClient?.send(payload.toString()) ?: false
-        if (sentOverBle) {
-            logTelemetry("TX [BLE]: Payload sent")
-            return
-        }
-        
-        // 3. Try WebSocket (Real-time Full Sync)
-        val sentOverWs = ws?.send(payload) ?: false
-        if (sentOverWs) {
-            logTelemetry("TX [WS]: State synchronized")
-            return
-        }
-        
-        // 4. Try Full State via REST as fallback
         val client = apiClient ?: return
         viewModelScope.launch {
             try {
                 client.postSettings(payload)
-                logTelemetry("TX [REST]: Full state updated")
+                logTelemetry("TX [REST]: Full State Sync")
                 lastError.value = null
             } catch (e: HydraApiException) {
-                logTelemetry("TX Error [REST]: ${e.message}")
-                lastError.value = e.message
+                logTelemetry("TX Error [REST Full]: ${e.message}")
+                if (e.message?.contains("401") == true) {
+                    lastError.value = "Unauthorized: Session expired"
+                }
             }
         }
     }
@@ -452,6 +549,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
             return
         }
         mutate(robotView)
+        applyState(state) // Instant UI feedback
         pushState()
     }
 

@@ -123,5 +123,22 @@
     <string name="biometric_prompt_subtitle">Verifica la tua identità per accedere al controllo</string>
     <string name="biometric_setting_label">Abilita accesso biometrico</string>
     <string name="biometric_hint">Biometria disponibile. Abilita nel Profilo Utente.</string>
+    <string name="robot_control_title">CENTRO DI CONTROLLO ROBOTICO</string>
+    <string name="industrial_io_hub">HUB I/O INDUSTRIALE</string>
+    <string name="real_time_telemetry">TELEMETRIA IN TEMPO REALE</string>
+    <string name="vector_steps">Passi del Vettore</string>
+    <string name="buffer_empty">Buffer del Nodo Vuoto</string>
+    <string name="feedrate_override">REGOLAZIONE VELOCITÀ</string>
+    <string name="acceleration_ramp">RAMPA DI ACCELERAZIONE</string>
+    <string name="precision_xy_gantry">Tavolo a Portale XY di Precisione</string>
+    <string name="no_node_selected">NESSUN NODO SELEZIONATO</string>
+    <string name="select_node_desc">Seleziona un robot dalla rete per iniziare</string>
+    <string name="operation_progress">Progresso della Pipeline Operativa</string>
+    <string name="resume">RIPRENDI</string>
+    <string name="continue_label">CONTINUA</string>
+    <string name="disable_node">DISABILITA NODO</string>
+    <string name="enable_node">ABILITA NODO</string>
+    <string name="arm_label">BRACCIO</string>
+    <string name="coordinates">COORDINATE</string>
     <string name="e_stop">ARRESTO D\'EMERGENZA</string>
 </resources>

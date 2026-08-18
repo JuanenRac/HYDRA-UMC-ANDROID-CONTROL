@@ -124,5 +124,21 @@
     <string name="biometric_prompt_subtitle">Verify your identity to access control</string>
     <string name="biometric_setting_label">Enable Biometric Login</string>
     <string name="biometric_hint">Biometrics available. Enable in User Profile.</string>
-    <string name="e_stop">EMERGENCY STOP</string>
+    <string name="robot_control_title">ROBOT CONTROL CENTER</string>
+    <string name="industrial_io_hub">INDUSTRIAL I/O HUB</string>
+    <string name="real_time_telemetry">REAL-TIME TELEMETRY</string>
+    <string name="vector_steps">Vector Steps</string>
+    <string name="buffer_empty">Node Buffer Empty</string>
+    <string name="feedrate_override">FEEDRATE OVERRIDE</string>
+    <string name="acceleration_ramp">ACCELERATION RAMP</string>
+    <string name="precision_xy_gantry">Precision XY Gantry Table</string>
+    <string name="no_node_selected">NO NODE SELECTED</string>
+    <string name="select_node_desc">Select a robot from the network to begin</string>
+    <string name="operation_progress">Operation Pipeline Progress</string>
+    <string name="resume">RESUME</string>
+    <string name="continue_label">CONTINUE</string>
+    <string name="disable_node">DISABLE NODE</string>
+    <string name="enable_node">ENABLE NODE</string>
+    <string name="arm_label">ARM</string>
+    <string name="coordinates">COORDINATES</string>
 </resources>

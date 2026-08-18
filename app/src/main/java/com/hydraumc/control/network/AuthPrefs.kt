@@ -20,6 +20,7 @@ private val KEY_EMAIL = stringPreferencesKey("email")
 private val KEY_REMEMBER_ME = booleanPreferencesKey("remember_me")
 private val KEY_LOGGED_IN = booleanPreferencesKey("is_logged_in")
 private val KEY_BIOMETRIC_ENABLED = booleanPreferencesKey("biometric_enabled")
+private val KEY_TOKEN = stringPreferencesKey("token")
 
 /**
  * Manages user authentication and profile persistence.
@@ -33,7 +34,8 @@ class AuthPrefs(private val context: Context) {
             email = prefs[KEY_EMAIL] ?: "",
             rememberMe = prefs[KEY_REMEMBER_ME] ?: false,
             isLoggedIn = prefs[KEY_LOGGED_IN] ?: false,
-            isBiometricEnabled = prefs[KEY_BIOMETRIC_ENABLED] ?: false
+            isBiometricEnabled = prefs[KEY_BIOMETRIC_ENABLED] ?: false,
+            token = prefs[KEY_TOKEN] ?: ""
         )
     }
 
@@ -45,6 +47,7 @@ class AuthPrefs(private val context: Context) {
             prefs[KEY_REMEMBER_ME] = profile.rememberMe
             prefs[KEY_LOGGED_IN] = profile.isLoggedIn
             prefs[KEY_BIOMETRIC_ENABLED] = profile.isBiometricEnabled
+            prefs[KEY_TOKEN] = profile.token
         }
     }
 
@@ -64,5 +67,6 @@ data class UserProfile(
     val email: String,
     val rememberMe: Boolean,
     val isLoggedIn: Boolean,
-    val isBiometricEnabled: Boolean = false
+    val isBiometricEnabled: Boolean = false,
+    val token: String = ""
 )

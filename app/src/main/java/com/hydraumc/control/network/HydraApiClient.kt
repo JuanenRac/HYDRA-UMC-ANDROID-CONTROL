@@ -59,6 +59,13 @@ class HydraApiClient(host: String, port: Int, private val client: OkHttpClient =
     /** Current authentication token. */
     var authToken: String? = null
 
+    suspend fun login(username: String, password: String): JSONObject = withContext(Dispatchers.IO) {
+        val payload = JSONObject().put("username", username).put("password", password)
+        val body = payload.toString().toRequestBody(JSON_MEDIA_TYPE)
+        val request = Request.Builder().url("$baseUrl/api/login").post(body).build()
+        executeExpectingJson(request)
+    }
+
     /** 
      * Performs a one-shot probe to identify a HYDRA-UMC server. 
      * @return The JSON response if successful and identified, null otherwise.
@@ -108,7 +115,7 @@ class HydraApiClient(host: String, port: Int, private val client: OkHttpClient =
         Unit
     }
 
-    fun postRobotCommand(robotId: Int, payload: JSONObject) {
+    suspend fun postRobotCommand(robotId: Int, payload: JSONObject): JSONObject = withContext(Dispatchers.IO) {
         val request = Request.Builder()
             .url("$baseUrl/api/robot/$robotId/command")
             .header("Authorization", "Bearer ${authToken ?: ""}")
@@ -120,9 +127,9 @@ class HydraApiClient(host: String, port: Int, private val client: OkHttpClient =
     /**
      * Fetches real-time system metrics from the CM5.
      */
-    fun getSystemMetrics(): JSONObject {
+    suspend fun getSystemMetrics(): JSONObject = withContext(Dispatchers.IO) {
         val request = Request.Builder().url("$baseUrl/api/system/metrics").build()
-        return executeExpectingJson(request)
+        executeExpectingJson(request)
     }
 
     /**

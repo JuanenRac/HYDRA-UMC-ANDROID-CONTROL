@@ -91,6 +91,22 @@ class RobotView(val raw: JSONObject) {
         raw.put("tool", value)
     }
 
+    /** Gets the list of valves as a JSONArray. */
+    val valves: JSONArray get() = raw.optJSONArray("valves") ?: JSONArray().also { raw.put("valves", it) }
+    
+    /** Sets the state of a specific valve. */
+    fun setValve(index: Int, state: Boolean) {
+        valves.put(index, state)
+    }
+
+    /** Gets the list of pumps as a JSONArray. */
+    val pumps: JSONArray get() = raw.optJSONArray("pumps") ?: JSONArray().also { raw.put("pumps", it) }
+    
+    /** Sets the state of a specific pump. */
+    fun setPump(index: Int, state: Boolean) {
+        pumps.put(index, state)
+    }
+
     /** Robot-level joints {j1, j2, j3, j4, j5, j6}. */
     val joints: JSONObject get() = raw.optJSONObject("joints") ?: JSONObject().also { raw.put("joints", it) }
     
