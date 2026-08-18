@@ -39,7 +39,7 @@ import java.util.concurrent.TimeUnit
 /** Default port for HYDRA-UMC servers. */
 private const val DEFAULT_PORT = 3000
 /** Timeout for each individual host probe. */
-private const val SCAN_TIMEOUT_MS = 600L
+private const val SCAN_TIMEOUT_MS = 1500L
 /** Maximum number of concurrent probes to run. */
 private const val SCAN_CONCURRENCY = 64
 

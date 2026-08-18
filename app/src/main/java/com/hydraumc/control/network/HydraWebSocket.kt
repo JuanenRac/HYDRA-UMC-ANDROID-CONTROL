@@ -37,6 +37,7 @@ import okhttp3.Request
 import okhttp3.Response
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
+import org.json.JSONArray
 import org.json.JSONObject
 
 /** Delay before attempting to reconnect a dropped WebSocket. */
@@ -145,10 +146,42 @@ class HydraWebSocket(
         if (type != "settings" && type != "delta") return 
         
         val payload = json.optJSONObject("payload") ?: return
+        
+        // Semantic check to avoid re-processing what we just sent (echo)
         val payloadJson = payload.toString()
         if (payloadJson == lastPayloadJson) return 
+        
+        // Also check if the content is semantically identical even if string differs
+        val lastJson = lastPayloadJson?.let { try { JSONObject(it) } catch(e: Exception) { null } }
+        if (lastJson != null && areJsonObjectsEqual(lastJson, payload)) {
+            lastPayloadJson = payloadJson // Update string for faster check next time
+            return
+        }
+
         lastPayloadJson = payloadJson
         onSettings(payload)
+    }
+
+    /**
+     * Helper to compare two JSONObjects semantically.
+     */
+    private fun areJsonObjectsEqual(a: JSONObject, b: JSONObject): Boolean {
+        if (a.length() != b.length()) return false
+        val keys = a.keys()
+        while (keys.hasNext()) {
+            val key = keys.next()
+            if (!b.has(key)) return false
+            val valA = a.get(key)
+            val valB = b.get(key)
+            if (valA is JSONObject && valB is JSONObject) {
+                if (!areJsonObjectsEqual(valA, valB)) return false
+            } else if (valA is JSONArray && valB is JSONArray) {
+                if (valA.toString() != valB.toString()) return false
+            } else if (valA != valB) {
+                return false
+            }
+        }
+        return true
     }
 
     /** 

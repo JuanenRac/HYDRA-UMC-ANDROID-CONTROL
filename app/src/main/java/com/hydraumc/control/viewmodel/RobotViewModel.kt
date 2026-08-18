@@ -196,6 +196,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
     var apiClient: HydraApiClient? = null
     private var ws: HydraWebSocket? = null
     private var bleClient: HydraBleClient? = null
+    private var restSyncJob: kotlinx.coroutines.Job? = null
     private val prefs = ConnectionPrefs(application)
     private val authPrefs = AuthPrefs(application)
     private val stateCache = StateCache(application)
@@ -510,7 +511,27 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         val payload = state.toJson()
 
         // 2. Dual-Layer Sync Strategy
+        // WebSocket is always instant for high-speed telemetry
+        ws?.send(payload)
+
+        // 3. Debounced REST Sync
         // We always perform a Full Sync via REST to ensure the server disk matches.
+        // However, we debounce non-critical high-frequency updates (like jogging).
+        val isCritical = command in listOf("play", "stop", "pause", "enable", "disable")
+        
+        if (isCritical) {
+            restSyncJob?.cancel()
+            performRestSync(client, payload)
+        } else {
+            restSyncJob?.cancel()
+            restSyncJob = viewModelScope.launch {
+                kotlinx.coroutines.delay(500)
+                performRestSync(client, payload)
+            }
+        }
+    }
+
+    private fun performRestSync(client: HydraApiClient, payload: org.json.JSONObject) {
         viewModelScope.launch {
             try {
                 client.postSettings(payload)
@@ -518,12 +539,15 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                 lastError.value = null
             } catch (e: HydraApiException) {
                 logTelemetry("TX Error [REST Sync]: ${e.message}")
-                if (e.message?.contains("401") == true) lastError.value = "Unauthorized: Session expired"
+                if (e.message?.contains("401") == true) {
+                    lastError.value = "Unauthorized: Session expired"
+                    // Stop further sync attempts until re-logged
+                    isLoggedIn.value = false
+                    connectionStatus.value = getApplication<Application>().getString(R.string.status_disconnected)
+                    ws?.disconnect()
+                }
             }
         }
-
-        // Parallel high-speed WebSocket broadcast
-        ws?.send(payload)
     }
 
     private fun mutateSelected(mutate: (RobotView) -> Unit) {

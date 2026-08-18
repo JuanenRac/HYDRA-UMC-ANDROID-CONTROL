@@ -128,7 +128,10 @@ class HydraApiClient(host: String, port: Int, private val client: OkHttpClient =
      * Fetches real-time system metrics from the CM5.
      */
     suspend fun getSystemMetrics(): JSONObject = withContext(Dispatchers.IO) {
-        val request = Request.Builder().url("$baseUrl/api/system/metrics").build()
+        val request = Request.Builder()
+            .url("$baseUrl/api/system/metrics")
+            .header("Authorization", "Bearer ${authToken ?: ""}")
+            .build()
         executeExpectingJson(request)
     }
 

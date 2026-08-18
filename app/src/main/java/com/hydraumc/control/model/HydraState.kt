@@ -340,12 +340,45 @@ class HydraState(val raw: JSONObject) {
             if (value is JSONObject && target.has(key) && target.get(key) is JSONObject) {
                 deepMerge(target.getJSONObject(key), value)
             } else if (value is JSONArray && target.has(key) && target.get(key) is JSONArray) {
-                // For arrays like 'controllers' or 'robots', we usually want to replace 
-                // but for industrial efficiency we could merge by ID. 
-                // For now, replacing the array is safer for 'delta' consistency.
-                target.put(key, value)
+                val targetArray = target.getJSONArray(key)
+                mergeArrays(targetArray, value)
             } else {
                 target.put(key, value)
+            }
+        }
+    }
+
+    /**
+     * Merges source array into target array. If elements have 'id', they are updated
+     * instead of appended. Non-id elements or new IDs are appended.
+     */
+    private fun mergeArrays(target: JSONArray, source: JSONArray) {
+        // If source is empty, we don't assume we should clear target (delta vs full)
+        // In HYDRA-UMC, a delta with an empty array usually means no changes to that list.
+        if (source.length() == 0) return
+
+        for (i in 0 until source.length()) {
+            val sourceItem = source.opt(i)
+            if (sourceItem is JSONObject) {
+                val id = if (sourceItem.has("id")) sourceItem.get("id") else null
+                var updated = false
+                if (id != null) {
+                    for (j in 0 until target.length()) {
+                        val targetItem = target.opt(j)
+                        if (targetItem is JSONObject && targetItem.has("id") && targetItem.get("id") == id) {
+                            deepMerge(targetItem, sourceItem)
+                            updated = true
+                            break
+                        }
+                    }
+                }
+                if (!updated) {
+                    target.put(sourceItem)
+                }
+            } else {
+                // For non-object primitives, we just append if not present or replace?
+                // Usually these are simple lists. We'll append for now.
+                target.put(sourceItem)
             }
         }
     }
