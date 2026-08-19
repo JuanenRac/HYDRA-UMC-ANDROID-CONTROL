@@ -446,6 +446,11 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
             ) { message -> 
                 if (!isSwitchingServer) {
                     lastError.value = message 
+                    if (message.contains("autorizada") || message.contains("Access denied")) {
+                        isLoggedIn.value = false
+                        connectionStatus.value = getApplication<Application>().getString(R.string.status_disconnected)
+                        ws?.disconnect()
+                    }
                 }
             }.also { it.connect() }
         }
