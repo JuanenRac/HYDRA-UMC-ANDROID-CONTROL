@@ -167,13 +167,24 @@ class HydraApiClient(host: String, port: Int, private val client: OkHttpClient =
     }
 
     companion object {
-        /** 
-         * Shared OkHttpClient instance with optimized timeouts. 
+        /**
+         * Shared OkHttpClient instance with optimized timeouts.
+         *
+         * The interceptor self-identifies every request to server.ts's own
+         * per-client remote-access toggles (Config > Remote Access in the
+         * browser UI, added 2026-08-19) - lets the project owner disable
+         * this app's own access without also blocking SUITE/iOS, or vice
+         * versa. Only GET /api/hydra-info actually checks this header
+         * server-side; sending it on every request is simpler than special-
+         * casing just that one call, and harmless everywhere else.
          */
         val sharedHttpClient: OkHttpClient = OkHttpClient.Builder()
             .connectTimeout(5, TimeUnit.SECONDS)
             .readTimeout(10, TimeUnit.SECONDS)
             .writeTimeout(10, TimeUnit.SECONDS)
+            .addInterceptor { chain ->
+                chain.proceed(chain.request().newBuilder().header("X-Hydra-Client", "android").build())
+            }
             .build()
     }
 }

@@ -80,6 +80,11 @@ dependencies {
     // Preferences DataStore
     implementation(libs.androidx.datastore.preferences)
 
+    // Encrypted at-rest storage for the login credential cache (AuthPrefs.kt) -
+    // Keystore-backed AES256-GCM, added 2026-08-19 replacing the plaintext
+    // DataStore fields the username/password/token were sitting in before.
+    implementation(libs.androidx.security.crypto)
+
     // Testing
     testImplementation(libs.junit)
     testImplementation(libs.robolectric)

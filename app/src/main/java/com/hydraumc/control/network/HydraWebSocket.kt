@@ -42,6 +42,9 @@ import org.json.JSONObject
 /** Delay before attempting to reconnect a dropped WebSocket. */
 private const val RECONNECT_DELAY_MS = 3_000L
 
+/** RFC 6455 close code the server sends for a missing/invalid/expired auth token. */
+private const val WS_CLOSE_POLICY_VIOLATION = 1008
+
 /** 
  * Enumeration of possible WebSocket connection statuses. 
  */
@@ -119,6 +122,18 @@ class HydraWebSocket(
 
             override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
                 onStatus(WsStatus.DISCONNECTED)
+                if (code == WS_CLOSE_POLICY_VIOLATION) {
+                    // server.ts closes the /ws upgrade with 1008 specifically when the
+                    // token query param is missing/invalid/expired (see this class's own
+                    // ?token= in openSocket()) - retrying the exact same token every
+                    // RECONNECT_DELAY_MS forever just spins against a server that will
+                    // never accept it, and silently masks a session the user actually
+                    // needs to re-authenticate. Surface it instead and stop reconnecting;
+                    // the ViewModel's own login() supplies a fresh token to try again.
+                    closingByUser = true
+                    onError("Sesión no autorizada: inicia sesión de nuevo")
+                    return
+                }
                 scheduleReconnect()
             }
 
