@@ -6,6 +6,8 @@
 package com.hydraumc.control.ui
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.VideocamOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -17,17 +19,26 @@ import com.hydraumc.control.ui.theme.metallicIndustrial
 
 /**
  * Composable that displays the Camera screen.
- * Allows selecting between 8 different robot camera feeds.
- * Uses a real MJPEG stream from the CM5 server.
+ * Allows selecting between the robots the server actually reports, and shows
+ * a real MJPEG stream from the CM5 server for whichever one is selected.
+ *
+ * 2026-08-19: previously always listed a fixed "Robot Camera 1..8" regardless
+ * of whether that robot's camera was actually enabled on the server, and had
+ * no way to tell (RobotState.hasCamera itself was buggy - see
+ * model/HydraState.kt's own fix comment) or to turn one on/off from here.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CameraScreen(viewModel: RobotViewModel) {
     var expanded by remember { mutableStateOf(false) }
     val selectedCameraId by viewModel.selectedCameraId
+    val robots = viewModel.robots.value
     val ip = viewModel.ipAddress.value
     val port = viewModel.port.value
-    
+
+    val selectedRobot = robots.find { it.id == selectedCameraId }
+    val cameraEnabled = selectedRobot?.hasCamera ?: false
+
     // Industrial MJPEG stream URL
     val streamUrl = "http://$ip:$port/api/camera/$selectedCameraId/stream"
 
@@ -37,14 +48,14 @@ fun CameraScreen(viewModel: RobotViewModel) {
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        /** Camera Selector Dropdown */
+        /** Camera Selector Dropdown - lists real robots, not a fixed 1..8 range. */
         ExposedDropdownMenuBox(
             expanded = expanded,
             onExpandedChange = { expanded = !expanded },
             modifier = Modifier.fillMaxWidth()
         ) {
             OutlinedTextField(
-                value = "Robot Camera $selectedCameraId",
+                value = selectedRobot?.name ?: "Robot Camera $selectedCameraId",
                 onValueChange = {},
                 readOnly = true,
                 label = { Text("Select Camera Feed") },
@@ -61,11 +72,11 @@ fun CameraScreen(viewModel: RobotViewModel) {
                 expanded = expanded,
                 onDismissRequest = { expanded = false }
             ) {
-                (1..8).forEach { id ->
+                robots.forEach { robot ->
                     DropdownMenuItem(
-                        text = { Text("Robot Camera $id") },
+                        text = { Text("${robot.name}${if (!robot.hasCamera) " (disabled)" else ""}") },
                         onClick = {
-                            viewModel.selectedCameraId.intValue = id
+                            viewModel.selectedCameraId.intValue = robot.id
                             expanded = false
                         }
                     )
@@ -73,9 +84,30 @@ fun CameraScreen(viewModel: RobotViewModel) {
             }
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
-        /** Real MJPEG Stream Viewer */
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = if (cameraEnabled) "Camera Enabled" else "Camera Disabled",
+                style = MaterialTheme.typography.labelMedium,
+                color = if (cameraEnabled) Color(0xFF4CAF50) else Color(0xFFEF5350)
+            )
+            Switch(
+                checked = cameraEnabled,
+                enabled = selectedRobot != null,
+                onCheckedChange = { enabled ->
+                    selectedRobot?.let { viewModel.setVisionEnabled(it.id, enabled) }
+                }
+            )
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        /** Real MJPEG Stream Viewer, or a clear "disabled" placeholder instead of a silently blank feed. */
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -83,18 +115,33 @@ fun CameraScreen(viewModel: RobotViewModel) {
                 .metallicIndustrial(backgroundColor = Color.Black),
             contentAlignment = Alignment.Center
         ) {
-            MjpegPlayer(
-                url = streamUrl,
-                modifier = Modifier.fillMaxSize()
-            )
-            
-            // Overlay label
-            Text(
-                text = "LIVE: ROBOT $selectedCameraId",
-                style = MaterialTheme.typography.labelSmall,
-                color = Color.Green.copy(alpha = 0.7f),
-                modifier = Modifier.align(Alignment.TopStart).padding(8.dp)
-            )
+            if (cameraEnabled) {
+                MjpegPlayer(
+                    url = streamUrl,
+                    modifier = Modifier.fillMaxSize()
+                )
+                Text(
+                    text = "LIVE: ${selectedRobot?.name ?: "ROBOT $selectedCameraId"}",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Color.Green.copy(alpha = 0.7f),
+                    modifier = Modifier.align(Alignment.TopStart).padding(8.dp)
+                )
+            } else {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(Icons.Default.VideocamOff, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(48.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Camera Disabled",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.Gray
+                    )
+                    Text(
+                        text = "Use the switch above to enable it on the server",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Color.Gray.copy(alpha = 0.7f)
+                    )
+                }
+            }
         }
     }
 }

@@ -3,25 +3,31 @@
 // Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
 // GPL-3.0 - see LICENSE
 //
-// Talks the exact contract in HYDRA-UMC-STUDIO/docs/REMOTE_API.md - the same
-// one HYDRA-UMC SUITE's own hydra_suite/net/discovery.py and
-// hydra_suite/net/client.py implement in Python:
-//   - GET  /api/hydra-info  - discovery/identity (section 1), 404 if
+// Talks the exact contract in HYDRA-UMC-STUDIO/docs/REMOTE_API.md (that
+// document itself admits it can drift from server.ts, the real source of
+// truth - verify against the server's own code before trusting it blindly):
+//   - GET  /api/hydra-info          - discovery/identity, 404 if
 //     SystemSettings.remoteAccess.enabled is explicitly false
-//   - GET  /api/settings    - full current state (section 2)
-//   - POST /api/settings    - overwrite the whole state, read-modify-write,
-//     no granular per-field PATCH exists
+//   - GET  /api/settings            - full current state
+//   - POST /api/settings            - overwrite the whole state,
+//     read-modify-write, no granular per-field PATCH exists
+//   - POST /api/robot/:id/command   - atomic per-robot command (stop/play/
+//     pause/jog/tool/valve/pump/speed/vision) - server.ts computes
+//     affectedIds (self + combinedWith) itself, persists to disk, and
+//     broadcasts a WS "delta" to every OTHER client on its own. This is
+//     what every mutation in this app (RobotViewModel.kt's own
+//     sendAtomicCommand()) actually uses as of 2026-08-19 - a much smaller
+//     payload than a full POST /api/settings for a single jog tick, and it
+//     used to sit here completely unused (postRobotCommand() was defined
+//     but never called anywhere, while every mutation instead did a full
+//     whole-object POST /api/settings via HydraState.toJson(), same as
+//     HYDRA-UMC-STUDIO's own browser UI's updateRobot() and SUITE's own
+//     push_state() - both since fixed the same day, see those projects' own
+//     SONNET/ tracking files). postSettings() below is still used for the
+//     one-time full sync on connect() and for factory-reset-shaped writes,
+//     just no longer for every single robot command.
 //
-// Deliberately built on plain OkHttp + org.json rather than Retrofit/Gson -
-// this app used to (wrongly) define its own REST surface
-// (POST /api/robots/{id}/command|jog|speed|atc) that does not exist on any
-// real HYDRA-UMC STUDIO server; the actual server only ever exposes the 2
-// endpoints above plus the /ws WebSocket (see HydraWebSocket.kt). Every
-// mutation in this app (jog, speed, tool change, play/pause/stop, enable)
-// goes through HydraState (model/HydraState.kt) and comes back here as a
-// whole-object POST /api/settings, exactly like HYDRA-UMC-STUDIO's own
-// browser UI (src/components/RobotDetail.tsx's updateRobot()) and SUITE's
-// own HydraConnection.push_state().
+// Deliberately built on plain OkHttp + org.json rather than Retrofit/Gson.
 // =============================================================================
 package com.hydraumc.control.network
 

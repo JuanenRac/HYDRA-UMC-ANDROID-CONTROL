@@ -31,6 +31,7 @@ import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanResult
 import android.content.Context
 import android.annotation.SuppressLint
+import org.json.JSONObject
 
 /** 
  * Data class for ATC tools with slot and name. 
@@ -196,7 +197,6 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
     var apiClient: HydraApiClient? = null
     private var ws: HydraWebSocket? = null
     private var bleClient: HydraBleClient? = null
-    private var restSyncJob: kotlinx.coroutines.Job? = null
     private val prefs = ConnectionPrefs(application)
     private val authPrefs = AuthPrefs(application)
     private val stateCache = StateCache(application)
@@ -484,141 +484,150 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    private fun pushState(command: String? = null) {
-        val robotId = selectedRobotId.value
-        
-        // 1. Instant local feedback
-        if (command != null && robotId != null) {
-            val targetRobot = state.robotById(robotId)
-            if (targetRobot != null) {
-                val affectedIds = mutableListOf(robotId)
-                val combinedArr = targetRobot.raw.optJSONArray("combinedWith")
-                if (combinedArr != null) {
-                    for (i in 0 until combinedArr.length()) affectedIds.add(combinedArr.getInt(i))
-                }
-                
-                affectedIds.forEach { id ->
-                    state.robotById(id)?.let { r ->
-                        when (command) {
-                            "play" -> r.setPlaying(true)
-                            "stop" -> r.stop()
-                            "pause" -> r.togglePaused()
-                            "enable" -> r.setOnline(true)
-                            "disable" -> r.setOnline(false)
-                        }
-                    }
-                }
-                applyState(state) // Refresh UI instantly
-            }
-        }
+    // 2026-08-19: every write in this app used to go through mutateSelected()/
+    // pushState() below, which ALWAYS pushed the full ~3.66MB settings tree
+    // (over both the WebSocket AND a debounced REST POST) for even a single
+    // jog tick - HydraApiClient.kt's own postRobotCommand() existed since day
+    // one but nothing ever called it (see that file's own now-corrected
+    // header comment). Switched every command here to the real atomic
+    // POST /api/robot/:id/command (server.ts:210-298): the server computes
+    // affectedIds itself, persists to disk, AND broadcasts a "delta" to every
+    // OTHER connected client on its own - this app doesn't need to also push
+    // the full tree over its own WebSocket for these anymore. Fixed at the
+    // same time: enable/disable never propagated to a robot's own
+    // combinedWith siblings (mutateSelected() only ever touched the single
+    // selected robot), unlike play/pause/stop, which already had that logic
+    // duplicated just for themselves - now every command shares the same
+    // affectedIds computation, so this class of bug can't reappear for a
+    // future command the same way.
+    private var atomicSyncJob: kotlinx.coroutines.Job? = null
 
-        val client = apiClient ?: return
-        val payload = state.toJson()
-
-        // 2. Dual-Layer Sync Strategy
-        // WebSocket is always instant for high-speed telemetry
-        ws?.send(payload)
-
-        // 3. Debounced REST Sync
-        // We always perform a Full Sync via REST to ensure the server disk matches.
-        // However, we debounce non-critical high-frequency updates (like jogging).
-        val isCritical = command in listOf("play", "stop", "pause", "enable", "disable")
-        
-        if (isCritical) {
-            restSyncJob?.cancel()
-            performRestSync(client, payload)
-        } else {
-            restSyncJob?.cancel()
-            restSyncJob = viewModelScope.launch {
-                kotlinx.coroutines.delay(500)
-                performRestSync(client, payload)
-            }
-        }
-    }
-
-    private fun performRestSync(client: HydraApiClient, payload: org.json.JSONObject) {
-        viewModelScope.launch {
-            try {
-                client.postSettings(payload)
-                logTelemetry("TX [REST]: Full State Sync")
-                lastError.value = null
-            } catch (e: HydraApiException) {
-                logTelemetry("TX Error [REST Sync]: ${e.message}")
-                if (e.message?.contains("401") == true) {
-                    lastError.value = "Unauthorized: Session expired"
-                    // Stop further sync attempts until re-logged
-                    isLoggedIn.value = false
-                    connectionStatus.value = getApplication<Application>().getString(R.string.status_disconnected)
-                    ws?.disconnect()
-                }
-            }
-        }
-    }
-
-    private fun mutateSelected(mutate: (RobotView) -> Unit) {
-        val robotId = selectedRobotId.value ?: return
-        val robotView = state.robotById(robotId) ?: run {
+    /**
+     * Applies [command]/[params] to [robotId] (defaults to the globally
+     * selected control robot; the Camera screen passes an explicit id since
+     * the camera being browsed there isn't necessarily the robot selected
+     * for jogging) - and, for commands that make sense combined, its
+     * combinedWith siblings - locally for instant UI feedback, then sends it
+     * to the server via the atomic endpoint. [propagateToCombined] is false
+     * for per-axis/per-slot actions (jog, valve, pump, tool, speed, vision)
+     * that only ever make sense for the one robot being controlled, true for
+     * play/pause/stop/enable/disable, which are meant to act on a whole
+     * combined group at once.
+     */
+    private fun sendAtomicCommand(
+        command: String,
+        params: JSONObject? = null,
+        propagateToCombined: Boolean = false,
+        debounceMs: Long = 0,
+        explicitRobotId: Int? = null,
+        localMutate: (RobotView) -> Unit,
+    ) {
+        val robotId = explicitRobotId ?: selectedRobotId.value ?: return
+        val targetRobot = state.robotById(robotId) ?: run {
             lastError.value = getApplication<Application>().getString(R.string.error_robot_not_found)
             return
         }
-        mutate(robotView)
-        applyState(state) // Instant UI feedback
-        pushState()
+
+        val affectedIds = mutableListOf(robotId)
+        if (propagateToCombined) {
+            targetRobot.raw.optJSONArray("combinedWith")?.let { arr ->
+                for (i in 0 until arr.length()) affectedIds.add(arr.getInt(i))
+            }
+        }
+        affectedIds.forEach { id -> state.robotById(id)?.let(localMutate) }
+        applyState(state)
+
+        val client = apiClient ?: return
+        val payload = JSONObject().put("command", command).apply { if (params != null) put("params", params) }
+
+        val send: () -> Unit = {
+            viewModelScope.launch {
+                try {
+                    client.postRobotCommand(robotId, payload)
+                    lastError.value = null
+                } catch (e: HydraApiException) {
+                    logTelemetry("TX Error [$command]: ${e.message}")
+                    if (e.message?.contains("401") == true) {
+                        lastError.value = "Unauthorized: Session expired"
+                        isLoggedIn.value = false
+                        connectionStatus.value = getApplication<Application>().getString(R.string.status_disconnected)
+                        ws?.disconnect()
+                    }
+                }
+            }
+        }
+
+        atomicSyncJob?.cancel()
+        if (debounceMs > 0) {
+            atomicSyncJob = viewModelScope.launch {
+                kotlinx.coroutines.delay(debounceMs)
+                send()
+            }
+        } else {
+            send()
+        }
     }
 
     fun sendCommand(command: String) {
         when (command) {
-            "enable" -> mutateSelected { it.setOnline(value = true) }
-            "disable" -> mutateSelected { it.setOnline(value = false) }
-            "play", "pause", "stop" -> {
-                // Sincronización total agresiva para estas acciones críticas
-                pushState(command)
-            }
+            "enable" -> sendAtomicCommand(command, propagateToCombined = true) { it.setOnline(true) }
+            "disable" -> sendAtomicCommand(command, propagateToCombined = true) { it.setOnline(false) }
+            "play" -> sendAtomicCommand(command, propagateToCombined = true) { it.setPlaying(true) }
+            "pause" -> sendAtomicCommand(command, propagateToCombined = true) { it.togglePaused() }
+            "stop" -> sendAtomicCommand(command, propagateToCombined = true) { it.stop() }
             else -> lastError.value = getApplication<Application>().getString(R.string.error_unknown_command, command)
         }
     }
 
     fun jog(target: String, axis: String, amount: Double) {
-        mutateSelected { r ->
+        val params = JSONObject().put("axis", axis).put("amount", amount).put("target", target)
+        sendAtomicCommand("jog", params) { r ->
             if (target == "robot") {
                 r.setPosAxis(axis, r.posAxis(axis) + amount)
             } else if (target == "xytable") {
-                r.setXyTableAxis(axis, (r.xyTablePos.optDouble(axis, 0.0) + amount))
+                r.setXyTableAxis(axis, r.xyTablePos.optDouble(axis, 0.0) + amount)
             }
         }
     }
 
     fun toggleValve(index: Int) {
-        mutateSelected { r ->
-            val current = r.valves.optBoolean(index, false)
-            r.setValve(index, !current)
-        }
+        val targetRobot = selectedRobotId.value?.let { state.robotById(it) } ?: return
+        val newState = !targetRobot.valves.optBoolean(index, false)
+        val params = JSONObject().put("index", index).put("state", newState)
+        sendAtomicCommand("valve", params) { it.setValve(index, newState) }
     }
 
     fun togglePump(index: Int) {
-        mutateSelected { r ->
-            val current = r.pumps.optBoolean(index, false)
-            r.setPump(index, !current)
-        }
+        val targetRobot = selectedRobotId.value?.let { state.robotById(it) } ?: return
+        val newState = !targetRobot.pumps.optBoolean(index, false)
+        val params = JSONObject().put("index", index).put("state", newState)
+        sendAtomicCommand("pump", params) { it.setPump(index, newState) }
     }
 
+    /** Debounced (300ms) - a dragged slider fires this many times a second. */
     fun setSpeed(speed: Double, acceleration: Double) {
-        mutateSelected { r ->
+        val params = JSONObject().put("speed", speed).put("acceleration", acceleration)
+        sendAtomicCommand("speed", params, debounceMs = 300) { r ->
             r.setSpeed(speed)
             r.setAcceleration(acceleration)
         }
     }
 
+    /** Toggles a robot's vision system on/off from the Camera screen (server.ts's own "vision" command, added 2026-08-19). Takes an explicit robotId since the camera being browsed isn't necessarily the globally selected control robot. */
+    fun setVisionEnabled(robotId: Int, enabled: Boolean) {
+        val params = JSONObject().put("enabled", enabled)
+        sendAtomicCommand("vision", params, explicitRobotId = robotId) { r -> r.raw.put("visionEnabled", enabled) }
+    }
+
     fun changeTool(slot: Int) {
-        // assuming server handles slot to tool mapping, but we can do it locally too
-        mutateSelected { r ->
-            val tool = r.atcTools.find { it.slot == slot }?.tool ?: "None"
-            r.setTool(tool)
-        }
+        val targetRobot = selectedRobotId.value?.let { state.robotById(it) } ?: return
+        val tool = targetRobot.atcTools.find { it.slot == slot }?.tool ?: "None"
+        mutateSelectedTool(tool)
     }
 
     fun mutateSelectedTool(toolName: String) {
-        mutateSelected { it.setTool(toolName) }
+        val params = JSONObject().put("tool", toolName)
+        sendAtomicCommand("tool", params) { it.setTool(toolName) }
     }
 
     fun scanNetwork() {

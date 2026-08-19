@@ -8,12 +8,15 @@ package com.hydraumc.control.ui
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.draw.clip
+import android.widget.Toast
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -93,7 +96,7 @@ fun EndstopIndicator(label: String, active: Boolean) {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 fun ControlScreen(viewModel: RobotViewModel) {
     val context = LocalContext.current
@@ -431,13 +434,31 @@ fun ControlScreen(viewModel: RobotViewModel) {
                     horizontalArrangement = Arrangement.SpaceEvenly,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // EMERGENCY STOP
-                    IconButton(
-                        onClick = { 
-                            vibrate(longArrayOf(0, 150, 50, 150, 50, 150))
-                            viewModel.sendCommand("stop") 
-                        },
-                        modifier = Modifier.size(64.dp).background(Color.Red.copy(alpha = 0.15f), CircleShape).border(2.dp, Color.Red, CircleShape)
+                    // EMERGENCY STOP - real long-press protection (README's own claim of this
+                    // was previously false, see SONNET/HYDRA-UMC-ANDROID-CONTROL/
+                    // auditoria_historial.txt, 2026-08-19: a plain onClick fired the exact
+                    // same "stop" command as the STOP button below, only the vibration
+                    // pattern differed). A quick tap now does nothing but a short buzz +
+                    // hint toast; only a genuine hold (Compose's own long-press timing,
+                    // ~500ms) actually sends the command.
+                    Box(
+                        modifier = Modifier
+                            .size(64.dp)
+                            .background(Color.Red.copy(alpha = 0.15f), CircleShape)
+                            .border(2.dp, Color.Red, CircleShape)
+                            .combinedClickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null,
+                                onClick = {
+                                    vibrate(duration = 30)
+                                    Toast.makeText(context, "Hold to confirm E-STOP", Toast.LENGTH_SHORT).show()
+                                },
+                                onLongClick = {
+                                    vibrate(longArrayOf(0, 150, 50, 150, 50, 150))
+                                    viewModel.sendCommand("stop")
+                                }
+                            ),
+                        contentAlignment = Alignment.Center
                     ) {
                         Icon(Icons.Default.Dangerous, contentDescription = "E-STOP", tint = Color.Red, modifier = Modifier.size(36.dp))
                     }
@@ -460,11 +481,23 @@ fun ControlScreen(viewModel: RobotViewModel) {
                         Icon(if (selectedRobot.isPaused) Icons.Default.PlayArrow else Icons.Default.Pause, contentDescription = "PAUSE", tint = Color.White)
                     }
 
-                    // STOP
-                    IconButton(
-                        onClick = { vibrate(); viewModel.sendCommand("stop") },
-                        enabled = selectedRobot.online && (selectedRobot.isPlaying || selectedRobot.isPaused),
-                        modifier = Modifier.size(54.dp).background(if(selectedRobot.online && (selectedRobot.isPlaying || selectedRobot.isPaused)) Color(0xFF991B1B) else Color.DarkGray, CircleShape)
+                    // STOP - same long-press protection as E-STOP above.
+                    val stopEnabled = selectedRobot.online && (selectedRobot.isPlaying || selectedRobot.isPaused)
+                    Box(
+                        modifier = Modifier
+                            .size(54.dp)
+                            .background(if (stopEnabled) Color(0xFF991B1B) else Color.DarkGray, CircleShape)
+                            .combinedClickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null,
+                                enabled = stopEnabled,
+                                onClick = {
+                                    vibrate(duration = 30)
+                                    Toast.makeText(context, "Hold to confirm STOP", Toast.LENGTH_SHORT).show()
+                                },
+                                onLongClick = { vibrate(); viewModel.sendCommand("stop") }
+                            ),
+                        contentAlignment = Alignment.Center
                     ) {
                         Icon(Icons.Default.Stop, contentDescription = "STOP", tint = Color.White)
                     }
