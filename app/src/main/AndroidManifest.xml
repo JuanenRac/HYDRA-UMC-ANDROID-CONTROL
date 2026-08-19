@@ -7,6 +7,16 @@
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <!-- Android 13+ (API 33+) gates NsdManager.discoverServices() behind
+         either ACCESS_FINE_LOCATION or NEARBY_WIFI_DEVICES actually being
+         GRANTED at runtime (a manifest declaration alone is not enough,
+         same as any other dangerous permission since API 23) - without
+         either one granted, discovery silently reports zero services
+         instead of failing loudly. This app never uses nearby-device data
+         for physical location, so neverForLocation avoids also implying a
+         location-permission dependency for this one. See MainActivity's
+         runtime permission request. -->
+    <uses-permission android:name="android.permission.NEARBY_WIFI_DEVICES" android:usesPermissionFlags="neverForLocation" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
