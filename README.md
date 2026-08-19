@@ -73,22 +73,83 @@ The APK lands at `app/build/outputs/apk/debug/app-debug.apk`. Install it with `a
 | Robot won't move | Browser cerebral link | Keep a HYDRA-UMC STUDIO browser tab open for IK processing |
 | Bluetooth disabled | Physical chip off | Use the "ENABLE SYSTEM BT" 3D button in the app |
 
+## 📂 Repository Structure
+
+```text
+HYDRA-UMC-ANDROID-CONTROL/
+├── app/
+│   ├── build.gradle.kts          # App module Gradle config - AGP/Kotlin/Compose versions, dependencies, debug-signed release build type
+│   └── src/main/
+│       ├── AndroidManifest.xml   # Permissions, activity/receiver declarations, usesCleartextTraffic (plain-HTTP LAN server, no TLS)
+│       ├── java/com/hydraumc/control/
+│       │   ├── MainActivity.kt          # Entry point - splash, login/main screen gating, cold-start-safe global E-STOP handling
+│       │   ├── MainScreen.kt            # Bottom-nav scaffold, top bar (server selector, profile, telemetry, settings)
+│       │   ├── model/
+│       │   │   ├── BleDevice.kt          # Bluetooth LE scan result data class
+│       │   │   └── HydraState.kt         # settings.json field-by-field mirror (RobotView/ControllerView/JobView) + ServerInfo discovery model
+│       │   ├── network/
+│       │   │   ├── AuthPrefs.kt           # Encrypted (AES256-GCM) credential/session storage
+│       │   │   ├── ConnectionPrefs.kt     # Persisted server IP/port (DataStore Preferences)
+│       │   │   ├── Discovery.kt           # Concurrent /24 subnet scan (+ dormant NSD/mDNS listener) for finding a server on the LAN
+│       │   │   ├── HydraApiClient.kt      # REST client - login, settings read/write, atomic robot commands, system metrics
+│       │   │   ├── HydraBleClient.kt      # Bluetooth GATT client, alternative transport to Wi-Fi
+│       │   │   ├── HydraWebSocket.kt      # Live state-delta push over WS, reconnect handling
+│       │   │   └── StateCache.kt          # Last-known-state cache (DataStore) for offline dashboard viewing
+│       │   ├── ui/
+│       │   │   ├── AboutDialog.kt          # App/version info dialog
+│       │   │   ├── CameraScreen.kt         # Per-robot MJPEG camera feed + vision on/off switch
+│       │   │   ├── ControlScreen.kt        # Manual jog controls, E-STOP/play/pause/stop with long-press protection
+│       │   │   ├── DashboardScreen.kt      # 3D carousel robot picker + system health + module matrix
+│       │   │   ├── LoginScreen.kt          # Username/password + IP/port entry, biometric login
+│       │   │   ├── MjpegPlayer.kt          # MJPEG stream parser + Canvas renderer
+│       │   │   ├── NativeThreeDScreen.kt   # Google Filament native 3D visor - not wired into navigation yet, no .glb pipeline
+│       │   │   ├── SettingsScreen.kt       # Wi-Fi/Bluetooth scan UI, connection settings
+│       │   │   ├── SplashScreen.kt         # Custom Compose splash screen
+│       │   │   ├── TelemetryScreen.kt      # Terminal-style event/sync log viewer
+│       │   │   ├── ThreeDScreen.kt         # Real 3D viewport - WebView embedding STUDIO's own headless 3D scene
+│       │   │   ├── UserProfileDialog.kt    # Profile edit + biometric toggle dialog
+│       │   │   └── theme/
+│       │   │       ├── Color.kt, Theme.kt, Typography.kt   # Material 3 color scheme, theme wrapper, type scale
+│       │   │       └── HydraButton.kt, IndustrialComponents.kt, IndustrialStyle.kt   # Shared industrial-styled UI building blocks
+│       │   ├── util/
+│       │   │   ├── BiometricHelper.kt      # androidx.biometric prompt wrapper
+│       │   │   └── NotificationHelper.kt   # Job-complete/safety push notifications
+│       │   ├── viewmodel/
+│       │   │   └── RobotViewModel.kt   # Shared ViewModel - networking, auth, discovery, atomic command dispatch, all UI state
+│       │   └── widget/
+│       │       └── GlobalStopWidget.kt # Home-screen widget for a global E-STOP without opening the app
+│       └── res/
+│           ├── drawable/, layout/, mipmap*/, xml/   # Icons, widget layout, launcher icons, backup/data-extraction rules
+│           └── values/, values-es/, values-de/, values-fr/, values-it/   # Strings in 5 languages, colors, theme
+├── docs/
+│   └── ARCHITECTURE.md           # Design/architecture notes
+├── images/                       # README banner + splash screen source assets
+├── build-android.bat / .sh       # One-shot build + adb install convenience scripts
+├── gradlew, gradlew.bat          # Gradle wrapper
+├── build.gradle.kts, settings.gradle.kts, gradle.properties   # Root Gradle project config
+├── local.properties              # Local Android SDK path (machine-specific, not committed)
+├── .env.example                  # Example environment variables
+└── LICENSE                       # GPL-3.0
+```
+
 ## 🔗 Related Projects
 
-This project is part of a larger robotics ecosystem by the same author (JuanenRac / Electro Hobby 3D):
+This project is part of a larger robotics ecosystem by the same author (JuanenRac / Electro Hobby 3D). Worth knowing about, since a request might actually be about one of these rather than this repository:
 
 **HYDRA-UMC platform** — the multi-robot micro-factory cell
-- **[HYDRA-UMC](https://github.com/JuanenRac/HYDRA-UMC)** — Motherboard: Raspberry Pi CM5 host + STM32H745.
-- **[HYDRA-UMC STUDIO](https://github.com/JuanenRac/HYDRA-UMC-STUDIO)** — Web-based control dashboard and core server.
-- **HYDRA-UMC-CONTROL** *(this repository)* — Android control app over Wi-Fi and Bluetooth.
-- **[HYDRA-UMC-IOS-CONTROL](https://github.com/JuanenRac/HYDRA-UMC-IOS-CONTROL)** — iOS counterpart.
-- **[HYDRA-UMC-SUITE](https://github.com/JuanenRac/HYDRA-UMC-SUITE)** — Desktop swarm command center.
-- **[HYDRA-UMC-EDITOR-URDF](https://github.com/JuanenRac/HYDRA-UMC-EDITOR-URDF)** — planned: graphical URDF creator/editor for STUDIO's model catalog. Not started yet.
-- **[HYDRA-UMC-DSI](https://github.com/JuanenRac/HYDRA-UMC-DSI)** — planned: native touch UI for HYDRA-UMC's own 7" DSI touchscreen (1280×800) on the Compute Module 5. Not started yet.
+- **[HYDRA-UMC](https://github.com/JuanenRac/HYDRA-UMC)** — the motherboard itself: Raspberry Pi CM5 host + dual-core STM32H745 real-time co-processor, orchestrating up to 8 distributed robot arms over CAN-OTA/SPI-OTA. Own hardware + firmware, GPL-3.0/CERN-OHL-S v2/CC BY-SA 4.0.
+- **[HYDRA-UMC STUDIO](https://github.com/JuanenRac/HYDRA-UMC-STUDIO)** — web-based control dashboard for HYDRA-UMC: multi-robot 3D visualization, kinematics/trajectory recording, CAN-OTA flashing and testing for the whole platform. React + Vite + Three.js.
+- **HYDRA-UMC-ANDROID-CONTROL** *(this repository)* — Android control app for HYDRA-UMC over Wi-Fi/Bluetooth. Real, working app - full remote-control feature set, JWT auth, encrypted credential storage.
+- **[HYDRA-UMC-IOS-CONTROL](https://github.com/JuanenRac/HYDRA-UMC-IOS-CONTROL)** — iOS/iPadOS control app for HYDRA-UMC over Wi-Fi, built in Flutter (cross-platform, verifiable on Windows without a Mac; final `.ipa` packaging still needs Xcode). Real, working app - same feature set as the Android app.
+- **[HYDRA-UMC-SUITE](https://github.com/JuanenRac/HYDRA-UMC-SUITE)** — desktop (Python/PySide6) swarm command center: multi-controller network discovery, live bidirectional sync, real 3D robot viewport, Photoshop-style dockable workspace. Real and working, not a placeholder.
+- **[HYDRA-UMC-EDITOR-URDF](https://github.com/JuanenRac/HYDRA-UMC-EDITOR-URDF)** — desktop (Python/PySide6) graphical URDF creator/editor for this project's own model catalog: pulls source files from GitHub or a local folder, validates DOF feasibility, edits color/scale/kinematics with a live 3D preview, and pushes the finished result to a running STUDIO server. Real and working, not a placeholder.
+- **[HYDRA-UMC-DSI](https://github.com/JuanenRac/HYDRA-UMC-DSI)** — planned: a native touch UI for HYDRA-UMC's own 7" DSI touchscreen (1280×800) on the Compute Module 5, controlling this same server directly from the board. Not started yet.
 
-**URTC platform** — robot tool head controllers
-- **[URTC](https://github.com/JuanenRac/URTC)** — Universal Robot Tool Controller (STM32F303).
-- **[URTC Flasher](https://github.com/JuanenRac/URTC-FLASHER)** / **[URTC Tester](https://github.com/JuanenRac/URTC-TESTER)** / **[URTC Web Studio](https://github.com/JuanenRac/URTC-WEB-STUDIO)**.
+**URTC platform** — the tool head controller every HYDRA-UMC robot arm carries
+- **[URTC](https://github.com/JuanenRac/URTC)** — Universal Robot Tool Controller: STM32F303-based CAN bus tool head controller, 25 fully-implemented tool profiles, CAN-OTA firmware update.
+- **[URTC Flasher](https://github.com/JuanenRac/URTC-FLASHER)** — desktop CAN-OTA + full-chip SWD/JTAG flashing tool for URTC boards (Windows/Linux).
+- **[URTC Tester](https://github.com/JuanenRac/URTC-TESTER)** — desktop live CAN-bus diagnostic tool for URTC boards, one panel per tool profile (Windows/Linux).
+- **[URTC Web Studio](https://github.com/JuanenRac/URTC-WEB-STUDIO)** — browser-based alternative to the 2 desktop tools above (Web Serial API + SLCAN), no local install needed.
 
 ## 👤 Author
 
