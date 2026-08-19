@@ -128,7 +128,10 @@ fun scanSubnets(context: Context, client: OkHttpClient, port: Int = DEFAULT_PORT
                     override fun onResolveFailed(serviceInfo: NsdServiceInfo, errorCode: Int) {}
                     override fun onServiceResolved(serviceInfo: NsdServiceInfo) {
                         val host = serviceInfo.host.hostAddress ?: return
-                        launch {
+                        // Dispatchers.IO explicitly - this callback runs on whatever
+                        // dispatcher the collector's own scope uses (viewModelScope is
+                        // Dispatchers.Main.immediate), and probeHost() is a blocking call.
+                        launch(Dispatchers.IO) {
                             probeHost(client, host, serviceInfo.port)?.let { trySend(it) }
                         }
                     }
