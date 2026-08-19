@@ -434,13 +434,10 @@ fun ControlScreen(viewModel: RobotViewModel) {
                     horizontalArrangement = Arrangement.SpaceEvenly,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // EMERGENCY STOP - real long-press protection (README's own claim of this
-                    // was previously false, see SONNET/HYDRA-UMC-ANDROID-CONTROL/
-                    // auditoria_historial.txt, 2026-08-19: a plain onClick fired the exact
-                    // same "stop" command as the STOP button below, only the vibration
-                    // pattern differed). A quick tap now does nothing but a short buzz +
-                    // hint toast; only a genuine hold (Compose's own long-press timing,
-                    // ~500ms) actually sends the command.
+                    // EMERGENCY STOP - real long-press protection: a quick tap does nothing
+                    // but a short buzz + hint toast, so an accidental brush of this button
+                    // can't stop the robot; only a genuine hold (Compose's own long-press
+                    // timing, ~500ms) actually sends the command.
                     Box(
                         modifier = Modifier
                             .size(64.dp)

@@ -77,17 +77,14 @@ class RobotView(val raw: JSONObject) {
     val hasLaser: Boolean get() = isModuleEnabled("juanenLaser")
     val hasHeatedBed: Boolean get() = isModuleEnabled("heatedBed")
     val hasVacuumTable: Boolean get() = isModuleEnabled("vacuumTable")
-    // Found 2026-08-19: `raw.has("camera")` was true for almost every robot
-    // regardless of whether its camera is actually on - STUDIO's own default
-    // robot data always has a "camera" KEY present (store.tsx's own
+    // `raw.has("camera")` alone proves nothing - STUDIO's own default robot
+    // data always has a "camera" KEY present (store.tsx's own
     // createDefaultCameras()), just sometimes with connected=false, so mere
-    // key presence proved nothing. `cameraView` is a different, unrelated
-    // field entirely - the 3D viewport's own orbit camera position, not
-    // vision/camera hardware - confused with real vision state here the same
-    // way STUDIO's own Dashboard.tsx Overview panel was (see that project's
-    // own SONNET/HYDRA-UMC-STUDIO/auditoria_historial.txt, fixed the same
-    // day). Real signal: visionEnabled on the robot itself, OR its paired
-    // camera entry's own connected flag.
+    // key presence doesn't mean the camera is on. `cameraView` is a
+    // different, unrelated field entirely - the 3D viewport's own orbit
+    // camera position, not vision/camera hardware. The real signal is
+    // visionEnabled on the robot itself, OR its paired camera entry's own
+    // connected flag.
     val hasCamera: Boolean get() = raw.optBoolean("visionEnabled", false) || (raw.optJSONObject("camera")?.optBoolean("connected", false) ?: false)
     val hasAtc: Boolean get() = raw.has("atc")
     val hasRack: Boolean get() = isModuleEnabled("rackSystem")

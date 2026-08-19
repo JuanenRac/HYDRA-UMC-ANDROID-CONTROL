@@ -438,10 +438,13 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                         }
                     }
                 },
-                onSettings = { payload -> 
-                    // CRITICAL FIX: Merge delta instead of replacing whole state
+                onSettings = { payload ->
+                    // Merge the incoming delta into the existing state rather than
+                    // replacing it outright - a WS push only ever carries what
+                    // changed, not the full tree, so a plain replace would drop
+                    // every field the payload didn't include.
                     state.merge(payload)
-                    applyState(state) 
+                    applyState(state)
                 },
             ) { message -> 
                 if (!isSwitchingServer) {
@@ -484,22 +487,16 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    // 2026-08-19: every write in this app used to go through mutateSelected()/
-    // pushState() below, which ALWAYS pushed the full ~3.66MB settings tree
-    // (over both the WebSocket AND a debounced REST POST) for even a single
-    // jog tick - HydraApiClient.kt's own postRobotCommand() existed since day
-    // one but nothing ever called it (see that file's own now-corrected
-    // header comment). Switched every command here to the real atomic
-    // POST /api/robot/:id/command (server.ts:210-298): the server computes
-    // affectedIds itself, persists to disk, AND broadcasts a "delta" to every
-    // OTHER connected client on its own - this app doesn't need to also push
-    // the full tree over its own WebSocket for these anymore. Fixed at the
-    // same time: enable/disable never propagated to a robot's own
-    // combinedWith siblings (mutateSelected() only ever touched the single
-    // selected robot), unlike play/pause/stop, which already had that logic
-    // duplicated just for themselves - now every command shares the same
-    // affectedIds computation, so this class of bug can't reappear for a
-    // future command the same way.
+    // Every write in this app goes through the real atomic
+    // POST /api/robot/:id/command (server.ts:210-298) instead of pushing the
+    // full settings tree for a single jog tick: the server computes
+    // affectedIds itself (self + combinedWith), persists to disk, AND
+    // broadcasts a "delta" to every OTHER connected client on its own, so
+    // this app doesn't also need to push the full tree over its own
+    // WebSocket. Every command shares the same affectedIds computation below
+    // (propagateToCombined), so enable/disable, play/pause/stop, and any
+    // future command all propagate to a robot's own combinedWith siblings
+    // the same way instead of each reimplementing that fan-out separately.
     private var atomicSyncJob: kotlinx.coroutines.Job? = null
 
     /**
@@ -613,7 +610,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    /** Toggles a robot's vision system on/off from the Camera screen (server.ts's own "vision" command, added 2026-08-19). Takes an explicit robotId since the camera being browsed isn't necessarily the globally selected control robot. */
+    /** Toggles a robot's vision system on/off from the Camera screen (server.ts's own "vision" command). Takes an explicit robotId since the camera being browsed isn't necessarily the globally selected control robot. */
     fun setVisionEnabled(robotId: Int, enabled: Boolean) {
         val params = JSONObject().put("enabled", enabled)
         sendAtomicCommand("vision", params, explicitRobotId = robotId) { r -> r.raw.put("visionEnabled", enabled) }

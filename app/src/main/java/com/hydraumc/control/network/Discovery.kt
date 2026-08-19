@@ -15,6 +15,16 @@
 // that file's own header comment calls out as a real bug already found and
 // fixed there (a same-machine or same-network server bound to a specific
 // interface, not just localhost, would otherwise never be probed).
+//
+// Identity check: a hit is "a real HYDRA-UMC server" purely by the presence
+// of remoteApiVersion in the response - the exact same test
+// HydraApiClient.getHydraInfo() already uses for the manual-IP path
+// (RobotViewModel.connect()). The `product` field server.ts returns
+// (server.ts's own GET /api/hydra-info handler) is the operator's
+// configurable serverName setting, only defaulting to the literal string
+// "HYDRA-UMC STUDIO" when unset - matching against that literal here would
+// silently drop every server whose owner ever renamed it, while the exact
+// same host still answers fine to a manual IP/port entry.
 // =============================================================================
 package com.hydraumc.control.network
 
@@ -94,7 +104,9 @@ private fun probeHost(client: OkHttpClient, host: String, port: Int): ServerInfo
             if (!response.isSuccessful) return null
             val body = response.body?.string() ?: return null
             val json = JSONObject(body)
-            if (json.optString("product") != "HYDRA-UMC STUDIO") return null
+            // Same identity test as HydraApiClient.getHydraInfo() - `product`
+            // is a user-editable server name, not a fixed marker.
+            if (!json.has("remoteApiVersion")) return null
             ServerInfo.fromHydraInfo(host, port, json)
         }
     } catch (e: Exception) {

@@ -14,18 +14,14 @@
 //   - POST /api/robot/:id/command   - atomic per-robot command (stop/play/
 //     pause/jog/tool/valve/pump/speed/vision) - server.ts computes
 //     affectedIds (self + combinedWith) itself, persists to disk, and
-//     broadcasts a WS "delta" to every OTHER client on its own. This is
-//     what every mutation in this app (RobotViewModel.kt's own
-//     sendAtomicCommand()) actually uses as of 2026-08-19 - a much smaller
-//     payload than a full POST /api/settings for a single jog tick, and it
-//     used to sit here completely unused (postRobotCommand() was defined
-//     but never called anywhere, while every mutation instead did a full
-//     whole-object POST /api/settings via HydraState.toJson(), same as
-//     HYDRA-UMC-STUDIO's own browser UI's updateRobot() and SUITE's own
-//     push_state() - both since fixed the same day, see those projects' own
-//     SONNET/ tracking files). postSettings() below is still used for the
-//     one-time full sync on connect() and for factory-reset-shaped writes,
-//     just no longer for every single robot command.
+//     broadcasts a WS "delta" to every OTHER client on its own. This is what
+//     every mutation in this app (RobotViewModel.kt's own
+//     sendAtomicCommand()) uses: a much smaller payload than a full
+//     POST /api/settings for a single jog tick, and it lets the server (not
+//     every client independently) own the combinedWith fan-out logic.
+//     postSettings() below is reserved for the one-time full sync on
+//     connect() and for factory-reset-shaped writes, not for individual
+//     robot commands.
 //
 // Deliberately built on plain OkHttp + org.json rather than Retrofit/Gson.
 // =============================================================================
@@ -172,11 +168,11 @@ class HydraApiClient(host: String, port: Int, private val client: OkHttpClient =
          *
          * The interceptor self-identifies every request to server.ts's own
          * per-client remote-access toggles (Config > Remote Access in the
-         * browser UI, added 2026-08-19) - lets the project owner disable
-         * this app's own access without also blocking SUITE/iOS, or vice
-         * versa. Only GET /api/hydra-info actually checks this header
-         * server-side; sending it on every request is simpler than special-
-         * casing just that one call, and harmless everywhere else.
+         * browser UI) - lets the project owner disable this app's own access
+         * without also blocking SUITE/iOS, or vice versa. Only GET
+         * /api/hydra-info actually checks this header server-side; sending
+         * it on every request is simpler than special-casing just that one
+         * call, and harmless everywhere else.
          */
         val sharedHttpClient: OkHttpClient = OkHttpClient.Builder()
             .connectTimeout(5, TimeUnit.SECONDS)

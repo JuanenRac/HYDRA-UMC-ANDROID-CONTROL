@@ -6,12 +6,14 @@
 package com.hydraumc.control.ui
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.res.stringResource
@@ -33,6 +35,12 @@ fun LoginScreen(viewModel: RobotViewModel) {
     var username by remember { mutableStateOf(viewModel.loginUsername.value) }
     var password by remember { mutableStateOf("") }
     var rememberMe by remember { mutableStateOf(viewModel.loginRememberMe.value) }
+    // Server address/port entered right here instead of requiring a trip
+    // through Settings first - prefilled from whatever ConnectionPrefs
+    // already loaded into the ViewModel (last-used values, or the built-in
+    // defaults if this is a first run).
+    var ipAddress by remember { mutableStateOf(viewModel.ipAddress.value) }
+    var port by remember { mutableStateOf(viewModel.port.value) }
     val isBiometricEnabled = viewModel.isBiometricEnabled.value
     val lastError = viewModel.lastError.value
 
@@ -61,7 +69,40 @@ fun LoginScreen(viewModel: RobotViewModel) {
                 )
                 
                 Spacer(modifier = Modifier.height(24.dp))
-                
+
+                // IP/port right on this screen - the owner shouldn't have to
+                // visit Settings first just to point the app at a server.
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    OutlinedTextField(
+                        value = ipAddress,
+                        onValueChange = { ipAddress = it },
+                        label = { Text(stringResource(R.string.ip_label)) },
+                        singleLine = true,
+                        modifier = Modifier.weight(2f),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White
+                        )
+                    )
+                    OutlinedTextField(
+                        value = port,
+                        onValueChange = { port = it },
+                        label = { Text(stringResource(R.string.port_label)) },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.weight(1f),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White
+                        )
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
                 OutlinedTextField(
                     value = username,
                     onValueChange = { username = it },
@@ -108,7 +149,15 @@ fun LoginScreen(viewModel: RobotViewModel) {
                 
                 HydraButton(
                     text = stringResource(R.string.login_button_label),
-                    onClick = { viewModel.login(username, password, rememberMe) },
+                    onClick = {
+                        // login()/connect() both read ipAddress.value/port.value off the
+                        // ViewModel rather than taking them as parameters, so this screen's
+                        // own fields have to land there first - same values ConnectionPrefs
+                        // ends up persisting once connect() succeeds.
+                        viewModel.ipAddress.value = ipAddress.trim()
+                        viewModel.port.value = port.trim()
+                        viewModel.login(username, password, rememberMe)
+                    },
                     modifier = Modifier.fillMaxWidth()
                 )
 
@@ -122,7 +171,10 @@ fun LoginScreen(viewModel: RobotViewModel) {
                                 title = context.getString(R.string.biometric_prompt_title),
                                 subtitle = context.getString(R.string.biometric_prompt_subtitle),
                                 onSuccess = {
-                                    // Use stored credentials for biometric login
+                                    // Use stored credentials for biometric login, but still
+                                    // honor whatever IP/port this screen currently shows.
+                                    viewModel.ipAddress.value = ipAddress.trim()
+                                    viewModel.port.value = port.trim()
                                     viewModel.login(
                                         viewModel.loginUsername.value,
                                         viewModel.loginPassword.value,

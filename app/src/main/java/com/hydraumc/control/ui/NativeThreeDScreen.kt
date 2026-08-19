@@ -17,8 +17,10 @@ import androidx.compose.ui.platform.LocalLifecycleOwner
 import com.google.android.filament.*
 
 /**
- * High-performance native 3D visor.
- * Migrated from WebView to Google Filament for 60 FPS industrial control.
+ * Native 3D visor built on Google Filament - intended for higher-performance
+ * industrial control than the WebView-based viewport once it has a real
+ * .glb asset pipeline (AssetLoader/gltfio) wired in. Not currently used by
+ * any navigation route: ThreeDScreen.kt (WebView) is the real 3D view today.
  */
 @Composable
 fun NativeThreeDScreen(robotId: Int) {

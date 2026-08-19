@@ -23,9 +23,12 @@ import androidx.compose.ui.viewinterop.AndroidView
 import com.hydraumc.control.viewmodel.RobotViewModel
 
 /**
- * Composable that displays the 3D view by embedding the server's web interface.
- * Returns to WebView as the native Filament engine requires .glb assets not yet present.
- * 
+ * Composable that displays the 3D view by embedding the server's own web
+ * interface (the same Three.js viewport HYDRA-UMC STUDIO's browser UI
+ * renders) in a WebView. This is the real, working 3D view - the native
+ * Filament path (NativeThreeDScreen.kt) needs an actual .glb asset pipeline
+ * that doesn't exist yet, so it stays unused rather than half-wired-in.
+ *
  * @param viewModel The shared RobotViewModel containing connection info.
  */
 @Composable
@@ -38,10 +41,16 @@ fun ThreeDScreen(viewModel: RobotViewModel) {
     
     // Key used to force WebView recreation on refresh
     var refreshKey by remember { mutableIntStateOf(0) }
-    
+
     // We target the specific robot in the Studio UI via URL parameters
     val token = viewModel.apiClient?.authToken ?: ""
     val url = "http://$ip:$port/?hideUI=true&robotId=$selectedId&token=$token"
+
+    // Tracks what was last actually pushed into the WebView via loadUrl() -
+    // compared against `url` in `update` below (not against webView.url,
+    // which the WebView/server can normalize on its own and cause a
+    // loadUrl-every-recomposition loop).
+    var loadedUrl by remember { mutableStateOf<String?>(null) }
 
     Box(modifier = Modifier.fillMaxSize()) {
         key(refreshKey) {
@@ -55,15 +64,27 @@ fun ThreeDScreen(viewModel: RobotViewModel) {
                         settings.allowFileAccess = true
                         settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
                         settings.userAgentString = "HYDRA-UMC-ANDROID-CONTROL"
-                        
+
                         setLayerType(android.view.View.LAYER_TYPE_HARDWARE, null)
-                        
+
                         webViewClient = WebViewClient()
                         loadUrl(url)
+                        loadedUrl = url
                     }
                 },
+                // `factory` above only runs once per `key(refreshKey)` - without
+                // this, a WebView built while ip/port/selectedId/token was still
+                // stale (e.g. the JWT not yet propagated to apiClient right after
+                // login, or the user picking a different robot/server afterwards)
+                // stayed on that stale URL forever, since nothing ever told it to
+                // navigate again. Re-issuing loadUrl() only when the computed URL
+                // actually changed keeps the embedded page in sync with the
+                // ViewModel instead of freezing it at first composition.
                 update = { webView ->
-                    // Standard update logic if needed
+                    if (loadedUrl != url) {
+                        webView.loadUrl(url)
+                        loadedUrl = url
+                    }
                 },
                 modifier = Modifier.fillMaxSize()
             )

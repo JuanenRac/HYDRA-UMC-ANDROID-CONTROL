@@ -3,18 +3,16 @@
 // Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
 // GPL-3.0 - see LICENSE
 // =============================================================================
-// Was plain Jetpack DataStore Preferences until 2026-08-19 - functionally the
-// same problem as plain SharedPreferences (an unencrypted XML/protobuf file
-// under /data/data/<pkg>/, readable in full on any rooted device or from an
-// ADB backup) despite being the newer API. The username/password/bearer
-// token this class caches (only ever used to prefill the login form and to
-// silently restore a session via the stored token - see
-// RobotViewModel.kt's own init{}) are exactly the kind of secret that file
-// format was never meant to hold. Now backed by EncryptedSharedPreferences
-// (androidx.security.crypto) instead: AES256-GCM per value with a hardware
-// Keystore-backed master key on any device that supports it (StrongBox/TEE),
-// software Keystore fallback otherwise - either way, nothing plaintext ever
-// touches disk.
+// The username/password/bearer token this class caches (only ever used to
+// prefill the login form and to silently restore a session via the stored
+// token - see RobotViewModel.kt's own init{}) are secrets that plain
+// SharedPreferences/DataStore Preferences were never meant to hold: both
+// store an unencrypted XML/protobuf file under /data/data/<pkg>/, readable
+// in full on any rooted device or from an ADB backup. Backed instead by
+// EncryptedSharedPreferences (androidx.security.crypto): AES256-GCM per
+// value with a hardware Keystore-backed master key on any device that
+// supports it (StrongBox/TEE), software Keystore fallback otherwise -
+// either way, nothing plaintext ever touches disk.
 package com.hydraumc.control.network
 
 import android.content.Context
@@ -40,11 +38,11 @@ private const val KEY_TOKEN = "token"
 class AuthPrefs(private val context: Context) {
 
     init {
-        // One-time best-effort cleanup: the old plaintext DataStore file
-        // (context.filesDir/datastore/auth_prefs.preferences_pb) held this
-        // same username/password/token before the 2026-08-19 encryption
-        // migration above - leaving it on disk would defeat the point of
-        // encrypting the new store. Safe to attempt on every construction:
+        // Best-effort cleanup: an unencrypted DataStore Preferences file at
+        // this same path (context.filesDir/datastore/auth_prefs.preferences_pb)
+        // could still hold this same username/password/token from an older
+        // install of this app - leaving it on disk would defeat the point of
+        // encrypting the store above. Safe to attempt on every construction:
         // delete() on an already-missing file is a harmless no-op.
         runCatching { File(context.filesDir, "datastore/auth_prefs.preferences_pb").delete() }
     }

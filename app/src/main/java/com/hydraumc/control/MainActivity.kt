@@ -33,18 +33,16 @@ class MainActivity : FragmentActivity() {
     /** The shared ViewModel that manages robot state and connectivity. */
     private val robotViewModel: RobotViewModel by viewModels()
 
-    // Found 2026-08-19 (SONNET/HYDRA-UMC-ANDROID-CONTROL/auditoria_historial.txt):
-    // handleIntent() used to run in onCreate() BEFORE setContent{} even mounts,
-    // and robotViewModel.robots.value only ever gets populated later, either
-    // asynchronously from the cached state the ViewModel's own init{} loads
-    // (StateCache) or from a live scanNetwork()/connect(). If the app process
-    // wasn't already alive (a fully cold start from the home-screen widget,
-    // GlobalStopWidget.kt), the E-STOP loop below ran over an EMPTY list and
-    // silently stopped nothing - the exact scenario a home-screen safety
-    // widget exists for. Fixed by deferring the actual stop loop into a
-    // Compose LaunchedEffect (below, in setContent) that waits for
-    // robots.value to actually have entries instead of firing once,
-    // synchronously, against whatever (possibly nothing) is loaded yet.
+    // The widget's E-STOP intent can arrive during a fully cold start (app
+    // process not already alive), when robotViewModel.robots.value is still
+    // empty - it only gets populated later, either asynchronously from the
+    // cached state the ViewModel's own init{} loads (StateCache) or from a
+    // live scanNetwork()/connect(). handleIntent() itself only flags the
+    // request; the actual stop loop lives in a Compose LaunchedEffect (below,
+    // in setContent) that waits for robots.value to actually have entries
+    // before acting, so a cold-start E-STOP still reliably stops every robot
+    // once the roster loads instead of firing once against an empty list -
+    // exactly the scenario a home-screen safety widget needs to survive.
     private var pendingGlobalEstop by mutableStateOf(false)
 
     /** Activity result launcher for enabling Bluetooth. */
@@ -94,8 +92,7 @@ class MainActivity : FragmentActivity() {
             // Deferred global E-STOP - see pendingGlobalEstop's own comment above.
             // Re-runs whenever robots.value changes, so a cold start (robots.value
             // starts empty, gets populated moments later from cache/network) still
-            // reliably stops every robot once there's actually something to stop,
-            // instead of firing once against an empty list and giving up.
+            // reliably stops every robot once there's actually something to stop.
             val robotsForEstop = robotViewModel.robots.value
             LaunchedEffect(pendingGlobalEstop, robotsForEstop) {
                 if (pendingGlobalEstop && robotsForEstop.isNotEmpty()) {
@@ -140,7 +137,7 @@ class MainActivity : FragmentActivity() {
         if (intent?.action == "ACTION_GLOBAL_ESTOP") {
             // Just flag it - the actual stop loop runs from the LaunchedEffect in
             // setContent{} above once robots.value is real, not empty. See
-            // pendingGlobalEstop's own comment for why this used to fail cold.
+            // pendingGlobalEstop's own comment for why that matters on a cold start.
             pendingGlobalEstop = true
         }
     }

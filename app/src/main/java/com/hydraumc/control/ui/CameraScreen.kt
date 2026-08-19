@@ -21,11 +21,9 @@ import com.hydraumc.control.ui.theme.metallicIndustrial
  * Composable that displays the Camera screen.
  * Allows selecting between the robots the server actually reports, and shows
  * a real MJPEG stream from the CM5 server for whichever one is selected.
- *
- * 2026-08-19: previously always listed a fixed "Robot Camera 1..8" regardless
- * of whether that robot's camera was actually enabled on the server, and had
- * no way to tell (RobotState.hasCamera itself was buggy - see
- * model/HydraState.kt's own fix comment) or to turn one on/off from here.
+ * Lists only robots the server reports (via RobotState.hasCamera - see
+ * model/HydraState.kt), and lets the operator turn a robot's camera on/off
+ * directly from here, instead of assuming every robot has one.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
