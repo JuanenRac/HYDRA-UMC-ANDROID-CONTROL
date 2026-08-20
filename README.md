@@ -129,6 +129,8 @@ HYDRA-UMC-ANDROID-CONTROL/
 ├── build.gradle.kts, settings.gradle.kts, gradle.properties   # Root Gradle project config
 ├── local.properties              # Local Android SDK path (machine-specific, not committed)
 ├── .env.example                  # Example environment variables
+├── README.md                     # This file
+├── README_spa.md / README_ita.md / README_fra.md / README_deu.md   # Translations
 └── LICENSE                       # GPL-3.0
 ```
 
@@ -159,4 +161,6 @@ This project is part of a larger robotics ecosystem by the same author (JuanenRa
 
 ## 📜 License
 
-GNU General Public License v3.0 (GPL-3.0) - see [`LICENSE`](LICENSE).
+**GNU General Public License v3.0 (GPL-3.0)** for the source code - see [`LICENSE`](LICENSE).
+
+This documentation (this README and its own translations - `README_spa.md`, `README_ita.md`, `README_fra.md`, `README_deu.md`) is available under **Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)**. Full text at https://creativecommons.org/licenses/by-sa/4.0/.
