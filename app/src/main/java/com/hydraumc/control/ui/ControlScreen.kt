@@ -101,6 +101,16 @@ fun EndstopIndicator(label: String, active: Boolean) {
 fun ControlScreen(viewModel: RobotViewModel) {
     val context = LocalContext.current
     val vibrator = remember { context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator }
+
+    // viewModel.lastError was never read anywhere outside LoginScreen.kt/
+    // SettingsScreen.kt - a failed jog, valve/pump toggle, or even E-STOP
+    // (RobotViewModel.kt's own sendAtomicCommand()) set it, but an operator
+    // sitting on THIS screen (where commands actually get sent) had no way
+    // to ever see that. Same Toast pattern already used a few lines down
+    // for the E-STOP/STOP hold confirmation, not a new UI mechanism.
+    LaunchedEffect(viewModel.lastError.value) {
+        viewModel.lastError.value?.let { Toast.makeText(context, it, Toast.LENGTH_LONG).show() }
+    }
     
     @SuppressLint("MissingPermission")
     fun vibrate(pattern: LongArray? = null, duration: Long = 50) {
@@ -152,9 +162,17 @@ fun ControlScreen(viewModel: RobotViewModel) {
                             color = Color.LightGray,
                             fontWeight = FontWeight.Bold
                         )
-                        val isConnected = connectionStatus.contains("Connected", ignoreCase = true)
+                        // connectionStatus is itself a localized string (always
+                        // set from getString(R.string.status_connected) - see
+                        // RobotViewModel.kt), so it has to be compared against
+                        // that same resource, not a hardcoded English literal -
+                        // a literal match here always fails in es/de/fr/it,
+                        // showing "disconnected" (red) even while connected.
+                        // Same comparison DashboardScreen.kt already uses correctly.
+                        val connectedLabel = stringResource(R.string.status_connected)
+                        val isConnected = connectionStatus == connectedLabel
                         Text(
-                            text = (if (isConnected) stringResource(R.string.status_connected) else connectionStatus).uppercase(),
+                            text = (if (isConnected) connectedLabel else connectionStatus).uppercase(),
                             style = MaterialTheme.typography.labelSmall,
                             color = if (isConnected) Color(0xFF10B981) else Color(0xFFF43F5E),
                             fontWeight = FontWeight.Black
@@ -162,7 +180,7 @@ fun ControlScreen(viewModel: RobotViewModel) {
                     }
                 }
                 StatusLed(
-                    isOn = connectionStatus.contains("Connected", ignoreCase = true),
+                    isOn = connectionStatus == stringResource(R.string.status_connected),
                     activeColor = MetallicCyan,
                     size = 20.dp
                 )

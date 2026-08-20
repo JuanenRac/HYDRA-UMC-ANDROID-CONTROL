@@ -250,8 +250,23 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
     fun login(user: String, pass: String, remember: Boolean) {
         val host = ipAddress.value.trim()
         val portValue = port.value.trim()
-        val portInt = portValue.toIntOrNull() ?: 3000
-        
+        // Same validation connect() already applies - without it, an empty
+        // host/port here fell through silently (port defaulting to 3000
+        // rather than telling the user their input was missing), and an
+        // invalid port never surfaced error_invalid_port the way connect()'s
+        // own path does. Username/password are checked too: an empty
+        // credential otherwise goes straight to the server as an empty
+        // string instead of being caught client-side first.
+        if (host.isEmpty() || portValue.isEmpty() || user.isBlank() || pass.isBlank()) {
+            lastError.value = getApplication<Application>().getString(R.string.error_enter_ip_port)
+            return
+        }
+        val portInt = portValue.toIntOrNull()
+        if (portInt == null) {
+            lastError.value = getApplication<Application>().getString(R.string.error_invalid_port, portValue)
+            return
+        }
+
         val client = HydraApiClient(host, portInt)
         apiClient = client
         
@@ -393,8 +408,21 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    // Tracked so a reconnect (server switch, manual reconnect) can cancel
+    // the PREVIOUS loop before starting a new one - without this, every
+    // connect() -> startMetricsLoop() call left the old loop running
+    // indefinitely: its own `while` condition only exits once
+    // connectionStatus stops reading "Connected", but after a server
+    // switch that string becomes true again for the NEW server almost
+    // immediately, so the old loop (still closing over the OLD client)
+    // never actually saw a false condition - it just kept polling a
+    // server that's no longer the active one, racing the new loop to
+    // overwrite the same shared `metrics` value.
+    private var metricsJob: kotlinx.coroutines.Job? = null
+
     private fun startMetricsLoop(client: HydraApiClient) {
-        viewModelScope.launch {
+        metricsJob?.cancel()
+        metricsJob = viewModelScope.launch {
             while(connectionStatus.value == getApplication<Application>().getString(R.string.status_connected)) {
                 try {
                     val m = client.getSystemMetrics()
@@ -497,7 +525,17 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
     // (propagateToCombined), so enable/disable, play/pause/stop, and any
     // future command all propagate to a robot's own combinedWith siblings
     // the same way instead of each reimplementing that fan-out separately.
-    private var atomicSyncJob: kotlinx.coroutines.Job? = null
+    // Keyed by `command`, not a single shared Job - a pending debounced
+    // command (only setSpeed uses debounceMs today) must only be cancelled
+    // by a NEW command of that same kind, not by an unrelated jog/valve/
+    // pump/play tap that happens to land inside the debounce window. A
+    // single shared Job here used to mean: drag the speed slider, then
+    // immediately jog before the 300ms debounce fires, and the speed
+    // change silently never reaches the server at all - the UI already
+    // shows the new speed (the local mutation below is synchronous), so
+    // nothing about the screen indicates the robot is still running at
+    // the OLD speed.
+    private val atomicSyncJobs = mutableMapOf<String, kotlinx.coroutines.Job?>()
 
     /**
      * Applies [command]/[params] to [robotId] (defaults to the globally
@@ -525,17 +563,51 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
             return
         }
 
+        // Checked BEFORE the optimistic mutation below, not after (used to
+        // be `val client = apiClient ?: return`, reached only once the UI
+        // already showed the change as applied) - with no REST client at
+        // all (BLE-only session: connectBle() sets apiClient = null and
+        // this app has no BLE command path yet), every command used to
+        // mutate the local/UI state and then silently discard itself,
+        // so every button appeared to work while doing nothing whatsoever
+        // to the real robot.
+        val client = apiClient ?: run {
+            lastError.value = getApplication<Application>().getString(R.string.error_not_connected)
+            return
+        }
+
         val affectedIds = mutableListOf(robotId)
         if (propagateToCombined) {
             targetRobot.raw.optJSONArray("combinedWith")?.let { arr ->
                 for (i in 0 until arr.length()) affectedIds.add(arr.getInt(i))
             }
         }
+        // Snapshot every affected robot's raw state as JSON text before
+        // mutating, so a failed send can restore it - the mutation below is
+        // optimistic (applied to the UI immediately, before the network
+        // round-trip even starts), and until this snapshot existed a
+        // failed POST (network error, server rejection, timeout - anything
+        // that isn't the one already-handled 401 case) left the UI showing
+        // the command as applied forever, with no way back to the real
+        // last-known-good state short of a full reconnect.
+        val snapshots = affectedIds.mapNotNull { id -> state.robotById(id)?.let { id to it.raw.toString() } }
         affectedIds.forEach { id -> state.robotById(id)?.let(localMutate) }
         applyState(state)
 
-        val client = apiClient ?: return
         val payload = JSONObject().put("command", command).apply { if (params != null) put("params", params) }
+
+        fun rollback() {
+            for ((id, json) in snapshots) {
+                val raw = state.robotById(id)?.raw ?: continue
+                val restored = org.json.JSONObject(json)
+                val keys = restored.keys()
+                while (keys.hasNext()) {
+                    val key = keys.next()
+                    raw.put(key, restored.get(key))
+                }
+            }
+            applyState(state)
+        }
 
         val send: () -> Unit = {
             viewModelScope.launch {
@@ -549,14 +621,25 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                         isLoggedIn.value = false
                         connectionStatus.value = getApplication<Application>().getString(R.string.status_disconnected)
                         ws?.disconnect()
+                    } else {
+                        lastError.value = getApplication<Application>().getString(R.string.error_command_failed, command)
                     }
+                    rollback()
+                } catch (e: Exception) {
+                    // Was `catch (e: HydraApiException)` only - a plain
+                    // timeout/SocketException from OkHttp isn't wrapped in
+                    // HydraApiException, so it escaped uncaught, skipping
+                    // both the error message AND the rollback below.
+                    logTelemetry("TX Error [$command]: ${e.message}")
+                    lastError.value = getApplication<Application>().getString(R.string.error_command_failed, command)
+                    rollback()
                 }
             }
         }
 
-        atomicSyncJob?.cancel()
+        atomicSyncJobs[command]?.cancel()
         if (debounceMs > 0) {
-            atomicSyncJob = viewModelScope.launch {
+            atomicSyncJobs[command] = viewModelScope.launch {
                 kotlinx.coroutines.delay(debounceMs)
                 send()
             }
@@ -740,6 +823,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
 
     override fun onCleared() {
         super.onCleared()
+        metricsJob?.cancel()
         ws?.disconnect()
         bleClient?.disconnect()
         stopBtScan()

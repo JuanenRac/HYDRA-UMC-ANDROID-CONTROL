@@ -54,6 +54,8 @@
     <string name="error_enter_ip_port">Introduce una IP y un puerto.</string>
     <string name="error_invalid_port">Puerto inválido: %s</string>
     <string name="error_robot_not_found">El robot seleccionado ya no existe en el estado del servidor.</string>
+    <string name="error_not_connected">No conectado a ningún servidor - comando no enviado.</string>
+    <string name="error_command_failed">Comando fallido: %1$s (cambio revertido)</string>
     <string name="error_unknown_command">Comando desconocido: %s</string>
     <string name="error_no_tool_in_slot">No existe ninguna herramienta en el slot %d.</string>
     <string name="control_robots">Control de Robots</string>

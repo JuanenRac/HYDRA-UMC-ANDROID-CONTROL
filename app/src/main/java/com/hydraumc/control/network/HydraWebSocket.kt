@@ -184,9 +184,15 @@ class HydraWebSocket(
      * @return True if the message was sent, false if the socket is closed.
      */
     fun send(payload: JSONObject): Boolean {
-        val payloadJson = payload.toString()
-        if (payloadJson == lastPayloadJson) return true 
+        // Check the socket BEFORE the echo-guard, not after - a payload
+        // that happens to match the last one sent/received returns "true"
+        // (nothing to do) below regardless of whether the socket is
+        // actually connected, so checking connectivity second would report
+        // a fake success for exactly the case that matters most: the
+        // reconnect window right after a drop.
         val socket = webSocket ?: return false
+        val payloadJson = payload.toString()
+        if (payloadJson == lastPayloadJson) return true
         /** Envelope following the REMOTE_API.md contract. */
         val envelope = JSONObject().put("type", "settings").put("payload", payload)
         val sent = socket.send(envelope.toString())

@@ -86,6 +86,15 @@ fun ThreeDScreen(viewModel: RobotViewModel) {
                         loadedUrl = url
                     }
                 },
+                // Without this, leaving this screen (or the key(refreshKey)
+                // block above discarding the old instance on a manual
+                // refresh) never called WebView.destroy() - the loaded page
+                // is STUDIO's own Three.js viewport, which keeps a
+                // requestAnimationFrame loop running continuously, so an
+                // orphaned WebView kept driving that loop (CPU/GPU/battery)
+                // in the background for as long as the GC happened to take
+                // to collect it, which WebView gives no real guarantee on.
+                onRelease = { webView -> webView.destroy() },
                 modifier = Modifier.fillMaxSize()
             )
         }

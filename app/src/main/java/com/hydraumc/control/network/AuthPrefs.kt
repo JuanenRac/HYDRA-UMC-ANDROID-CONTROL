@@ -87,7 +87,15 @@ class AuthPrefs(private val context: Context) {
     }
 
     suspend fun clearAuth() = withContext(Dispatchers.IO) {
-        openEncryptedPrefs().edit().putBoolean(KEY_LOGGED_IN, false).apply()
+        // Clears the bearer token too, not just the "logged in" flag - without
+        // this, connect()/setupWebSocket() (which read loadAuth().token
+        // directly as a fallback, not gated on isLoggedIn) would keep
+        // reusing the old session's token after an explicit logout, as if
+        // the logout had never happened.
+        openEncryptedPrefs().edit()
+            .putBoolean(KEY_LOGGED_IN, false)
+            .putString(KEY_TOKEN, "")
+            .apply()
         Unit
     }
 }
