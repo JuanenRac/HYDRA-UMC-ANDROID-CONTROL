@@ -3,21 +3,35 @@
 // Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
 // GPL-3.0 - see LICENSE
 //
-// Subnet scanner - hits GET /api/hydra-info (REMOTE_API.md section 1) on
-// every candidate IP in the phone's own /24 range concurrently, keeps
-// whichever ones actually answer with a real HYDRA-UMC STUDIO payload. No
-// mDNS/Bonjour service exists on the server side yet (REMOTE_API.md's own
-// "Future work" note) - a raw concurrent scan is the real, working option
-// today. This is a direct Kotlin port of HYDRA-UMC-SUITE's own
-// hydra_suite/net/discovery.py - same 2 functions
-// (localIpv4Addresses/candidateHostsFor), same "always probe 127.0.0.1 and
-// the phone's own LAN IP too, not just the other hosts on the subnet" fix
-// that file's own header comment calls out as a real bug already found and
-// fixed there (a same-machine or same-network server bound to a specific
-// interface, not just localhost, would otherwise never be probed).
+// Two discovery mechanisms run side by side:
 //
-// Identity check: a hit is "a real HYDRA-UMC server" purely by the presence
-// of remoteApiVersion in the response - the exact same test
+// 1. Subnet scanner (the deterministic one) - hits GET /api/hydra-info
+//    (REMOTE_API.md section 1) on every candidate IP in the phone's own /24
+//    range concurrently, keeps whichever ones actually answer with a real
+//    HYDRA-UMC STUDIO payload. Doesn't depend on multicast reachability (WiFi
+//    AP client isolation, IGMP snooping, a chipset dropping multicast frames
+//    in power-save mode - all real-world ways mDNS silently fails on
+//    Android), so this is what reliably finds a server. This is a direct
+//    Kotlin port of HYDRA-UMC-SUITE's own hydra_suite/net/discovery.py - same
+//    2 functions (localIpv4Addresses/candidateHostsFor), same "always probe
+//    127.0.0.1 and the phone's own LAN IP too, not just the other hosts on
+//    the subnet" fix that file's own header comment calls out as a real bug
+//    already found and fixed there (a same-machine or same-network server
+//    bound to a specific interface, not just localhost, would otherwise
+//    never be probed).
+//
+// 2. NsdManager (mDNS/Bonjour) listener - server.ts DOES publish itself as
+//    _hydra._tcp via the bonjour-service package, so this is a real,
+//    potentially-faster path, not dead code. It only works end to end if the
+//    NEARBY_WIFI_DEVICES/ACCESS_FINE_LOCATION runtime permission is actually
+//    GRANTED (a manifest declaration alone does nothing on API 23+) -
+//    MainActivity requests it up front. Even granted, mDNS on Android is
+//    inherently less reliable than a plain HTTP probe (see above), so this
+//    stays a nice-to-have layered on top of the subnet scan, not a
+//    replacement for it.
+//
+// Identity check for both paths: a hit is "a real HYDRA-UMC server" purely
+// by the presence of remoteApiVersion in the response - the exact same test
 // HydraApiClient.getHydraInfo() already uses for the manual-IP path
 // (RobotViewModel.connect()). The `product` field server.ts returns
 // (server.ts's own GET /api/hydra-info handler) is the operator's

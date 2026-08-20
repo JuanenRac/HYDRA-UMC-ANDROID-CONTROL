@@ -5,6 +5,7 @@
 // =============================================================================
 package com.hydraumc.control
 
+import android.os.Build
 import android.os.Bundle
 import androidx.fragment.app.FragmentActivity
 import androidx.activity.compose.setContent
@@ -54,6 +55,40 @@ class MainActivity : FragmentActivity() {
         }
     }
 
+    // A manifest <uses-permission> declaration alone never grants a dangerous
+    // permission (API 23+) - the user has to actually approve a runtime
+    // prompt. Without one, two things silently degrade with no error the
+    // user can act on: NsdManager.discoverServices() in network/Discovery.kt
+    // (API 33+ requires ACCESS_FINE_LOCATION or NEARBY_WIFI_DEVICES to
+    // actually be GRANTED, not just declared, or it just reports zero
+    // services - the subnet-scan half of discovery still works either way,
+    // it doesn't need this), and scanBluetooth() in RobotViewModel.kt
+    // (BLUETOOTH_SCAN/CONNECT on API 31+, ACCESS_FINE_LOCATION on older
+    // ones). Requested once up front here so both have a real chance of
+    // being granted instead of failing quietly forever.
+    private val requestDiscoveryPermissionsLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions(),
+    ) { /* No explicit handling needed: a denial just means NSD/BLE stay degraded
+          to what they already have (the subnet scan for network discovery,
+          nothing for Bluetooth) - the user can grant them later from Android's
+          own App Info > Permissions screen and retry from Settings. */ }
+
+    /** Every runtime permission NSD (mDNS) discovery and Bluetooth LE scanning need, for this device's API level. */
+    private fun discoveryPermissionsToRequest(): Array<String> {
+        val permissions = mutableListOf(
+            android.Manifest.permission.ACCESS_FINE_LOCATION,
+            android.Manifest.permission.ACCESS_COARSE_LOCATION,
+        )
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            permissions.add(android.Manifest.permission.BLUETOOTH_SCAN)
+            permissions.add(android.Manifest.permission.BLUETOOTH_CONNECT)
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            permissions.add("android.permission.NEARBY_WIFI_DEVICES")
+        }
+        return permissions.toTypedArray()
+    }
+
     /**
      * Called when the activity is starting. This is where most initialization should go.
      */
@@ -66,7 +101,11 @@ class MainActivity : FragmentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         handleIntent(intent)
-        
+
+        // Ask up front, not lazily on first use - see the launcher's own
+        // comment above for why a manifest declaration alone isn't enough.
+        requestDiscoveryPermissionsLauncher.launch(discoveryPermissionsToRequest())
+
         // Auto-enable WiFi and search for servers on startup
         try {
             val wifiManager = applicationContext.getSystemService(WIFI_SERVICE) as WifiManager
