@@ -1,9 +1,21 @@
 @echo off
 setlocal
 
-echo =================================================
-echo    HYDRA-UMC CONTROL - ANDROID DEPLOYMENT TOOL
-echo =================================================
+:: =============================================================================
+:: HYDRA-UMC-ANDROID-CONTROL - build-android.bat
+:: Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
+:: GPL-3.0 - see LICENSE
+:: =============================================================================
+
+echo =================================================================
+echo   HYDRA-UMC-ANDROID-CONTROL - build-android.bat
+echo   Builds the debug APK (gradlew.bat assembleDebug) and installs it
+echo   on a connected device via adb.
+echo.
+echo   Copyright (C) 2026 JuanenRac (Electro Hobby 3D)
+echo   ^<electrohobby3d@gmail.com^>
+echo   GPL-3.0 - see LICENSE
+echo =================================================================
 echo.
 
 :: cd into the script's own directory

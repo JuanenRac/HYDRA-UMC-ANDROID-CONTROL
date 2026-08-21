@@ -3,6 +3,58 @@ plugins {
     alias(libs.plugins.kotlin.compose)
 }
 
+// =============================================================================
+// Ecosystem-wide auto version bump ("odometer" rule, base 10) - see
+// CHANGELOG.md and version.properties. This block runs at Gradle
+// CONFIGURATION time, which happens on every real build (assembleDebug,
+// installDebug, compileDebugKotlin, ...) - so version.properties is read,
+// bumped, and rewritten with the new values BEFORE those values are used
+// for versionCode/versionName below, meaning the APK produced by this exact
+// invocation already carries the bumped number, never the previous one.
+//
+// Rule: versionPatch +1; if it would go above 9 it resets to 0 and
+// versionMinor +1 instead (example: 1.0.9 -> 1.1.0). versionCode is a
+// separate simple monotonic counter, always +1, no carry - Android requires
+// versionCode to strictly increase across every build that ever ships.
+// Same odometer convention already used by HYDRA-UMC-STUDIO/scripts/
+// bump-version.mjs, HYDRA-UMC-SUITE/bump_version.py and
+// HYDRA-UMC-IOS-CONTROL/tool/bump_version.dart - this is the Gradle-native
+// equivalent for this repo, wired into the configuration phase instead of a
+// separate pre-build script since that's the point in a Gradle build that
+// reliably runs on every real build.
+val versionPropsFile = file("version.properties")
+val versionPropsText = versionPropsFile.readText()
+
+fun readIntProp(text: String, key: String): Int {
+    val match = Regex("(?m)^$key=(\\d+)\\s*$").find(text)
+        ?: throw GradleException("version.properties: missing '$key=<number>' line")
+    return match.groupValues[1].toInt()
+}
+
+fun replaceIntProp(text: String, key: String, value: Int): String =
+    text.replace(Regex("(?m)^$key=\\d+\\s*$"), "$key=$value")
+
+var appVersionMajor = readIntProp(versionPropsText, "versionMajor")
+var appVersionMinor = readIntProp(versionPropsText, "versionMinor")
+var appVersionPatch = readIntProp(versionPropsText, "versionPatch")
+var appVersionCode = readIntProp(versionPropsText, "versionCode")
+
+appVersionPatch += 1
+if (appVersionPatch > 9) {
+    appVersionPatch = 0
+    appVersionMinor += 1
+}
+appVersionCode += 1
+
+var newVersionPropsText = versionPropsText
+newVersionPropsText = replaceIntProp(newVersionPropsText, "versionMajor", appVersionMajor)
+newVersionPropsText = replaceIntProp(newVersionPropsText, "versionMinor", appVersionMinor)
+newVersionPropsText = replaceIntProp(newVersionPropsText, "versionPatch", appVersionPatch)
+newVersionPropsText = replaceIntProp(newVersionPropsText, "versionCode", appVersionCode)
+versionPropsFile.writeText(newVersionPropsText)
+
+val appVersionName = "$appVersionMajor.$appVersionMinor.$appVersionPatch"
+
 android {
     namespace = "com.hydraumc.control"
     // 36 required by androidx.core 1.18.0
@@ -13,8 +65,8 @@ android {
         minSdk = 24
         // 35 (Android 15) for stable runtime behavior.
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = appVersionCode
+        versionName = appVersionName
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_21
@@ -22,6 +74,10 @@ android {
     }
     buildFeatures {
         compose = true
+        // Needed so BuildConfig.VERSION_NAME reflects the auto-bumped
+        // versionName above at runtime (AboutDialog.kt reads it) - disabled
+        // by default on AGP 8+.
+        buildConfig = true
     }
 
     buildTypes {

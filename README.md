@@ -57,6 +57,15 @@ gradlew.bat assembleDebug      # Windows
 
 The APK lands at `app/build/outputs/apk/debug/app-debug.apk`. Install it with `adb install -r -d app/build/outputs/apk/debug/app-debug.apk`, or transfer it to the device manually. Swap `assembleDebug` for `assembleRelease` for a release build - it currently signs with the debug key (`app/build.gradle.kts`'s own `release` block, kept that way for easy testing), so it installs fine but isn't ready for distribution as-is.
 
+## 🔢 Versioning
+
+This repo follows an ecosystem-wide policy: the version bumps automatically on **every real build**, no manual editing of `app/build.gradle.kts`'s `versionName`/`versionCode`. `app/version.properties` holds the current `versionMajor`/`versionMinor`/`versionPatch`/`versionCode`; `app/build.gradle.kts` reads it, bumps it, and rewrites it at Gradle **configuration** time - which runs on every real build (`assembleDebug`, `compileDebugKotlin`, an IDE sync, ...) - so the produced APK always carries a number strictly newer than the last one:
+
+- **Patch, odometer-style (base 10):** +1 on every build; once it would exceed 9 it resets to 0 and minor gets +1 instead - e.g. `1.0.9` -> `1.1.0`. Major is never touched automatically.
+- **`versionCode`:** a plain monotonic counter, +1 on every build, no carry - Android requires it to strictly increase across every build that ever ships.
+
+The running version is visible live in the **About** dialog (`BuildConfig.VERSION_NAME`, reading the same `versionName` Gradle just computed). See [CHANGELOG.md](CHANGELOG.md) for the version history.
+
 ## 📲 Testing against HYDRA-UMC STUDIO
 
 1. Run the server: `cd HYDRA-UMC-STUDIO && npm run dev` (Port 3000).

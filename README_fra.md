@@ -57,6 +57,15 @@ gradlew.bat assembleDebug      # Windows
 
 L'APK atterrit dans `app/build/outputs/apk/debug/app-debug.apk`. Installez-le avec `adb install -r -d app/build/outputs/apk/debug/app-debug.apk`, ou transférez-le manuellement sur l'appareil. Remplacez `assembleDebug` par `assembleRelease` pour une compilation de release - elle signe actuellement avec la clé de débogage (le propre bloc `release` de `app/build.gradle.kts`, conservé ainsi pour faciliter les tests), donc elle s'installe correctement mais n'est pas prête pour la distribution telle quelle.
 
+## 🔢 Gestion des versions
+
+Ce dépôt suit une politique à l'échelle de l'écosystème : le numéro de version augmente automatiquement à **chaque build réel**, sans modification manuelle de `versionName`/`versionCode` dans `app/build.gradle.kts`. `app/version.properties` conserve les valeurs actuelles de `versionMajor`/`versionMinor`/`versionPatch`/`versionCode` ; `app/build.gradle.kts` les lit, les incrémente et réécrit le fichier au moment de la **configuration** de Gradle - ce qui se produit à chaque build réel (`assembleDebug`, `compileDebugKotlin`, une synchronisation de l'IDE, ...) - de sorte que l'APK produit porte toujours un numéro strictement supérieur au précédent :
+
+- **Patch, façon compteur kilométrique (base 10) :** +1 à chaque build ; s'il dépasserait 9, il revient à 0 et le minor augmente de +1 - exemple : `1.0.9` -> `1.1.0`. Le major n'est jamais modifié automatiquement.
+- **`versionCode` :** un simple compteur monotone, +1 à chaque build, sans report - Android exige qu'il augmente strictement à chaque build réellement diffusée.
+
+La version en cours d'exécution est visible en direct dans la boîte de dialogue **À propos** (`BuildConfig.VERSION_NAME`, qui lit le même `versionName` que Gradle vient de calculer). Voir [CHANGELOG.md](CHANGELOG.md) pour l'historique des versions.
+
 ## 📲 Tests contre HYDRA-UMC STUDIO
 
 1. Lancez le serveur : `cd HYDRA-UMC-STUDIO && npm run dev` (Port 3000).

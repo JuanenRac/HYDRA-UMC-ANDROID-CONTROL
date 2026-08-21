@@ -15,6 +15,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.hydraumc.control.BuildConfig
 import com.hydraumc.control.R
 import com.hydraumc.control.ui.theme.metallicIndustrial
 import com.hydraumc.control.ui.theme.HydraButton
@@ -44,7 +45,10 @@ fun AboutDialog(onDismiss: () -> Unit) {
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = stringResource(R.string.app_version),
+                        // BuildConfig.VERSION_NAME mirrors app/version.properties as of the
+                        // last real build (see build.gradle.kts) - always the actual shipped
+                        // number, never a value that can drift out of sync with it.
+                        text = stringResource(R.string.app_version, BuildConfig.VERSION_NAME),
                         style = MaterialTheme.typography.labelLarge,
                         color = Color.LightGray
                     )

@@ -104,7 +104,7 @@
     <string name="accept_button">AKZEPTIEREN</string>
     <string name="logout_button">ABMELDEN</string>
     <string name="about_title">Über HYDRA-UMC CONTROL</string>
-    <string name="app_version">Version 1.0.0</string>
+    <string name="app_version">Version %1$s</string>
     <string name="developed_by">Entwickelt von JuanenRac</string>
     <string name="company_name">Electro Hobby 3D</string>
     <string name="app_description">Professionelle native Steuerung für HYDRA-UMC Robotikplattformen.</string>
