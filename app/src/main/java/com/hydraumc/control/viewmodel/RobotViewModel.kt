@@ -31,6 +31,8 @@ import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanResult
 import android.content.Context
 import android.annotation.SuppressLint
+import android.location.LocationManager
+import android.os.Build
 import org.json.JSONObject
 
 /** 
@@ -779,6 +781,22 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
             return
         }
         isBtEnabled.value = true
+
+        // On API 24-30, BLE scan results are silently withheld system-wide
+        // if Location Services (GPS) is off at the OS level, even with the
+        // runtime permission already granted - startScan() itself reports
+        // no error, it just never calls onScanResult(). API 31+ (S) dropped
+        // this requirement once BLUETOOTH_SCAN(neverForLocation) replaced
+        // the old location-permission-based BLE scan model, so this only
+        // needs checking below that version.
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+            val locationManager = getApplication<Application>().getSystemService(Context.LOCATION_SERVICE) as? LocationManager
+            val locationEnabled = locationManager?.isLocationEnabled ?: false
+            if (!locationEnabled) {
+                lastBtError.value = "Location Services must be enabled for Bluetooth scanning on this Android version"
+                return
+            }
+        }
 
         isBtScanning.value = true
         discoveredBtDevices.value = emptyList()
