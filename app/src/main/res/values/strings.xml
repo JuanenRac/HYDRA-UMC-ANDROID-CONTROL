@@ -150,4 +150,5 @@
     <string name="controller_status">Controller Status</string>
     <string name="handshake_waiting">Waiting for board handshake...</string>
     <string name="dynamics_config">DYNAMICS CONFIGURATION</string>
+    <string name="e_stop">EMERGENCY STOP</string>
 </resources>
