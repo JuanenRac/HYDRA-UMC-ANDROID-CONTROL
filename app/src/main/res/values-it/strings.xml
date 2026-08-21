@@ -58,6 +58,7 @@
     <string name="error_command_failed">Comando fallito: %1$s (modifica annullata)</string>
     <string name="error_unknown_command">Comando sconosciuto: %s</string>
     <string name="error_no_tool_in_slot">Nessuno strumento presente nello slot %d.</string>
+    <string name="error_global_estop_no_robots">ARRESTO DI EMERGENZA non inviato: nessun robot ancora noto. Apri l\'app e controlla la connessione.</string>
     <string name="control_robots">Controllo Robot</string>
     <string name="select_robot">Seleziona un robot</string>
     <string name="virtual_joystick">Joystick Virtuale</string>

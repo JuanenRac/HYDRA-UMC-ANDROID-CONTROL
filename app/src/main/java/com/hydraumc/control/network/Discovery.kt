@@ -48,6 +48,7 @@ import android.net.nsd.NsdServiceInfo
 import com.hydraumc.control.model.ServerInfo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.launch
@@ -59,6 +60,7 @@ import org.json.JSONObject
 import java.net.Inet4Address
 import java.net.NetworkInterface
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicInteger
 
 /** Default port for HYDRA-UMC servers. */
 private const val DEFAULT_PORT = 3000
@@ -66,6 +68,12 @@ private const val DEFAULT_PORT = 3000
 private const val SCAN_TIMEOUT_MS = 1500L
 /** Maximum number of concurrent probes to run. */
 private const val SCAN_CONCURRENCY = 64
+// mDNS resolution (onServiceFound -> resolveService -> onServiceResolved)
+// routinely lands slower than the subnet scan's own plain HTTP probes -
+// this bounds how much extra time the flow waits for pending resolutions
+// once the (deterministic, always-finishing) subnet scan itself is done,
+// instead of closing immediately and cancelling them mid-flight.
+private const val MDNS_GRACE_MS = 3_000L
 
 /** 
  * Every non-loopback IPv4 address this device currently has.
@@ -133,20 +141,38 @@ private fun probeHost(client: OkHttpClient, host: String, port: Int): ServerInfo
  */
 fun scanSubnets(context: Context, client: OkHttpClient, port: Int = DEFAULT_PORT): Flow<ServerInfo> = callbackFlow {
     val nsdManager = context.getSystemService(Context.NSD_SERVICE) as NsdManager
-    
+
+    // Tracks mDNS resolutions currently in flight (resolveService() called,
+    // no onResolveFailed/onServiceResolved callback yet) so the closing
+    // logic below can wait for them instead of closing (and thereby
+    // cancelling, since closing a callbackFlow cancels its producer scope)
+    // the instant the subnet scan's own jobs are done - see MDNS_GRACE_MS.
+    val pendingMdnsResolutions = AtomicInteger(0)
+
     val nsdListener = object : NsdManager.DiscoveryListener {
         override fun onDiscoveryStarted(regType: String) {}
         override fun onServiceFound(service: NsdServiceInfo) {
             if (service.serviceType == "_hydra._tcp.") {
+                pendingMdnsResolutions.incrementAndGet()
                 nsdManager.resolveService(service, object : NsdManager.ResolveListener {
-                    override fun onResolveFailed(serviceInfo: NsdServiceInfo, errorCode: Int) {}
+                    override fun onResolveFailed(serviceInfo: NsdServiceInfo, errorCode: Int) {
+                        pendingMdnsResolutions.decrementAndGet()
+                    }
                     override fun onServiceResolved(serviceInfo: NsdServiceInfo) {
-                        val host = serviceInfo.host.hostAddress ?: return
+                        val host = serviceInfo.host.hostAddress
+                        if (host == null) {
+                            pendingMdnsResolutions.decrementAndGet()
+                            return
+                        }
                         // Dispatchers.IO explicitly - this callback runs on whatever
                         // dispatcher the collector's own scope uses (viewModelScope is
                         // Dispatchers.Main.immediate), and probeHost() is a blocking call.
                         launch(Dispatchers.IO) {
-                            probeHost(client, host, serviceInfo.port)?.let { trySend(it) }
+                            try {
+                                probeHost(client, host, serviceInfo.port)?.let { trySend(it) }
+                            } finally {
+                                pendingMdnsResolutions.decrementAndGet()
+                            }
                         }
                     }
                 })
@@ -195,6 +221,16 @@ fun scanSubnets(context: Context, client: OkHttpClient, port: Int = DEFAULT_PORT
     // completion that only awaitClose's own cancellation would ever trigger.
     launch {
         jobs.forEach { it.join() }
+        // The subnet scan itself is done, but mDNS resolutions triggered by
+        // onServiceFound can still be in flight - mDNS is typically slower
+        // than the subnet HTTP probes above, so closing immediately here
+        // used to cancel any resolution that hadn't landed yet, silently
+        // dropping that result with no error surfaced anywhere. Give
+        // pending resolutions up to MDNS_GRACE_MS more before closing.
+        val deadline = System.currentTimeMillis() + MDNS_GRACE_MS
+        while (pendingMdnsResolutions.get() > 0 && System.currentTimeMillis() < deadline) {
+            delay(100)
+        }
         close()
     }
 

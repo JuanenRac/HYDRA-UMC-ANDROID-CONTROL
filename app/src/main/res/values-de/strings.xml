@@ -58,6 +58,7 @@
     <string name="error_command_failed">Befehl fehlgeschlagen: %1$s (Änderung rückgängig gemacht)</string>
     <string name="error_unknown_command">Unbekannter Befehl: %s</string>
     <string name="error_no_tool_in_slot">In Steckplatz %d befindet sich kein Werkzeug.</string>
+    <string name="error_global_estop_no_robots">Not-Aus nicht gesendet: noch kein Roboter bekannt. Öffne die App und überprüfe die Verbindung.</string>
     <string name="control_robots">Robotersteuerung</string>
     <string name="select_robot">Roboter auswählen</string>
     <string name="virtual_joystick">Virtueller Joystick</string>

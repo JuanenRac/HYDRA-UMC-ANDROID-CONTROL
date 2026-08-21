@@ -350,6 +350,18 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    // Guards against two connect() calls racing each other - e.g. the user
+    // tapping a discovered server right as scanNetwork()'s own auto-connect
+    // (its first discovered result) fires, or a rapid double-tap on Connect.
+    // Without this, both coroutines run concurrently and can interleave
+    // their writes to apiClient/state/robots.value, with whichever REST
+    // response lands last "winning" regardless of which connect() call was
+    // actually the user's most recent intent. Cancelling the previous job
+    // stops it at its next suspension point (every HydraApiClient call is a
+    // real suspend fun on Dispatchers.IO, so cancellation propagates instead
+    // of the coroutine running to completion in the background).
+    private var connectJob: kotlinx.coroutines.Job? = null
+
     fun connect() {
         val host = ipAddress.value.trim()
         val portValue = port.value.trim()
@@ -371,7 +383,8 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         bleClient?.disconnect()
         bleClient = null
 
-        viewModelScope.launch {
+        connectJob?.cancel()
+        connectJob = viewModelScope.launch {
             // Ensure token is carried over or reloaded from persistence
             val token = apiClient?.authToken ?: authPrefs.loadAuth().token
             val client = HydraApiClient(host, portInt)
@@ -467,12 +480,22 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                     }
                 },
                 onSettings = { payload ->
-                    // Merge the incoming delta into the existing state rather than
-                    // replacing it outright - a WS push only ever carries what
-                    // changed, not the full tree, so a plain replace would drop
-                    // every field the payload didn't include.
-                    state.merge(payload)
-                    applyState(state)
+                    // Full replace, not a merge - every WS push from server.ts's
+                    // broadcastSettings() carries the COMPLETE current state tree,
+                    // whether labeled "settings" (the first message on connect) or
+                    // "delta" (every push after a command); confirmed against
+                    // server.ts's own call sites (all pass lastKnownSettings, the
+                    // full in-memory tree) and docs/REMOTE_API.md section 3, which
+                    // documents only one message shape existing today. A prior
+                    // version of this callback called state.merge(payload) instead,
+                    // under the wrong assumption that "delta" meant a partial diff -
+                    // HydraState.mergeArrays() only ever APPENDED primitive-array
+                    // fields (valves/pumps/combinedWith) as a result, so a robot
+                    // removed from a combinedWith group kept receiving that group's
+                    // play/pause/stop/enable/disable indefinitely, since its old id
+                    // never actually left the merged array. Matches connectBle()'s
+                    // own onSettings handling below, which was always a full replace.
+                    applyState(HydraState(payload))
                 },
             ) { message -> 
                 if (!isSwitchingServer) {
@@ -500,10 +523,26 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
             
             newState.allRobots.forEach { robot ->
                 val oldRobot = oldState.robotById(robot.id)
-                if ((oldRobot != null) && oldRobot.isPlaying && !robot.isPlaying) {
+                // Gated on isFinished too, not just the isPlaying:true->false
+                // transition alone - that transition also happens on a plain
+                // manual STOP (from this app, the browser, or SUITE), which
+                // used to make every operator-initiated stop show a false
+                // "completed successfully" notification. isFinished is only
+                // ever set true by the browser client's own natural-completion
+                // path (see RobotView.isFinished's own comment) and left
+                // false by every play/pause/stop action, atomic or not - a
+                // manual stop no longer trips this. Known residual gap: the
+                // server's own atomic "play" command (server.ts) doesn't
+                // reset isFinished, so a robot that finished a job once and
+                // is then replayed+stopped from this app before the browser
+                // client resets it can still show a stale true positive -
+                // narrow enough (needs a specific prior-session state) not to
+                // block fixing the common case, and the underlying gap is in
+                // HYDRA-UMC-STUDIO's server.ts, not this app.
+                if ((oldRobot != null) && oldRobot.isPlaying && !robot.isPlaying && robot.isFinished) {
                     NotificationHelper.sendAlert(
-                        getApplication(), 
-                        "Robot ${robot.name}", 
+                        getApplication(),
+                        "Robot ${robot.name}",
                         "Job sequence completed successfully.",
                     )
                 }
@@ -823,6 +862,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
 
     override fun onCleared() {
         super.onCleared()
+        connectJob?.cancel()
         metricsJob?.cancel()
         ws?.disconnect()
         bleClient?.disconnect()

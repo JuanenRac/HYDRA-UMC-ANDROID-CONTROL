@@ -58,6 +58,7 @@
     <string name="error_command_failed">Comando fallido: %1$s (cambio revertido)</string>
     <string name="error_unknown_command">Comando desconocido: %s</string>
     <string name="error_no_tool_in_slot">No existe ninguna herramienta en el slot %d.</string>
+    <string name="error_global_estop_no_robots">PARO DE EMERGENCIA no enviado: todavía no se conoce ningún robot. Abre la app y comprueba la conexión.</string>
     <string name="control_robots">Control de Robots</string>
     <string name="select_robot">Seleccione un robot</string>
     <string name="virtual_joystick">Joystick Virtual</string>

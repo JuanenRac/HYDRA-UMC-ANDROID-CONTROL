@@ -159,6 +159,15 @@ class RobotView(val raw: JSONObject) {
     val isPlaying: Boolean get() = playbackState.optBoolean("isPlaying", false) || playbackState.optBoolean("playing", false)
     /** Whether the current movement sequence is paused. */
     val isPaused: Boolean get() = playbackState.optBoolean("isPaused", false) || playbackState.optBoolean("paused", false)
+    // HYDRA-UMC-STUDIO's browser client (RobotDetail.tsx) explicitly writes
+    // isFinished=true only at the exact moment a job sequence runs to
+    // completion on its own, and isFinished=false on every play/pause/stop
+    // action it initiates - the server's own atomic play/stop commands
+    // (server.ts's POST /api/robot/:id/command, used by this app) don't
+    // touch the field at all, so it's a reliable-enough signal to tell
+    // "the job actually finished" apart from "someone pressed stop".
+    /** Whether the last playback run finished on its own (not via a manual stop). */
+    val isFinished: Boolean get() = playbackState.optBoolean("isFinished", false) || playbackState.optBoolean("finished", false)
     /** Playback speed percentage. */
     val speed: Double get() = playbackState.optDouble("speed", 100.0)
     /** Playback acceleration percentage. */
@@ -359,11 +368,40 @@ class HydraState(val raw: JSONObject) {
     /**
      * Merges source array into target array. If elements have 'id', they are updated
      * instead of appended. Non-id elements or new IDs are appended.
+     *
+     * NOTE: as of the 2026-08-21 audit, nothing in this app calls [merge] any
+     * more for its primary WebSocket sync path (see RobotViewModel.kt's
+     * onSettings handler) - every WS push from HYDRA-UMC STUDIO's server.ts,
+     * whether labeled "settings" or "delta", carries the FULL current state
+     * tree (confirmed against server.ts's own broadcastSettings() call
+     * sites and docs/REMOTE_API.md section 3, which documents only one
+     * message shape existing today), so a full replace is both simpler and
+     * correct where a partial merge is not. This method - and the fix below
+     * - are kept for a future genuine partial-delta message type
+     * (REMOTE_API.md's own envelope is deliberately left generic for one),
+     * so it doesn't reintroduce the same bug if/when merge() is wired back
+     * up to a real caller.
      */
     private fun mergeArrays(target: JSONArray, source: JSONArray) {
         // If source is empty, we don't assume we should clear target (delta vs full)
         // In HYDRA-UMC, a delta with an empty array usually means no changes to that list.
         if (source.length() == 0) return
+
+        // Arrays of bare primitives (valves, pumps, combinedWith) have no
+        // per-element identity to match on the way id-keyed objects do
+        // below, so unconditionally appending (the old behavior) meant they
+        // only ever grew, never shrank or changed value - a robot removed
+        // from a combinedWith group, for example, kept receiving that
+        // group's play/pause/stop/enable/disable forever, since its old id
+        // was never actually gone from the merged array. A primitive-array
+        // field is always sent as its full CURRENT value, not a list of
+        // items to add, so it must be replaced wholesale instead.
+        val hasObjectElements = (0 until source.length()).any { source.opt(it) is JSONObject }
+        if (!hasObjectElements) {
+            while (target.length() > 0) target.remove(target.length() - 1)
+            for (i in 0 until source.length()) target.put(source.opt(i))
+            return
+        }
 
         for (i in 0 until source.length()) {
             val sourceItem = source.opt(i)
@@ -384,8 +422,9 @@ class HydraState(val raw: JSONObject) {
                     target.put(sourceItem)
                 }
             } else {
-                // For non-object primitives, we just append if not present or replace?
-                // Usually these are simple lists. We'll append for now.
+                // Mixed array (some object elements, some bare primitives) -
+                // not a shape any known field actually uses, kept as append
+                // since there's no well-defined "identity" to replace by here.
                 target.put(sourceItem)
             }
         }

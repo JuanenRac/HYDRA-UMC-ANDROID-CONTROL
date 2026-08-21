@@ -58,6 +58,7 @@
     <string name="error_command_failed">Command failed: %1$s (change reverted)</string>
     <string name="error_unknown_command">Unknown command: %s</string>
     <string name="error_no_tool_in_slot">No tool exists in slot %d.</string>
+    <string name="error_global_estop_no_robots">Global E-STOP not sent: no known robot yet. Open the app and check the connection.</string>
     <string name="control_robots">Robot Control</string>
     <string name="select_robot">Select a robot</string>
     <string name="virtual_joystick">Virtual Joystick</string>

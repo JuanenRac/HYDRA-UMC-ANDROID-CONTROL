@@ -83,6 +83,17 @@ class HydraWebSocket(
     private var reconnectJob: Job? = null
     /** Coroutine scope for management tasks. */
     private val scope = CoroutineScope(Dispatchers.IO)
+    // OkHttp's WebSocketListener callbacks (onOpen/onMessage/onClosing/
+    // onClosed/onFailure) run on OkHttp's own internal dispatcher threads,
+    // never Dispatchers.Main - but onSettings/onStatus/onError all flow into
+    // RobotViewModel callbacks that mutate the same org.json JSONObject/
+    // JSONArray tree sendAtomicCommand()'s localMutate touches from the main
+    // thread. org.json isn't thread-safe, so without this dispatch the two
+    // could race on the same live JSONObject. JSON parsing itself
+    // (handleMessage's JSONObject(text) call) stays off this scope, running
+    // on the caller's own (background) thread, since a full state payload
+    // can be large enough that parsing it on Main would visibly jank the UI.
+    private val mainScope = CoroutineScope(Dispatchers.Main.immediate)
 
     /** Rationale: The server broadcasts every write back to the sender too. */
     private var lastPayloadJson: String? = null
@@ -109,7 +120,7 @@ class HydraWebSocket(
         val request = Request.Builder().url(url).build()
         webSocket = client.newWebSocket(request, object : WebSocketListener() {
             override fun onOpen(webSocket: WebSocket, response: Response) {
-                onStatus(WsStatus.CONNECTED)
+                mainScope.launch { onStatus(WsStatus.CONNECTED) }
             }
 
             override fun onMessage(webSocket: WebSocket, text: String) {
@@ -121,7 +132,7 @@ class HydraWebSocket(
             }
 
             override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
-                onStatus(WsStatus.DISCONNECTED)
+                mainScope.launch { onStatus(WsStatus.DISCONNECTED) }
                 if (code == WS_CLOSE_POLICY_VIOLATION) {
                     // server.ts closes the /ws upgrade with 1008 specifically when the
                     // token query param is missing/invalid/expired (see this class's own
@@ -131,15 +142,17 @@ class HydraWebSocket(
                     // needs to re-authenticate. Surface it instead and stop reconnecting;
                     // the ViewModel's own login() supplies a fresh token to try again.
                     closingByUser = true
-                    onError("Sesión no autorizada: inicia sesión de nuevo")
+                    mainScope.launch { onError("Sesión no autorizada: inicia sesión de nuevo") }
                     return
                 }
                 scheduleReconnect()
             }
 
             override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
-                onStatus(WsStatus.DISCONNECTED)
-                onError("Conexión WebSocket perdida: ${t.message ?: t::class.simpleName}")
+                mainScope.launch {
+                    onStatus(WsStatus.DISCONNECTED)
+                    onError("Conexión WebSocket perdida: ${t.message ?: t::class.simpleName}")
+                }
                 scheduleReconnect()
             }
         })
@@ -153,29 +166,31 @@ class HydraWebSocket(
         val json = try {
             JSONObject(text)
         } catch (e: Exception) {
-            onError("Mensaje WebSocket no es JSON válido: ${e.message}")
+            mainScope.launch { onError("Mensaje WebSocket no es JSON válido: ${e.message}") }
             return
         }
-        
+
         // Handle server-side error messages (e.g. Auth failure before close)
         val error = json.optString("error")
         if (error.isNotEmpty()) {
-            onError(error)
+            mainScope.launch { onError(error) }
             return
         }
 
         val type = json.optString("type")
-        if (type != "settings" && type != "delta") return 
-        
+        if (type != "settings" && type != "delta") return
+
         val payload = json.optJSONObject("payload") ?: return
-        
-        // Simple idempotency guard. Semantic check is no longer needed since 
+
+        // Simple idempotency guard. Semantic check is no longer needed since
         // the server doesn't broadcast the echo back to the sender.
         val payloadJson = payload.toString()
-        if (payloadJson == lastPayloadJson) return 
+        if (payloadJson == lastPayloadJson) return
 
         lastPayloadJson = payloadJson
-        onSettings(payload)
+        // Dispatched to Main, not called directly from this (background)
+        // thread - see mainScope's own comment above.
+        mainScope.launch { onSettings(payload) }
     }
 
     /** 

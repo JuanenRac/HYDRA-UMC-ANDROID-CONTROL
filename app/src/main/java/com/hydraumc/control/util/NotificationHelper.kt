@@ -23,6 +23,21 @@ object NotificationHelper {
     private const val ESTOP_CHANNEL_ID = "hydra_safety_alerts"
     private const val PERSISTENT_ID = 1001
 
+    // Distinct PendingIntent request codes for sendAlert()'s "open app" intent
+    // vs showSafetyNotification()'s own "open app" intent. Both target
+    // MainActivity with no action/data/categories set, so PendingIntent's own
+    // filterEquals() considers them identical regardless of the differing
+    // Intent.flags each call actually sets (flags/extras aren't part of that
+    // comparison) - reusing requestCode 0 for both meant whichever one was
+    // created FIRST silently "won": the OS returns/reuses that original
+    // Intent (with its own flags) for every later PendingIntent.getActivity()
+    // call sharing the same requestCode+filter, discarding the second call's
+    // Intent entirely. FLAG_UPDATE_CURRENT closes the same gap for any future
+    // caller that reuses one of these codes without realizing it collides.
+    private const val REQUEST_CODE_ALERT_OPEN = 100
+    private const val REQUEST_CODE_SAFETY_OPEN = 200
+    private const val REQUEST_CODE_SAFETY_ESTOP = 201
+
     /** Initializes the notification channels. */
     fun createChannel(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -49,7 +64,12 @@ object NotificationHelper {
         val intent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
-        val pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_IMMUTABLE)
+        val pendingIntent = PendingIntent.getActivity(
+            context,
+            REQUEST_CODE_ALERT_OPEN,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
 
         val builder = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_launcher_foreground)
@@ -67,13 +87,23 @@ object NotificationHelper {
     /** Shows a persistent notification with an E-STOP action. */
     fun showSafetyNotification(context: Context) {
         val intent = Intent(context, MainActivity::class.java)
-        val pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_IMMUTABLE)
-        
+        val pendingIntent = PendingIntent.getActivity(
+            context,
+            REQUEST_CODE_SAFETY_OPEN,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+
         // Intent for E-STOP action
         val estopIntent = Intent(context, MainActivity::class.java).apply {
             action = "ACTION_GLOBAL_ESTOP"
         }
-        val estopPendingIntent = PendingIntent.getActivity(context, 1, estopIntent, PendingIntent.FLAG_IMMUTABLE)
+        val estopPendingIntent = PendingIntent.getActivity(
+            context,
+            REQUEST_CODE_SAFETY_ESTOP,
+            estopIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
 
         val builder = NotificationCompat.Builder(context, ESTOP_CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_launcher_foreground)

@@ -25,6 +25,14 @@ import com.hydraumc.control.ui.CustomSplashScreen
 import com.hydraumc.control.ui.LoginScreen
 import com.hydraumc.control.ui.theme.HydraTheme
 import com.hydraumc.control.viewmodel.RobotViewModel
+import kotlinx.coroutines.delay
+
+// A widget-triggered E-STOP with no robot roster yet (cold start, no cache,
+// server unreachable) used to leave pendingGlobalEstop set forever with no
+// feedback - see the LaunchedEffect pair in setContent{} below. Bounds how
+// long it waits for robots.value to populate before giving up and telling
+// the user instead of hanging silently.
+private const val GLOBAL_ESTOP_TIMEOUT_MS = 15_000L
 
 /**
  * Main activity that initializes the application, handles the splash screen,
@@ -73,7 +81,7 @@ class MainActivity : FragmentActivity() {
           nothing for Bluetooth) - the user can grant them later from Android's
           own App Info > Permissions screen and retry from Settings. */ }
 
-    /** Every runtime permission NSD (mDNS) discovery and Bluetooth LE scanning need, for this device's API level. */
+    /** Every runtime permission NSD (mDNS) discovery, Bluetooth LE scanning, and notifications need, for this device's API level. */
     private fun discoveryPermissionsToRequest(): Array<String> {
         val permissions = mutableListOf(
             android.Manifest.permission.ACCESS_FINE_LOCATION,
@@ -85,6 +93,15 @@ class MainActivity : FragmentActivity() {
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             permissions.add("android.permission.NEARBY_WIFI_DEVICES")
+            // Declared in AndroidManifest.xml since this app's earliest BLE
+            // scaffolding, but - like every dangerous permission since API
+            // 23 - a manifest declaration alone never grants it; nothing in
+            // this app requested it at runtime until now, so the persistent
+            // E-STOP notification (NotificationHelper.showSafetyNotification,
+            // shown on every WS connect) almost certainly never actually
+            // appeared on Android 13+ devices, with no indication to the
+            // user that their quick-E-STOP notification was silently absent.
+            permissions.add(android.Manifest.permission.POST_NOTIFICATIONS)
         }
         return permissions.toTypedArray()
     }
@@ -140,6 +157,26 @@ class MainActivity : FragmentActivity() {
                         robotViewModel.sendCommand("stop")
                     }
                     pendingGlobalEstop = false
+                }
+            }
+
+            // Companion timeout for the LaunchedEffect above - if
+            // robotsForEstop is STILL empty this long after the widget tap
+            // (no cache, server unreachable, robot on another network),
+            // stop waiting and tell the user instead of leaving
+            // pendingGlobalEstop set forever with no feedback at all. Not a
+            // full fix (a real fix needs a Service/WorkManager path that
+            // doesn't depend on the UI or a live robots.value at all - see
+            // mejoras_futuras.txt), but an operator who taps the E-STOP
+            // widget and gets nothing at least now finds out their tap
+            // didn't reach any robot, rather than assuming it did.
+            LaunchedEffect(pendingGlobalEstop) {
+                if (pendingGlobalEstop) {
+                    delay(GLOBAL_ESTOP_TIMEOUT_MS)
+                    if (pendingGlobalEstop && robotViewModel.robots.value.isEmpty()) {
+                        pendingGlobalEstop = false
+                        robotViewModel.lastError.value = getString(R.string.error_global_estop_no_robots)
+                    }
                 }
             }
 

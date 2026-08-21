@@ -58,6 +58,7 @@
     <string name="error_command_failed">Échec de la commande : %1$s (modification annulée)</string>
     <string name="error_unknown_command">Commande inconnue : %s</string>
     <string name="error_no_tool_in_slot">Aucun outil n\'existe dans l\'emplacement %d.</string>
+    <string name="error_global_estop_no_robots">ARRÊT D\'URGENCE non envoyé : aucun robot connu pour l\'instant. Ouvre l\'application et vérifie la connexion.</string>
     <string name="control_robots">Contrôle du Robot</string>
     <string name="select_robot">Sélectionnez un robot</string>
     <string name="virtual_joystick">Joystick Virtuel</string>
