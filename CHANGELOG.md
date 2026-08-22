@@ -10,6 +10,23 @@ in [README.md](README.md#-versioning). Entries recorded before that policy
 existed are grouped under the pre-policy version `1.0.0` the repo carried
 at the time.
 
+## [1.0.9] - Background efficiency + Bluetooth-settings live reaction
+
+- **`saveState()` debounce** - was writing the full app state to DataStore
+  on every WebSocket push and every optimistic mutation with no throttling;
+  now debounced via `stateCacheJob` (1000ms).
+- **Metrics loop respects app lifecycle** - `startMetricsLoop()` kept
+  polling `GET /api/system/metrics` every 5s even with the app backgrounded;
+  now paused/resumed via `ProcessLifecycleOwner`.
+- **Live Bluetooth status in Settings** - `refreshBtStatus()` previously
+  only ran once when Settings opened, missing a Bluetooth toggle made from
+  system Settings while this screen stayed open; now reacts live via a
+  `BroadcastReceiver` on `ACTION_STATE_CHANGED`.
+- **Doc/reference cleanup** - corrected several stale references claiming
+  HYDRA-UMC STUDIO hosts `server.ts` (moved to the standalone
+  HYDRA-UMC-SERVER project) across the README (+4 translations),
+  `docs/ARCHITECTURE.md`, `AndroidManifest.xml`, and 3 `.kt` file headers.
+
 ## [Unreleased policy]
 
 - **Automatic version bump on every real build.** `app/build.gradle.kts`
