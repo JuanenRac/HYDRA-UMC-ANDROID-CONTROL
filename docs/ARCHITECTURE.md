@@ -6,9 +6,10 @@
 ## 1. What this app is
 
 A native Android app (Kotlin + Jetpack Compose) that serves as a console for robots running on the
-[HYDRA-UMC](https://github.com/JuanenRac/HYDRA-UMC) platform. It talks to the same server (HYDRA-UMC STUDIO,
-Node/Express + WebSocket) that the web UI and HYDRA-UMC-IOS-CONTROL use, over the same
-[`REMOTE_API.md`](https://github.com/JuanenRac/HYDRA-UMC-STUDIO/blob/main/docs/REMOTE_API.md) contract - same design,
+[HYDRA-UMC](https://github.com/JuanenRac/HYDRA-UMC) platform. It talks to the same backend (HYDRA-UMC-SERVER,
+Node/Express + WebSocket - a separate repo from HYDRA-UMC STUDIO's own web UI since the two were split apart) that
+the web UI and HYDRA-UMC-IOS-CONTROL use, over the same
+[`REMOTE_API.md`](https://github.com/JuanenRac/HYDRA-UMC-SERVER/blob/main/docs/REMOTE_API.md) contract - same design,
 no code shared between the three clients.
 
 ## 2. Wi-Fi transport (primary, working today)
@@ -129,6 +130,6 @@ per its own comment ("for stable runtime behavior"); confirm with the owner if t
 
 ## 7. Relationship to the rest of the ecosystem
 
-The app is synchronized with **HYDRA-UMC STUDIO** (server) and **URTC** (tooling). It enforces the 26-tool URTC
+The app is synchronized with **HYDRA-UMC-SERVER** (backend) and **URTC** (tooling). It enforces the 26-tool URTC
 standard and relies on the server's own kinematics (IK) support for autonomous robot movement independent of any
 active browser session.

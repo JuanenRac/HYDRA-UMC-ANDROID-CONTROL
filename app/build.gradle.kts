@@ -106,6 +106,11 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
+    // ProcessLifecycleOwner - lets RobotViewModel tell whether the app
+    // process is actually in the foreground, so background polling (see
+    // startMetricsLoop) can pause instead of running indefinitely just
+    // because the ViewModel/WebSocket survive an Activity being backgrounded.
+    implementation(libs.androidx.lifecycle.process)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)

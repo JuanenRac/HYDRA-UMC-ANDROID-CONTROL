@@ -219,7 +219,12 @@ private fun BluetoothSettings(viewModel: RobotViewModel, onEnableBluetooth: () -
     val isBtEnabled = viewModel.isBtEnabled.value
     val lastBtError = viewModel.lastBtError.value
 
-    /** Periodically refresh status or when appearing */
+    // One-shot refresh on entering this screen, for the case Bluetooth was
+    // toggled while the app process wasn't alive to see the system
+    // broadcast at all. While the app IS alive, isBtEnabled/lastBtError
+    // already stay live via RobotViewModel's own BroadcastReceiver for
+    // ACTION_STATE_CHANGED (registered once in its init{}, not scoped to
+    // this screen) - this call is just a safety net, not the primary path.
     LaunchedEffect(Unit) {
         viewModel.refreshBtStatus()
     }

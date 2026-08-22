@@ -1,11 +1,14 @@
 // =============================================================================
-// HYDRA-UMC CONTROL - REST API client for communication with HYDRA-UMC STUDIO
+// HYDRA-UMC CONTROL - REST API client for communication with the HYDRA-UMC-SERVER backend
 // Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
 // GPL-3.0 - see LICENSE
 //
-// Talks the exact contract in HYDRA-UMC-STUDIO/docs/REMOTE_API.md (that
+// Talks the exact contract in HYDRA-UMC-SERVER/docs/REMOTE_API.md (that
 // document itself admits it can drift from server.ts, the real source of
-// truth - verify against the server's own code before trusting it blindly):
+// truth - verify against the server's own code before trusting it blindly).
+// HYDRA-UMC-SERVER is the headless Node/Express+WebSocket backend split out
+// of HYDRA-UMC STUDIO's own process - this client talks to that backend
+// directly, not to STUDIO's (now frontend-only) web app:
 //   - GET  /api/hydra-info          - discovery/identity, 404 if
 //     SystemSettings.remoteAccess.enabled is explicitly false
 //   - GET  /api/settings            - full current state

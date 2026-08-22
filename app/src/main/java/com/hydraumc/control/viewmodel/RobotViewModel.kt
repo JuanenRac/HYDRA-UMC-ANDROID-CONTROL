@@ -26,13 +26,20 @@ import com.hydraumc.control.network.WsStatus
 import com.hydraumc.control.network.scanSubnets
 import com.hydraumc.control.util.NotificationHelper
 import kotlinx.coroutines.launch
+import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
 import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanResult
+import android.content.BroadcastReceiver
 import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.annotation.SuppressLint
 import android.location.LocationManager
 import android.os.Build
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.ProcessLifecycleOwner
 import org.json.JSONObject
 
 /** 
@@ -213,9 +220,57 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
 
     val selectedCameraId = mutableIntStateOf(1)
 
+    // Whether the app process is currently in the foreground. viewModelScope
+    // (and the WebSocket it owns) deliberately keeps running while
+    // backgrounded - real-time robot state needs to keep arriving live even
+    // with the app not on screen - but polling (startMetricsLoop) doesn't
+    // need to, and onCleared() alone never catches "just backgrounded": it
+    // only fires when the ViewModel itself is destroyed (Activity
+    // finishing), which backgrounding alone never triggers. Driven by the
+    // appLifecycleObserver registered in init{} below.
+    private var isAppInForeground = true
+
+    private val appLifecycleObserver = LifecycleEventObserver { _, event ->
+        when (event) {
+            Lifecycle.Event.ON_START -> {
+                isAppInForeground = true
+                val client = apiClient
+                if ((client != null) && (metricsJob?.isActive != true) &&
+                    (connectionStatus.value == getApplication<Application>().getString(R.string.status_connected))
+                ) {
+                    startMetricsLoop(client)
+                }
+            }
+            Lifecycle.Event.ON_STOP -> {
+                isAppInForeground = false
+            }
+            else -> {}
+        }
+    }
+
+    // Reacts to the user toggling Bluetooth from outside the app (Quick
+    // Settings, system Settings) instead of only refreshing isBtEnabled once
+    // when SettingsScreen's Bluetooth tab happens to be composed - without
+    // this, turning Bluetooth off while that screen is open left the Switch
+    // showing "on" until the user navigated away and back.
+    private val btStateReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            refreshBtStatus()
+        }
+    }
+
     init {
         connectionStatus.value = application.getString(R.string.status_disconnected)
         NotificationHelper.createChannel(application)
+
+        ProcessLifecycleOwner.get().lifecycle.addObserver(appLifecycleObserver)
+
+        val btFilter = IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            application.registerReceiver(btStateReceiver, btFilter, Context.RECEIVER_NOT_EXPORTED)
+        } else {
+            application.registerReceiver(btStateReceiver, btFilter)
+        }
 
         viewModelScope.launch {
             prefs.load()?.let { (savedIp, savedPort) ->
@@ -435,10 +490,21 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
     // overwrite the same shared `metrics` value.
     private var metricsJob: kotlinx.coroutines.Job? = null
 
+    // Debounce job for the offline-viewing disk cache write in applyState()
+    // below - see that call site's own comment for why this exists.
+    private var stateCacheJob: kotlinx.coroutines.Job? = null
+
     private fun startMetricsLoop(client: HydraApiClient) {
         metricsJob?.cancel()
         metricsJob = viewModelScope.launch {
-            while(connectionStatus.value == getApplication<Application>().getString(R.string.status_connected)) {
+            // isAppInForeground gates this too, not just connectionStatus -
+            // without it, backgrounding the app (Home button, app switcher)
+            // left this loop polling /api/system/metrics every 5s
+            // indefinitely, since the WebSocket connection (and therefore
+            // connectionStatus == "Connected") deliberately stays alive while
+            // backgrounded. The appLifecycleObserver relaunches this loop via
+            // ON_START once the app returns to the foreground.
+            while(connectionStatus.value == getApplication<Application>().getString(R.string.status_connected) && isAppInForeground) {
                 try {
                     val m = client.getSystemMetrics()
                     metrics.value = SystemMetrics(
@@ -519,10 +585,26 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         jobs.value = newState.allJobs.map { JobState(it.name) }
         
         if (!isFromCache) {
-            viewModelScope.launch {
+            // Debounced, not written on every single call - applyState()
+            // runs on every WS broadcast AND every local optimistic command
+            // mutation (sendAtomicCommand calls it directly), so a robot
+            // being actively jogged/controlled used to write the ENTIRE
+            // current state tree to disk (DataStore's edit{} does a full
+            // atomic file replace under the hood) on every single one of
+            // those, unthrottled - real flash wear on the eMMC over a
+            // device's lifetime of continuous use, for a cache that only
+            // exists for offline viewing (StateCache's own doc comment) and
+            // is already superseded by a full REST sync on the next
+            // connect() anyway. A short quiet-period debounce (same
+            // cancel-and-relaunch Job pattern as metricsJob/connectJob/
+            // atomicSyncJobs elsewhere in this file) coalesces a burst of
+            // rapid state changes into one write instead of one per change.
+            stateCacheJob?.cancel()
+            stateCacheJob = viewModelScope.launch {
+                kotlinx.coroutines.delay(1000)
                 stateCache.saveState(newState.toJson())
             }
-            
+
             newState.allRobots.forEach { robot ->
                 val oldRobot = oldState.robotById(robot.id)
                 // Gated on isFinished too, not just the isPlaying:true->false
@@ -540,7 +622,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                 // client resets it can still show a stale true positive -
                 // narrow enough (needs a specific prior-session state) not to
                 // block fixing the common case, and the underlying gap is in
-                // HYDRA-UMC-STUDIO's server.ts, not this app.
+                // HYDRA-UMC-SERVER's server.ts, not this app.
                 if ((oldRobot != null) && oldRobot.isPlaying && !robot.isPlaying && robot.isFinished) {
                     NotificationHelper.sendAlert(
                         getApplication(),
@@ -882,8 +964,15 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         super.onCleared()
         connectJob?.cancel()
         metricsJob?.cancel()
+        stateCacheJob?.cancel()
         ws?.disconnect()
         bleClient?.disconnect()
         stopBtScan()
+        ProcessLifecycleOwner.get().lifecycle.removeObserver(appLifecycleObserver)
+        try {
+            getApplication<Application>().unregisterReceiver(btStateReceiver)
+        } catch (_: IllegalArgumentException) {
+            // Already unregistered (e.g. receiver never successfully bound) - harmless.
+        }
     }
 }

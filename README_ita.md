@@ -4,7 +4,7 @@
 
 # 📱 HYDRA-UMC CONTROL
 
-Un'app Android nativa (Kotlin + Jetpack Compose) che controlla un robot sulla piattaforma [HYDRA-UMC](https://github.com/JuanenRac/HYDRA-UMC) via Wi-Fi o Bluetooth, parlando esattamente lo stesso contratto [`REMOTE_API.md`](https://github.com/JuanenRac/HYDRA-UMC-STUDIO/blob/main/docs/REMOTE_API.md) usato da [HYDRA-UMC SUITE](https://github.com/JuanenRac/HYDRA-UMC-SUITE) - discovery, lettura/scrittura dello stato completo, e sincronizzazione live via WebSocket con un server [HYDRA-UMC STUDIO](https://github.com/JuanenRac/HYDRA-UMC-STUDIO) in esecuzione. Controparte Android diretta di [HYDRA-UMC-IOS-CONTROL](https://github.com/JuanenRac/HYDRA-UMC-IOS-CONTROL). Vedi [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) per il design completo.
+Un'app Android nativa (Kotlin + Jetpack Compose) che controlla un robot sulla piattaforma [HYDRA-UMC](https://github.com/JuanenRac/HYDRA-UMC) via Wi-Fi o Bluetooth, parlando esattamente lo stesso contratto [`REMOTE_API.md`](https://github.com/JuanenRac/HYDRA-UMC-SERVER/blob/main/docs/REMOTE_API.md) usato da [HYDRA-UMC SUITE](https://github.com/JuanenRac/HYDRA-UMC-SUITE) - discovery, lettura/scrittura dello stato completo, e sincronizzazione live via WebSocket con un backend [HYDRA-UMC-SERVER](https://github.com/JuanenRac/HYDRA-UMC-SERVER) in esecuzione (lo stesso con cui parla la dashboard web di [HYDRA-UMC STUDIO](https://github.com/JuanenRac/HYDRA-UMC-STUDIO)). Controparte Android diretta di [HYDRA-UMC-IOS-CONTROL](https://github.com/JuanenRac/HYDRA-UMC-IOS-CONTROL). Vedi [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) per il design completo.
 
 ## 🏗️ Cosa è implementato
 
@@ -66,9 +66,9 @@ Questo repository segue una politica a livello di ecosistema: la versione aument
 
 La versione in esecuzione è visibile in tempo reale nella finestra **Informazioni** (`BuildConfig.VERSION_NAME`, che legge lo stesso `versionName` appena calcolato da Gradle). Vedi [CHANGELOG.md](CHANGELOG.md) per la cronologia delle versioni.
 
-## 📲 Test contro HYDRA-UMC STUDIO
+## 📲 Test contro un server reale
 
-1. Avvia il server: `cd HYDRA-UMC-STUDIO && npm run dev` (Porta 3000).
+1. Avvia il backend: `cd HYDRA-UMC-SERVER && npm run dev` (Porta 3000) - questa è la vera API REST/WS con cui parla l'app (vedi Progetti Correlati più sotto); il comando `npm run dev` di `HYDRA-UMC-STUDIO` avvia solo il suo dev server Vite del frontend (porta 5173) contro questo stesso backend, non è il server dell'API in sé.
 2. Collega il tuo dispositivo Android alla stessa Wi-Fi.
 3. Usa il **Selettore Globale del Server** oppure inserisci l'IP manualmente nell'header.
 4. **Biometria:** Attiva "Biometric Login" nel tuo Profilo Utente per saltare la schermata della password al prossimo avvio.

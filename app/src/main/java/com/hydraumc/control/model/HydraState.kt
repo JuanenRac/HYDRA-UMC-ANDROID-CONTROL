@@ -14,7 +14,7 @@
 // corrupting the real app's state for anyone still using the browser UI
 // or HYDRA-UMC SUITE. Instead, HydraState wraps the raw JSONObject tree
 // exactly as received from GET/POST /api/settings (see
-// HYDRA-UMC-STUDIO/docs/REMOTE_API.md section 2) and only exposes
+// HYDRA-UMC-SERVER/docs/REMOTE_API.md section 2) and only exposes
 // convenience accessors for the handful of fields this app actually
 // reads/writes - every other field round-trips untouched.
 //
@@ -371,7 +371,7 @@ class HydraState(val raw: JSONObject) {
      *
      * NOTE: as of the 2026-08-21 audit, nothing in this app calls [merge] any
      * more for its primary WebSocket sync path (see RobotViewModel.kt's
-     * onSettings handler) - every WS push from HYDRA-UMC STUDIO's server.ts,
+     * onSettings handler) - every WS push from HYDRA-UMC-SERVER's server.ts,
      * whether labeled "settings" or "delta", carries the FULL current state
      * tree (confirmed against server.ts's own broadcastSettings() call
      * sites and docs/REMOTE_API.md section 3, which documents only one

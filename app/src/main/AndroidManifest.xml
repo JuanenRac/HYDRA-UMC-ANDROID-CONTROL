@@ -20,8 +20,10 @@
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
-    <!-- HYDRA-UMC STUDIO's server (server.ts) is plain http/ws, no TLS, by
-         design - REMOTE_API.md's own "trusted LAN, no auth" model. The
+    <!-- HYDRA-UMC-SERVER's server.ts (the backend this app talks to - a
+         separate repo from HYDRA-UMC STUDIO's own web frontend since the two
+         were split apart) is plain http/ws, no TLS, by design -
+         REMOTE_API.md's own "trusted LAN, no auth" model. The
          target host is a dynamic user-entered IP (network/Discovery.kt),
          not a fixed domain, so a network-security-config domain allowlist
          isn't an option; usesCleartextTraffic is the only way this app can
