@@ -4,6 +4,15 @@
 
 # 📱 HYDRA-UMC CONTROL
 
+<p align="center">
+  <a href="README.md">🇺🇸 English</a> |
+  🇪🇸 <b>Español</b> |
+  <a href="README_fra.md">🇫🇷 Français</a> |
+  <a href="README_ita.md">🇮🇹 Italiano</a> |
+  <a href="README_deu.md">🇩🇪 Deutsch</a>
+</p>
+
+
 <p align="left">
   <img src="https://img.shields.io/badge/Licencia-GPL%203.0-blue.svg" alt="GPL 3.0">
   <img src="https://img.shields.io/badge/Lenguaje-Kotlin-7F52FF.svg" alt="Kotlin">
