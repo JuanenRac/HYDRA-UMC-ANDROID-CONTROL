@@ -847,8 +847,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                     // previously only the FAILURE path logged anything
                     // (logTelemetry("TX Error [...]") below), so a command
                     // that reached the server with no visible effect (the
-                    // still-open Pause/Stop investigation - see
-                    // SONNET/8.PLAN_MADUREZ...txt) looked identical in the
+                    // still-open Pause/Stop investigation looked identical in the
                     // on-screen log to one that silently failed to send at
                     // all. This line is the missing half: confirms the POST
                     // actually left this app, so the next live repro can

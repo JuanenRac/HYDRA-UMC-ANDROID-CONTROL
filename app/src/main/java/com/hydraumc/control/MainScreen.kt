@@ -76,7 +76,7 @@ fun MainScreen(viewModel: RobotViewModel, onEnableBluetooth: () -> Unit = {}) {
 
     // Hoisted above the bottomBar's own read of the same state (audit
     // idea: "modo landscape optimizado para tablets" -
-    // SONNET/AUDITORIA_COMPLETA_44_PROYECTOS.txt) - BUG (found while
+    // BUG (found while
     // implementing that idea): landscape used to unconditionally force
     // the fullscreen 3D view regardless of which tab was open, so a
     // tablet (landscape being its natural default orientation, unlike a
