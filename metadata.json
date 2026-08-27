@@ -1,0 +1,6 @@
+{
+  "name": "Hydra-UMC",
+  "description": "Android Control App for Hydra-UMC",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

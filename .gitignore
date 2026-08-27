@@ -1,0 +1,25 @@
+# Gradle
+.gradle/
+build/
+app/build/
+
+# Local dev machine config - contains the local Android SDK path, never portable between machines
+local.properties
+
+# Android Studio / IntelliJ
+.idea/
+*.iml
+.navigation/
+captures/
+
+# Keystores - never commit signing material
+*.jks
+*.keystore
+
+# OS / editor
+.DS_Store
+.artifacts/97d37a92-5d59-4f92-b4ae-3a283cb8b179/implementation_plan.artifact.md
+# HYDRA-UMC shared secret protection
+.env
+.env.*
+!.env.example
