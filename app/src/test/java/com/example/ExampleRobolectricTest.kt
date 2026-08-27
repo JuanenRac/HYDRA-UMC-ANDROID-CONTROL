@@ -1,3 +1,9 @@
+// =============================================================================
+// HYDRA-UMC-ANDROID-CONTROL - Android resource availability test
+// Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
+// GPL-3.0 - see LICENSE
+// =============================================================================
+
 package com.hydraumc.control
 
 import android.content.Context
@@ -17,6 +23,6 @@ class ExampleRobolectricTest {
   fun `read string from context`() {
     val context = ApplicationProvider.getApplicationContext<Context>()
     val appName = context.getString(R.string.app_name)
-    assertEquals("HYDRA-UMC", appName)
+    assertEquals("HYDRA-UMC CONTROL", appName)
   }
 }

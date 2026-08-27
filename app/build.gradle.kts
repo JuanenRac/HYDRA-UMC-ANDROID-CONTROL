@@ -1,3 +1,9 @@
+// =============================================================================
+// HYDRA-UMC-ANDROID-CONTROL - Android application Gradle configuration
+// Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
+// GPL-3.0 - see LICENSE
+// =============================================================================
+
 plugins {
     id("com.android.application")
     alias(libs.plugins.kotlin.compose)
@@ -83,6 +89,15 @@ android {
         buildConfig = true
     }
 
+    testOptions {
+        unitTests {
+            // Robolectric must receive merged Android resources and the app
+            // manifest; without them Context.getString and Compose activity
+            // resolution fail in the same way as an unconfigured JVM test.
+            isIncludeAndroidResources = true
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = true
@@ -157,6 +172,7 @@ dependencies {
     testImplementation(libs.roborazzi.compose)
     testImplementation(libs.roborazzi.junit.rule)
     testImplementation(libs.androidx.compose.ui.test.junit4)
+    testImplementation(libs.androidx.compose.ui.test.manifest)
 
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
