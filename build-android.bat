@@ -2,6 +2,8 @@
 setlocal
 python "%~dp0bump_manifest_version.py"
 if errorlevel 1 ( echo VERSION BUMP FAILED. & pause & exit /b 1 )
+python "%~dp0bump_version_code.py"
+if errorlevel 1 ( echo VERSION BUMP FAILED. & pause & exit /b 1 )
 
 :: =============================================================================
 :: HYDRA-UMC-ANDROID-CONTROL - build-android.bat
@@ -49,7 +51,13 @@ if %ERRORLEVEL% equ 0 (
 )
 
 echo [1/3] Building application (APK Debug)...
-call ".\gradlew.bat" assembleDebug
+:: -PhydraUmcReadOnly=true / HYDRA_UMC_CI=1 tell app/build.gradle.kts not to
+:: bump version.properties itself - the two scripts above already did the
+:: one real bump for this build; without this flag Gradle's own
+:: configuration-time bump would double it (the same flag build-test.bat
+:: uses for its compile-only, non-mutating CI check).
+set HYDRA_UMC_CI=1
+call ".\gradlew.bat" assembleDebug -PhydraUmcReadOnly=true
 
 if %ERRORLEVEL% neq 0 (
     echo.

@@ -6,6 +6,7 @@
 # GPL-3.0 - see LICENSE
 # =============================================================================
 python3 "$(dirname "$0")/bump_manifest_version.py" || exit 1
+python3 "$(dirname "$0")/bump_version_code.py" || exit 1
 
 # Pauses for a keypress before the script's window closes - fires on every
 # exit path (success or error) so a double-clicked terminal doesn't vanish
@@ -55,7 +56,12 @@ fi
 
 echo "[1/3] ðŸ› ï¸  Building application (APK Debug)..."
 chmod +x gradlew
-./gradlew assembleDebug
+# -PhydraUmcReadOnly=true / HYDRA_UMC_CI=1 tell app/build.gradle.kts not to
+# bump version.properties itself - the two scripts above already did the
+# one real bump for this build; without this flag Gradle's own
+# configuration-time bump would double it (the same flag build-test.sh
+# uses for its compile-only, non-mutating CI check).
+HYDRA_UMC_CI=1 ./gradlew assembleDebug -PhydraUmcReadOnly=true
 
 if [ $? -ne 0 ]; then
     echo "âŒ Error: APK build failed. Please check the logs above."
