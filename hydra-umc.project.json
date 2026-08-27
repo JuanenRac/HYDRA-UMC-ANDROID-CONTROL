@@ -1,0 +1,28 @@
+{
+  "schema_version": "1.0",
+  "ecosystem": "HYDRA-UMC",
+  "name": "HYDRA-UMC-ANDROID-CONTROL",
+  "version": "0.2.6",
+  "role": "ui",
+  "stack": "android",
+  "technologies": [
+    "Kotlin",
+    "Jetpack",
+    "biometric auth",
+    "WebSocket client"
+  ],
+  "deployment_target": "mobile",
+  "maturity": "established",
+  "family": "Core Backend & Clients",
+  "parent": "HYDRA-UMC-SERVER",
+  "build": "./gradlew assembleDebug. Needs Android SDK.",
+  "notes": "Native Android control app with biometric login, talking to HYDRA-UMC-SERVER over Wi-Fi/Bluetooth.",
+  "native_version": {
+    "file": "app/version.properties",
+    "pattern": {
+      "major": "^versionMajor\\s*=\\s*(\\d+)",
+      "minor": "^versionMinor\\s*=\\s*(\\d+)",
+      "patch": "^versionPatch\\s*=\\s*(\\d+)"
+    }
+  }
+}
