@@ -23,6 +23,10 @@ at the time.
 - New `README_zho.md` / `README_jpn.md` documentation translations, plus
   the 5 existing README files' language selectors updated to link them.
 
+## [0.2.8]
+
+- Build version synchronized with `hydra-umc.project.json` and the repository-native version source.
+
 ## [0.2.7] - Fixed a version double-bump bug in the real build script
 
 `build-android.sh`/`build-android.bat` called `bump_manifest_version.py`
