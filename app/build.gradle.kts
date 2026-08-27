@@ -27,8 +27,9 @@ plugins {
 // HYDRA-UMC-IOS-CONTROL/tool/bump_version.dart - this is the Gradle-native
 // equivalent for this repo, wired into the configuration phase instead of a
 // separate pre-build script since that's the point in a Gradle build that
-// reliably runs on every real build. CI sets HYDRA_UMC_CI=1 so verification
-// tasks can use the declared version without mutating a checked-out source tree.
+// reliably runs on every real build. CI sets HYDRA_UMC_CI=1 and the local
+// non-versioning verifier passes -PhydraUmcReadOnly=true, so either path can
+// use the declared version without mutating a checked-out source tree.
 val versionPropsFile = file("version.properties")
 val versionPropsText = versionPropsFile.readText()
 
@@ -46,7 +47,10 @@ var appVersionMinor = readIntProp(versionPropsText, "versionMinor")
 var appVersionPatch = readIntProp(versionPropsText, "versionPatch")
 var appVersionCode = readIntProp(versionPropsText, "versionCode")
 
-if (System.getenv("HYDRA_UMC_CI") != "1") {
+val readOnlyBuild = providers.gradleProperty("hydraUmcReadOnly").orNull == "true" ||
+    System.getenv("HYDRA_UMC_CI") == "1"
+
+if (!readOnlyBuild) {
     appVersionPatch += 1
     if (appVersionPatch > 9) {
         appVersionPatch = 0
