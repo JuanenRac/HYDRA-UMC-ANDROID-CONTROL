@@ -1,9 +1,8 @@
 # Changelog
 
 All notable changes to HYDRA-UMC CONTROL (Android) are summarized here.
-Full session-by-session detail (including dates) lives in a private,
-unpublished internal log - this file is public, so it intentionally omits
-calendar dates.
+This public changelog records release-relevant work rather than a
+session-by-session diary.
 
 Version numbers below follow the ecosystem-wide auto-bump policy described
 in [README.md](README.md#-versioning). Entries recorded before that policy
@@ -23,6 +22,22 @@ at the time.
   each via a real XML parse).
 - New `README_zho.md` / `README_jpn.md` documentation translations, plus
   the 5 existing README files' language selectors updated to link them.
+
+## [0.2.7] - Fixed a version double-bump bug in the real build script
+
+`build-android.sh`/`build-android.bat` called `bump_manifest_version.py`
+(which performs a real increment of `version.properties` *and* the
+manifest together) and then ran `./gradlew assembleDebug` with no
+read-only flag - so `app/build.gradle.kts`'s own configuration-time bump
+also fired, silently advancing the native version twice per real build
+while the manifest only ever advanced once. Fixed by adding
+`bump_version_code.py` (increments Android's separate `versionCode`
+counter, which `bump_manifest_version.py` intentionally doesn't touch -
+see its own docstring) and passing `-PhydraUmcReadOnly=true`/`HYDRA_UMC_CI=1`
+to the Gradle invocation, the same flag `build-test.sh`/`build-test.bat`
+already used for their compile-only, non-mutating CI check - so there is
+now exactly one real bump path, owned by the build scripts, and Gradle's
+own bump code stays inert during a real build.
 
 ## [0.2.6]
 
