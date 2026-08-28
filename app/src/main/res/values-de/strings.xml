@@ -150,4 +150,20 @@
     <string name="handshake_waiting">Warten auf Board-Handshake...</string>
     <string name="dynamics_config">DYNAMIK-KONFIGURATION</string>
     <string name="e_stop">NOT-AUS</string>
+    <!-- Anwendungsaktualisierungen -->
+    <string name="tab_updates">Updates</string>
+    <string name="app_updates">Anwendungsaktualisierungen</string>
+    <string name="update_current_version">Installierte Version: %1$s</string>
+    <string name="update_check">Nach Update suchen</string>
+    <string name="update_checking">GitHub Releases werden geprüft…</string>
+    <string name="update_up_to_date">Auf diesem Gerät ist bereits die aktuelle stabile Version installiert.</string>
+    <string name="update_available">Version %1$s ist verfügbar.</string>
+    <string name="update_release_notes">Versionshinweise</string>
+    <string name="update_download_install">Herunterladen und installieren</string>
+    <string name="update_downloading">Update wird heruntergeladen: %1$d%%</string>
+    <string name="update_install_permission">Erlaube dieser App die Installation von Updates in den Android-Einstellungen, kehre dann hierher zurück und prüfe erneut.</string>
+    <string name="update_allow_install">Installation erlauben</string>
+    <string name="update_installing">Der Android-Paketinstaller ist bereit, das Update zu prüfen und zu installieren.</string>
+    <string name="update_later">Später</string>
+    <string name="scan_description">Prüft GET /api/hydra-info an jeder IP im Subnetz (wie HYDRA-UMC SUITE).</string>
 </resources>

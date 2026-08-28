@@ -151,4 +151,19 @@
     <string name="handshake_waiting">ボードのハンドシェイクを待機中…</string>
     <string name="dynamics_config">ダイナミクス設定</string>
     <string name="e_stop">緊急停止</string>
+    <!-- アプリケーション更新 -->
+    <string name="tab_updates">更新</string>
+    <string name="app_updates">アプリケーションの更新</string>
+    <string name="update_current_version">インストール済みバージョン: %1$s</string>
+    <string name="update_check">更新を確認</string>
+    <string name="update_checking">GitHub Releases を確認しています…</string>
+    <string name="update_up_to_date">この端末には最新の安定版がインストールされています。</string>
+    <string name="update_available">バージョン %1$s を利用できます。</string>
+    <string name="update_release_notes">リリースノート</string>
+    <string name="update_download_install">ダウンロードしてインストール</string>
+    <string name="update_downloading">更新をダウンロード中: %1$d%%</string>
+    <string name="update_install_permission">Android の設定でこのアプリによる更新のインストールを許可し、ここに戻ってもう一度確認してください。</string>
+    <string name="update_allow_install">インストールを許可</string>
+    <string name="update_installing">Android のパッケージインストーラで更新を確認してインストールできます。</string>
+    <string name="update_later">後で</string>
 </resources>

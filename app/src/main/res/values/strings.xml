@@ -151,4 +151,19 @@
     <string name="handshake_waiting">Waiting for board handshake...</string>
     <string name="dynamics_config">DYNAMICS CONFIGURATION</string>
     <string name="e_stop">EMERGENCY STOP</string>
+    <!-- Application updates -->
+    <string name="tab_updates">Updates</string>
+    <string name="app_updates">Application updates</string>
+    <string name="update_current_version">Installed version: %1$s</string>
+    <string name="update_check">Check for update</string>
+    <string name="update_checking">Checking GitHub Releases…</string>
+    <string name="update_up_to_date">This device already has the latest stable version.</string>
+    <string name="update_available">Version %1$s is available.</string>
+    <string name="update_release_notes">Release notes</string>
+    <string name="update_download_install">Download and install</string>
+    <string name="update_downloading">Downloading update: %1$d%%</string>
+    <string name="update_install_permission">Allow this app to install updates in Android Settings, then return here and check again.</string>
+    <string name="update_allow_install">Allow installation</string>
+    <string name="update_installing">Android’s package installer is ready to verify and install the update.</string>
+    <string name="update_later">Later</string>
 </resources>

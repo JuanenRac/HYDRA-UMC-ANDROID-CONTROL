@@ -25,6 +25,7 @@ import com.hydraumc.control.ui.CustomSplashScreen
 import com.hydraumc.control.ui.LoginScreen
 import com.hydraumc.control.ui.theme.HydraTheme
 import com.hydraumc.control.viewmodel.RobotViewModel
+import com.hydraumc.control.viewmodel.AppUpdateViewModel
 import kotlinx.coroutines.delay
 
 // A widget-triggered E-STOP with no robot roster yet (cold start, no cache,
@@ -41,6 +42,8 @@ private const val GLOBAL_ESTOP_TIMEOUT_MS = 15_000L
 class MainActivity : FragmentActivity() {
     /** The shared ViewModel that manages robot state and connectivity. */
     private val robotViewModel: RobotViewModel by viewModels()
+    /** Checks only public GitHub Release metadata when the app starts. */
+    private val appUpdateViewModel: AppUpdateViewModel by viewModels()
 
     // The widget's E-STOP intent can arrive during a fully cold start (app
     // process not already alive), when robotViewModel.robots.value is still
@@ -143,6 +146,7 @@ class MainActivity : FragmentActivity() {
                 keepNativeSplash = false
                 // Initial scan
                 robotViewModel.scanNetwork()
+                appUpdateViewModel.checkForUpdate()
             }
 
             // Deferred global E-STOP - see pendingGlobalEstop's own comment above.
@@ -193,7 +197,7 @@ class MainActivity : FragmentActivity() {
                     } else if (!isLoggedIn) {
                         LoginScreen(robotViewModel)
                     } else {
-                        MainScreen(robotViewModel) {
+                        MainScreen(robotViewModel, appUpdateViewModel) {
                             /** Intent to request enabling Bluetooth. */
                             val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
                             enableBluetoothLauncher.launch(enableBtIntent)

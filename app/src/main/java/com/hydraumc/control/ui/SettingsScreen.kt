@@ -12,6 +12,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bluetooth
+import androidx.compose.material.icons.filled.Update
 import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -24,6 +25,8 @@ import androidx.compose.ui.unit.dp
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.hydraumc.control.viewmodel.RobotViewModel
+import com.hydraumc.control.viewmodel.AppUpdateState
+import com.hydraumc.control.viewmodel.AppUpdateViewModel
 import com.hydraumc.control.R
 import com.hydraumc.control.model.BleDevice
 import com.hydraumc.control.model.ServerInfo
@@ -38,13 +41,19 @@ import com.hydraumc.control.ui.theme.HydraButton
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
 @Composable
-fun SettingsScreen(viewModel: RobotViewModel, onEnableBluetooth: () -> Unit = {}) {
+fun SettingsScreen(
+    viewModel: RobotViewModel,
+    updateViewModel: AppUpdateViewModel,
+    onEnableBluetooth: () -> Unit = {},
+) {
     /** Index of the currently selected settings tab. */
     var selectedTabIndex by remember { mutableIntStateOf(0) }
-    /** List of tab items for Wi-Fi and Bluetooth. */
+    val updateState by updateViewModel.state.collectAsState()
+    /** List of tab items for Wi-Fi, Bluetooth and application updates. */
     val tabs = listOf(
         TabItem(stringResource(R.string.tab_wifi), Icons.Default.Wifi),
         TabItem(stringResource(R.string.tab_bluetooth), Icons.Default.Bluetooth),
+        TabItem(stringResource(R.string.tab_updates), Icons.Default.Update),
     )
 
     Column(modifier = Modifier.fillMaxSize()) {
@@ -63,6 +72,7 @@ fun SettingsScreen(viewModel: RobotViewModel, onEnableBluetooth: () -> Unit = {}
             when (selectedTabIndex) {
                 0 -> WifiSettings(viewModel)
                 1 -> BluetoothSettings(viewModel, onEnableBluetooth)
+                2 -> UpdateSettings(updateState, updateViewModel)
             }
         }
     }
@@ -74,6 +84,84 @@ fun SettingsScreen(viewModel: RobotViewModel, onEnableBluetooth: () -> Unit = {}
  * @property icon The icon associated with the tab.
  */
 data class TabItem(val title: String, val icon: ImageVector)
+
+/** Settings page for the signed, operator-approved GitHub Release update path. */
+@Composable
+private fun UpdateSettings(state: AppUpdateState, updateViewModel: AppUpdateViewModel) {
+    Column {
+        Text(stringResource(R.string.app_updates), style = MaterialTheme.typography.titleLarge)
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            stringResource(R.string.update_current_version, com.hydraumc.control.BuildConfig.VERSION_NAME),
+            style = MaterialTheme.typography.bodyMedium,
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        when (state) {
+            AppUpdateState.Idle, AppUpdateState.UpToDate -> {
+                if (state is AppUpdateState.UpToDate) {
+                    Text(stringResource(R.string.update_up_to_date), color = MaterialTheme.colorScheme.primary)
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+                HydraButton(
+                    text = stringResource(R.string.update_check),
+                    onClick = updateViewModel::checkForUpdate,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+            AppUpdateState.Checking -> {
+                CircularProgressIndicator()
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(stringResource(R.string.update_checking))
+            }
+            is AppUpdateState.Available -> UpdateAvailableContent(
+                update = state.update,
+                onDownload = { updateViewModel.downloadAndInstall(state.update) },
+            )
+            is AppUpdateState.Downloading -> {
+                Text(stringResource(R.string.update_downloading, state.progress ?: 0))
+                state.progress?.let { LinearProgressIndicator(progress = { it / 100f }, modifier = Modifier.fillMaxWidth()) }
+            }
+            is AppUpdateState.InstallPermissionRequired -> {
+                Text(stringResource(R.string.update_install_permission))
+                Spacer(modifier = Modifier.height(8.dp))
+                HydraButton(
+                    text = stringResource(R.string.update_allow_install),
+                    onClick = updateViewModel::openInstallPermissionSettings,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+            AppUpdateState.Installing -> Text(stringResource(R.string.update_installing))
+            is AppUpdateState.Failed -> {
+                Text(state.message, color = MaterialTheme.colorScheme.error)
+                Spacer(modifier = Modifier.height(8.dp))
+                HydraButton(
+                    text = stringResource(R.string.update_check),
+                    onClick = updateViewModel::checkForUpdate,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun UpdateAvailableContent(
+    update: com.hydraumc.control.update.AvailableUpdate,
+    onDownload: () -> Unit,
+) {
+    Text(stringResource(R.string.update_available, update.version.toString()), style = MaterialTheme.typography.titleMedium)
+    if (update.notes.isNotBlank()) {
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(stringResource(R.string.update_release_notes), style = MaterialTheme.typography.labelLarge)
+        Text(update.notes, style = MaterialTheme.typography.bodySmall)
+    }
+    Spacer(modifier = Modifier.height(16.dp))
+    HydraButton(
+        text = stringResource(R.string.update_download_install),
+        onClick = onDownload,
+        modifier = Modifier.fillMaxWidth(),
+    )
+}
 
 /** 
  * Composable for managing Wi-Fi/Network connection settings.
