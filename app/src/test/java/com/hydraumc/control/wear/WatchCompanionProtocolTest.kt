@@ -40,6 +40,20 @@ class WatchCompanionProtocolTest {
         assertEquals("voice_turn", payload.getString("type"))
         assertEquals("watch-voice-001", payload.getString("requestId"))
         assertEquals("status for robot A1", payload.getString("transcript"))
+        assertEquals("watch-voice-001", WatchVoiceTurn.fromJson(payload).requestId)
+    }
+
+    @Test
+    fun `paired relay replies preserve the safe response metadata`() {
+        val original = WatchAssistantReply(
+            requestId = "watch-voice-003",
+            text = "Mission requests require confirmation.",
+            level = "ATTENTION",
+            speak = true,
+            requiresConfirmation = true,
+        )
+
+        assertEquals(original, WatchAssistantReply.fromJson(original.toJson()))
     }
 
     @Test(expected = IllegalArgumentException::class)

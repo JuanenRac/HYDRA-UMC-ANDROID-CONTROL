@@ -6,11 +6,11 @@ GPL-3.0 - see LICENSE
 
 # Paired Watch voice relay
 
-Android Control owns the authenticated client session to HYDRA-UMC-SERVER. A
-future Wear Data Layer receiver must pass only an already-recognised,
-user-initiated `WatchVoiceTurn` to `RobotViewModel.relayWatchVoiceTurn()`.
-That method uses the normal Server bearer token and receives a typed
-`WatchAssistantReply`.
+Android Control owns the authenticated client session to HYDRA-UMC-SERVER.
+`WatchVoiceRelayService` receives only an already-recognised,
+user-initiated `WatchVoiceTurn` through the Wear OS Data Layer. It loads the
+phone's encrypted Server session, relays the text through the bounded Server
+endpoint and sends back a typed `WatchAssistantReply`.
 
 ```text
 Wear microphone -> system STT -> paired Android transport
@@ -24,6 +24,10 @@ Wear microphone -> system STT -> paired Android transport
 modifies `HydraState`; a motion-related assistant reply is explicitly marked
 `requiresConfirmation` and must be confirmed through a primary control UI.
 
-The Wear Data Layer/Bluetooth transport itself is intentionally not emulated
-without a real paired watch. It must authenticate and associate a device
-before invoking these relay methods; it must never embed the Voice UI token.
+The Data Layer is the official paired Android/Wear transport, not a custom
+Bluetooth socket. Google Play services accepts messages only when the Watch
+and Android Control APKs have the same `applicationId`
+(`com.hydraumc.control`) and signing certificate; it encrypts the channel
+over Bluetooth or its relay path. The Watch never receives the Server JWT or
+Voice UI token. A real paired device remains required to validate radio,
+account and speech-engine behaviour.

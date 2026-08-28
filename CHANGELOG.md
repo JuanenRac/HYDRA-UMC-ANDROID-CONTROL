@@ -9,12 +9,15 @@ in [README.md](README.md#-versioning). Entries recorded before that policy
 existed are grouped under the pre-policy version `0.0.0` the repo carried
 at the time.
 
-## [Unreleased] - Chinese and Japanese added to the string resources
+## [Unreleased] - Paired Watch relay and language resources
 
-- Added typed `WatchVoiceTurn`, `WatchAssistantReply` and
-  `WatchSystemStatus` contracts plus authenticated Server client methods. The
-  future paired Wear receiver can relay a bounded voice turn and fetch a
-  read-only status card, but it cannot issue a robot command.
+- Added `WatchVoiceRelayService` using Wear OS Data Layer. It accepts only
+  bounded recognised text or a health-card request from the paired Watch,
+  loads the phone's encrypted Server session and returns the typed reply. It
+  never exposes a token to the Watch and never invokes a robot-command API.
+- Added the official `play-services-wearable` dependency. Both Android and
+  Watch use the same application ID/signing certificate, which Data Layer
+  enforces before it accepts a message.
 
 - New `values-zh/strings.xml` (Simplified Chinese) and `values-ja/strings.xml`
   (Japanese) - full translation of all 147 strings, matching the coverage

@@ -16,7 +16,7 @@
   "family": "Core Backend & Clients",
   "parent": "HYDRA-UMC-SERVER",
   "build": "./gradlew assembleDebug. Needs Android SDK.",
-  "notes": "Native Android control app with biometric login, talking to HYDRA-UMC-SERVER over Wi-Fi/Bluetooth. It contains a bounded authenticated relay contract for future paired Watch voice turns and read-only system-status cards; that path never issues robot commands.",
+  "notes": "Native Android control app with biometric login, talking to HYDRA-UMC-SERVER over Wi-Fi/Bluetooth. It receives paired Wear OS Data Layer voice/status messages, keeps the Server JWT encrypted on the phone and returns bounded replies; that path never issues robot commands.",
   "native_version": {
     "file": "app/version.properties",
     "pattern": {
