@@ -36,10 +36,24 @@ keystore. Android's package installer verifies that an update is signed by the
 same certificate as the installed application; a differently signed APK is
 rejected even if it has a higher version number.
 
-The current debug signing configuration is suitable only for local testing.
-Before the first public GitHub Release, replace it with the protected release
-keystore configuration and retain an encrypted backup of that key. Losing the
-key prevents in-place updates to existing installations.
+The current debug signing fallback is suitable only for local testing. Before
+the first public GitHub Release, copy `keystore.properties.example` to the
+ignored `keystore.properties`, supply the protected release-keystore values,
+and retain an encrypted backup of that key. Losing the key prevents in-place
+updates to existing installations.
+
+To prepare the exact artifact without incrementing a version again, run one of
+these after the normal version-bumping build:
+
+```text
+prepare-github-release.bat
+./prepare-github-release.sh
+```
+
+The scripts refuse to run without all private signing values and write only
+`dist/HYDRA-UMC-ANDROID-CONTROL-release.apk`, the exact asset name required by
+the updater. They prepare an artifact only; creating and publishing the GitHub
+Release remains an intentional operator action.
 
 ## Device flow
 
@@ -51,6 +65,9 @@ key prevents in-place updates to existing installations.
    `com.hydraumc.control` and has a larger Android `versionCode`.
 5. Android's own installer validates the signing certificate and requests the
    platform-required installation approval.
+6. If Android opens the one-time unknown-sources permission page, returning to
+   Android Control revalidates the already downloaded APK and resumes the
+   system-installer handoff. It does not download the asset twice.
 
 On Android 8 and later, the operator must allow this application to install
 unknown-source packages once in Android Settings. The app opens that specific

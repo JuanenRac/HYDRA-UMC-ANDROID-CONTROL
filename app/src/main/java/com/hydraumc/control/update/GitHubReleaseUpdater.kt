@@ -154,6 +154,20 @@ class GitHubReleaseUpdater(private val context: Context) {
         context.startActivity(intent)
     }
 
+    /**
+     * Returns the already downloaded update only when it is still a valid,
+     * newer APK for this exact application. This makes returning from
+     * Android's unknown-sources approval screen resume the install without a
+     * second network download or trusting a stale cache file.
+     */
+    fun cachedInstallableApk(): File? {
+        val apk = File(File(context.cacheDir, UPDATE_DIRECTORY), APK_FILE_NAME)
+        if (!apk.isFile) return null
+        val packageInfo = packageArchiveInfo(apk) ?: return null
+        if (packageInfo.packageName != context.packageName) return null
+        return apk.takeIf { packageVersionCode(packageInfo) > installedVersionCode() }
+    }
+
     private fun parseLatestRelease(payload: String): UpdateCheckResult {
         val release = JSONObject(payload)
         if (release.optBoolean("draft") || release.optBoolean("prerelease")) {

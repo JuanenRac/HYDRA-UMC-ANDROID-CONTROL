@@ -41,8 +41,8 @@ no code shared between the three clients.
 ## 3. Bluetooth transport (present in code, not usable end-to-end)
 
 `HydraBleClient.kt` mirrors `HydraApiClient`/`HydraWebSocket`'s shape (connect/observe/send) but over Android's GATT
-APIs, backed by `BleDevice.kt` as the scan-result model. A past session fixed three concrete robustness
-bugs in this path (see `auditoria_historial.txt`), but `HYDRA_SERVICE_UUID`/`HYDRA_STATE_CHAR_UUID` are still
+APIs, backed by `BleDevice.kt` as the scan-result model. The Android-side transport includes robustness fixes,
+but `HYDRA_SERVICE_UUID`/`HYDRA_STATE_CHAR_UUID` are still
 placeholder values - there is no GATT server/protocol implemented on the CM5 side of HYDRA-UMC yet, so BLE cannot
 actually talk to a robot today regardless of how solid the Android-side client code is.
 
@@ -57,7 +57,7 @@ actually talk to a robot today regardless of how solid the Android-side client c
   `GLOBAL_ESTOP_TIMEOUT_MS` (15s): if the roster is still empty after that, it gives up and surfaces
   `error_global_estop_no_robots` via `robotViewModel.lastError` instead of leaving the tap silently pending forever.
   This still opens the Activity and depends on a loaded roster rather than sending the stop directly from a
-  Service/WorkManager - see `mejoras_futuras.txt` for the real redesign, still pending.
+  Service/WorkManager path, which remains a future implementation.
 - **Mission notifications**: `util/NotificationHelper.kt`, high-priority channels for job completion / hardware
   fault alerts.
 - **Real-time MJPEG streaming**: `ui/MjpegPlayer.kt` decodes frames from `/api/camera/:id/stream` onto a Compose

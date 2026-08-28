@@ -49,6 +49,7 @@ media = "1.7.0"
 filament = "1.75.0"
 glance = "1.1.1"
 securityCrypto = "1.1.0"
+playServicesWearable = "20.0.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -115,6 +116,7 @@ filament-filamat = { group = "com.google.android.filament", name = "filamat-andr
 filament-utils = { group = "com.google.android.filament", name = "filament-utils-android", version.ref = "filament" }
 glance-appwidget = { group = "androidx.glance", name = "glance-appwidget", version.ref = "glance" }
 androidx-security-crypto = { group = "androidx.security", name = "security-crypto", version.ref = "securityCrypto" }
+play-services-wearable = { group = "com.google.android.gms", name = "play-services-wearable", version.ref = "playServicesWearable" }
 
 
 [plugins]

@@ -8,10 +8,12 @@ package com.hydraumc.control.viewmodel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.hydraumc.control.BuildConfig
 import com.hydraumc.control.update.AvailableUpdate
 import com.hydraumc.control.update.GitHubReleaseUpdater
 import com.hydraumc.control.update.UpdateCheckResult
 import com.hydraumc.control.update.UpdateDownloadResult
+import com.hydraumc.control.wear.WatchCompanionVersionStatus
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -68,6 +70,41 @@ class AppUpdateViewModel(application: Application) : AndroidViewModel(applicatio
     }
 
     fun openInstallPermissionSettings() = updater.openInstallPermissionSettings()
+
+    /**
+     * Status-only payload for a future authenticated Android-to-Watch
+     * transport. It contains no APK URL or installation command, by design.
+     */
+    fun currentWatchCompanionVersionStatus(): WatchCompanionVersionStatus =
+        WatchCompanionVersionStatus(
+            appVersion = BuildConfig.VERSION_NAME,
+            updateAvailable = when (mutableState.value) {
+                is AppUpdateState.Available,
+                is AppUpdateState.Downloading,
+                is AppUpdateState.InstallPermissionRequired,
+                AppUpdateState.Installing -> true
+                else -> false
+            },
+        )
+
+    /**
+     * Called when Android Control returns to the foreground after its
+     * per-app unknown-sources permission screen. The APK was verified before
+     * that screen was opened and is verified again here before launch.
+     */
+    fun resumeInstallAfterPermissionApproval() {
+        val permissionState = mutableState.value as? AppUpdateState.InstallPermissionRequired ?: return
+        if (!updater.canRequestPackageInstalls()) return
+        val apk = updater.cachedInstallableApk()
+        if (apk == null) {
+            mutableState.value = AppUpdateState.Failed(
+                "The downloaded update is no longer available or valid. Check for updates again.",
+            )
+            return
+        }
+        mutableState.value = AppUpdateState.Installing
+        updater.launchSystemInstaller(apk)
+    }
 
     /** Hides a startup prompt; Settings can always issue a new explicit check. */
     fun dismiss() {

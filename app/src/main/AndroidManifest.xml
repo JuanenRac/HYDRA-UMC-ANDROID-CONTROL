@@ -72,5 +72,18 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/update_file_paths" />
         </provider>
+
+        <!-- Receives only Data Layer messages from the Watch APK with this
+             same package name and signing certificate. It relays recognised
+             text through the normal authenticated Server session; it never
+             exposes the Server JWT to the Watch. -->
+        <service
+            android:name=".wear.WatchVoiceRelayService"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.google.android.gms.wearable.MESSAGE_RECEIVED" />
+                <data android:scheme="wear" android:host="*" android:pathPrefix="/hydra-umc/" />
+            </intent-filter>
+        </service>
     </application>
 </manifest>
