@@ -85,7 +85,17 @@ class RobotView(val raw: JSONObject) {
     // camera position, not vision/camera hardware. The real signal is
     // visionEnabled on the robot itself, OR its paired camera entry's own
     // connected flag.
-    val hasCamera: Boolean get() = raw.optBoolean("visionEnabled", false) || (raw.optJSONObject("camera")?.optBoolean("connected", false) ?: false)
+    // `visionEnabled` is the authoritative command-state once the server
+    // provides it. Earlier settings used only camera.connected, and A1/A2
+    // can still carry that legacy field as true while visionEnabled is false;
+    // OR-ing both fields made their switches impossible to turn off in the
+    // Android UI. Fall back only for genuinely old servers that omit the
+    // authoritative field completely.
+    val hasCamera: Boolean get() = if (raw.has("visionEnabled")) {
+        raw.optBoolean("visionEnabled", false)
+    } else {
+        raw.optJSONObject("camera")?.optBoolean("connected", false) ?: false
+    }
     val hasAtc: Boolean get() = raw.has("atc")
     val hasRack: Boolean get() = isModuleEnabled("rackSystem")
 
@@ -195,17 +205,21 @@ class RobotView(val raw: JSONObject) {
         }
     }
 
-    /** Toggles the pause state of playback. */
-    fun togglePaused() {
-        val newVal = !isPaused
+    /** Sets the pause state explicitly so combined robots cannot diverge. */
+    fun setPaused(paused: Boolean) {
         val pb = playbackState
-        pb.put("isPaused", newVal)
-        pb.put("paused", newVal)
-        pb.put("requestPause", newVal) // Explicit pause request for browser sync
+        pb.put("isPaused", paused)
+        pb.put("paused", paused)
+        pb.put("requestPause", paused)
         pb.put("isPlaying", true)
         pb.put("playing", true)
         pb.put("isFinished", false)
         pb.put("finished", false)
+    }
+
+    /** Toggles the pause state of playback for legacy local callers. */
+    fun togglePaused() {
+        setPaused(!isPaused)
     }
 
     /** Stops playback and resets state. */

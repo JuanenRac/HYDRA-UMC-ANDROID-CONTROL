@@ -11,6 +11,11 @@ at the time.
 
 ## [Unreleased] - Chinese and Japanese added to the string resources
 
+- Added typed `WatchVoiceTurn`, `WatchAssistantReply` and
+  `WatchSystemStatus` contracts plus authenticated Server client methods. The
+  future paired Wear receiver can relay a bounded voice turn and fetch a
+  read-only status card, but it cannot issue a robot command.
+
 - New `values-zh/strings.xml` (Simplified Chinese) and `values-ja/strings.xml`
   (Japanese) - full translation of all 147 strings, matching the coverage
   of the existing values-es/values-de/values-fr/values-it resource sets.

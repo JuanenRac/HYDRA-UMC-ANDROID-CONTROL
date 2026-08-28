@@ -170,8 +170,8 @@ class MainActivity : FragmentActivity() {
             // stop waiting and tell the user instead of leaving
             // pendingGlobalEstop set forever with no feedback at all. Not a
             // full fix (a real fix needs a Service/WorkManager path that
-            // doesn't depend on the UI or a live robots.value at all - see
-            // mejoras_futuras.txt), but an operator who taps the E-STOP
+            // doesn't depend on the UI or a live robots.value at all), but
+            // an operator who taps the E-STOP
             // widget and gets nothing at least now finds out their tap
             // didn't reach any robot, rather than assuming it did.
             LaunchedEffect(pendingGlobalEstop) {
@@ -211,6 +211,14 @@ class MainActivity : FragmentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         handleIntent(intent)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // A user may have just approved Android's per-app "install unknown
+        // apps" setting. Resume only the verified APK already in our cache;
+        // no update is downloaded or installed merely because the app opens.
+        appUpdateViewModel.resumeInstallAfterPermissionApproval()
     }
 
     private fun handleIntent(intent: Intent?) {

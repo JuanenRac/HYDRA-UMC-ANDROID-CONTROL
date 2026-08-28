@@ -1,7 +1,9 @@
 # Gradle
 .gradle/
+.kotlin/
 build/
 app/build/
+dist/
 
 # Local dev machine config - contains the local Android SDK path, never portable between machines
 local.properties
@@ -15,6 +17,7 @@ captures/
 # Keystores - never commit signing material
 *.jks
 *.keystore
+keystore.properties
 
 # OS / editor
 .DS_Store

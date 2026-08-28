@@ -9,6 +9,46 @@ plugins {
     alias(libs.plugins.kotlin.compose)
 }
 
+import java.util.Properties
+
+// A GitHub-release APK must be signed with a private, persistent certificate
+// or Android will reject it as an update. Secrets live only in the ignored
+// keystore.properties file (or CI environment variables), never in Git.
+val releaseSigningProperties = Properties().also { properties ->
+    val localSigningFile = rootProject.file("keystore.properties")
+    if (localSigningFile.isFile) {
+        localSigningFile.inputStream().use(properties::load)
+    }
+}
+
+fun releaseSigningValue(key: String, environmentKey: String): String? =
+    providers.gradleProperty(key).orNull
+        ?: System.getenv(environmentKey)
+        ?: releaseSigningProperties.getProperty(key)
+
+val releaseStoreFilePath = releaseSigningValue(
+    "hydraUmcReleaseStoreFile",
+    "HYDRA_UMC_RELEASE_STORE_FILE",
+)
+val releaseStorePassword = releaseSigningValue(
+    "hydraUmcReleaseStorePassword",
+    "HYDRA_UMC_RELEASE_STORE_PASSWORD",
+)
+val releaseKeyAlias = releaseSigningValue(
+    "hydraUmcReleaseKeyAlias",
+    "HYDRA_UMC_RELEASE_KEY_ALIAS",
+)
+val releaseKeyPassword = releaseSigningValue(
+    "hydraUmcReleaseKeyPassword",
+    "HYDRA_UMC_RELEASE_KEY_PASSWORD",
+)
+val hasPrivateReleaseSigning = listOf(
+    releaseStoreFilePath,
+    releaseStorePassword,
+    releaseKeyAlias,
+    releaseKeyPassword,
+).all { !it.isNullOrBlank() }
+
 // =============================================================================
 // Ecosystem-wide auto version bump ("odometer" rule, base 10) - see
 // CHANGELOG.md and version.properties. This block runs at Gradle
@@ -110,7 +150,20 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            signingConfig = signingConfigs.getByName("debug") // Use debug key for now for easy testing
+            // Local developer builds retain the debug key when no private
+            // configuration exists. The publication scripts explicitly
+            // refuse that fallback, so it can never be mistaken for a
+            // GitHub update-channel artifact.
+            signingConfig = if (hasPrivateReleaseSigning) {
+                signingConfigs.maybeCreate("hydraUmcRelease").apply {
+                    storeFile = file(requireNotNull(releaseStoreFilePath))
+                    storePassword = requireNotNull(releaseStorePassword)
+                    keyAlias = requireNotNull(releaseKeyAlias)
+                    keyPassword = requireNotNull(releaseKeyPassword)
+                }
+            } else {
+                signingConfigs.getByName("debug")
+            }
         }
     }
 
@@ -169,6 +222,10 @@ dependencies {
     // holds are exactly the kind of secret plain DataStore/SharedPreferences
     // was never meant to store unencrypted.
     implementation(libs.androidx.security.crypto)
+
+    // Private, end-to-end encrypted Watch <-> phone transport. Google Play
+    // services accepts only the same applicationId signed with the same key.
+    implementation(libs.play.services.wearable)
 
     // Testing
     testImplementation(libs.junit)

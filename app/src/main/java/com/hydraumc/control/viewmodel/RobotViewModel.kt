@@ -24,6 +24,9 @@ import com.hydraumc.control.network.HydraBleClient
 import com.hydraumc.control.network.StateCache
 import com.hydraumc.control.network.WsStatus
 import com.hydraumc.control.network.scanSubnets
+import com.hydraumc.control.wear.WatchAssistantReply
+import com.hydraumc.control.wear.WatchSystemStatus
+import com.hydraumc.control.wear.WatchVoiceTurn
 import com.hydraumc.control.util.NotificationHelper
 import kotlinx.coroutines.launch
 import android.bluetooth.BluetoothAdapter
@@ -219,6 +222,11 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
     val isBiometricEnabled = mutableStateOf(value = false)
 
     val selectedCameraId = mutableIntStateOf(1)
+    // Read-only relay state for the future Android Wear Data Layer receiver.
+    // It is deliberately separate from robot state: a voice reply must never
+    // be mistaken for a physical command or applied optimistically.
+    val latestWatchVoiceReply = mutableStateOf<WatchAssistantReply?>(null)
+    val latestWatchSystemStatus = mutableStateOf<WatchSystemStatus?>(null)
 
     // Whether the app process is currently in the foreground. viewModelScope
     // (and the WebSocket it owns) deliberately keeps running while
@@ -396,6 +404,41 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
 
     fun clearLogs() {
         telemetryLogs.value = emptyList()
+    }
+
+    /**
+     * Entry point for a paired Watch transport. The transport itself is
+     * hardware-dependent, but the authenticated Android -> Server -> Voice
+     * UI relay is real and testable now. A reply only carries text/status;
+     * it never invokes sendAtomicCommand or changes robot state.
+     */
+    fun relayWatchVoiceTurn(requestId: String, transcript: String, locale: String) {
+        val client = apiClient ?: run {
+            lastError.value = "Connect to HYDRA-UMC-SERVER before relaying a Watch voice request."
+            return
+        }
+        viewModelScope.launch {
+            try {
+                val reply = client.postWatchVoiceTurn(WatchVoiceTurn(requestId, transcript, locale))
+                latestWatchVoiceReply.value = reply
+                logTelemetry("Watch voice reply received: ${reply.level}; confirmation=${reply.requiresConfirmation}")
+            } catch (error: Exception) {
+                lastError.value = "Watch voice relay failed: ${error.message}"
+                logTelemetry("Watch voice relay failed")
+            }
+        }
+    }
+
+    /** Retrieves the safe health-card shape for the paired Wear transport. */
+    fun refreshWatchSystemStatus() {
+        val client = apiClient ?: return
+        viewModelScope.launch {
+            try {
+                latestWatchSystemStatus.value = client.getWatchSystemStatus()
+            } catch (error: Exception) {
+                logTelemetry("Watch system-status refresh failed")
+            }
+        }
     }
 
     fun logout() {
@@ -895,7 +938,17 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
             "enable" -> sendAtomicCommand(command, propagateToCombined = true) { it.setOnline(true) }
             "disable" -> sendAtomicCommand(command, propagateToCombined = true) { it.setOnline(false) }
             "play" -> sendAtomicCommand(command, propagateToCombined = true) { it.setPlaying(true) }
-            "pause" -> sendAtomicCommand(command, propagateToCombined = true) { it.togglePaused() }
+            // Pause is an explicit desired state, computed once from the
+            // selected robot and applied identically to its combined group.
+            // Toggling every member independently allowed a stale A1/A2 pair
+            // to flip in opposite directions, while SERVER/STUDIO used a
+            // different current member as their toggle source.
+            "pause" -> {
+                val robotId = selectedRobotId.value ?: return
+                val paused = !(state.robotById(robotId)?.isPaused ?: false)
+                val params = JSONObject().put("paused", paused)
+                sendAtomicCommand(command, params, propagateToCombined = true) { it.setPaused(paused) }
+            }
             "stop" -> sendAtomicCommand(command, propagateToCombined = true) { it.stop() }
             else -> lastError.value = getApplication<Application>().getString(R.string.error_unknown_command, command)
         }
@@ -938,7 +991,13 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
     /** Toggles a robot's vision system on/off from the Camera screen (server.ts's own "vision" command). Takes an explicit robotId since the camera being browsed isn't necessarily the globally selected control robot. */
     fun setVisionEnabled(robotId: Int, enabled: Boolean) {
         val params = JSONObject().put("enabled", enabled)
-        sendAtomicCommand("vision", params, explicitRobotId = robotId) { r -> r.raw.put("visionEnabled", enabled) }
+        sendAtomicCommand("vision", params, explicitRobotId = robotId) { r ->
+            r.raw.put("visionEnabled", enabled)
+            // Keep the legacy embedded camera mirror aligned with the
+            // authoritative robot value. A1/A2 used to retain connected=true
+            // here after vision was disabled, unlike A3-A8.
+            r.raw.optJSONObject("camera")?.put("connected", enabled)
+        }
     }
 
     fun changeTool(slot: Int) {

@@ -36,6 +36,9 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
+import com.hydraumc.control.wear.WatchAssistantReply
+import com.hydraumc.control.wear.WatchSystemStatus
+import com.hydraumc.control.wear.WatchVoiceTurn
 import org.json.JSONObject
 import java.io.IOException
 import java.util.concurrent.TimeUnit
@@ -138,6 +141,30 @@ class HydraApiClient(host: String, port: Int, private val client: OkHttpClient =
             .header("Authorization", "Bearer ${authToken ?: ""}")
             .build()
         executeExpectingJson(request)
+    }
+
+    /**
+     * Relays a recognised Watch voice turn through the authenticated Server
+     * boundary. Server owns the Voice UI credential; Android and the watch
+     * never receive it and this route cannot actuate a robot.
+     */
+    suspend fun postWatchVoiceTurn(turn: WatchVoiceTurn): WatchAssistantReply = withContext(Dispatchers.IO) {
+        val request = Request.Builder()
+            .url("$baseUrl/api/voice/turn")
+            .header("Authorization", "Bearer ${authToken ?: ""}")
+            .post(turn.toJson().toString().toRequestBody(JSON_MEDIA_TYPE))
+            .build()
+        WatchAssistantReply.fromJson(executeExpectingJson(request))
+    }
+
+    /** Fetches the small authenticated health card intended for Wear surfaces. */
+    suspend fun getWatchSystemStatus(): WatchSystemStatus = withContext(Dispatchers.IO) {
+        val request = Request.Builder()
+            .url("$baseUrl/api/watch/system-status")
+            .header("Authorization", "Bearer ${authToken ?: ""}")
+            .get()
+            .build()
+        WatchSystemStatus.fromJson(executeExpectingJson(request))
     }
 
     /**
