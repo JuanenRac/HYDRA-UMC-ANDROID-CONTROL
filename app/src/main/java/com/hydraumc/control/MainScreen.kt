@@ -31,6 +31,8 @@ import androidx.compose.ui.text.withStyle
 import com.hydraumc.control.ui.*
 import com.hydraumc.control.ui.theme.metallicIndustrial
 import com.hydraumc.control.viewmodel.RobotViewModel
+import com.hydraumc.control.viewmodel.AppUpdateState
+import com.hydraumc.control.viewmodel.AppUpdateViewModel
 
 /**
  * Sealed class defining the different screens available for navigation.
@@ -63,13 +65,18 @@ val items = listOf(Screen.Dashboard, Screen.Control, Screen.Camera, Screen.Three
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen(viewModel: RobotViewModel, onEnableBluetooth: () -> Unit = {}) {
+fun MainScreen(
+    viewModel: RobotViewModel,
+    updateViewModel: AppUpdateViewModel,
+    onEnableBluetooth: () -> Unit = {},
+) {
     /** The navigation controller for the entire app. */
     val navController = rememberNavController()
     var showAboutDialog by remember { mutableStateOf(value = false) }
     var showProfileDialog by remember { mutableStateOf(value = false) }
     var serverDropdownExpanded by remember { mutableStateOf(value = false) }
     val discoveredServers = viewModel.discoveredServers.value
+    val updateState by updateViewModel.state.collectAsState()
 
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
@@ -104,6 +111,23 @@ fun MainScreen(viewModel: RobotViewModel, onEnableBluetooth: () -> Unit = {}) {
     
     if (showProfileDialog) {
         UserProfileDialog(viewModel = viewModel, onDismiss = { showProfileDialog = false })
+    }
+
+    // Startup checks only fetch release metadata. The actual APK transfer and
+    // Android installer are both initiated by the operator from this prompt.
+    if (updateState is AppUpdateState.Available) {
+        val update = (updateState as AppUpdateState.Available).update
+        AlertDialog(
+            onDismissRequest = updateViewModel::dismiss,
+            title = { Text(stringResource(R.string.app_updates)) },
+            text = { UpdateAvailableContent(update) { updateViewModel.downloadAndInstall(update) } },
+            confirmButton = {},
+            dismissButton = {
+                TextButton(onClick = updateViewModel::dismiss) {
+                    Text(stringResource(R.string.update_later))
+                }
+            },
+        )
     }
 
     Scaffold(
@@ -276,7 +300,7 @@ fun MainScreen(viewModel: RobotViewModel, onEnableBluetooth: () -> Unit = {}) {
             composable(Screen.Camera.route) { CameraScreen(viewModel) }
             composable(Screen.ThreeD.route) { ThreeDScreen(viewModel) }
             composable(Screen.Telemetry.route) { TelemetryScreen(viewModel) }
-            composable(Screen.Settings.route) { SettingsScreen(viewModel, onEnableBluetooth) }
+            composable(Screen.Settings.route) { SettingsScreen(viewModel, updateViewModel, onEnableBluetooth) }
         }
     }
 }

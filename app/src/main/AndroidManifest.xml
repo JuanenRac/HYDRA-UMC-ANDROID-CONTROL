@@ -19,6 +19,9 @@
     <uses-permission android:name="android.permission.NEARBY_WIFI_DEVICES" android:usesPermissionFlags="neverForLocation" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Required only to hand a verified update APK to Android's system
+         package installer. The app never installs packages silently. -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
     <!-- HYDRA-UMC-SERVER's server.ts (the backend this app talks to - a
          separate repo from HYDRA-UMC STUDIO's own web frontend since the two
@@ -56,5 +59,18 @@
             <meta-data android:name="android.appwidget.provider"
                 android:resource="@xml/global_stop_widget_info" />
         </receiver>
+
+        <!-- Shares an APK held in the app cache with Android's package
+             installer through a temporary content:// URI; no file:// URI or
+             broad external-storage permission is needed. -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.updateprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/update_file_paths" />
+        </provider>
     </application>
 </manifest>

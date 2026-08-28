@@ -151,4 +151,19 @@
     <string name="handshake_waiting">Esperando Handshake de la placa...</string>
     <string name="dynamics_config">CONFIGURACIÓN DINÁMICA</string>
     <string name="e_stop">PARADA DE EMERGENCIA</string>
+    <!-- Actualizaciones de la aplicación -->
+    <string name="tab_updates">Actualizaciones</string>
+    <string name="app_updates">Actualizaciones de la aplicación</string>
+    <string name="update_current_version">Versión instalada: %1$s</string>
+    <string name="update_check">Buscar actualización</string>
+    <string name="update_checking">Consultando GitHub Releases…</string>
+    <string name="update_up_to_date">Este dispositivo ya tiene la última versión estable.</string>
+    <string name="update_available">La versión %1$s está disponible.</string>
+    <string name="update_release_notes">Notas de la versión</string>
+    <string name="update_download_install">Descargar e instalar</string>
+    <string name="update_downloading">Descargando actualización: %1$d%%</string>
+    <string name="update_install_permission">Permite que esta aplicación instale actualizaciones en los Ajustes de Android, vuelve aquí y busca de nuevo.</string>
+    <string name="update_allow_install">Permitir instalación</string>
+    <string name="update_installing">El instalador de paquetes de Android está listo para verificar e instalar la actualización.</string>
+    <string name="update_later">Más tarde</string>
 </resources>

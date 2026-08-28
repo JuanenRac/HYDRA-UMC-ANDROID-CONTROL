@@ -23,6 +23,10 @@ at the time.
 - New `README_zho.md` / `README_jpn.md` documentation translations, plus
   the 5 existing README files' language selectors updated to link them.
 
+## [0.2.9]
+
+- Build version synchronized with `hydra-umc.project.json` and the repository-native version source.
+
 ## [0.2.8]
 
 - Build version synchronized with `hydra-umc.project.json` and the repository-native version source.
