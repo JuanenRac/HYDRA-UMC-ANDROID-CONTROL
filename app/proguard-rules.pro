@@ -37,3 +37,20 @@
 -dontwarn org.openjsse.javax.net.ssl.SSLParameters
 -dontwarn org.openjsse.javax.net.ssl.SSLSocket
 -dontwarn org.openjsse.net.ssl.OpenJSSE
+
+# Google Tink (androidx.security.crypto's own EncryptedSharedPreferences/
+# MasterKey, used by AuthPrefs.kt to store the login session - read at app
+# startup, in RobotViewModel's own init) registers its crypto primitives
+# via reflection at runtime (Class.forName()-style lookups R8's static
+# reachability analysis can't see), so R8 silently strips almost the
+# entire com.google.crypto.tink.** tree as "unreachable" dead code without
+# this - confirmed against the first real release build's own
+# app/build/outputs/mapping/release/usage.txt, which listed ~4390 lines of
+# removed Tink classes. That crashed the app before any UI ever rendered
+# (a stripped class MasterKey.Builder needs at runtime, not a compile-time
+# error, since R8 has no way to know these are still needed). Standard,
+# widely-documented keep rule for this exact library.
+-keep class com.google.crypto.tink.** { *; }
+-keep interface com.google.crypto.tink.** { *; }
+-keepclassmembers class com.google.crypto.tink.** { *; }
+-dontwarn com.google.crypto.tink.**
