@@ -52,9 +52,27 @@ at the time.
   always has - the same gap every other non-STUDIO client (iOS, DSI,
   SUITE) still has for every model besides Parol6, not a regression.
 
-## [0.3.2] - Real diagnostics for the still-open "3D viewport shows no robot" report
+## [0.3.2] - Fixed a release-only crash on launch, plus real diagnostics for the still-open "3D viewport shows no robot" report
 
-- `ThreeDScreen.kt`'s embedded WebView had no error surface at all - a
+- **Critical fix**: every release build up to and including v0.3.1 crashed
+  immediately on launch (before any UI, including the splash screen, ever
+  rendered) once installed from a real device instead of `gradlew
+  installDebug`. Root cause: R8 (only ever exercised by a real release
+  build - debug builds skip it entirely, so this was the first time it
+  ran against this app's actual code) silently stripped ~4390 lines of
+  `com.google.crypto.tink.**` classes as unreachable dead code, confirmed
+  by reading the release build's own `app/build/outputs/mapping/release/
+  usage.txt`. Tink is what `androidx.security.crypto`'s
+  `EncryptedSharedPreferences`/`MasterKey` use internally (via reflection
+  R8's static analysis can't see) to store the login session -
+  `AuthPrefs.kt`, read at app startup inside `RobotViewModel`'s own
+  `init`, so the missing classes crashed the process before a single
+  screen could compose. Added the standard, widely-documented Tink keep
+  rules to `app/proguard-rules.pro`; the rebuilt release now retains all
+  1419 real Tink classes the encrypted-prefs path needs (re-verified
+  against the same `usage.txt`/`mapping.txt`).
+- Real diagnostics for the still-open "3D viewport shows no robot" report.
+  `ThreeDScreen.kt`'s embedded WebView had no error surface at all - a
   real page-load failure and a page that loads fine but fails to render
   the WebGL viewport looked identical from outside (both just blank).
   `WebView.setWebContentsDebuggingEnabled` (debug builds only - a release
