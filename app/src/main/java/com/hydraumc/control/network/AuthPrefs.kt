@@ -20,9 +20,24 @@ import android.content.SharedPreferences
 import android.util.Log
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.util.concurrent.Executors
+
+// Real defensive isolation, from the same investigation as cachedPrefs
+// below (see its own comment): a single dedicated thread instead of the
+// shared Dispatchers.IO pool, so this class's own AndroidKeyStore/
+// EncryptedSharedPreferences work is NEVER at the mercy of however much
+// unrelated blocking I/O (Discovery.kt's own subnet scan launches up to
+// SCAN_CONCURRENCY probes on Dispatchers.IO at the very same cold-start
+// moment RobotViewModel's init{} needs this class) happens to be sharing
+// that pool at the same time. One thread is enough - every call here goes
+// through the same synchronized openEncryptedPrefs() gate below anyway,
+// so there is never real parallel work to lose by not having more.
+private val authPrefsDispatcher = Executors.newSingleThreadExecutor { r ->
+    Thread(r, "AuthPrefs").apply { isDaemon = true }
+}.asCoroutineDispatcher()
 
 private const val PREFS_FILE_NAME = "auth_prefs_encrypted"
 private const val KEY_USERNAME = "username"
@@ -48,7 +63,33 @@ class AuthPrefs(private val context: Context) {
         runCatching { File(context.filesDir, "datastore/auth_prefs.preferences_pb").delete() }
     }
 
+    // Real bug this fixes, live-reproduced with timing logs: a bare
+    // `authPrefs.loadAuth()` call on app cold start took 17.5 SECONDS -
+    // traced to createEncryptedPrefs() below being called fresh on every
+    // single loadAuth()/saveAuth()/clearAuth() invocation instead of once.
+    // MasterKey.Builder(context).build() is a real AndroidKeyStore
+    // round-trip (key generation or retrieval, StrongBox/TEE-backed on
+    // devices that support it), not a cheap in-memory object - recreating
+    // it on every call, rather than once per AuthPrefs instance (itself
+    // already a singleton for this ViewModel's lifetime - see
+    // RobotViewModel's own `private val authPrefs = AuthPrefs(application)`),
+    // was paying that same cost repeatedly for no reason. Reported as "el
+    // splash se queda negro mucho rato" - MainActivity's own splash-gating
+    // logic was working correctly the whole time; it was faithfully
+    // waiting on this real 17.5s stall.
+    @Volatile private var cachedPrefs: SharedPreferences? = null
+
     private fun openEncryptedPrefs(): SharedPreferences {
+        cachedPrefs?.let { return it }
+        return synchronized(this) {
+            cachedPrefs?.let { return@synchronized it }
+            val prefs = openEncryptedPrefsUncached()
+            cachedPrefs = prefs
+            prefs
+        }
+    }
+
+    private fun openEncryptedPrefsUncached(): SharedPreferences {
         return try {
             createEncryptedPrefs()
         } catch (e: Exception) {
@@ -128,7 +169,7 @@ class AuthPrefs(private val context: Context) {
         }
     }
 
-    suspend fun loadAuth(): UserProfile = withContext(Dispatchers.IO) {
+    suspend fun loadAuth(): UserProfile = withContext(authPrefsDispatcher) {
         val prefs = openEncryptedPrefs()
         UserProfile(
             username = prefs.getString(KEY_USERNAME, "") ?: "",
@@ -141,7 +182,7 @@ class AuthPrefs(private val context: Context) {
         )
     }
 
-    suspend fun saveAuth(profile: UserProfile) = withContext(Dispatchers.IO) {
+    suspend fun saveAuth(profile: UserProfile) = withContext(authPrefsDispatcher) {
         openEncryptedPrefs().edit()
             .putString(KEY_USERNAME, profile.username)
             .putString(KEY_PASSWORD, profile.password)
@@ -154,7 +195,7 @@ class AuthPrefs(private val context: Context) {
         Unit
     }
 
-    suspend fun clearAuth() = withContext(Dispatchers.IO) {
+    suspend fun clearAuth() = withContext(authPrefsDispatcher) {
         // Clears the bearer token too, not just the "logged in" flag - without
         // this, connect()/setupWebSocket() (which read loadAuth().token
         // directly as a fallback, not gated on isLoggedIn) would keep
