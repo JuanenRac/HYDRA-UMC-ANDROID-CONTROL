@@ -161,6 +161,9 @@
     <string name="update_version_new">Nuova versione: v%1$s</string>
     <string name="update_view_changes">Vedi le modifiche</string>
     <string name="update_close">Chiudi</string>
+    <!-- 3D viewport fullscreen landscape mode -->
+    <string name="threed_fullscreen">Schermo intero</string>
+    <string name="threed_exit_fullscreen">Esci da schermo intero</string>
     <string name="update_download_install">Scarica e installa</string>
     <string name="update_downloading">Download dell’aggiornamento: %1$d%%</string>
     <string name="update_install_permission">Consenti a questa app di installare aggiornamenti nelle Impostazioni Android, quindi torna qui e controlla di nuovo.</string>

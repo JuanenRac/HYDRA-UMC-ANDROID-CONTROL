@@ -162,6 +162,9 @@
     <string name="update_version_new">Nueva versión: v%1$s</string>
     <string name="update_view_changes">Ver cambios</string>
     <string name="update_close">Cerrar</string>
+    <!-- 3D viewport fullscreen landscape mode -->
+    <string name="threed_fullscreen">Pantalla completa</string>
+    <string name="threed_exit_fullscreen">Salir de pantalla completa</string>
     <string name="update_download_install">Descargar e instalar</string>
     <string name="update_downloading">Descargando actualización: %1$d%%</string>
     <string name="update_install_permission">Permite que esta aplicación instale actualizaciones en los Ajustes de Android, vuelve aquí y busca de nuevo.</string>
