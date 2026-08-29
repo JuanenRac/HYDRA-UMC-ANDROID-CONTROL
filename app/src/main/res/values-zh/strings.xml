@@ -162,6 +162,9 @@
     <string name="update_version_new">新版本：v%1$s</string>
     <string name="update_view_changes">查看更新内容</string>
     <string name="update_close">关闭</string>
+    <!-- 3D viewport fullscreen landscape mode -->
+    <string name="threed_fullscreen">全屏</string>
+    <string name="threed_exit_fullscreen">退出全屏</string>
     <string name="update_download_install">下载并安装</string>
     <string name="update_downloading">正在下载更新：%1$d%%</string>
     <string name="update_install_permission">请在 Android 设置中允许此应用安装更新，然后返回此处再次检查。</string>

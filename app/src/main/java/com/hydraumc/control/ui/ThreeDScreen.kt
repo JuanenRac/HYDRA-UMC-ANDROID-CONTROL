@@ -5,6 +5,9 @@
 // =============================================================================
 package com.hydraumc.control.ui
 
+import android.app.Activity
+import android.content.pm.ActivityInfo
+import android.content.res.Configuration
 import android.util.Log
 import android.webkit.ConsoleMessage
 import android.webkit.WebChromeClient
@@ -19,6 +22,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -26,9 +31,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import com.hydraumc.control.R
 import com.hydraumc.control.viewmodel.RobotViewModel
 
 /**
@@ -47,7 +56,24 @@ fun ThreeDScreen(viewModel: RobotViewModel) {
     val selectedId = viewModel.selectedRobotId.value ?: 1
     val robots = viewModel.robots.value
     val selectedRobot = robots.find { it.id == selectedId }
-    
+
+    // Real feature, not a bug fix: a manual fullscreen-landscape mode with
+    // the jog joystick overlaid transparently on each side (game-controller
+    // style - JoystickXYPad left thumb, JoystickZColumn right thumb), for
+    // operating a robot while watching its live 3D view fill the whole
+    // screen. Reuses MainScreen.kt's EXISTING isLandscape-triggered
+    // fullscreen bypass (Surface(fillMaxSize) { ThreeDScreen(...) }, which
+    // already fires whenever the physical device is rotated while on this
+    // tab) rather than duplicating that logic - this button just forces the
+    // Activity's requested orientation to landscape, which makes
+    // LocalConfiguration's own orientation flip reactively and sails
+    // straight into that same already-working bypass. No new fullscreen
+    // code path to get wrong, only a new way to reach the existing one.
+    val context = LocalContext.current
+    val activity = context as? Activity
+    val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
+    var jogStep by remember { mutableStateOf(1.0) }
+
     // Key used to force WebView recreation on refresh
     var refreshKey by remember { mutableIntStateOf(0) }
 
@@ -248,9 +274,100 @@ fun ThreeDScreen(viewModel: RobotViewModel) {
                     color = Color.White.copy(alpha = 0.7f)
                 )
             }
+            if (!isLandscape) {
+                // Only offered from the normal portrait view - once already
+                // in the fullscreen landscape mode, the corner "exit"
+                // button below is the way back, not this same icon again.
+                IconButton(onClick = { activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE }) {
+                    Icon(Icons.Default.Fullscreen, contentDescription = stringResource(R.string.threed_fullscreen), tint = Color.White)
+                }
+            }
             IconButton(onClick = { refreshKey++ }) {
                 Icon(Icons.Default.Refresh, contentDescription = "Refresh", tint = Color.White)
             }
         }
+
+        if (isLandscape) {
+            FullscreenJogOverlay(
+                viewModel = viewModel,
+                selectedRobot = selectedRobot,
+                jogStep = jogStep,
+                onJogStepChange = { jogStep = it },
+                onExit = { activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED },
+            )
+        }
+    }
+}
+
+/**
+ * The joystick overlay + exit button shown in ThreeDScreen's fullscreen
+ * landscape mode - see that composable's own comment for why this mode
+ * exists and how it's reached. Semi-transparent so the live 3D view stays
+ * fully visible underneath, positioned like a game controller's two
+ * thumbsticks (XY pad bottom-left, Z column bottom-right) rather than
+ * bunched together the way the portrait Control screen shows them.
+ */
+@Composable
+private fun FullscreenJogOverlay(
+    viewModel: RobotViewModel,
+    selectedRobot: com.hydraumc.control.viewmodel.RobotState?,
+    jogStep: Double,
+    onJogStepChange: (Double) -> Unit,
+    onExit: () -> Unit,
+) {
+    val enabled = selectedRobot?.online == true
+    val onJog: (Int, Int, Int) -> Unit = { dx, dy, dz ->
+        viewModel.jogXYZ("robot", dx, dy, dz, jogStep)
+    }
+
+    // Exit button - top-right corner, mirroring the control bar's own
+    // top-left placement so it's never confused with the refresh/fullscreen
+    // buttons that only make sense in the OTHER mode.
+    IconButton(
+        onClick = onExit,
+        modifier = Modifier
+            .fillMaxSize()
+            .wrapContentSize(Alignment.TopEnd)
+            .padding(12.dp)
+            .background(Color.Black.copy(alpha = 0.6f), RoundedCornerShape(8.dp)),
+    ) {
+        Icon(Icons.Default.Close, contentDescription = stringResource(R.string.threed_exit_fullscreen), tint = Color.White)
+    }
+
+    // Step-size chips - top-center, out of the way of both thumb zones.
+    Row(
+        modifier = Modifier
+            .fillMaxSize()
+            .wrapContentSize(Alignment.TopCenter)
+            .padding(top = 12.dp)
+            .background(Color.Black.copy(alpha = 0.6f), RoundedCornerShape(8.dp))
+            .padding(horizontal = 8.dp, vertical = 4.dp),
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        listOf(1.0, 10.0, 50.0).forEach { size ->
+            FilterChip(selected = jogStep == size, onClick = { onJogStepChange(size) }, label = { Text("${size.toInt()}mm") })
+        }
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .wrapContentSize(Alignment.BottomStart)
+            .padding(20.dp)
+            .background(Color.Black.copy(alpha = 0.35f), RoundedCornerShape(12.dp))
+            .padding(10.dp),
+    ) {
+        JoystickXYPad(onJog = onJog, enabled = enabled)
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .wrapContentSize(Alignment.BottomEnd)
+            .padding(20.dp)
+            .background(Color.Black.copy(alpha = 0.35f), RoundedCornerShape(12.dp))
+            .padding(10.dp),
+    ) {
+        JoystickZColumn(onJog = onJog, enabled = enabled)
     }
 }

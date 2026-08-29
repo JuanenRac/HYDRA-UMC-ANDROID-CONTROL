@@ -55,6 +55,8 @@ import kotlinx.coroutines.launch
 
 private const val REPEAT_MS = 150L
 
+private val padBtnSize = 40.dp
+
 /**
  * XYZ jog D-pad - press-and-hold repeat (fires immediately on press, then
  * every REPEAT_MS while held), diagonals send both X and Y in one call
@@ -76,8 +78,26 @@ fun Joystick3D(
     enabled: Boolean = true,
     zEnabled: Boolean = enabled,
 ) {
-    val padBtnSize = 40.dp
+    Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        JoystickXYPad(onJog = onJog, enabled = enabled)
+        JoystickZColumn(onJog = onJog, enabled = zEnabled)
+    }
+}
 
+/**
+ * Just the XY pad half of [Joystick3D] - split out so a fullscreen
+ * landscape layout (ThreeDScreen.kt's own fullscreen mode) can place it
+ * and [JoystickZColumn] on opposite sides of the screen like a game
+ * controller's two thumbsticks, instead of only ever together as one
+ * fixed unit. [Joystick3D] itself is unchanged for every existing caller
+ * (ControlScreen.kt) - this is purely an extraction, not a new control.
+ */
+@Composable
+fun JoystickXYPad(
+    onJog: (dx: Int, dy: Int, dz: Int) -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+) {
     @Composable
     fun JogButton(
         dx: Int,
@@ -119,6 +139,42 @@ fun Joystick3D(
         }
     }
 
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        // 3x3 grid, diagonals included (matches a typical jog pendant
+        // layout) plus a non-interactive center crosshair marker.
+        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            JogButton(-1, 1, 0, Icons.Filled.NorthWest, active = enabled)
+            JogButton(0, 1, 0, Icons.Filled.North, active = enabled)
+            JogButton(1, 1, 0, Icons.Filled.NorthEast, active = enabled)
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            JogButton(-1, 0, 0, Icons.Filled.West, active = enabled)
+            Box(
+                modifier = Modifier.size(padBtnSize),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(Icons.Filled.GpsFixed, contentDescription = null, tint = Color(0xFF334155), modifier = Modifier.size(16.dp))
+            }
+            JogButton(1, 0, 0, Icons.Filled.East, active = enabled)
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            JogButton(-1, -1, 0, Icons.Filled.SouthWest, active = enabled)
+            JogButton(0, -1, 0, Icons.Filled.South, active = enabled)
+            JogButton(1, -1, 0, Icons.Filled.SouthEast, active = enabled)
+        }
+    }
+}
+
+/**
+ * Just the Z column half of [Joystick3D] - see [JoystickXYPad]'s own doc
+ * for why this is split out.
+ */
+@Composable
+fun JoystickZColumn(
+    onJog: (dx: Int, dy: Int, dz: Int) -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+) {
     @Composable
     fun ZButton(
         dz: Int,
@@ -160,44 +216,15 @@ fun Joystick3D(
         }
     }
 
-    Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-        // XY pad - 3x3 grid, diagonals included (matches a typical jog
-        // pendant layout) plus a non-interactive center crosshair marker.
-        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                JogButton(-1, 1, 0, Icons.Filled.NorthWest, active = enabled)
-                JogButton(0, 1, 0, Icons.Filled.North, active = enabled)
-                JogButton(1, 1, 0, Icons.Filled.NorthEast, active = enabled)
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                JogButton(-1, 0, 0, Icons.Filled.West, active = enabled)
-                Box(
-                    modifier = Modifier.size(padBtnSize),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Icon(Icons.Filled.GpsFixed, contentDescription = null, tint = Color(0xFF334155), modifier = Modifier.size(16.dp))
-                }
-                JogButton(1, 0, 0, Icons.Filled.East, active = enabled)
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                JogButton(-1, -1, 0, Icons.Filled.SouthWest, active = enabled)
-                JogButton(0, -1, 0, Icons.Filled.South, active = enabled)
-                JogButton(1, -1, 0, Icons.Filled.SouthEast, active = enabled)
-            }
-        }
-
-        // Z column - always rendered (matches STUDIO's own Joystick3D
-        // layout exactly, see this file's header comment), but gated by
-        // its own zEnabled rather than the XY pad's `enabled` - see this
-        // function's own `zEnabled` doc.
-        Column(
-            verticalArrangement = Arrangement.spacedBy(4.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.width(padBtnSize).height(padBtnSize * 3 + 8.dp),
-        ) {
-            val zHeight = (padBtnSize * 3 + 8.dp - 4.dp) / 2
-            ZButton(1, Icons.Filled.North, active = zEnabled, tint = Color(0xFF10B981), height = zHeight)
-            ZButton(-1, Icons.Filled.South, active = zEnabled, tint = Color(0xFFF43F5E), height = zHeight)
-        }
+    // Always rendered (matches STUDIO's own Joystick3D layout exactly, see
+    // this file's header comment), gating is purely via `enabled`.
+    Column(
+        modifier = modifier.width(padBtnSize).height(padBtnSize * 3 + 8.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        val zHeight = (padBtnSize * 3 + 8.dp - 4.dp) / 2
+        ZButton(1, Icons.Filled.North, active = enabled, tint = Color(0xFF10B981), height = zHeight)
+        ZButton(-1, Icons.Filled.South, active = enabled, tint = Color(0xFFF43F5E), height = zHeight)
     }
 }

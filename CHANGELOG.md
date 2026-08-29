@@ -52,6 +52,25 @@ at the time.
   always has - the same gap every other non-STUDIO client (iOS, DSI,
   SUITE) still has for every model besides Parol6, not a regression.
 
+## [0.3.8] - Fullscreen landscape 3D view with an overlaid jog joystick
+
+- **New: a fullscreen, landscape, chrome-free mode for the 3D viewport**,
+  requested for real robot operation while watching the live 3D view fill
+  the whole screen. A new button next to Refresh forces the Activity into
+  landscape (reusing MainScreen.kt's existing isLandscape-triggered
+  fullscreen bypass rather than a new code path - this button just gives
+  it a manual trigger alongside the physical-rotation one it already had),
+  which hides the app's own menus entirely. The jog joystick is overlaid
+  semi-transparently, game-controller style: the XY pad bottom-left, the Z
+  column bottom-right (`Joystick3D.kt` split into separately-usable
+  `JoystickXYPad`/`JoystickZColumn` halves for this - `Joystick3D` itself
+  is unchanged for ControlScreen.kt's existing portrait use), plus
+  step-size chips top-center and a close button top-right to return to the
+  normal app view.
+- **Not yet live-verified visually** - built and confirmed compiling
+  (debug and release) but the actual on-screen positioning/transparency/
+  ergonomics need a real device check before calling this done.
+
 ## [0.3.7] - In-app notifications toggle, and a real update dialog redesign
 
 - **New in-app notifications toggle** (Settings > Notifications), separate
