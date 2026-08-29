@@ -217,6 +217,19 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
     private var isSwitchingServer = false
 
     val isLoggedIn = mutableStateOf(value = false)
+    // Real, live-reproduced bug this exists to fix: MainActivity's splash
+    // screen dismisses on a FIXED timer (5s+2.5s, unrelated to this class's
+    // own init{} below), so a slow authPrefs.loadAuth() + cached-session
+    // check could still be running when LoginScreen first appears - the
+    // user then sees a real login form, starts typing fresh credentials,
+    // and the cached-session coroutine finishes moments later and flips
+    // isLoggedIn straight to true underneath them (reusing the LAST
+    // session's credentials, not whatever they just typed), reading
+    // exactly like "typed the username, got kicked to the dashboard before
+    // ever entering a password". Starts false; MainActivity now keeps the
+    // splash up until this is true too, not just its own timer - see the
+    // comment at the end of init{} below for exactly where this flips.
+    val authCheckComplete = mutableStateOf(value = false)
     val loginUsername = mutableStateOf(value = "")
     val loginPassword = mutableStateOf(value = "")
     val loginEmail = mutableStateOf(value = "")
@@ -349,6 +362,16 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                     }
                 })
             }
+
+            // isLoggedIn.value now holds its correct resting value either
+            // way (true from a cached session above, or its untouched
+            // `false` default) - MainActivity can safely decide
+            // LoginScreen vs MainScreen from here on without it changing
+            // out from under whichever one it already picked. connect()
+            // above keeps running in the background past this point
+            // (network I/O, no reason to hold the splash open for it) -
+            // only the isLoggedIn decision itself needs to be settled.
+            authCheckComplete.value = true
 
             stateCache.loadState()?.let { cached ->
                 applyState(HydraState(cached), isFromCache = true)
