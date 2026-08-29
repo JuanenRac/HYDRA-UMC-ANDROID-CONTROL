@@ -181,6 +181,14 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.activity.compose)
+    // Forces a modern androidx.fragment resolution across the whole
+    // dependency graph - some older transitive dependency was pinning it
+    // below 1.3.0, which lint's own InvalidFragmentVersionForActivityResult
+    // check fails a release build over (registerForActivityResult in
+    // MainActivity.kt needs >= 1.3.0's onRequestPermissionsResult fix).
+    // Not used directly; a direct declaration is the standard Gradle way
+    // to win version resolution over a transitive one.
+    implementation(libs.androidx.fragment.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     // ProcessLifecycleOwner - lets RobotViewModel tell whether the app
     // process is actually in the foreground, so background polling (see

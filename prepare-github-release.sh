@@ -49,7 +49,17 @@ echo "[2/3] Copying the exact GitHub Release asset name..."
 mkdir -p dist
 cp "$apk" "dist/HYDRA-UMC-ANDROID-CONTROL-release.apk"
 
-echo "[3/3] Release artifact ready for a draft GitHub Release:"
+echo "[3/3] Release artifact ready:"
 echo "      dist/HYDRA-UMC-ANDROID-CONTROL-release.apk"
-echo "Create a stable vMAJOR.MINOR.PATCH GitHub Release and attach that exact file."
-echo "Do not publish a debug-signed APK: Android will reject it as an update."
+
+# Auto-publish only when a personal .env/GITHUB_TOKEN is configured -
+# publish-github-release.sh itself no-ops (exit 0) without one.
+if [[ -f .env ]]; then
+  echo "Publishing to GitHub Releases..."
+  ./publish-github-release.sh
+else
+  echo "No .env found - not auto-publishing. Create a stable vMAJOR.MINOR.PATCH"
+  echo "GitHub Release yourself and attach that exact file, or copy"
+  echo ".env.example to .env with a personal token to automate this."
+  echo "Do not publish a debug-signed APK: Android will reject it as an update."
+fi

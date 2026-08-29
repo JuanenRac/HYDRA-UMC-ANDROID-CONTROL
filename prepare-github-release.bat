@@ -48,11 +48,24 @@ if not exist "dist" mkdir "dist"
 copy /Y "%APK%" "dist\HYDRA-UMC-ANDROID-CONTROL-release.apk" >nul
 if errorlevel 1 goto :failed
 
-echo [3/3] Release artifact ready for a draft GitHub Release:
+echo [3/3] Release artifact ready:
 echo       dist\HYDRA-UMC-ANDROID-CONTROL-release.apk
 echo.
-echo Create a stable vMAJOR.MINOR.PATCH GitHub Release and attach that exact file.
-echo Do not publish a debug-signed APK: Android will reject it as an update.
+
+rem Auto-publish only when a personal .env/GITHUB_TOKEN is configured -
+rem publish-github-release.ps1 itself no-ops (exit 0) without one, so this
+rem stays silent/harmless on a checkout that never set one up, matching
+rem this script's own long-standing manual fallback below.
+if exist ".env" (
+  echo Publishing to GitHub Releases...
+  powershell -NoProfile -ExecutionPolicy Bypass -File "publish-github-release.ps1"
+  if errorlevel 1 goto :failed
+) else (
+  echo No .env found - not auto-publishing. Create a stable vMAJOR.MINOR.PATCH
+  echo GitHub Release yourself and attach that exact file, or copy
+  echo .env.example to .env with a personal token to automate this.
+  echo Do not publish a debug-signed APK: Android will reject it as an update.
+)
 goto :done
 
 :missingSigning

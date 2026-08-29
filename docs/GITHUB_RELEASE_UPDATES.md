@@ -52,8 +52,28 @@ prepare-github-release.bat
 
 The scripts refuse to run without all private signing values and write only
 `dist/HYDRA-UMC-ANDROID-CONTROL-release.apk`, the exact asset name required by
-the updater. They prepare an artifact only; creating and publishing the GitHub
-Release remains an intentional operator action.
+the updater.
+
+## Publishing the artifact
+
+Creating and publishing the GitHub Release is still deliberately gated behind
+one thing only its owner has: a personal GitHub token, never a CI secret.
+
+Copy `.env.example` to `.env` (gitignored) and set `GITHUB_TOKEN` to a
+personal access token with `repo` scope on your own GitHub account. Once
+that's in place, `prepare-github-release.bat`/`.sh` automatically calls
+`publish-github-release.ps1`/`.sh` right after a successful signed build -
+it creates the release for the current `app/version.properties` version (or
+replaces just the APK asset if that version's release already exists) and
+uploads `dist/HYDRA-UMC-ANDROID-CONTROL-release.apk` to it. No `.env` means
+no auto-publish: the script silently stops after producing the local
+artifact, exactly like before this existed, so a checkout with no personal
+token configured still works for local builds.
+
+This intentionally stays a private, locally-run step - never a GitHub
+Actions workflow - for the same reason release signing itself does: no
+secret that could publish a trusted, auto-installed update to every existing
+installation is ever handed to CI.
 
 ## Device flow
 
