@@ -52,6 +52,17 @@ at the time.
   always has - the same gap every other non-STUDIO client (iOS, DSI,
   SUITE) still has for every model besides Parol6, not a regression.
 
+## [0.4.0] - Real per-service live status in the Ecosystem tab
+
+- **Telemetry > Ecosistema** now shows a real green/red "bulb" plus the
+  service port next to any project whose server-side manifest declares a
+  `service` object (`EcosystemProject.servicePort`/`.live`, new fields on
+  `GET /api/ecosystem/status` - see HYDRA-UMC-SERVER's own changelog).
+  Green means a real TCP/HTTP probe just succeeded; red means it just
+  failed; no bulb at all for a library/CLI/firmware/UI that was never
+  meant to run as a network service - never inferred from the existing
+  `maturity` badge, which stays a separate, static manifest claim.
+
 ## [0.3.9] - Real device feedback on 0.3.8: immersive fullscreen, ecosystem tab, splash retune
 
 Real, live feedback from testing 0.3.8 acted on directly:

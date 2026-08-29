@@ -9,6 +9,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.Hub
@@ -133,14 +134,19 @@ private fun LogsTab(viewModel: RobotViewModel) {
 }
 
 /**
- * Real V0 ecosystem-status display - see server.ts's own getEcosystemStatus()
- * for exactly what this is (sibling repos' own project manifests on the SAME
- * machine the server runs from) and isn't (a live health check of every
- * ecosystem project as a deployed network service - almost none of them are
- * deployed anywhere yet). Refreshes once on first entering this tab, and on
- * demand via the refresh button - not polled continuously, since a
- * filesystem-manifest scan doesn't change from one second to the next the
- * way live telemetry does.
+ * Real ecosystem-status display - see server.ts's own getEcosystemStatus()
+ * for exactly what this is: sibling repos' own project manifests on the SAME
+ * machine the server runs from, PLUS a real per-service live probe (the
+ * green/red [LiveStatusDot] below) for whichever of them opt in with a
+ * `service` object in their manifest - most of the ecosystem is a library/
+ * CLI/firmware/UI that never runs as a network service and correctly shows
+ * no bulb at all, not a red one. Refreshes once on first entering this tab,
+ * and on demand via the refresh button - not polled continuously. The
+ * manifest half of this genuinely doesn't change second to second; the
+ * live-probe half honestly can (a service can go up/down between visits)
+ * but this tab is a diagnostic check, not a dashboard that needs to be
+ * always current - the same manual-refresh pattern as the rest of this
+ * tab, kept simple rather than adding a background poll loop for it.
  */
 @Composable
 private fun EcosystemTab(viewModel: RobotViewModel) {
@@ -225,7 +231,10 @@ private fun EcosystemProjectCard(project: EcosystemProject) {
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column {
-                Text(project.name, style = MaterialTheme.typography.titleSmall)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(project.name, style = MaterialTheme.typography.titleSmall)
+                    LiveStatusDot(project)
+                }
                 Text(
                     listOfNotNull(project.role, project.stack, project.version?.let { "v$it" })
                         .joinToString(" · "),
@@ -236,6 +245,31 @@ private fun EcosystemProjectCard(project: EcosystemProject) {
             MaturityBadge(project.maturity)
         }
     }
+}
+
+/**
+ * The real "green bulb / red bulb" per service - not derived from
+ * [EcosystemProject.maturity] (a static manifest claim), only from
+ * [EcosystemProject.live] (a real, just-now TCP/HTTP probe result the
+ * server actually ran - see getEcosystemStatus()'s own probeService()).
+ * Renders nothing at all for a project whose manifest never declared a
+ * `service` (servicePort null) - most of the ecosystem is a library/CLI/
+ * firmware/UI that was never meant to have one, and a bulb on those would
+ * misleadingly suggest "down" for something that was never "up" to begin
+ * with.
+ */
+@Composable
+private fun LiveStatusDot(project: EcosystemProject) {
+    val port = project.servicePort ?: return
+    val dotColor = if (project.live == true) Color(0xFF10B981) else Color(0xFFEF4444)
+    Spacer(modifier = Modifier.width(6.dp))
+    Box(
+        modifier = Modifier
+            .size(8.dp)
+            .background(dotColor, CircleShape)
+    )
+    Spacer(modifier = Modifier.width(4.dp))
+    Text(":$port", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
 }
 
 @Composable
