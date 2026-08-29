@@ -328,9 +328,12 @@ fun ControlScreen(viewModel: RobotViewModel) {
                             zEnabled = selectedRobot.online && activeTarget == "robot",
                             onJog = { dx, dy, dz ->
                                 vibrate()
-                                if (dx != 0) viewModel.jog(activeTarget, "x", dx * stepSize)
-                                if (dy != 0) viewModel.jog(activeTarget, "y", dy * stepSize)
-                                if (dz != 0) viewModel.jog(activeTarget, "z", dz * stepSize)
+                                // jogXYZ resolves the combined delta against this
+                                // robot's own real kinematics once (Parol6 today -
+                                // see its own doc comment) instead of 3 independent
+                                // per-axis jog() calls, matching STUDIO's own
+                                // floating joystick overlay for the same robot.
+                                viewModel.jogXYZ(activeTarget, dx, dy, dz, stepSize)
                             },
                         )
                     }

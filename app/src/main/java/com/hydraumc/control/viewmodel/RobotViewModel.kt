@@ -12,8 +12,10 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.hydraumc.control.model.BleDevice
 import com.hydraumc.control.model.HydraState
+import com.hydraumc.control.model.JOINT_NAMES
 import com.hydraumc.control.model.RobotView
 import com.hydraumc.control.model.ServerInfo
+import com.hydraumc.control.kinematics.parol6CartesianToJoints
 import com.hydraumc.control.R
 import com.hydraumc.control.network.AuthPrefs
 import com.hydraumc.control.network.ConnectionPrefs
@@ -987,6 +989,57 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                 r.setXyTableAxis(axis, r.xyTablePos.optDouble(axis, 0.0) + amount)
             }
         }
+    }
+
+    /**
+     * XYZ jog for the joystick D-pad - mirrors HYDRA-UMC-STUDIO's own
+     * handleXYZJog() in RobotDetail.tsx: resolves the combined dx/dy/dz
+     * delta against this robot's own real per-model kinematics ONCE, then
+     * fires up to 3 atomic 'jog' commands (one per non-zero axis, same as
+     * server.ts only ever moves one pos axis per command) all carrying
+     * that SAME resolved joints override - instead of jogging pos.x/y/z
+     * blindly and letting server.ts's own calculateJoints() (a single
+     * generic IK formula) silently diverge from this robot's real
+     * kinematics chain. See server.ts's own jog case comment and
+     * Parol6Kinematics.kt's own header for the full rationale.
+     *
+     * Only Parol6 has a real Kotlin port of that per-model IK today - the
+     * same gap every non-STUDIO client (iOS, DSI, SUITE) still has for
+     * every other model, not a regression this introduces. Every other
+     * model/target keeps jogging pos.x/y/z exactly as this app always
+     * has, via the plain jog() calls below - no worse than before.
+     */
+    fun jogXYZ(target: String, dx: Int, dy: Int, dz: Int, jogStep: Double) {
+        val robotId = selectedRobotId.value
+        val robot = robotId?.let { state.robotById(it) }
+        if (target == "robot" && robot != null && robot.model == "Parol6 (6-DOF)") {
+            val x = robot.posAxis("x") + dx * jogStep
+            val y = robot.posAxis("y") + dy * jogStep
+            val z = robot.posAxis("z") + dz * jogStep
+            val a = robot.posAxis("a")
+            val b = robot.posAxis("b")
+            val c = robot.posAxis("c")
+            val newJoints = parol6CartesianToJoints(x, y, z, a, b, c)
+            val axes = listOf(
+                Triple("x", dx * jogStep, x),
+                Triple("y", dy * jogStep, y),
+                Triple("z", dz * jogStep, z),
+            ).filter { it.second != 0.0 }
+            for ((axis, amount, value) in axes) {
+                val jointsParam = JSONObject()
+                JOINT_NAMES.forEachIndexed { i, name -> jointsParam.put(name, newJoints[i]) }
+                val params = JSONObject().put("axis", axis).put("amount", amount).put("target", target).put("joints", jointsParam)
+                sendAtomicCommand("jog", params) { r ->
+                    r.setPosAxis(axis, value)
+                    JOINT_NAMES.forEachIndexed { i, name -> r.setJoint(name, newJoints[i]) }
+                }
+            }
+            return
+        }
+
+        if (dx != 0) jog(target, "x", dx * jogStep)
+        if (dy != 0) jog(target, "y", dy * jogStep)
+        if (dz != 0) jog(target, "z", dz * jogStep)
     }
 
     fun toggleValve(index: Int) {
