@@ -158,12 +158,19 @@
     <string name="update_check">Buscar actualización</string>
     <string name="update_checking">Consultando GitHub Releases…</string>
     <string name="update_up_to_date">Este dispositivo ya tiene la última versión estable.</string>
-    <string name="update_available">La versión %1$s está disponible.</string>
-    <string name="update_release_notes">Notas de la versión</string>
+    <string name="update_version_installed">Instalada: v%1$s</string>
+    <string name="update_version_new">Nueva versión: v%1$s</string>
+    <string name="update_view_changes">Ver cambios</string>
+    <string name="update_close">Cerrar</string>
     <string name="update_download_install">Descargar e instalar</string>
     <string name="update_downloading">Descargando actualización: %1$d%%</string>
     <string name="update_install_permission">Permite que esta aplicación instale actualizaciones en los Ajustes de Android, vuelve aquí y busca de nuevo.</string>
     <string name="update_allow_install">Permitir instalación</string>
     <string name="update_installing">El instalador de paquetes de Android está listo para verificar e instalar la actualización.</string>
     <string name="update_later">Más tarde</string>
+    <!-- In-app notifications toggle -->
+    <string name="tab_notifications">Notificaciones</string>
+    <string name="notifications_settings_title">Notificaciones</string>
+    <string name="notifications_enable_toggle">Activar notificaciones</string>
+    <string name="notifications_enable_description">Alertas de seguridad (persistente mientras hay conexión) y notificaciones de trabajo completado. Esto es independiente del permiso de notificaciones de Android para esta app — ambos deben estar activados para que las notificaciones aparezcan de verdad.</string>
 </resources>

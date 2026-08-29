@@ -158,12 +158,19 @@
     <string name="update_check">检查更新</string>
     <string name="update_checking">正在检查 GitHub Releases…</string>
     <string name="update_up_to_date">此设备已经安装最新稳定版本。</string>
-    <string name="update_available">版本 %1$s 可用。</string>
-    <string name="update_release_notes">发行说明</string>
+    <string name="update_version_installed">已安装：v%1$s</string>
+    <string name="update_version_new">新版本：v%1$s</string>
+    <string name="update_view_changes">查看更新内容</string>
+    <string name="update_close">关闭</string>
     <string name="update_download_install">下载并安装</string>
     <string name="update_downloading">正在下载更新：%1$d%%</string>
     <string name="update_install_permission">请在 Android 设置中允许此应用安装更新，然后返回此处再次检查。</string>
     <string name="update_allow_install">允许安装</string>
     <string name="update_installing">Android 软件包安装程序已准备好验证并安装更新。</string>
     <string name="update_later">稍后</string>
+    <!-- In-app notifications toggle -->
+    <string name="tab_notifications">通知</string>
+    <string name="notifications_settings_title">通知</string>
+    <string name="notifications_enable_toggle">启用通知</string>
+    <string name="notifications_enable_description">安全警报（连接期间持续显示）和任务完成通知。这与 Android 本身针对此应用的通知权限是分开的——两者都需要开启，通知才会真正出现。</string>
 </resources>
