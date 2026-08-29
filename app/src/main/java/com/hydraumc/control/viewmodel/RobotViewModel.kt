@@ -327,7 +327,27 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                 // parameter doc) - a manual reconnect/server-switch failure
                 // elsewhere must not force a real, already-active session
                 // to log out over a transient error.
-                connect(onInitialConnectFailed = { isLoggedIn.value = false })
+                //
+                // Also persists the correction (authPrefs.saveAuth with
+                // isLoggedIn=false), not just the in-memory flag - without
+                // this, only THIS session's flash-then-revert was fixed;
+                // profile.isLoggedIn on disk stayed true forever, so the
+                // very next cold start read the same stale value and
+                // repeated the exact same flash on every single launch
+                // for as long as the cached ip/port stayed unreachable
+                // (reported as the bug "still happening" after the first,
+                // in-memory-only fix). username/password/rememberMe/token
+                // are kept as-is - only whether a session should be
+                // auto-resumed on the NEXT cold start changes, so the
+                // owner sees LoginScreen with fields still pre-filled
+                // instead of another silent flash, and can just tap Login
+                // again (same network) or fix ip/port first.
+                connect(onInitialConnectFailed = {
+                    isLoggedIn.value = false
+                    viewModelScope.launch {
+                        authPrefs.saveAuth(profile.copy(isLoggedIn = false))
+                    }
+                })
             }
 
             stateCache.loadState()?.let { cached ->
