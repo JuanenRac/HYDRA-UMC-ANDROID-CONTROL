@@ -314,7 +314,18 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                 // triggers - so trigger it here too instead of leaving it to
                 // the user to notice and work around.
                 isLoggedIn.value = true
-                connect()
+                // onInitialConnectFailed: a cached session whose server is
+                // now unreachable/invalid (wrong ip/port, server moved,
+                // different network) used to leave isLoggedIn true forever
+                // - MainActivity gates purely on that flag, so the app
+                // showed the full main screen with no real connection
+                // behind it instead of bouncing back to LoginScreen where
+                // the ip/port fields could actually be fixed. Only this
+                // cached-session path opts in (see connect()'s own
+                // parameter doc) - a manual reconnect/server-switch failure
+                // elsewhere must not force a real, already-active session
+                // to log out over a transient error.
+                connect(onInitialConnectFailed = { isLoggedIn.value = false })
             }
 
             stateCache.loadState()?.let { cached ->
@@ -476,7 +487,19 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
     // of the coroutine running to completion in the background).
     private var connectJob: kotlinx.coroutines.Job? = null
 
-    fun connect() {
+    /**
+     * @param onInitialConnectFailed Called only when the very first REST
+     *   sync of this call fails (host unreachable, wrong port, not a real
+     *   HYDRA-UMC server, etc.) - used exclusively by the cached-session
+     *   auto-login in `init` above to bounce back to LoginScreen instead of
+     *   leaving `isLoggedIn` true with nothing real behind it (see that
+     *   call site's own comment). Left null for every other caller (the
+     *   Login button's own post-success connect(), manual reconnect,
+     *   server switch) so a transient failure on an ALREADY-established
+     *   session never forces a real logout - only the specific case this
+     *   was reported for does.
+     */
+    fun connect(onInitialConnectFailed: (() -> Unit)? = null) {
         val host = ipAddress.value.trim()
         val portValue = port.value.trim()
         if (host.isEmpty() || portValue.isEmpty()) {
@@ -527,6 +550,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
             } catch (e: HydraApiException) {
                 logTelemetry("REST Sync Error: ${e.message}")
                 lastError.value = e.message
+                onInitialConnectFailed?.invoke()
             } finally {
                 isSwitchingServer = false
             }
