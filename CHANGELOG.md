@@ -31,6 +31,40 @@ at the time.
 - New `README_zho.md` / `README_jpn.md` documentation translations, plus
   the 5 existing README files' language selectors updated to link them.
 
+## [0.3.1] - First published GitHub Release, and the release build that made it possible
+
+- Fixed the "GitHub returned HTTP 404" update-check error: root cause was
+  that no GitHub Release had ever been published for this repo, and no
+  release keystore existed yet to sign one with. Generated a protected
+  release keystore and published the first real GitHub Release (v0.3.0).
+- `app/proguard-rules.pro`: added the standard OkHttp `-dontwarn` rules
+  for its optional BouncyCastle/Conscrypt/OpenJSSE TLS-provider
+  integrations (none is an actual dependency here) - the very first real
+  `assembleRelease` build failed `minifyReleaseWithR8` without them, since
+  debug builds never exercise R8 at all.
+- Added a direct `androidx.fragment:fragment-ktx` dependency to force a
+  modern resolution across the graph - a transitive dependency was
+  pinning it below 1.3.0, which lint's own
+  `InvalidFragmentVersionForActivityResult` check fails a release build
+  over (`registerForActivityResult` in `MainActivity.kt` needs it).
+- New `publish-github-release.ps1`/`.sh`, called automatically by
+  `prepare-github-release.bat`/`.sh` right after a successful signed
+  build whenever a personal `.env`/`GITHUB_TOKEN` is configured locally
+  (see new `.env.example`) - creates the GitHub Release for the current
+  version (or replaces just the APK asset if it already exists) and
+  uploads the signed APK to it. Deliberately never runs in CI, matching
+  this project's existing release-signing security model.
+- `RobotViewModel.kt`: a cached session (`rememberMe`) whose configured
+  server is now unreachable or wrong (switched networks, server moved, a
+  stale ip/port) used to set `isLoggedIn` true immediately and never
+  revert it when the follow-up `connect()` failed - `MainActivity` gates
+  purely on that flag, so the app showed the full main screen with no
+  real connection behind it instead of bouncing back to LoginScreen where
+  the ip/port could actually be fixed. Now only that one cached-session
+  path reverts `isLoggedIn` on an initial connect failure; a manual
+  reconnect or server switch on an already-active session still tolerates
+  a transient error without forcing a real logout.
+
 ## [0.3.0]
 
 - Build version synchronized with `hydra-umc.project.json` and the repository-native version source.
