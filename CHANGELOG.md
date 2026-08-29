@@ -52,6 +52,53 @@ at the time.
   always has - the same gap every other non-STUDIO client (iOS, DSI,
   SUITE) still has for every model besides Parol6, not a regression.
 
+## [0.3.6] - The 10+ second black screen on startup, traced to a real 17.5s stall
+
+- **Fixes a long black screen between the splash and the login/dashboard
+  screen appearing** (reported as "sigue pasando" after 0.3.5's splash
+  timer was already shortened - the timer was never the actual cause).
+  Traced with live timing logs to a single call, `AuthPrefs.loadAuth()`,
+  taking **17.5 seconds** on one real cold start. Two real, independent
+  fixes:
+  - `AuthPrefs.kt`'s `MasterKey`/`EncryptedSharedPreferences` instance was
+    being rebuilt from scratch - a real AndroidKeyStore round-trip, not a
+    cheap object - on every single `loadAuth()`/`saveAuth()`/`clearAuth()`
+    call instead of once. Now cached for the lifetime of the (already
+    singleton, per `RobotViewModel`) `AuthPrefs` instance.
+  - `AuthPrefs.kt`'s own Keystore work now runs on a small dedicated
+    single-thread dispatcher instead of the app-wide shared
+    `Dispatchers.IO` pool - real hypothesis, not yet live-confirmed (the
+    test device left before a rebuild could be verified): `Discovery.kt`'s
+    subnet scan (`scanNetwork()`, launched at essentially the same instant
+    from `MainActivity`'s own startup effect) could occupy up to
+    `SCAN_CONCURRENCY` (was 64) real OS threads from that same shared pool
+    simultaneously, each held for up to `SCAN_TIMEOUT_MS` against every
+    unreachable address in a /24 subnet - plausibly starving unrelated
+    `Dispatchers.IO` work queued at the same moment. `SCAN_CONCURRENCY`
+    lowered to 16 regardless, so this scan can no longer fully saturate
+    that shared pool even if the isolation above weren't already
+    sufficient on its own.
+- **Fixes STUDIO's own splash screen adding ~10s to opening the 3D
+  viewport tab.** `App.tsx` (HYDRA-UMC STUDIO) showed a fixed, unconditional
+  10-second branding splash on every mount, including
+  `ThreeDScreen.kt`'s embedded WebView, which loads that exact page fresh
+  every time the 3D tab opens. Now skipped whenever `?hideUI=true` is
+  present - the same flag that already means "embedded, no chrome" for
+  Dashboard.tsx's own header/sidebar.
+- Also shortens this app's own native `CustomSplashScreen` from a fixed
+  5000ms hold + 2500ms fade (7.5s total) down to 900ms + 400ms (1.3s) -
+  pure branding-delay trim, not gating on anything real either way.
+- Also fixes a real, separate bug found investigating the above:
+  `RobotViewModel`'s cached-session auto-login used to flip `isLoggedIn`
+  true *before* `connect()` had confirmed the cached server was actually
+  reachable - if it wasn't, the full (empty) Dashboard showed first,
+  reading as another stuck/black screen against this app's dark theme,
+  for however long the connection attempt took to time out, before
+  finally reverting to LoginScreen. `isLoggedIn` now only flips true once
+  a `connect()` attempt actually succeeds (new
+  `onInitialConnectSucceeded` callback) - LoginScreen (fields already
+  pre-filled) shows the whole time a reconnect is pending instead.
+
 ## [0.3.5] - The 3D viewport finally renders, plus a second real login bypass and a real login crash
 
 - **Fixes the 3D viewport rendering solid black (or white after a manual

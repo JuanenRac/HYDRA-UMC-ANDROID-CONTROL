@@ -66,8 +66,24 @@ import java.util.concurrent.atomic.AtomicInteger
 private const val DEFAULT_PORT = 3000
 /** Timeout for each individual host probe. */
 private const val SCAN_TIMEOUT_MS = 1500L
-/** Maximum number of concurrent probes to run. */
-private const val SCAN_CONCURRENCY = 64
+// Real hypothesis under investigation, NOT yet live-confirmed (the device
+// this was traced on left before a rebuild could be tested): a cold start
+// launches this scan (MainActivity's own LaunchedEffect) at essentially
+// the same instant as RobotViewModel's init{} coroutine, which needs
+// Dispatchers.IO too for a real AndroidKeyStore round-trip
+// (AuthPrefs.kt's own openEncryptedPrefs()) - a live timing capture showed
+// authPrefs.loadAuth() alone taking 17.5s on one cold start, wildly out of
+// line with a normal Keystore read. At the OLD value of 64, every single
+// one of this scan's probes (up to 254, one per candidate host in a /24)
+// could occupy a real OS thread from Dispatchers.IO's own shared pool
+// (also sized ~64 by default) for the full SCAN_TIMEOUT_MS each, for
+// unreachable addresses (the overwhelming majority on almost any real
+// subnet) - fully saturating that shared pool for several sequential
+// waves right when AuthPrefs' own single suspend call needed a thread
+// from the exact same pool. Lowered well below the pool's own default
+// size so this scan can never fully starve unrelated Dispatchers.IO work
+// again, regardless of how many hosts turn out unreachable.
+private const val SCAN_CONCURRENCY = 16
 // mDNS resolution (onServiceFound -> resolveService -> onServiceResolved)
 // routinely lands slower than the subnet scan's own plain HTTP probes -
 // this bounds how much extra time the flow waits for pending resolutions

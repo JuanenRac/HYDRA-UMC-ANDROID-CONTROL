@@ -300,7 +300,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                 ipAddress.value = savedIp
                 port.value = savedPort
             }
-            
+
             val profile = authPrefs.loadAuth()
             loginUsername.value = profile.username
             loginPassword.value = profile.password
@@ -315,69 +315,62 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
             }
 
             if (profile.rememberMe && profile.isLoggedIn) {
-                // Mirrors login()'s own success path (isLoggedIn=true immediately
-                // followed by connect()) - setting isLoggedIn alone used to swap
-                // LoginScreen -> MainScreen (MainActivity gates purely on this
-                // flag) with NO live connection behind it: apiClient above only
-                // carries the saved token, nothing has opened a WebSocket or
-                // synced state yet. Whether or not this resolves while the user
-                // is mid-typing a fresh login on LoginScreen (this whole block
-                // runs on a background coroutine with no ordering guarantee
-                // relative to LoginScreen's composition), the resulting
-                // "logged in" dashboard was otherwise dead until a manual
-                // logout+login forced the same connect() the button already
-                // triggers - so trigger it here too instead of leaving it to
-                // the user to notice and work around.
-                isLoggedIn.value = true
-                // onInitialConnectFailed: a cached session whose server is
-                // now unreachable/invalid (wrong ip/port, server moved,
-                // different network) used to leave isLoggedIn true forever
-                // - MainActivity gates purely on that flag, so the app
-                // showed the full main screen with no real connection
-                // behind it instead of bouncing back to LoginScreen where
-                // the ip/port fields could actually be fixed. Only this
-                // cached-session path opts in (see connect()'s own
-                // parameter doc) - a manual reconnect/server-switch failure
-                // elsewhere must not force a real, already-active session
-                // to log out over a transient error.
-                //
-                // Also persists the correction (authPrefs.saveAuth with
-                // isLoggedIn=false), not just the in-memory flag - without
-                // this, only THIS session's flash-then-revert was fixed;
-                // profile.isLoggedIn on disk stayed true forever, so the
-                // very next cold start read the same stale value and
-                // repeated the exact same flash on every single launch
-                // for as long as the cached ip/port stayed unreachable
-                // (reported as the bug "still happening" after the first,
-                // in-memory-only fix). username/password/rememberMe/token
-                // are kept as-is - only whether a session should be
-                // auto-resumed on the NEXT cold start changes, so the
-                // owner sees LoginScreen with fields still pre-filled
-                // instead of another silent flash, and can just tap Login
-                // again (same network) or fix ip/port first.
-                connect(onInitialConnectFailed = {
-                    isLoggedIn.value = false
-                    viewModelScope.launch {
-                        authPrefs.saveAuth(profile.copy(isLoggedIn = false))
-                    }
-                })
+                // Real bug, live-reproduced, in what USED to be here:
+                // isLoggedIn was set true immediately (before connect() had
+                // confirmed anything), so if the cached ip/port turned out
+                // unreachable, MainActivity showed the full Dashboard -
+                // empty, since nothing had synced yet, reading as a
+                // stuck/black screen against this app's dark theme - for
+                // however long HydraApiClient's own connectTimeout (5s) +
+                // the eventual onInitialConnectFailed round-trip took,
+                // BEFORE finally bouncing back to LoginScreen. isLoggedIn
+                // now only flips true once the connection is actually
+                // confirmed (onInitialConnectSucceeded, right after a real
+                // settings sync - see connect()'s own success path) - while
+                // that's pending, MainActivity correctly shows LoginScreen
+                // instead (fields already pre-filled from `profile` above),
+                // not a misleading empty Dashboard. A normal, reachable
+                // server still resolves this near-instantly (LAN latency,
+                // not the 5s timeout), so the common case isn't slowed
+                // down - only the "server unreachable" case now shows an
+                // honest, usable login form the whole time instead of
+                // something that looks broken.
+                connect(
+                    onInitialConnectSucceeded = { isLoggedIn.value = true },
+                    // A cached session whose server is now unreachable/
+                    // invalid (wrong ip/port, server moved, different
+                    // network) also persists the correction
+                    // (authPrefs.saveAuth with isLoggedIn=false), not just
+                    // leaving isLoggedIn at its untouched `false` default -
+                    // without this, profile.isLoggedIn on disk stayed true
+                    // forever, so the very next cold start read the same
+                    // stale value and repeated the same failed reconnect
+                    // attempt on every single launch for as long as the
+                    // cached ip/port stayed unreachable. username/password/
+                    // rememberMe/token are kept as-is - only whether a
+                    // session should be auto-resumed on the NEXT cold start
+                    // changes.
+                    onInitialConnectFailed = {
+                        viewModelScope.launch {
+                            authPrefs.saveAuth(profile.copy(isLoggedIn = false))
+                        }
+                    },
+                )
             }
 
             // isLoggedIn.value now holds its correct resting value either
-            // way (true from a cached session above, or its untouched
-            // `false` default) - MainActivity can safely decide
-            // LoginScreen vs MainScreen from here on without it changing
-            // out from under whichever one it already picked. connect()
-            // above keeps running in the background past this point
-            // (network I/O, no reason to hold the splash open for it) -
-            // only the isLoggedIn decision itself needs to be settled.
+            // way (still `false` while a cached-session reconnect above is
+            // pending/failed, or flipped true the moment it's confirmed) -
+            // MainActivity can safely decide LoginScreen vs MainScreen from
+            // here on without it changing out from under whichever one it
+            // already picked based on a value that later turns out wrong.
             authCheckComplete.value = true
 
             stateCache.loadState()?.let { cached ->
                 applyState(HydraState(cached), isFromCache = true)
             }
         }
-        
+
         val bluetoothManager = getApplication<Application>().getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
         isBtEnabled.value = bluetoothManager.adapter?.isEnabled ?: false
     }
@@ -544,7 +537,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
      *   session never forces a real logout - only the specific case this
      *   was reported for does.
      */
-    fun connect(onInitialConnectFailed: (() -> Unit)? = null) {
+    fun connect(onInitialConnectSucceeded: (() -> Unit)? = null, onInitialConnectFailed: (() -> Unit)? = null) {
         val host = ipAddress.value.trim()
         val portValue = port.value.trim()
         if (host.isEmpty() || portValue.isEmpty()) {
@@ -590,7 +583,8 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                 val settings = client.getSettings()
                 logTelemetry("Initial state synchronized via REST")
                 applyState(HydraState(settings))
-                
+                onInitialConnectSucceeded?.invoke()
+
                 startMetricsLoop(client)
             } catch (e: HydraApiException) {
                 logTelemetry("REST Sync Error: ${e.message}")
