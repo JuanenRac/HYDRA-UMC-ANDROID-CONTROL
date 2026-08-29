@@ -31,6 +31,29 @@ at the time.
 - New `README_zho.md` / `README_jpn.md` documentation translations, plus
   the 5 existing README files' language selectors updated to link them.
 
+## [0.3.2] - Real diagnostics for the still-open "3D viewport shows no robot" report
+
+- `ThreeDScreen.kt`'s embedded WebView had no error surface at all - a
+  real page-load failure and a page that loads fine but fails to render
+  the WebGL viewport looked identical from outside (both just blank).
+  `WebView.setWebContentsDebuggingEnabled` (debug builds only - a release
+  never exposes this, since it lets any USB-connected desktop inspect
+  this WebView's DOM/JS/network, including the auth token in its URL)
+  now lets `chrome://inspect` attach to this exact WebView for a real
+  console/network trace. `onReceivedError`/`onReceivedHttpError`
+  overrides log a genuine main-frame navigation or HTTP failure to
+  logcat, which previously reached nowhere at all.
+- The WebView's custom user-agent string used to replace Chromium
+  WebView's own default outright, dropping the browser-engine
+  identification some WebGL vendor/driver quirk-detection code keys off
+  of - now appended to the real default instead, a real (if unverified
+  without a live device) candidate for why the viewport specifically
+  could fail to render even on a page that loads correctly.
+- Root cause still not confirmed live (matches the note left on this
+  same investigation in an earlier session) - these are the concrete
+  tools needed to actually see what's failing next time it's
+  reproduced, not a claimed fix for the underlying render bug itself.
+
 ## [0.3.1] - First published GitHub Release, and the release build that made it possible
 
 - Fixed the "GitHub returned HTTP 404" update-check error: root cause was
