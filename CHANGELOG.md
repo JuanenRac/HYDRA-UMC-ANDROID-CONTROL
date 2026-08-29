@@ -52,6 +52,23 @@ at the time.
   always has - the same gap every other non-STUDIO client (iOS, DSI,
   SUITE) still has for every model besides Parol6, not a regression.
 
+## [0.3.7] - In-app notifications toggle, and a real update dialog redesign
+
+- **New in-app notifications toggle** (Settings > Notifications), separate
+  from Android's own per-app notification permission - gates the
+  persistent safety notification (shown for as long as a WebSocket
+  connection stays open) and job-completion alerts. Defaults on, matching
+  this app's behavior before the preference existed. Turning it off mid-
+  session hides the persistent notification immediately, not just on the
+  next reconnect.
+- **Redesigned the update-available dialog** (reported as "sale muy
+  feo"): it used to dump the full GitHub release notes directly inside
+  the AlertDialog's own fixed-size `text` slot, visually squeezing/clipping
+  anything longer than a couple of lines. Now shows installed vs. new
+  version as two clearly labeled lines, with a "View changes" button that
+  opens a dedicated, properly scrollable full-size dialog for the release
+  notes instead.
+
 ## [0.3.6] - The 10+ second black screen on startup, traced to a real 17.5s stall
 
 - **Fixes a long black screen between the splash and the login/dashboard

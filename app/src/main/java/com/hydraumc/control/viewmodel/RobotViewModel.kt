@@ -213,6 +213,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
     private var bleClient: HydraBleClient? = null
     private val prefs = ConnectionPrefs(application)
     private val authPrefs = AuthPrefs(application)
+    private val notificationPrefs = com.hydraumc.control.util.NotificationPrefs(application)
     private val stateCache = StateCache(application)
     private var isSwitchingServer = false
 
@@ -235,6 +236,12 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
     val loginEmail = mutableStateOf(value = "")
     val loginRememberMe = mutableStateOf(value = false)
     val isBiometricEnabled = mutableStateOf(value = false)
+    // In-app notifications toggle - see NotificationPrefs.kt's own header
+    // comment for why this exists alongside Android's own per-app system
+    // toggle. Defaults to true (this app's behavior before this preference
+    // existed); loaded for real in init{} below and updated via
+    // setNotificationsEnabled().
+    val notificationsEnabled = mutableStateOf(value = true)
 
     val selectedCameraId = mutableIntStateOf(1)
     // Read-only relay state for the future Android Wear Data Layer receiver.
@@ -285,6 +292,10 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
     init {
         connectionStatus.value = application.getString(R.string.status_disconnected)
         NotificationHelper.createChannel(application)
+
+        viewModelScope.launch {
+            notificationsEnabled.value = notificationPrefs.isEnabled()
+        }
 
         ProcessLifecycleOwner.get().lifecycle.addObserver(appLifecycleObserver)
 
@@ -502,6 +513,21 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         telemetryLogs.value = (listOf("[$timestamp] $message") + telemetryLogs.value).take(50)
     }
 
+    /** Toggles the in-app notifications preference - see NotificationPrefs.kt's own header comment. */
+    fun setNotificationsEnabled(enabled: Boolean) {
+        notificationsEnabled.value = enabled
+        viewModelScope.launch {
+            notificationPrefs.setEnabled(enabled)
+        }
+        // Turning it off mid-session should hide the persistent safety
+        // notification immediately too, not just gate the NEXT connect -
+        // otherwise the owner turns this off expecting quiet and it stays
+        // on screen until the next reconnect.
+        if (!enabled) {
+            NotificationHelper.hideSafetyNotification(getApplication())
+        }
+    }
+
     fun refreshBtStatus() {
         val bluetoothManager = getApplication<Application>().getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
         val adapter = bluetoothManager.adapter
@@ -654,7 +680,9 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                         }
                         WsStatus.CONNECTED -> {
                             logTelemetry("WebSocket CONNECTED")
-                            NotificationHelper.showSafetyNotification(getApplication())
+                            if (notificationsEnabled.value) {
+                                NotificationHelper.showSafetyNotification(getApplication())
+                            }
                             getApplication<Application>().getString(R.string.status_connected)
                         }
                         WsStatus.DISCONNECTED -> {
@@ -750,7 +778,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                 // narrow enough (needs a specific prior-session state) not to
                 // block fixing the common case, and the underlying gap is in
                 // HYDRA-UMC-SERVER's server.ts, not this app.
-                if ((oldRobot != null) && oldRobot.isPlaying && !robot.isPlaying && robot.isFinished) {
+                if ((oldRobot != null) && oldRobot.isPlaying && !robot.isPlaying && robot.isFinished && notificationsEnabled.value) {
                     NotificationHelper.sendAlert(
                         getApplication(),
                         "Robot ${robot.name}",

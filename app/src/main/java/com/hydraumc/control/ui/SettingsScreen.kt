@@ -10,8 +10,11 @@ import android.os.Build
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bluetooth
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Update
 import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material3.*
@@ -49,10 +52,11 @@ fun SettingsScreen(
     /** Index of the currently selected settings tab. */
     var selectedTabIndex by remember { mutableIntStateOf(0) }
     val updateState by updateViewModel.state.collectAsState()
-    /** List of tab items for Wi-Fi, Bluetooth and application updates. */
+    /** List of tab items for Wi-Fi, Bluetooth, notifications and application updates. */
     val tabs = listOf(
         TabItem(stringResource(R.string.tab_wifi), Icons.Default.Wifi),
         TabItem(stringResource(R.string.tab_bluetooth), Icons.Default.Bluetooth),
+        TabItem(stringResource(R.string.tab_notifications), Icons.Default.Notifications),
         TabItem(stringResource(R.string.tab_updates), Icons.Default.Update),
     )
 
@@ -72,7 +76,8 @@ fun SettingsScreen(
             when (selectedTabIndex) {
                 0 -> WifiSettings(viewModel)
                 1 -> BluetoothSettings(viewModel, onEnableBluetooth)
-                2 -> UpdateSettings(updateState, updateViewModel)
+                2 -> NotificationSettings(viewModel)
+                3 -> UpdateSettings(updateState, updateViewModel)
             }
         }
     }
@@ -84,6 +89,40 @@ fun SettingsScreen(
  * @property icon The icon associated with the tab.
  */
 data class TabItem(val title: String, val icon: ImageVector)
+
+/**
+ * Settings page for the in-app notifications toggle - see
+ * NotificationPrefs.kt's own header comment for why this exists alongside
+ * Android's own per-app system notification permission.
+ * @param viewModel The shared RobotViewModel.
+ */
+@Composable
+private fun NotificationSettings(viewModel: RobotViewModel) {
+    val notificationsEnabled = viewModel.notificationsEnabled.value
+
+    Column {
+        Text(stringResource(R.string.notifications_settings_title), style = MaterialTheme.typography.titleLarge)
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(stringResource(R.string.notifications_enable_toggle), style = MaterialTheme.typography.titleMedium)
+            Switch(
+                checked = notificationsEnabled,
+                onCheckedChange = { viewModel.setNotificationsEnabled(it) },
+            )
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            stringResource(R.string.notifications_enable_description),
+            style = MaterialTheme.typography.bodySmall,
+            color = Color.Gray,
+        )
+    }
+}
 
 /** Settings page for the signed, operator-approved GitHub Release update path. */
 @Composable
@@ -144,23 +183,94 @@ private fun UpdateSettings(state: AppUpdateState, updateViewModel: AppUpdateView
     }
 }
 
+// Real fix for a real complaint ("sale muy feo"): this used to dump the
+// FULL release notes text directly inside the update AlertDialog's own
+// `text` slot, which AlertDialog sizes tightly around its title/buttons -
+// long notes just got visually squeezed/clipped rather than genuinely
+// scrolled. Now shows installed vs new version as two clearly labeled
+// lines (not one blended sentence) and moves the notes themselves into a
+// dedicated, properly scrollable ReleaseNotesDialog opened via its own
+// button, sized to actually fit real release-notes-length text.
 @Composable
 fun UpdateAvailableContent(
     update: com.hydraumc.control.update.AvailableUpdate,
     onDownload: () -> Unit,
 ) {
-    Text(stringResource(R.string.update_available, update.version.toString()), style = MaterialTheme.typography.titleMedium)
-    if (update.notes.isNotBlank()) {
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(stringResource(R.string.update_release_notes), style = MaterialTheme.typography.labelLarge)
-        Text(update.notes, style = MaterialTheme.typography.bodySmall)
+    var showReleaseNotes by remember { mutableStateOf(false) }
+
+    if (showReleaseNotes) {
+        ReleaseNotesDialog(update = update, onDismiss = { showReleaseNotes = false })
     }
-    Spacer(modifier = Modifier.height(16.dp))
-    HydraButton(
-        text = stringResource(R.string.update_download_install),
-        onClick = onDownload,
-        modifier = Modifier.fillMaxWidth(),
-    )
+
+    Column {
+        Text(
+            stringResource(R.string.update_version_installed, com.hydraumc.control.BuildConfig.VERSION_NAME),
+            style = MaterialTheme.typography.bodyMedium,
+        )
+        Text(
+            stringResource(R.string.update_version_new, update.version.toString()),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.primary,
+        )
+        if (update.notes.isNotBlank()) {
+            Spacer(modifier = Modifier.height(12.dp))
+            OutlinedButton(onClick = { showReleaseNotes = true }, modifier = Modifier.fillMaxWidth()) {
+                Text(stringResource(R.string.update_view_changes))
+            }
+        }
+        Spacer(modifier = Modifier.height(12.dp))
+        HydraButton(
+            text = stringResource(R.string.update_download_install),
+            onClick = onDownload,
+            modifier = Modifier.fillMaxWidth(),
+        )
+    }
+}
+
+/**
+ * A properly scrollable, full-size dialog for a release's notes - see
+ * UpdateAvailableContent's own comment for why this exists as its own
+ * dialog instead of being crammed into the update AlertDialog itself.
+ * @param update The release whose notes to show.
+ * @param onDismiss Callback to close this dialog.
+ */
+@Composable
+private fun ReleaseNotesDialog(update: com.hydraumc.control.update.AvailableUpdate, onDismiss: () -> Unit) {
+    androidx.compose.ui.window.Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            shape = MaterialTheme.shapes.large,
+            tonalElevation = 4.dp,
+            modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxHeight(0.8f),
+        ) {
+            Column(modifier = Modifier.fillMaxSize().padding(20.dp)) {
+                Text(update.releaseName.ifBlank { update.version.toString() }, style = MaterialTheme.typography.titleLarge)
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    stringResource(R.string.update_version_new, update.version.toString()),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Box(modifier = Modifier.weight(1f)) {
+                    Text(
+                        update.notes,
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .verticalScroll(rememberScrollState()),
+                    )
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+                HydraButton(
+                    text = stringResource(R.string.update_close),
+                    onClick = onDismiss,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+        }
+    }
 }
 
 /** 

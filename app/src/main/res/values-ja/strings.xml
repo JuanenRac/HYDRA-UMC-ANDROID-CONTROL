@@ -158,12 +158,19 @@
     <string name="update_check">更新を確認</string>
     <string name="update_checking">GitHub Releases を確認しています…</string>
     <string name="update_up_to_date">この端末には最新の安定版がインストールされています。</string>
-    <string name="update_available">バージョン %1$s を利用できます。</string>
-    <string name="update_release_notes">リリースノート</string>
+    <string name="update_version_installed">インストール済み: v%1$s</string>
+    <string name="update_version_new">新しいバージョン: v%1$s</string>
+    <string name="update_view_changes">変更内容を見る</string>
+    <string name="update_close">閉じる</string>
     <string name="update_download_install">ダウンロードしてインストール</string>
     <string name="update_downloading">更新をダウンロード中: %1$d%%</string>
     <string name="update_install_permission">Android の設定でこのアプリによる更新のインストールを許可し、ここに戻ってもう一度確認してください。</string>
     <string name="update_allow_install">インストールを許可</string>
     <string name="update_installing">Android のパッケージインストーラで更新を確認してインストールできます。</string>
     <string name="update_later">後で</string>
+    <!-- In-app notifications toggle -->
+    <string name="tab_notifications">通知</string>
+    <string name="notifications_settings_title">通知</string>
+    <string name="notifications_enable_toggle">通知を有効にする</string>
+    <string name="notifications_enable_description">安全アラート（接続中は常時表示）とジョブ完了通知です。これは Android 自体のアプリ通知権限とは別物です — 通知が実際に表示されるにはどちらも有効にする必要があります。</string>
 </resources>

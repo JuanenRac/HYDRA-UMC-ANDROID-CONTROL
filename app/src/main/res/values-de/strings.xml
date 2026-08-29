@@ -157,8 +157,10 @@
     <string name="update_check">Nach Update suchen</string>
     <string name="update_checking">GitHub Releases werden geprüft…</string>
     <string name="update_up_to_date">Auf diesem Gerät ist bereits die aktuelle stabile Version installiert.</string>
-    <string name="update_available">Version %1$s ist verfügbar.</string>
-    <string name="update_release_notes">Versionshinweise</string>
+    <string name="update_version_installed">Installiert: v%1$s</string>
+    <string name="update_version_new">Neue Version: v%1$s</string>
+    <string name="update_view_changes">Änderungen anzeigen</string>
+    <string name="update_close">Schließen</string>
     <string name="update_download_install">Herunterladen und installieren</string>
     <string name="update_downloading">Update wird heruntergeladen: %1$d%%</string>
     <string name="update_install_permission">Erlaube dieser App die Installation von Updates in den Android-Einstellungen, kehre dann hierher zurück und prüfe erneut.</string>
@@ -166,4 +168,9 @@
     <string name="update_installing">Der Android-Paketinstaller ist bereit, das Update zu prüfen und zu installieren.</string>
     <string name="update_later">Später</string>
     <string name="scan_description">Prüft GET /api/hydra-info an jeder IP im Subnetz (wie HYDRA-UMC SUITE).</string>
+    <!-- In-app notifications toggle -->
+    <string name="tab_notifications">Benachrichtigungen</string>
+    <string name="notifications_settings_title">Benachrichtigungen</string>
+    <string name="notifications_enable_toggle">Benachrichtigungen aktivieren</string>
+    <string name="notifications_enable_description">Sicherheitswarnungen (dauerhaft bei bestehender Verbindung) und Benachrichtigungen bei abgeschlossenen Aufträgen. Dies ist unabhängig von Androids eigener App-Benachrichtigungsberechtigung – beides muss aktiviert sein, damit Benachrichtigungen tatsächlich erscheinen.</string>
 </resources>

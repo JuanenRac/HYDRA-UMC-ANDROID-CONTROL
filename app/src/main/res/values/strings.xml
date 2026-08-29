@@ -158,12 +158,19 @@
     <string name="update_check">Check for update</string>
     <string name="update_checking">Checking GitHub Releases…</string>
     <string name="update_up_to_date">This device already has the latest stable version.</string>
-    <string name="update_available">Version %1$s is available.</string>
-    <string name="update_release_notes">Release notes</string>
+    <string name="update_version_installed">Installed: v%1$s</string>
+    <string name="update_version_new">New version: v%1$s</string>
+    <string name="update_view_changes">View changes</string>
+    <string name="update_close">Close</string>
     <string name="update_download_install">Download and install</string>
     <string name="update_downloading">Downloading update: %1$d%%</string>
     <string name="update_install_permission">Allow this app to install updates in Android Settings, then return here and check again.</string>
     <string name="update_allow_install">Allow installation</string>
     <string name="update_installing">Android’s package installer is ready to verify and install the update.</string>
     <string name="update_later">Later</string>
+    <!-- In-app notifications toggle -->
+    <string name="tab_notifications">Notifications</string>
+    <string name="notifications_settings_title">Notifications</string>
+    <string name="notifications_enable_toggle">Enable notifications</string>
+    <string name="notifications_enable_description">Safety alerts (persistent while connected) and job-completion notifications. This is separate from Android\'s own per-app notification permission - both need to be on for notifications to actually appear.</string>
 </resources>

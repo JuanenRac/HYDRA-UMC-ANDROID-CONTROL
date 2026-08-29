@@ -157,8 +157,10 @@
     <string name="update_check">Cerca aggiornamenti</string>
     <string name="update_checking">Controllo delle release GitHub…</string>
     <string name="update_up_to_date">Questo dispositivo ha già l’ultima versione stabile.</string>
-    <string name="update_available">La versione %1$s è disponibile.</string>
-    <string name="update_release_notes">Note di rilascio</string>
+    <string name="update_version_installed">Installata: v%1$s</string>
+    <string name="update_version_new">Nuova versione: v%1$s</string>
+    <string name="update_view_changes">Vedi le modifiche</string>
+    <string name="update_close">Chiudi</string>
     <string name="update_download_install">Scarica e installa</string>
     <string name="update_downloading">Download dell’aggiornamento: %1$d%%</string>
     <string name="update_install_permission">Consenti a questa app di installare aggiornamenti nelle Impostazioni Android, quindi torna qui e controlla di nuovo.</string>
@@ -166,4 +168,9 @@
     <string name="update_installing">Il programma di installazione pacchetti Android è pronto per verificare e installare l’aggiornamento.</string>
     <string name="update_later">Più tardi</string>
     <string name="scan_description">Verifica GET /api/hydra-info su ogni IP della sottorete (come HYDRA-UMC SUITE).</string>
+    <!-- In-app notifications toggle -->
+    <string name="tab_notifications">Notifiche</string>
+    <string name="notifications_settings_title">Notifiche</string>
+    <string name="notifications_enable_toggle">Abilita notifiche</string>
+    <string name="notifications_enable_description">Avvisi di sicurezza (persistenti mentre la connessione è attiva) e notifiche di completamento lavoro. Questo è separato dal permesso di notifica di Android per questa app — entrambi devono essere attivi perché le notifiche appaiano realmente.</string>
 </resources>
