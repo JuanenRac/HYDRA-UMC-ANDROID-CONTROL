@@ -54,3 +54,18 @@
 -keep interface com.google.crypto.tink.** { *; }
 -keepclassmembers class com.google.crypto.tink.** { *; }
 -dontwarn com.google.crypto.tink.**
+
+# androidx.work (WorkManager) is a TRANSITIVE dependency only - nothing in
+# this app's own code calls WorkManager, but it self-registers via
+# androidx.startup.InitializationProvider (a ContentProvider that runs
+# BEFORE Application.onCreate, before any UI) regardless, so it still
+# crashes app startup if R8 strips something it needs. Confirmed live via
+# a real adb logcat on a real device (v0.3.2, which already had the Tink
+# fix below and still crashed identically): "Unable to get provider
+# androidx.startup.InitializationProvider: Failed to create an instance
+# of androidx.work.impl.WorkDatabase" - WorkManager's own Room database,
+# which R8 had stripped (confirmed against usage.txt: ~627 removed
+# androidx.work.** lines). Same class of bug, same standard fix as Tink.
+-keep class androidx.work.** { *; }
+-keep interface androidx.work.** { *; }
+-dontwarn androidx.work.**

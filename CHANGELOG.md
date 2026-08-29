@@ -52,6 +52,27 @@ at the time.
   always has - the same gap every other non-STUDIO client (iOS, DSI,
   SUITE) still has for every model besides Parol6, not a regression.
 
+## [0.3.3] - Fixed a SECOND release-only crash on launch (v0.3.2's own Tink fix was real, but not the whole story)
+
+- **Critical fix**: v0.3.2 still crashed identically on a real device
+  despite the Tink fix, confirmed via a real `adb logcat` from a
+  connected device (the first time this investigation had one available)
+  showing the actual fatal exception: `Unable to get provider
+  androidx.startup.InitializationProvider: Failed to create an instance
+  of androidx.work.impl.WorkDatabase`. `androidx.work` (WorkManager) is
+  only a TRANSITIVE dependency - nothing in this app calls WorkManager
+  directly - but it self-registers via `androidx.startup
+  .InitializationProvider`, a ContentProvider that runs before
+  `Application.onCreate` and before any UI, so R8 stripping something it
+  needed (confirmed against `usage.txt`: ~627 removed `androidx.work.**`
+  lines) crashed the process before Tink's own code path was ever
+  reached. Same class of bug, same standard fix: added `-keep` rules for
+  `androidx.work.**` to `app/proguard-rules.pro` (removed-line count
+  dropped to 1). Verified live this time, not just by static analysis -
+  installed directly via `adb install -r` onto a real device, confirmed
+  the process stays alive past launch with no `AndroidRuntime` fatal in
+  logcat, and the owner confirmed the app opens and works normally.
+
 ## [0.3.2] - Fixed a release-only crash on launch, plus real diagnostics for the still-open "3D viewport shows no robot" report
 
 - **Critical fix**: every release build up to and including v0.3.1 crashed
