@@ -17,6 +17,7 @@ package com.hydraumc.control.network
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.util.Log
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import kotlinx.coroutines.Dispatchers
@@ -48,6 +49,46 @@ class AuthPrefs(private val context: Context) {
     }
 
     private fun openEncryptedPrefs(): SharedPreferences {
+        return try {
+            createEncryptedPrefs()
+        } catch (e: Exception) {
+            // Real crash reproduced live: AEADBadTagException /
+            // KeyStoreException("Signature/MAC verification failed") thrown
+            // from inside EncryptedSharedPreferences.create() itself (i.e.
+            // decrypting the stored Tink keyset, before this class ever gets
+            // a SharedPreferences instance back), crashing every screen that
+            // touches auth on startup - including the login screen, since
+            // RobotViewModel's init{} calls loadAuth() unconditionally.
+            // Root cause: android:allowBackup="true" (AndroidManifest.xml)
+            // with no exclusion rule lets Android's auto-backup restore this
+            // *file's ciphertext* on a fresh install/reinstall, but the
+            // Keystore-backed AES key it was encrypted with is
+            // hardware-tied and never survives that restore - the freshly
+            // generated key can never decrypt the restored blob, forever
+            // (a real android:allowBackup gotcha with EncryptedSharedPreferences,
+            // not theoretical - see AndroidManifest.xml/backup rules for the
+            // matching exclusion this crash motivated). Whatever the exact
+            // cause, an undecryptable keyset is unrecoverable in place - the
+            // only way out is to delete the corrupted file(s) and start a
+            // fresh keyset, which just means the user has to log in again
+            // instead of the app crash-looping on every launch.
+            Log.e("AuthPrefs", "Encrypted prefs unreadable, resetting: ${e.javaClass.simpleName}: ${e.message}")
+            deleteCorruptedPrefs()
+            // Live-reproduced: deleting only the SharedPreferences XML files
+            // above was NOT enough - the retry threw the exact same
+            // AEADBadTagException, proving the actual broken half is the
+            // AndroidKeyStore key entry itself (MasterKey's default alias),
+            // not the ciphertext on disk. MasterKey.Builder(context) resolves
+            // that alias by name and reuses whatever key is already there if
+            // one exists - so without deleting the Keystore entry too, the
+            // "fresh" MasterKey it builds is the same broken key, and
+            // EncryptedSharedPreferences.create() fails identically on retry.
+            deleteCorruptedMasterKey()
+            createEncryptedPrefs()
+        }
+    }
+
+    private fun createEncryptedPrefs(): SharedPreferences {
         val masterKey = MasterKey.Builder(context)
             .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
             .build()
@@ -58,6 +99,33 @@ class AuthPrefs(private val context: Context) {
             EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
             EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM,
         )
+    }
+
+    /**
+     * Deletes this prefs file and Tink's own companion keyset file(s) it
+     * stores alongside it (named `"$PREFS_FILE_NAME..."` - both start with
+     * the same prefix) so the next [createEncryptedPrefs] call generates a
+     * brand new keyset instead of tripping over the same undecryptable one.
+     */
+    private fun deleteCorruptedPrefs() {
+        runCatching {
+            val prefsDir = File(context.applicationInfo.dataDir, "shared_prefs")
+            prefsDir.listFiles { f -> f.name.startsWith(PREFS_FILE_NAME) }?.forEach { it.delete() }
+        }
+    }
+
+    /**
+     * Deletes the AndroidKeyStore entry MasterKey.Builder resolves by alias
+     * (reusing an existing key under that alias if one is already there,
+     * which is exactly what made [deleteCorruptedPrefs] alone insufficient -
+     * see the comment where this is called from).
+     */
+    private fun deleteCorruptedMasterKey() {
+        runCatching {
+            val keyStore = java.security.KeyStore.getInstance("AndroidKeyStore")
+            keyStore.load(null)
+            keyStore.deleteEntry(MasterKey.DEFAULT_MASTER_KEY_ALIAS)
+        }
     }
 
     suspend fun loadAuth(): UserProfile = withContext(Dispatchers.IO) {

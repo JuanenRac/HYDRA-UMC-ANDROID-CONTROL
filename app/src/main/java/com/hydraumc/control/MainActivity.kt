@@ -184,8 +184,16 @@ class MainActivity : FragmentActivity() {
                 }
             }
 
-            var showSplash by remember { mutableStateOf(value = true) }
+            var splashTimerDone by remember { mutableStateOf(value = false) }
             val isLoggedIn = robotViewModel.isLoggedIn.value
+            // Real fix for a live-reproduced bug, not just belt-and-braces:
+            // see RobotViewModel.authCheckComplete's own comment. Splash now
+            // stays up until BOTH the branding timer AND the cached-session
+            // check have finished, whichever takes longer - previously the
+            // timer alone decided, so a slow authPrefs.loadAuth() could
+            // still be resolving after LoginScreen was already showing and
+            // being typed into.
+            val showSplash = !splashTimerDone || !robotViewModel.authCheckComplete.value
 
             HydraTheme {
                 Surface(
@@ -193,7 +201,7 @@ class MainActivity : FragmentActivity() {
                     color = MaterialTheme.colorScheme.background,
                 ) {
                     if (showSplash) {
-                        CustomSplashScreen { showSplash = false }
+                        CustomSplashScreen { splashTimerDone = true }
                     } else if (!isLoggedIn) {
                         LoginScreen(robotViewModel)
                     } else {
