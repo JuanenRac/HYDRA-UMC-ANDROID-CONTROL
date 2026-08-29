@@ -52,6 +52,24 @@ at the time.
   always has - the same gap every other non-STUDIO client (iOS, DSI,
   SUITE) still has for every model besides Parol6, not a regression.
 
+## [0.3.4] - The login bypass fix actually needed to persist, not just correct memory
+
+- **Fixes the login screen still letting the dashboard show without real
+  credentials, reported as still happening after v0.3.1's own fix.** That
+  earlier fix only corrected the in-memory `isLoggedIn` flag when a
+  cached session's server turned out to be unreachable - it never wrote
+  the correction back to the saved profile on disk. So every single cold
+  start kept reading the same stale `isLoggedIn: true` from a past
+  session, flashed the main screen again, and (eventually) reverted -
+  the exact same cycle repeating on every launch for as long as the
+  cached ip/port stayed unreachable, which read as "sometimes it still
+  lets me in". `RobotViewModel.kt`'s cached-session auto-login now also
+  persists `isLoggedIn: false` via `authPrefs.saveAuth()` when the
+  follow-up connection fails, so the next cold start shows LoginScreen
+  (fields still pre-filled) instead of repeating the same flash.
+  username/password/rememberMe/token are left untouched - only whether a
+  session auto-resumes on the next launch changes.
+
 ## [0.3.3] - Fixed a SECOND release-only crash on launch (v0.3.2's own Tink fix was real, but not the whole story)
 
 - **Critical fix**: v0.3.2 still crashed identically on a real device
