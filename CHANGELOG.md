@@ -31,6 +31,27 @@ at the time.
 - New `README_zho.md` / `README_jpn.md` documentation translations, plus
   the 5 existing README files' language selectors updated to link them.
 
+- **New `Parol6Kinematics.kt`** - a faithful Kotlin port of HYDRA-UMC-STUDIO's
+  own real Parol6 inverse kinematics (`src/examples/parol6Kinematics.ts`:
+  the same 6-step PAROL6.urdf transform chain and multi-seeded
+  Newton-Raphson j2/j3 solve, not a redesign). Verified against a real
+  oracle - the actual TS source run with the real `three.js` library for
+  5 test poses - via 5 new JUnit tests (`Parol6KinematicsTest.kt`), all
+  matching to within 1e-3 degrees.
+- `RobotViewModel.kt`'s new `jogXYZ()` resolves the joystick D-pad's
+  combined dx/dy/dz delta against a Parol6-model robot's own real
+  kinematics once, then sends that resolved `joints` override alongside
+  each atomic `jog` command - mirroring `RobotDetail.tsx`'s own
+  `handleXYZJog()`. Fixes the joystick moving a Parol6 robot (e.g. A1)
+  differently from - and sometimes snapping toward a "home"-looking pose
+  compared to - STUDIO's own floating joystick overlay for the same
+  robot: without a client-supplied `joints` override, server.ts's own
+  `jog` case falls back to `calculateJoints()`, a single generic IK
+  formula that doesn't know Parol6's real (non-planar) kinematic chain.
+  Every other model/target still jogs `pos.x/y/z` exactly as this app
+  always has - the same gap every other non-STUDIO client (iOS, DSI,
+  SUITE) still has for every model besides Parol6, not a regression.
+
 ## [0.3.2] - Real diagnostics for the still-open "3D viewport shows no robot" report
 
 - `ThreeDScreen.kt`'s embedded WebView had no error surface at all - a
