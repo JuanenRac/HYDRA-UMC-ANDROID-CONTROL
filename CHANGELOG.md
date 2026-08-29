@@ -52,6 +52,31 @@ at the time.
   always has - the same gap every other non-STUDIO client (iOS, DSI,
   SUITE) still has for every model besides Parol6, not a regression.
 
+## [0.3.9] - Real device feedback on 0.3.8: immersive fullscreen, ecosystem tab, splash retune
+
+Real, live feedback from testing 0.3.8 acted on directly:
+
+- **Fixes the system gesture-nav bar staying visible in fullscreen
+  landscape 3D mode**, undercutting the point of a fullscreen view.
+  System bars are now hidden (swipe-to-reveal-temporarily) for exactly as
+  long as that mode is active, and always restored on the way out -
+  `DisposableEffect`-tied, so leaving the screen entirely can't leave them
+  hidden behind it either.
+- **Retuned the splash timing again** after live feedback that the
+  previous 900ms+400ms felt too abrupt in the OTHER direction ("sin
+  transición"). Now 2200ms hold + a genuinely visible 700ms fade - still
+  nowhere near the original 7.5s, just not jarringly quick either.
+- **New Ecosystem tab** (Telemetry screen, alongside the existing Logs
+  tab) showing the server's own real V0 `GET /api/ecosystem/status` scan -
+  every sibling repo's own manifest (role/stack/maturity/version/family),
+  grouped by family. Real, not theater: explicitly labeled as unavailable
+  when the server isn't running from a checkout with sibling repos beside
+  it (a real future CM5 deployment), rather than pretending to show live
+  health for services that mostly aren't deployed anywhere yet.
+- Settings tabs (Wi-Fi/Bluetooth/Notifications/Updates) are now icon-only
+  at double size, reported live as "se cortan las palabras y queda feo"
+  with 4 tabs' worth of labels in the same row.
+
 ## [0.3.8] - Fullscreen landscape 3D view with an overlaid jog joystick
 
 - **New: a fullscreen, landscape, chrome-free mode for the 3D viewport**,

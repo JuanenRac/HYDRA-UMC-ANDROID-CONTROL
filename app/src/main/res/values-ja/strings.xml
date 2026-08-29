@@ -165,6 +165,11 @@
     <!-- 3D viewport fullscreen landscape mode -->
     <string name="threed_fullscreen">全画面表示</string>
     <string name="threed_exit_fullscreen">全画面表示を終了</string>
+    <!-- Ecosystem status tab -->
+    <string name="tab_ecosystem">エコシステム</string>
+    <string name="ecosystem_unavailable">サーバーは隣接プロジェクトのマニフェストを見つけられませんでした。これは、サーバーが他の HYDRA-UMC/URTC リポジトリと同じマシン上のチェックアウトから実行されている場合にのみ機能します。</string>
+    <string name="maturity_established">確立済み</string>
+    <string name="maturity_functional">機能中</string>
     <string name="update_download_install">ダウンロードしてインストール</string>
     <string name="update_downloading">更新をダウンロード中: %1$d%%</string>
     <string name="update_install_permission">Android の設定でこのアプリによる更新のインストールを許可し、ここに戻ってもう一度確認してください。</string>

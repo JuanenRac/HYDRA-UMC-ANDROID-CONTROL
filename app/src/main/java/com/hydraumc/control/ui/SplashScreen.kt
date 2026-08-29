@@ -33,23 +33,26 @@ fun CustomSplashScreen(onTimeout: () -> Unit) {
     /** Animated alpha value for the splash screen transition. */
     val alphaAnim by animateFloatAsState(
         targetValue = if (startFadeOut) 0f else 1f,
-        animationSpec = tween(durationMillis = 400),
+        animationSpec = tween(durationMillis = 700),
         label = "splashAlpha"
     )
 
-    // Real complaint this fixes, live-reproduced: the original 5000ms hold
-    // + 2500ms fade (7.5s total) made every cold start feel stuck - the
-    // fade's own tail (image alpha dropping toward 0 against this Box's
-    // solid Color.Black background) reads as a plain black screen for a
-    // couple of those seconds, which is what got reported as "queda
-    // negro". Nothing here was ever gating on real work finishing (that's
-    // MainActivity's own authCheckComplete wait, layered on top of this) -
-    // it was purely a fixed branding delay, so shortening it is a pure UX
-    // win with no correctness change.
+    // Real complaint this fixed: the original 5000ms hold + 2500ms fade
+    // (7.5s total) made every cold start feel stuck - the fade's own tail
+    // reads as a plain black screen for a couple of those seconds. That
+    // was fixed down to 900ms + 400ms, which the owner then tested live
+    // and reported as feeling TOO abrupt in the other direction ("sin
+    // transición") - 900ms barely reads as a splash at all, and 400ms is
+    // too quick a cut to feel like a real fade. Retuned once more from
+    // real feedback rather than guessing again: a bit more hold (still
+    // nowhere near the original 5s), and a longer, genuinely visible fade.
+    // Nothing here gates on real work finishing (that's MainActivity's own
+    // authCheckComplete wait, layered on top of this) - purely a branding
+    // timing choice either way.
     LaunchedEffect(Unit) {
-        delay(900)
+        delay(2200)
         startFadeOut = true
-        delay(400)
+        delay(700)
         onTimeout()
     }
 

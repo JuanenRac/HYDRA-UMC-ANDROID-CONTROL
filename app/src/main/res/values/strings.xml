@@ -165,6 +165,11 @@
     <!-- 3D viewport fullscreen landscape mode -->
     <string name="threed_fullscreen">Fullscreen</string>
     <string name="threed_exit_fullscreen">Exit fullscreen</string>
+    <!-- Ecosystem status tab -->
+    <string name="tab_ecosystem">Ecosystem</string>
+    <string name="ecosystem_unavailable">The server could not find any sibling project manifests. This only works when the server is running from a checkout with other HYDRA-UMC/URTC repos alongside it.</string>
+    <string name="maturity_established">Established</string>
+    <string name="maturity_functional">Functional</string>
     <string name="update_download_install">Download and install</string>
     <string name="update_downloading">Downloading update: %1$d%%</string>
     <string name="update_install_permission">Allow this app to install updates in Android Settings, then return here and check again.</string>
