@@ -144,6 +144,22 @@ class HydraApiClient(host: String, port: Int, private val client: OkHttpClient =
     }
 
     /**
+     * Fetches the server's own real V0 ecosystem-status scan - see
+     * server.ts's own getEcosystemStatus() header comment for exactly what
+     * this is (sibling repos' own project manifests on the SAME machine
+     * the server is running from) and isn't (not a live health check of
+     * every ecosystem project as a deployed network service). Same trust
+     * tier as getSystemMetrics() above.
+     */
+    suspend fun getEcosystemStatus(): JSONObject = withContext(Dispatchers.IO) {
+        val request = Request.Builder()
+            .url("$baseUrl/api/ecosystem/status")
+            .header("Authorization", "Bearer ${authToken ?: ""}")
+            .build()
+        executeExpectingJson(request)
+    }
+
+    /**
      * Relays a recognised Watch voice turn through the authenticated Server
      * boundary. Server owns the Voice UI credential; Android and the watch
      * never receive it and this route cannot actuate a robot.

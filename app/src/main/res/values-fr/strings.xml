@@ -164,6 +164,11 @@
     <!-- 3D viewport fullscreen landscape mode -->
     <string name="threed_fullscreen">Plein écran</string>
     <string name="threed_exit_fullscreen">Quitter le plein écran</string>
+    <!-- Ecosystem status tab -->
+    <string name="tab_ecosystem">Écosystème</string>
+    <string name="ecosystem_unavailable">Le serveur n\'a trouvé aucun manifeste de projet voisin. Cela ne fonctionne que si le serveur s\'exécute depuis une copie locale avec d\'autres dépôts HYDRA-UMC/URTC à côté.</string>
+    <string name="maturity_established">Établi</string>
+    <string name="maturity_functional">Fonctionnel</string>
     <string name="update_download_install">Télécharger et installer</string>
     <string name="update_downloading">Téléchargement de la mise à jour : %1$d%%</string>
     <string name="update_install_permission">Autorisez cette application à installer des mises à jour dans les Réglages Android, revenez ici puis vérifiez à nouveau.</string>

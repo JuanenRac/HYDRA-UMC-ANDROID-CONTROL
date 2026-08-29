@@ -17,6 +17,9 @@ import android.webkit.WebResourceResponse
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import com.hydraumc.control.BuildConfig
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -73,6 +76,28 @@ fun ThreeDScreen(viewModel: RobotViewModel) {
     val activity = context as? Activity
     val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
     var jogStep by remember { mutableStateOf(1.0) }
+
+    // Real request from live device testing: the system's own bottom
+    // gesture-nav bar (visible by default on a Samsung A13 and most other
+    // real devices) stayed on screen in fullscreen landscape mode,
+    // undercutting the whole point of "the 3D view fills the entire
+    // screen". Hides system bars (immersive, swipe-to-reveal-temporarily)
+    // for exactly as long as this composable is in the fullscreen-landscape
+    // state, and restores them the moment it isn't - tied to a
+    // DisposableEffect so leaving this screen/composition entirely (not
+    // just rotating back to portrait) can't leave the app's own status/nav
+    // bars hidden behind it.
+    DisposableEffect(isLandscape, activity) {
+        val window = activity?.window
+        val controller = window?.let { WindowCompat.getInsetsController(it, it.decorView) }
+        if (isLandscape) {
+            controller?.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            controller?.hide(WindowInsetsCompat.Type.systemBars())
+        }
+        onDispose {
+            controller?.show(WindowInsetsCompat.Type.systemBars())
+        }
+    }
 
     // Key used to force WebView recreation on refresh
     var refreshKey by remember { mutableIntStateOf(0) }

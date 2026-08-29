@@ -165,6 +165,11 @@
     <!-- 3D viewport fullscreen landscape mode -->
     <string name="threed_fullscreen">全屏</string>
     <string name="threed_exit_fullscreen">退出全屏</string>
+    <!-- Ecosystem status tab -->
+    <string name="tab_ecosystem">生态系统</string>
+    <string name="ecosystem_unavailable">服务器未找到任何相邻项目的清单。此功能仅在服务器与其他 HYDRA-UMC/URTC 仓库一起从同一台机器运行时才可用。</string>
+    <string name="maturity_established">已建立</string>
+    <string name="maturity_functional">可用</string>
     <string name="update_download_install">下载并安装</string>
     <string name="update_downloading">正在下载更新：%1$d%%</string>
     <string name="update_install_permission">请在 Android 设置中允许此应用安装更新，然后返回此处再次检查。</string>

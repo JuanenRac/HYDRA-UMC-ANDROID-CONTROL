@@ -164,6 +164,11 @@
     <!-- 3D viewport fullscreen landscape mode -->
     <string name="threed_fullscreen">Vollbild</string>
     <string name="threed_exit_fullscreen">Vollbild verlassen</string>
+    <!-- Ecosystem status tab -->
+    <string name="tab_ecosystem">Ökosystem</string>
+    <string name="ecosystem_unavailable">Der Server konnte keine Manifeste benachbarter Projekte finden. Dies funktioniert nur, wenn der Server aus einem Checkout mit anderen HYDRA-UMC/URTC-Repositories daneben ausgeführt wird.</string>
+    <string name="maturity_established">Etabliert</string>
+    <string name="maturity_functional">Funktional</string>
     <string name="update_download_install">Herunterladen und installieren</string>
     <string name="update_downloading">Update wird heruntergeladen: %1$d%%</string>
     <string name="update_install_permission">Erlaube dieser App die Installation von Updates in den Android-Einstellungen, kehre dann hierher zurück und prüfe erneut.</string>

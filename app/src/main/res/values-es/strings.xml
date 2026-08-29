@@ -165,6 +165,11 @@
     <!-- 3D viewport fullscreen landscape mode -->
     <string name="threed_fullscreen">Pantalla completa</string>
     <string name="threed_exit_fullscreen">Salir de pantalla completa</string>
+    <!-- Ecosystem status tab -->
+    <string name="tab_ecosystem">Ecosistema</string>
+    <string name="ecosystem_unavailable">El servidor no ha encontrado ningún manifiesto de proyectos hermanos. Esto solo funciona cuando el servidor se ejecuta desde una copia local con otros repositorios HYDRA-UMC/URTC al lado.</string>
+    <string name="maturity_established">Establecido</string>
+    <string name="maturity_functional">Funcional</string>
     <string name="update_download_install">Descargar e instalar</string>
     <string name="update_downloading">Descargando actualización: %1$d%%</string>
     <string name="update_install_permission">Permite que esta aplicación instale actualizaciones en los Ajustes de Android, vuelve aquí y busca de nuevo.</string>

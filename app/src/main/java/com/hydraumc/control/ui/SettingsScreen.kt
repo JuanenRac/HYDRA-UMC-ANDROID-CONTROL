@@ -61,13 +61,18 @@ fun SettingsScreen(
     )
 
     Column(modifier = Modifier.fillMaxSize()) {
+        // Real complaint this fixes, live-reproduced: with 4 tabs (this
+        // used to be 3, Notifications is new), each label's text wrapped/
+        // got clipped mid-word inside its narrow quarter-width slot. Icon-
+        // only now, at double the default size, so the row stays legible
+        // regardless of language/label length - the title is kept as the
+        // icon's contentDescription instead, for screen readers.
         TabRow(selectedTabIndex = selectedTabIndex) {
             tabs.forEachIndexed { index, tab ->
                 Tab(
                     selected = selectedTabIndex == index,
                     onClick = { selectedTabIndex = index },
-                    text = { Text(tab.title) },
-                    icon = { Icon(tab.icon, contentDescription = null) },
+                    icon = { Icon(tab.icon, contentDescription = tab.title, modifier = Modifier.size(48.dp)) },
                 )
             }
         }

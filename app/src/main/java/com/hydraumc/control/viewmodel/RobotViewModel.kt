@@ -67,6 +67,23 @@ data class SystemMetrics(
     val uptime: Int
 )
 
+/**
+ * One ecosystem project's own self-description, as GET /api/ecosystem/status
+ * reports it - see server.ts's own getEcosystemStatus() for what this real
+ * V0 actually scans (sibling repos' own hydra-umc.project.json manifests on
+ * the same machine the server runs from) and doesn't (a live network health
+ * check - most of these aren't deployed as running services anywhere yet).
+ */
+data class EcosystemProject(
+    val name: String,
+    val role: String?,
+    val stack: String?,
+    val maturity: String?,
+    val family: String?,
+    val version: String?,
+    val deploymentTarget: String?,
+)
+
 /** 
  * Flat, display-friendly snapshot of one RobotView.
  */
@@ -188,6 +205,9 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
     val robots = mutableStateOf<List<RobotState>>(emptyList())
     val jobs = mutableStateOf<List<JobState>>(emptyList())
     val metrics = mutableStateOf<SystemMetrics?>(null)
+    val ecosystemProjects = mutableStateOf<List<EcosystemProject>>(emptyList())
+    val ecosystemAvailable = mutableStateOf(value = false)
+    val isLoadingEcosystemStatus = mutableStateOf(value = false)
     val selectedRobotId = mutableStateOf<Int?>(null)
 
     val ipAddress = mutableStateOf("192.168.1.100")
@@ -525,6 +545,47 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         // on screen until the next reconnect.
         if (!enabled) {
             NotificationHelper.hideSafetyNotification(getApplication())
+        }
+    }
+
+    /**
+     * Loads the server's own real V0 ecosystem-status scan - see
+     * HydraApiClient.getEcosystemStatus()'s own doc comment. Safe to call
+     * with no active connection (apiClient null): just no-ops, matching
+     * every other on-demand fetch in this class rather than throwing.
+     */
+    fun fetchEcosystemStatus() {
+        val client = apiClient ?: return
+        isLoadingEcosystemStatus.value = true
+        viewModelScope.launch {
+            try {
+                val response = client.getEcosystemStatus()
+                ecosystemAvailable.value = response.optBoolean("available", false)
+                val arr = response.optJSONArray("projects")
+                val projects = mutableListOf<EcosystemProject>()
+                if (arr != null) {
+                    for (i in 0 until arr.length()) {
+                        val p = arr.optJSONObject(i) ?: continue
+                        projects.add(
+                            EcosystemProject(
+                                name = p.optString("name"),
+                                role = p.optString("role").takeIf { it.isNotBlank() && !p.isNull("role") },
+                                stack = p.optString("stack").takeIf { it.isNotBlank() && !p.isNull("stack") },
+                                maturity = p.optString("maturity").takeIf { it.isNotBlank() && !p.isNull("maturity") },
+                                family = p.optString("family").takeIf { it.isNotBlank() && !p.isNull("family") },
+                                version = p.optString("version").takeIf { it.isNotBlank() && !p.isNull("version") },
+                                deploymentTarget = p.optString("deploymentTarget").takeIf { it.isNotBlank() && !p.isNull("deploymentTarget") },
+                            )
+                        )
+                    }
+                }
+                ecosystemProjects.value = projects
+            } catch (e: HydraApiException) {
+                ecosystemAvailable.value = false
+                lastError.value = e.message
+            } finally {
+                isLoadingEcosystemStatus.value = false
+            }
         }
     }
 
