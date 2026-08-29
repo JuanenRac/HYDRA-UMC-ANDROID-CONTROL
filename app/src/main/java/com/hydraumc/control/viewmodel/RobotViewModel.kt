@@ -69,10 +69,12 @@ data class SystemMetrics(
 
 /**
  * One ecosystem project's own self-description, as GET /api/ecosystem/status
- * reports it - see server.ts's own getEcosystemStatus() for what this real
- * V0 actually scans (sibling repos' own hydra-umc.project.json manifests on
- * the same machine the server runs from) and doesn't (a live network health
- * check - most of these aren't deployed as running services anywhere yet).
+ * reports it - see server.ts's own getEcosystemStatus() for what this scans
+ * (sibling repos' own hydra-umc.project.json manifests on the same machine
+ * the server runs from). [maturity] is a static claim from that manifest;
+ * [live] is the real thing - non-null only for a project whose manifest
+ * opts in with a `service` object, and only then is it a genuine, just-now
+ * TCP/HTTP probe result (true/false), never inferred from [maturity].
  */
 data class EcosystemProject(
     val name: String,
@@ -82,6 +84,8 @@ data class EcosystemProject(
     val family: String?,
     val version: String?,
     val deploymentTarget: String?,
+    val servicePort: Int?,
+    val live: Boolean?,
 )
 
 /** 
@@ -575,6 +579,11 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                                 family = p.optString("family").takeIf { it.isNotBlank() && !p.isNull("family") },
                                 version = p.optString("version").takeIf { it.isNotBlank() && !p.isNull("version") },
                                 deploymentTarget = p.optString("deploymentTarget").takeIf { it.isNotBlank() && !p.isNull("deploymentTarget") },
+                                servicePort = if (p.isNull("servicePort")) null else p.optInt("servicePort"),
+                                // Tri-state, not optBoolean's own false-when-absent default -
+                                // "never probed" (no service declared) must stay distinct from
+                                // a real, just-now "probed and it's down".
+                                live = if (p.isNull("live")) null else p.optBoolean("live"),
                             )
                         )
                     }
