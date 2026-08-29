@@ -5,9 +5,14 @@
 // =============================================================================
 package com.hydraumc.control.ui
 
+import android.util.Log
+import android.webkit.WebResourceError
+import android.webkit.WebResourceRequest
+import android.webkit.WebResourceResponse
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import com.hydraumc.control.BuildConfig
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -56,6 +61,23 @@ fun ThreeDScreen(viewModel: RobotViewModel) {
         key(refreshKey) {
             AndroidView(
                 factory = { context ->
+                    // Real reproduction reports have never been possible to see
+                    // past "the robot doesn't show up" - this WebView had no
+                    // error surface at all, so a page-load failure (wrong url,
+                    // network error, TLS/cert issue) and a page that loads fine
+                    // but fails to render the WebGL viewport looked identical
+                    // from outside. WebContentsDebugging (debug builds only -
+                    // never in a release, since it lets any USB-connected
+                    // desktop inspect this WebView's DOM/JS/network, including
+                    // the auth token in its URL) lets `chrome://inspect` attach
+                    // to this exact WebView for a real console/network trace.
+                    // The two callbacks below cover the other half: a real
+                    // navigation/HTTP failure now actually reaches logcat
+                    // instead of just rendering blank with no signal anywhere.
+                    if (BuildConfig.DEBUG) {
+                        WebView.setWebContentsDebuggingEnabled(true)
+                    }
+
                     WebView(context).apply {
                         settings.javaScriptEnabled = true
                         settings.domStorageEnabled = true
@@ -63,11 +85,32 @@ fun ThreeDScreen(viewModel: RobotViewModel) {
                         settings.databaseEnabled = true
                         settings.allowFileAccess = true
                         settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
-                        settings.userAgentString = "HYDRA-UMC-ANDROID-CONTROL"
+                        // Appended to (not replacing) the real default Chromium
+                        // WebView UA - a previous version replaced it outright,
+                        // which drops the browser-engine identification some
+                        // WebGL vendor/driver quirk-detection code keys off of.
+                        // Server-side/log identification of this embedded
+                        // viewport (if ever needed) can match on the appended
+                        // token instead of relying on the whole UA string.
+                        settings.userAgentString = "${settings.userAgentString} HYDRA-UMC-ANDROID-CONTROL"
 
                         setLayerType(android.view.View.LAYER_TYPE_HARDWARE, null)
 
-                        webViewClient = WebViewClient()
+                        webViewClient = object : WebViewClient() {
+                            override fun onReceivedError(view: WebView, request: WebResourceRequest, error: WebResourceError) {
+                                super.onReceivedError(view, request, error)
+                                if (request.isForMainFrame) {
+                                    Log.e("ThreeDScreen", "Main frame load failed for ${request.url}: ${error.description}")
+                                }
+                            }
+
+                            override fun onReceivedHttpError(view: WebView, request: WebResourceRequest, errorResponse: WebResourceResponse) {
+                                super.onReceivedHttpError(view, request, errorResponse)
+                                if (request.isForMainFrame) {
+                                    Log.e("ThreeDScreen", "Main frame HTTP ${errorResponse.statusCode} for ${request.url}")
+                                }
+                            }
+                        }
                         loadUrl(url)
                         loadedUrl = url
                     }
