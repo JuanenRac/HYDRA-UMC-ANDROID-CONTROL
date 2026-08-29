@@ -294,7 +294,18 @@ fun MainScreen(
             }
         }
     ) { innerPadding ->
-        NavHost(navController, startDestination = Screen.Dashboard.route, Modifier.padding(innerPadding)) {
+        // fillMaxSize() is required here, not optional - without it NavHost
+        // sizes itself to its own content's intrinsic height instead of
+        // filling Scaffold's actual content slot. Every other tab
+        // (Dashboard/Control/Camera/Telemetry/Settings) is a Column/
+        // LazyColumn that happily self-sizes and LOOKS fine either way, so
+        // this went unnoticed - but ThreeDScreen's WebView uses its own
+        // fillMaxSize() internally, which fills whatever (possibly
+        // zero-height) box NavHost itself ends up with. That's the real
+        // cause of the 3D viewport's "367x0"/blank-black-screen bug: the
+        // WebView's page (STUDIO's own React app) was correctly measuring
+        // a genuinely zero-height Android View, not failing to render.
+        NavHost(navController, startDestination = Screen.Dashboard.route, Modifier.padding(innerPadding).fillMaxSize()) {
             composable(Screen.Dashboard.route) { DashboardScreen(viewModel) }
             composable(Screen.Control.route) { ControlScreen(viewModel) }
             composable(Screen.Camera.route) { CameraScreen(viewModel) }

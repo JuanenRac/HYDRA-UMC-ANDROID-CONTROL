@@ -1,13 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?><!--
-   Sample backup rules file; uncomment and customize as necessary.
-   See https://developer.android.com/guide/topics/data/autobackup
-   for details.
-   Note: This file is ignored for devices older than API 31
-   See https://developer.android.com/about/versions/12/backup-restore
+   Pre-Android-12 counterpart to data_extraction_rules.xml (same real
+   AuthPrefs.kt AEADBadTagException crash this excludes from backup - see
+   that file's comment for the full story). Ignored on API 31+, which reads
+   data_extraction_rules.xml instead - both need the same exclusion since
+   this app's minSdk is below 31.
 -->
 <full-backup-content>
-    <!--
-   <include domain="sharedpref" path="."/>
-   <exclude domain="sharedpref" path="device.xml"/>
--->
+    <exclude domain="sharedpref" path="auth_prefs_encrypted.xml"/>
+    <exclude domain="sharedpref" path="auth_prefs_encrypted__androidx_security_crypto_encrypted_prefs_key_keyset__.xml"/>
+    <exclude domain="sharedpref" path="auth_prefs_encrypted__androidx_security_crypto_encrypted_prefs_value_keyset__.xml"/>
 </full-backup-content>

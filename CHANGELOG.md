@@ -52,6 +52,47 @@ at the time.
   always has - the same gap every other non-STUDIO client (iOS, DSI,
   SUITE) still has for every model besides Parol6, not a regression.
 
+## [0.3.5] - The 3D viewport finally renders, plus a second real login bypass and a real login crash
+
+- **Fixes the 3D viewport rendering solid black (or white after a manual
+  refresh) - it "never worked".** Root cause, confirmed by loading the
+  exact same URL in a real desktop browser (identical to every part of the
+  page rendering with real, correct sizes there): this WebView's own
+  `layoutParams` were left to Compose's `AndroidView` modifier system
+  alone, and a WebView specifically can establish its internal Chromium
+  layout viewport from whatever `LayoutParams` (or lack of them) were
+  present when it attached - not from whatever pixel bounds it's later
+  resized to. `ThreeDScreen.kt`'s WebView now sets real
+  `MATCH_PARENT`/`MATCH_PARENT` `LayoutParams` explicitly on creation, the
+  standard fix for this class of bug. Also now defers the WebView's first
+  `loadUrl()` until Compose has actually measured it (real nonzero size
+  confirmed via `onSizeChanged`) instead of firing it unconditionally from
+  `factory`, and sets `useWideViewPort`/`loadWithOverviewMode` - neither
+  turned out to be the root cause, but both are correct settings for a
+  WebView rendering a real responsive layout.
+- **Fixes login crashing immediately with `AEADBadTagException` after a
+  reinstall.** `android:allowBackup="true"` with no exclusion rules let
+  Android's auto-backup restore `AuthPrefs.kt`'s `EncryptedSharedPreferences`
+  ciphertext on a fresh install, but the Keystore-backed AES key it was
+  encrypted with is hardware-tied and never survives that restore - every
+  decrypt attempt threw, crashing any screen that touches auth (including
+  login) on every launch. `AuthPrefs.kt` now recovers automatically (clears
+  the corrupted prefs file AND the stale AndroidKeyStore entry, then starts
+  a fresh keyset - the file alone wasn't enough, confirmed live: the retry
+  failed identically until the Keystore entry itself was also cleared);
+  new `data_extraction_rules.xml`/`backup_rules.xml` exclude this file from
+  backup going forward so this can't recur.
+- **Fixes a second, distinct login bypass**: `MainActivity`'s splash screen
+  dismissed on a fixed timer alone, unrelated to whether
+  `RobotViewModel`'s own cached-session check (an async coroutine reading
+  `AuthPrefs`) had actually finished. A slow check could still be running
+  after the timer elapsed and the real login form was already showing and
+  being typed into - the cached session then resolved moments later and
+  flipped straight to the dashboard, reusing the LAST session's saved
+  credentials rather than whatever was just typed. New
+  `RobotViewModel.authCheckComplete` flag; the splash now stays up until
+  both the timer AND this are true.
+
 ## [0.3.4] - The login bypass fix actually needed to persist, not just correct memory
 
 - **Fixes the login screen still letting the dashboard show without real
