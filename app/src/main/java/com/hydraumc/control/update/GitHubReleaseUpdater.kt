@@ -17,7 +17,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import org.json.JSONObject
 import java.io.File
 import java.io.IOException
 
@@ -63,7 +62,7 @@ class GitHubReleaseUpdater(private val context: Context) {
                 }
                 val payload = response.body?.string()
                     ?: return@withContext UpdateCheckResult.Failed("GitHub returned an empty release response.")
-                parseLatestRelease(payload)
+                ReleaseMetadataParser.parseLatestStable(payload, BuildConfig.VERSION_NAME)
             }
         } catch (error: IOException) {
             UpdateCheckResult.Failed("Unable to check GitHub Releases: ${error.message ?: "network error"}")
@@ -179,36 +178,6 @@ class GitHubReleaseUpdater(private val context: Context) {
         return apk.takeIf { packageVersionCode(packageInfo) > installedVersionCode() }
     }
 
-    private fun parseLatestRelease(payload: String): UpdateCheckResult {
-        val release = JSONObject(payload)
-        if (release.optBoolean("draft") || release.optBoolean("prerelease")) {
-            return UpdateCheckResult.UpToDate
-        }
-        val remoteVersion = SemanticVersion.parseStable(release.optString("tag_name"))
-            ?: return UpdateCheckResult.Failed("Latest GitHub Release tag is not a stable vMAJOR.MINOR.PATCH value.")
-        val localVersion = SemanticVersion.parseStable(BuildConfig.VERSION_NAME)
-            ?: return UpdateCheckResult.Failed("Installed application version is not stable semver.")
-        if (remoteVersion <= localVersion) return UpdateCheckResult.UpToDate
-
-        val asset = (0 until release.getJSONArray("assets").length())
-            .asSequence()
-            .map { release.getJSONArray("assets").getJSONObject(it) }
-            .firstOrNull { it.optString("name") == RELEASE_ASSET_NAME }
-            ?: return UpdateCheckResult.Failed("Release v$remoteVersion has no $RELEASE_ASSET_NAME asset.")
-        val assetUrl = asset.optString("browser_download_url")
-        if (!assetUrl.startsWith("https://")) {
-            return UpdateCheckResult.Failed("Release APK URL is not HTTPS.")
-        }
-        return UpdateCheckResult.Available(
-            AvailableUpdate(
-                version = remoteVersion,
-                releaseName = release.optString("name", "HYDRA-UMC CONTROL v$remoteVersion"),
-                notes = release.optString("body").trim(),
-                assetUrl = assetUrl,
-            ),
-        )
-    }
-
     @Suppress("DEPRECATION")
     private fun packageArchiveInfo(apk: File): PackageInfo? =
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -240,7 +209,6 @@ class GitHubReleaseUpdater(private val context: Context) {
     private companion object {
         const val REPOSITORY = "JuanenRac/HYDRA-UMC-ANDROID-CONTROL"
         const val LATEST_RELEASE_URL = "https://api.github.com/repos/$REPOSITORY/releases/latest"
-        const val RELEASE_ASSET_NAME = "HYDRA-UMC-ANDROID-CONTROL-release.apk"
         const val UPDATE_DIRECTORY = "updates"
         const val APK_FILE_NAME = "HYDRA-UMC-ANDROID-CONTROL-update.apk"
         const val APK_MIME_TYPE = "application/vnd.android.package-archive"
