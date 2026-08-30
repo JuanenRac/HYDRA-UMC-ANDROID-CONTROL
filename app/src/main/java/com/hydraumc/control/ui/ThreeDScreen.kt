@@ -176,6 +176,23 @@ fun ThreeDScreen(viewModel: RobotViewModel) {
                         settings.databaseEnabled = true
                         settings.allowFileAccess = true
                         settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+                        // Real, defensible fix against a whole class of
+                        // "this WebView shows a stale build" bugs (one
+                        // honest candidate for the reported Android/STUDIO
+                        // 3D-view desync, not confirmed as THE root cause -
+                        // no live device was available to reproduce it this
+                        // pass, see store.tsx's own WS onopen/onmessage/
+                        // onclose diagnostics for how to actually pin it
+                        // down live). WebView's default LOAD_DEFAULT cache
+                        // mode can keep serving an old cached index.html/JS
+                        // bundle across app restarts even though
+                        // express.static's own Cache-Control: max-age=0
+                        // SHOULD force revalidation - this forces a real,
+                        // always-fresh fetch instead of trusting the cache
+                        // at all. This is a live robot-control surface on a
+                        // LAN: correctness beats the marginal bandwidth cost
+                        // of never caching.
+                        settings.cacheMode = WebSettings.LOAD_NO_CACHE
                         // Tried while chasing the blank-viewport bug above
                         // (the real fix ended up being `layoutParams` right
                         // above) - kept anyway since both are correct,

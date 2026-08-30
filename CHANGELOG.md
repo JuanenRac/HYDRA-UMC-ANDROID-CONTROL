@@ -52,6 +52,27 @@ at the time.
   always has - the same gap every other non-STUDIO client (iOS, DSI,
   SUITE) still has for every model besides Parol6, not a regression.
 
+## [0.4.1] - Force the 3D-view WebView to never serve a stale build
+
+- **`ThreeDScreen.kt`** - the embedded WebView now sets
+  `settings.cacheMode = WebSettings.LOAD_NO_CACHE`. Investigated while
+  chasing a reported "Android's 3D view and STUDIO's own browser tab
+  don't sync with each other" - real, confirmed root cause NOT found via
+  static analysis alone (the server-side broadcast, client-side delta-
+  apply, and robot-selection logic all check out correct on inspection;
+  a live device + a live STUDIO tab open side by side is what's actually
+  needed to pin this down, see `store.tsx`'s own WS onopen/onmessage/
+  onclose diagnostics for that). What WAS found and fixed while looking:
+  HYDRA-UMC-SERVER's own bundled STUDIO frontend (`public/`, what this
+  WebView actually loads) was stale - built from a commit several
+  commits behind STUDIO's real HEAD, a real, easy-to-forget gap
+  (`build-frontend.bat`/`.sh` has to be re-run by hand after every
+  STUDIO change) that would show as exactly this kind of "one client
+  behaves differently" symptom. Rebuilt it fresh as part of this pass.
+  `LOAD_NO_CACHE` is shipped as a real, defensible fix regardless -
+  correctness beats the marginal bandwidth cost on a LAN-only control
+  surface - not a confirmed fix for the reported symptom.
+
 ## [0.4.0] - Real per-service live status in the Ecosystem tab
 
 - **Telemetry > Ecosistema** now shows a real green/red "bulb" plus the
