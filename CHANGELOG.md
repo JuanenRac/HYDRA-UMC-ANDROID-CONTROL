@@ -52,6 +52,20 @@ at the time.
   always has - the same gap every other non-STUDIO client (iOS, DSI,
   SUITE) still has for every model besides Parol6, not a regression.
 
+## [0.4.3] - Hardened the self-update APK download
+
+- **`GitHubReleaseUpdater.kt`** - the downloaded update APK's actual byte
+  count is now checked against GitHub's own declared content length when
+  one is provided, and a truncated download is rejected and deleted
+  instead of being handed to `packageArchiveInfo()`/the installer. An
+  APK that fails any later real check (not a valid Android package,
+  wrong package name, not actually newer than the installed version) is
+  now deleted too, instead of being left on disk for a possible later
+  install attempt with a file that was already rejected once.
+- `docs/GITHUB_RELEASE_UPDATES.md` updated to match.
+- Verified: `./gradlew :app:compileDebugKotlin` and
+  `:app:testDebugUnitTest` both pass.
+
 ## [0.4.2] - Dedicated base-rotation (J1) buttons
 
 - **New `BaseRotationButtons` composable** (`Joystick3D.kt`) - 2 buttons
