@@ -22,6 +22,30 @@ at the time.
   applies its "android" default when a request hasn't already declared
   its own client type.
 
+- **Investigated the reported 3D-viewport desync (the 3D robot model not
+  reflecting the real robot's movement, though jog commands sent from
+  this app's own native joysticks moved it for real).** `ThreeDScreen.kt`
+  embeds Server's own STUDIO web viewport in a WebView
+  (`http://$ip:$port/?hideUI=true&robotId=...&token=...`) - the actual
+  WS-driven 3D render logic lives entirely in that web bundle's own JS,
+  not in this app, so root-caused it there instead of guessing at Kotlin
+  changes. Found two real, concrete bugs, both fixed in
+  HYDRA-UMC-STUDIO's own `0.2.8` (see that repo's changelog): (1)
+  `apiBase.ts` hardcoded `:3000` for every `fetch()`/WebSocket call
+  regardless of the port this exact page was loaded on - invisible when
+  Server runs on its default port, but a real misdirect for any
+  deployment on a different one; (2) the Server instance this was tested
+  against had been serving a STUDIO frontend build from hours earlier
+  that morning - redeployed fresh, which also picks up `0.2.2`'s own
+  already-shipped Camera-PIP-vs-disabled-camera fix that a stale build
+  would have masked. No code change needed in THIS repo for either -
+  this app's own WebView setup (cache mode, LayoutParams, console
+  logging) was already reviewed and found correct in `0.4.5`.
+  Not yet re-confirmed against a live device with the redeployed
+  Server - the `[WS] connected`/`[WS] delta` logcat diagnostics store.tsx
+  already prints (see `ThreeDScreenConsole` in this app's own logcat)
+  are the way to verify live next.
+
 Verified: `compileDebugKotlin`/`testDebugUnitTest` both pass,
 `version.properties` confirmed untouched by the verification compile
 (the real fix from [0.4.5] holding).
