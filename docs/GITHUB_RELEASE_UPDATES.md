@@ -81,8 +81,11 @@ installation is ever handed to CI.
 2. If its tag is newer than the installed stable version and it contains the
    exact asset above, the app displays an update prompt.
 3. The operator chooses **Download and install**.
-4. The app checks that the downloaded archive belongs to
-   `com.hydraumc.control` and has a larger Android `versionCode`.
+4. The app checks the response length when GitHub provides one, rejects and
+   removes a truncated download, then checks that the archive belongs to
+   `com.hydraumc.control` and has a larger Android `versionCode`. Invalid,
+   wrong-package, and non-newer cached APKs are removed rather than retained
+   for a later install attempt.
 5. Android's own installer validates the signing certificate and requests the
    platform-required installation approval.
 6. If Android opens the one-time unknown-sources permission page, returning to
