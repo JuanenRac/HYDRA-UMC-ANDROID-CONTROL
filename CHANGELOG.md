@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Extracted the GitHub Release metadata gate into the JVM-testable
+  `ReleaseMetadataParser`. New tests prove that only a newer stable release
+  with the exact HTTPS APK asset is offered; draft, prerelease, malformed,
+  missing-asset, HTTP and non-newer metadata never initiate a download.
+
 All notable changes to HYDRA-UMC CONTROL (Android) are summarized here.
 This public changelog records release-relevant work rather than a
 session-by-session diary.
