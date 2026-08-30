@@ -9,6 +9,25 @@ in [README.md](README.md#-versioning). Entries recorded before that policy
 existed are grouped under the pre-policy version `0.0.0` the repo carried
 at the time.
 
+## [0.4.6] - Watch relay calls now identify themselves distinctly to Server
+
+- **`HydraApiClient`'s shared interceptor is no longer unconditional** -
+  it used to stamp `X-Hydra-Client: android` onto every outgoing request,
+  including the 2 calls `WatchVoiceRelayService` makes on the paired
+  Watch's behalf (`postWatchVoiceTurn()`/`getWatchSystemStatus()`), so a
+  Watch-relayed request was indistinguishable from this app's own direct
+  traffic - Server's new Config > Remote Access "Watch" toggle (see that
+  repo's own changelog) had no real signal to gate on. Those 2 calls now
+  set `X-Hydra-Client: watch` explicitly, and the interceptor only
+  applies its "android" default when a request hasn't already declared
+  its own client type.
+
+Verified: `compileDebugKotlin`/`testDebugUnitTest` both pass,
+`version.properties` confirmed untouched by the verification compile
+(the real fix from [0.4.5] holding).
+Version bump per repo versioning scheme (bump_manifest_version.py +
+bump_version_code.py).
+
 ## [0.4.5] - E-STOP moved into the 3D viewport, real Gradle version-drift fix
 
 - **E-STOP/play/pause/stop console now lives inside the 3D viewport
