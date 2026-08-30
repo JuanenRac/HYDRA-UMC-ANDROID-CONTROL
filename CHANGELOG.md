@@ -52,6 +52,10 @@ at the time.
   always has - the same gap every other non-STUDIO client (iOS, DSI,
   SUITE) still has for every model besides Parol6, not a regression.
 
+## [0.4.4]
+
+- Build version synchronized with `hydra-umc.project.json` and the repository-native version source.
+
 ## [0.4.3] - Hardened the self-update APK download
 
 - **`GitHubReleaseUpdater.kt`** - the downloaded update APK's actual byte
