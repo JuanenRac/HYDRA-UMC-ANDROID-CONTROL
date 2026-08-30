@@ -168,6 +168,13 @@ class HydraApiClient(host: String, port: Int, private val client: OkHttpClient =
         val request = Request.Builder()
             .url("$baseUrl/api/voice/turn")
             .header("Authorization", "Bearer ${authToken ?: ""}")
+            // Real, distinct client identity for this relay call - see
+            // sharedHttpClient's own comment for why this must be set here
+            // rather than left to the interceptor's "android" default:
+            // server.ts's Config > Remote Access "Watch" toggle can only
+            // gate this specific call, independent of this same phone's
+            // own direct access, if it's actually labeled "watch".
+            .header("X-Hydra-Client", "watch")
             .post(turn.toJson().toString().toRequestBody(JSON_MEDIA_TYPE))
             .build()
         WatchAssistantReply.fromJson(executeExpectingJson(request))
@@ -178,6 +185,7 @@ class HydraApiClient(host: String, port: Int, private val client: OkHttpClient =
         val request = Request.Builder()
             .url("$baseUrl/api/watch/system-status")
             .header("Authorization", "Bearer ${authToken ?: ""}")
+            .header("X-Hydra-Client", "watch") // see postWatchVoiceTurn()'s own comment above
             .get()
             .build()
         WatchSystemStatus.fromJson(executeExpectingJson(request))
@@ -219,13 +227,22 @@ class HydraApiClient(host: String, port: Int, private val client: OkHttpClient =
          * /api/hydra-info actually checks this header server-side; sending
          * it on every request is simpler than special-casing just that one
          * call, and harmless everywhere else.
+         *
+         * Defaults to "android", but never overrides a value the request
+         * itself already set - postWatchVoiceTurn()/getWatchSystemStatus()
+         * below set "watch" explicitly, since those 2 calls relay a
+         * request on the paired Watch's behalf rather than this app's own
+         * traffic, and server.ts's own remoteAccess.watch toggle needs a
+         * real, distinct header to gate on to be anything but cosmetic.
          */
         val sharedHttpClient: OkHttpClient = OkHttpClient.Builder()
             .connectTimeout(5, TimeUnit.SECONDS)
             .readTimeout(10, TimeUnit.SECONDS)
             .writeTimeout(10, TimeUnit.SECONDS)
             .addInterceptor { chain ->
-                chain.proceed(chain.request().newBuilder().header("X-Hydra-Client", "android").build())
+                val original = chain.request()
+                val clientType = original.header("X-Hydra-Client") ?: "android"
+                chain.proceed(original.newBuilder().header("X-Hydra-Client", clientType).build())
             }
             .build()
     }
