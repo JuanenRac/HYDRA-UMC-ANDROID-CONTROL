@@ -107,15 +107,26 @@ class GitHubReleaseUpdater(private val context: Context) {
                             output.flush()
                         }
                     }
+                    if (expectedLength >= 0 && downloaded != expectedLength) {
+                        partial.delete()
+                        return@withContext UpdateDownloadResult.Failed(
+                            "APK download was incomplete: expected $expectedLength bytes, received $downloaded.",
+                        )
+                    }
                     if (!partial.renameTo(apk)) {
                         return@withContext UpdateDownloadResult.Failed("Could not finalise the downloaded APK.")
                     }
                     val packageInfo = packageArchiveInfo(apk)
-                        ?: return@withContext UpdateDownloadResult.Failed("Downloaded file is not a valid Android package.")
+                        ?: run {
+                            apk.delete()
+                            return@withContext UpdateDownloadResult.Failed("Downloaded file is not a valid Android package.")
+                        }
                     if (packageInfo.packageName != context.packageName) {
+                        apk.delete()
                         return@withContext UpdateDownloadResult.Failed("Downloaded APK has an unexpected package name.")
                     }
                     if (packageVersionCode(packageInfo) <= installedVersionCode()) {
+                        apk.delete()
                         return@withContext UpdateDownloadResult.Failed("Downloaded APK is not newer than the installed application.")
                     }
                     UpdateDownloadResult.ReadyToInstall(apk)
