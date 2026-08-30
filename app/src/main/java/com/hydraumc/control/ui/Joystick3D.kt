@@ -31,6 +31,8 @@ import androidx.compose.material.icons.filled.East
 import androidx.compose.material.icons.filled.GpsFixed
 import androidx.compose.material.icons.filled.North
 import androidx.compose.material.icons.filled.NorthEast
+import androidx.compose.material.icons.automirrored.filled.RotateLeft
+import androidx.compose.material.icons.automirrored.filled.RotateRight
 import androidx.compose.material.icons.filled.NorthWest
 import androidx.compose.material.icons.filled.South
 import androidx.compose.material.icons.filled.SouthEast
@@ -162,6 +164,64 @@ fun JoystickXYPad(
             JogButton(0, -1, 0, Icons.Filled.South, active = enabled)
             JogButton(1, -1, 0, Icons.Filled.SouthEast, active = enabled)
         }
+    }
+}
+
+/**
+ * 2 dedicated base-rotation (J1) buttons - requested directly, alongside
+ * the existing XYZ jog D-pad, so rotating the base and jogging the tool
+ * point are both reachable from the one control an operator already has
+ * open, mirroring STUDIO's own new base-rotation buttons in its floating
+ * JoystickOverlay (RobotDetail.tsx). Deliberately its own small composable
+ * rather than a new axis baked into [Joystick3D] itself - J1 rotation
+ * isn't a dx/dy/dz Cartesian delta the way every other button here is, so
+ * it doesn't fit that widget's own onJog(dx,dy,dz) contract.
+ *
+ * @param onRotate Called with `+1`/`-1` (not a raw degree amount - the
+ *   caller applies its own step size, same contract as [Joystick3D]'s
+ *   own `onJog`).
+ */
+@Composable
+fun BaseRotationButtons(
+    onRotate: (direction: Int) -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+) {
+    @Composable
+    fun RotateButton(direction: Int, icon: ImageVector) {
+        Box(
+            modifier = Modifier
+                .size(padBtnSize)
+                .background(Color(0xFF0F172A).copy(alpha = if (enabled) 0.8f else 0.4f), RoundedCornerShape(8.dp))
+                .border(1.dp, Color(0xFFA855F7).copy(alpha = if (enabled) 0.6f else 0.15f), RoundedCornerShape(8.dp))
+                .pointerInput(direction, enabled) {
+                    if (!enabled) return@pointerInput
+                    // Same press-and-hold-repeat contract as every other
+                    // jog control in this file.
+                    coroutineScope {
+                        awaitEachGesture {
+                            awaitFirstDown(requireUnconsumed = false)
+                            val job = launch {
+                                while (isActive) {
+                                    onRotate(direction)
+                                    delay(REPEAT_MS)
+                                }
+                            }
+                            waitForUpOrCancellation()
+                            job.cancel()
+                        }
+                    }
+                },
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(icon, contentDescription = null, tint = if (enabled) Color(0xFFA855F7) else Color(0xFFA855F7).copy(alpha = 0.4f), modifier = Modifier.size(18.dp))
+        }
+    }
+
+    Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+        RotateButton(-1, Icons.AutoMirrored.Filled.RotateLeft)
+        Text("J1", style = MaterialTheme.typography.labelSmall, color = Color(0xFFA855F7), fontWeight = FontWeight.Black, fontSize = 10.sp)
+        RotateButton(1, Icons.AutoMirrored.Filled.RotateRight)
     }
 }
 

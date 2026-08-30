@@ -399,7 +399,17 @@ private fun FullscreenJogOverlay(
             .background(Color.Black.copy(alpha = 0.35f), RoundedCornerShape(12.dp))
             .padding(10.dp),
     ) {
-        JoystickXYPad(onJog = onJog, enabled = enabled)
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            JoystickXYPad(onJog = onJog, enabled = enabled)
+            Spacer(modifier = Modifier.height(8.dp))
+            // Dedicated base-rotation (J1) buttons, right under the XY pad
+            // in this same panel - mirrors STUDIO's own new base-rotation
+            // buttons and ControlScreen.kt's own placement.
+            BaseRotationButtons(
+                enabled = enabled,
+                onRotate = { direction -> viewModel.jogJ1(direction, jogStep) },
+            )
+        }
     }
 
     Box(
