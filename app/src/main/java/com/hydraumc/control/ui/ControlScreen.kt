@@ -336,6 +336,21 @@ fun ControlScreen(viewModel: RobotViewModel) {
                                 viewModel.jogXYZ(activeTarget, dx, dy, dz, stepSize)
                             },
                         )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        // Dedicated base-rotation (J1) buttons, requested
+                        // directly alongside the XYZ jog D-pad above -
+                        // mirrors STUDIO's own new base-rotation buttons.
+                        // Only meaningful for the arm target - the XY table
+                        // has no J1 concept, same gate zEnabled above uses.
+                        BaseRotationButtons(
+                            enabled = selectedRobot.online && activeTarget == "robot",
+                            onRotate = { direction ->
+                                vibrate()
+                                viewModel.jogJ1(direction, stepSize)
+                            },
+                        )
                     }
                 }
 

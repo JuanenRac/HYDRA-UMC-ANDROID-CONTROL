@@ -52,6 +52,31 @@ at the time.
   always has - the same gap every other non-STUDIO client (iOS, DSI,
   SUITE) still has for every model besides Parol6, not a regression.
 
+## [0.4.2] - Dedicated base-rotation (J1) buttons
+
+- **New `BaseRotationButtons` composable** (`Joystick3D.kt`) - 2 buttons
+  (rotate CW/CCW, press-and-hold repeat, same contract as every other jog
+  control in this file), placed right alongside the existing XYZ jog
+  D-pad in both the normal Control screen and the fullscreen landscape 3D
+  overlay - mirrors STUDIO's own new base-rotation buttons in its
+  floating JoystickOverlay (RobotDetail.tsx), requested directly.
+- **New `RobotViewModel.jogJ1(direction, jogStep)`** - deliberately pure
+  joint-space (no per-model IK needed for J1 alone, unlike `jogXYZ()`),
+  so it works for every model, not just Parol6 (the only one with a real
+  IK port in this app so far). Real per-model J1 limits only exist for
+  Parol6 today (`PAROL6_JOINT_LIMITS_DEG`); every other model uses the
+  same `[-180, 180]` generic fallback STUDIO's own `jointLimitsFor()`
+  uses. Sends the exact same sanctioned `jog` command shape `jogXYZ()`
+  already uses (`axis:'x', amount:0` + a `joints` override carrying the
+  real desired state) - the real, established wire protocol, not a new
+  command type.
+- Only meaningful for the arm target, not the XY table (no J1 concept
+  there) - gated the same way the Z column already is.
+- Verified: `./gradlew :app:compileDebugKotlin` and
+  `:app:testDebugUnitTest` both pass (no dedicated unit test for
+  `jogJ1()` itself - `jogXYZ()`/`RobotViewModel` have none either, same
+  existing precedent). Not yet live-verified against a real robot.
+
 ## [0.4.1] - Force the 3D-view WebView to never serve a stale build
 
 - **`ThreeDScreen.kt`** - the embedded WebView now sets

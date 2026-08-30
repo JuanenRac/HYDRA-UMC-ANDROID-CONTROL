@@ -15,6 +15,7 @@ import com.hydraumc.control.model.HydraState
 import com.hydraumc.control.model.JOINT_NAMES
 import com.hydraumc.control.model.RobotView
 import com.hydraumc.control.model.ServerInfo
+import com.hydraumc.control.kinematics.PAROL6_JOINT_LIMITS_DEG
 import com.hydraumc.control.kinematics.parol6CartesianToJoints
 import com.hydraumc.control.R
 import com.hydraumc.control.network.AuthPrefs
@@ -1175,6 +1176,48 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         if (dx != 0) jog(target, "x", dx * jogStep)
         if (dy != 0) jog(target, "y", dy * jogStep)
         if (dz != 0) jog(target, "z", dz * jogStep)
+    }
+
+    /**
+     * Dedicated base-rotation (J1) jog - mirrors HYDRA-UMC-STUDIO's own
+     * new handleJ1Jog() in RobotDetail.tsx. Deliberately pure joint-space,
+     * not routed through jogXYZ()'s Cartesian/IK path above: rotating J1
+     * alone needs no inverse kinematics at all (unlike dx/dy/dz), so this
+     * is both simpler and model-agnostic - every model can be jogged this
+     * way, not just Parol6 (the only one with a real IK port here today).
+     * Real per-model limits only exist for Parol6 in this app so far
+     * (PAROL6_JOINT_LIMITS_DEG - same gap jogXYZ's own IK path already
+     * has for every other model); every other model uses the same
+     * [-180, 180] generic fallback STUDIO's own jointLimitsFor() uses.
+     *
+     * Does NOT attempt to keep [RobotState.pos]'s Cartesian fields
+     * consistent locally the way STUDIO's own fix does (that needs a
+     * per-model forward-kinematics port this app doesn't have for most
+     * models) - `joints` is what's actually authoritative server-side and
+     * what every other real cartesian computation in this app already
+     * re-derives fresh from, so a stale local `pos` display value here is
+     * cosmetic, not a correctness bug.
+     */
+    fun jogJ1(direction: Int, jogStep: Double) {
+        val robotId = selectedRobotId.value
+        val robot = robotId?.let { state.robotById(it) } ?: return
+        val (j1Min, j1Max) = if (robot.model == "Parol6 (6-DOF)") {
+            PAROL6_JOINT_LIMITS_DEG.getValue("j1")
+        } else {
+            -180.0 to 180.0
+        }
+        val currentJ1 = robot.joints.optDouble("j1", 0.0)
+        val newJ1 = (currentJ1 + direction * jogStep).coerceIn(j1Min, j1Max)
+        if (newJ1 == currentJ1) return // already at a real limit - no-op, not a clamped-but-sent command
+
+        val newJoints = JOINT_NAMES.associateWith { name -> if (name == "j1") newJ1 else robot.joints.optDouble(name, 0.0) }
+        val jointsParam = JSONObject()
+        JOINT_NAMES.forEach { name -> jointsParam.put(name, newJoints.getValue(name)) }
+        // axis:'x'/amount:0 is a real no-op on the server's own robot.pos.x -
+        // the real desired state is the `joints` override, same sanctioned
+        // mechanism jogXYZ() already uses above.
+        val params = JSONObject().put("axis", "x").put("amount", 0.0).put("target", "robot").put("joints", jointsParam)
+        sendAtomicCommand("jog", params) { r -> r.setJoint("j1", newJ1) }
     }
 
     fun toggleValve(index: Int) {
