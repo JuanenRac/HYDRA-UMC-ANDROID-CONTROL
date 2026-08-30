@@ -8,8 +8,6 @@ package com.hydraumc.control.ui
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -96,7 +94,7 @@ fun EndstopIndicator(label: String, active: Boolean) {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class, androidx.compose.foundation.ExperimentalFoundationApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ControlScreen(viewModel: RobotViewModel) {
     val context = LocalContext.current
@@ -451,89 +449,13 @@ fun ControlScreen(viewModel: RobotViewModel) {
             }
         }
 
-        // FLOATING PLAYBACK CONSOLE
+        // FLOATING PLAYBACK CONSOLE - shared with ThreeDScreen.kt's 3D
+        // viewport (portrait and fullscreen-landscape), see PlaybackConsole.kt
+        // for why this is a single, real implementation rather than a
+        // second copy of the E-STOP long-press protection.
         if (selectedRobot != null) {
-            Surface(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .fillMaxWidth()
-                    .padding(12.dp)
-                    .height(90.dp),
-                color = Color(0xFF1E293B).copy(alpha = 0.95f),
-                shape = RoundedCornerShape(24.dp),
-                shadowElevation = 12.dp,
-                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f))
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.SpaceEvenly,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    // EMERGENCY STOP - real long-press protection: a quick tap does nothing
-                    // but a short buzz + hint toast, so an accidental brush of this button
-                    // can't stop the robot; only a genuine hold (Compose's own long-press
-                    // timing, ~500ms) actually sends the command.
-                    Box(
-                        modifier = Modifier
-                            .size(64.dp)
-                            .background(Color.Red.copy(alpha = 0.15f), CircleShape)
-                            .border(2.dp, Color.Red, CircleShape)
-                            .combinedClickable(
-                                interactionSource = remember { MutableInteractionSource() },
-                                indication = null,
-                                onClick = {
-                                    vibrate(duration = 30)
-                                    Toast.makeText(context, "Hold to confirm E-STOP", Toast.LENGTH_SHORT).show()
-                                },
-                                onLongClick = {
-                                    vibrate(longArrayOf(0, 150, 50, 150, 50, 150))
-                                    viewModel.sendCommand("stop")
-                                }
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(Icons.Default.Dangerous, contentDescription = "E-STOP", tint = Color.Red, modifier = Modifier.size(36.dp))
-                    }
-
-                    // PLAY
-                    IconButton(
-                        onClick = { vibrate(); viewModel.sendCommand("play") },
-                        enabled = selectedRobot.online,
-                        modifier = Modifier.size(54.dp).background(if(selectedRobot.online) Color(0xFF15803D) else Color.DarkGray, CircleShape)
-                    ) {
-                        Icon(Icons.Default.PlayArrow, contentDescription = "PLAY", tint = Color.White)
-                    }
-
-                    // PAUSE / RESUME
-                    IconButton(
-                        onClick = { vibrate(); viewModel.sendCommand("pause") },
-                        enabled = selectedRobot.online && selectedRobot.isPlaying,
-                        modifier = Modifier.size(54.dp).background(if(selectedRobot.online && selectedRobot.isPlaying) Color(0xFFB45309) else Color.DarkGray, CircleShape)
-                    ) {
-                        Icon(if (selectedRobot.isPaused) Icons.Default.PlayArrow else Icons.Default.Pause, contentDescription = "PAUSE", tint = Color.White)
-                    }
-
-                    // STOP - same long-press protection as E-STOP above.
-                    val stopEnabled = selectedRobot.online && (selectedRobot.isPlaying || selectedRobot.isPaused)
-                    Box(
-                        modifier = Modifier
-                            .size(54.dp)
-                            .background(if (stopEnabled) Color(0xFF991B1B) else Color.DarkGray, CircleShape)
-                            .combinedClickable(
-                                interactionSource = remember { MutableInteractionSource() },
-                                indication = null,
-                                enabled = stopEnabled,
-                                onClick = {
-                                    vibrate(duration = 30)
-                                    Toast.makeText(context, "Hold to confirm STOP", Toast.LENGTH_SHORT).show()
-                                },
-                                onLongClick = { vibrate(); viewModel.sendCommand("stop") }
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(Icons.Default.Stop, contentDescription = "STOP", tint = Color.White)
-                    }
-                }
+            Box(modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(12.dp)) {
+                PlaybackConsole(viewModel = viewModel, selectedRobot = selectedRobot)
             }
         }
     }
