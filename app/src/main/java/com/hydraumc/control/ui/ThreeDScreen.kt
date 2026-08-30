@@ -337,6 +337,14 @@ fun ThreeDScreen(viewModel: RobotViewModel) {
                 onJogStepChange = { jogStep = it },
                 onExit = { activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED },
             )
+        } else if (selectedRobot != null) {
+            // Portrait: the E-STOP/play/pause/stop console lives inside the
+            // 3D viewport itself, same as the fullscreen-landscape overlay
+            // above - a real request from live testing, not just visual
+            // parity with ControlScreen.kt's own floating console.
+            Box(modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(12.dp)) {
+                PlaybackConsole(viewModel = viewModel, selectedRobot = selectedRobot)
+            }
         }
     }
 }
@@ -391,10 +399,15 @@ private fun FullscreenJogOverlay(
         }
     }
 
+    // Centered on the screen's own vertical axis (CenterStart/CenterEnd) -
+    // real request from live testing: anchored to BottomStart/BottomEnd,
+    // both thumb zones sat noticeably low on a real phone held landscape,
+    // below where a thumb naturally rests. Vertically centered instead,
+    // same horizontal edges as before.
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .wrapContentSize(Alignment.BottomStart)
+            .wrapContentSize(Alignment.CenterStart)
             .padding(20.dp)
             .background(Color.Black.copy(alpha = 0.35f), RoundedCornerShape(12.dp))
             .padding(10.dp),
@@ -415,11 +428,31 @@ private fun FullscreenJogOverlay(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .wrapContentSize(Alignment.BottomEnd)
+            .wrapContentSize(Alignment.CenterEnd)
             .padding(20.dp)
             .background(Color.Black.copy(alpha = 0.35f), RoundedCornerShape(12.dp))
             .padding(10.dp),
     ) {
         JoystickZColumn(onJog = onJog, enabled = enabled)
+    }
+
+    // E-STOP/play/pause/stop console - bottom-center, same real console
+    // ThreeDScreen's own portrait mode and ControlScreen.kt both use (see
+    // PlaybackConsole.kt). Below the now-centered thumb zones above, out of
+    // their way. A fixed width (not fillMaxWidth like the portrait
+    // placement) - landscape is much wider than the console was designed
+    // for, and PlaybackConsole's own Surface fills whatever width its
+    // container gives it, so this Box's own explicit width is what
+    // actually keeps the four buttons together instead of spread edge to
+    // edge across the whole screen.
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(bottom = 12.dp),
+        contentAlignment = Alignment.BottomCenter,
+    ) {
+        Box(modifier = Modifier.width(360.dp)) {
+            PlaybackConsole(viewModel = viewModel, selectedRobot = selectedRobot)
+        }
     }
 }

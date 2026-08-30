@@ -50,26 +50,25 @@ val hasPrivateReleaseSigning = listOf(
 ).all { !it.isNullOrBlank() }
 
 // =============================================================================
-// Ecosystem-wide auto version bump ("odometer" rule, base 10) - see
-// CHANGELOG.md and version.properties. This block runs at Gradle
-// CONFIGURATION time, which happens on every real build (assembleDebug,
-// installDebug, compileDebugKotlin, ...) - so version.properties is read,
-// bumped, and rewritten with the new values BEFORE those values are used
-// for versionCode/versionName below, meaning the APK produced by this exact
-// invocation already carries the bumped number, never the previous one.
+// Version source of truth
+// =============================================================================
+// Gradle always reads version.properties and never writes it.
+// build-android.bat/.sh are the sole release flow: they run
+// bump_manifest_version.py (native version + manifest + CHANGELOG) and
+// bump_version_code.py (the separate, always-monotonic Android versionCode)
+// first, then invoke Gradle - see bump_version_code.py's own docstring,
+// which already documented this exact contract.
 //
-// Rule: versionPatch +1; if it would go above 9 it resets to 0 and
-// versionMinor +1 instead (example: 0.0.9 -> 0.1.0). versionCode is a
-// separate simple monotonic counter, always +1, no carry - Android requires
-// versionCode to strictly increase across every build that ever ships.
-// Same odometer convention already used by HYDRA-UMC-STUDIO/scripts/
-// bump-version.mjs, HYDRA-UMC-SUITE/bump_version.py and
-// HYDRA-UMC-IOS-CONTROL/tool/bump_version.dart - this is the Gradle-native
-// equivalent for this repo, wired into the configuration phase instead of a
-// separate pre-build script since that's the point in a Gradle build that
-// reliably runs on every real build. CI sets HYDRA_UMC_CI=1 and the local
-// non-versioning verifier passes -PhydraUmcReadOnly=true, so either path can
-// use the declared version without mutating a checked-out source tree.
+// This used to write version.properties itself at Gradle CONFIGURATION
+// time on ANY real task (assembleDebug, installDebug, compileDebugKotlin,
+// ...) unless -PhydraUmcReadOnly=true/HYDRA_UMC_CI=1 was passed - a plain
+// dev build (e.g. a verification `compileDebugKotlin`) run without that
+// flag silently advanced the native version with no matching manifest/
+// CHANGELOG update. Found live: two verification compiles during this same
+// session bumped versionPatch/versionCode twice with the manifest never
+// moving - the exact version-mirror drift class this ecosystem's
+// convention exists to prevent, same bug already fixed in
+// HYDRA-UMC-WATCH's own build.gradle.kts.
 val versionPropsFile = file("version.properties")
 val versionPropsText = versionPropsFile.readText()
 
@@ -79,32 +78,10 @@ fun readIntProp(text: String, key: String): Int {
     return match.groupValues[1].toInt()
 }
 
-fun replaceIntProp(text: String, key: String, value: Int): String =
-    text.replace(Regex("(?m)^$key=\\d+\\s*$"), "$key=$value")
-
-var appVersionMajor = readIntProp(versionPropsText, "versionMajor")
-var appVersionMinor = readIntProp(versionPropsText, "versionMinor")
-var appVersionPatch = readIntProp(versionPropsText, "versionPatch")
-var appVersionCode = readIntProp(versionPropsText, "versionCode")
-
-val readOnlyBuild = providers.gradleProperty("hydraUmcReadOnly").orNull == "true" ||
-    System.getenv("HYDRA_UMC_CI") == "1"
-
-if (!readOnlyBuild) {
-    appVersionPatch += 1
-    if (appVersionPatch > 9) {
-        appVersionPatch = 0
-        appVersionMinor += 1
-    }
-    appVersionCode += 1
-
-    var newVersionPropsText = versionPropsText
-    newVersionPropsText = replaceIntProp(newVersionPropsText, "versionMajor", appVersionMajor)
-    newVersionPropsText = replaceIntProp(newVersionPropsText, "versionMinor", appVersionMinor)
-    newVersionPropsText = replaceIntProp(newVersionPropsText, "versionPatch", appVersionPatch)
-    newVersionPropsText = replaceIntProp(newVersionPropsText, "versionCode", appVersionCode)
-    versionPropsFile.writeText(newVersionPropsText)
-}
+val appVersionMajor = readIntProp(versionPropsText, "versionMajor")
+val appVersionMinor = readIntProp(versionPropsText, "versionMinor")
+val appVersionPatch = readIntProp(versionPropsText, "versionPatch")
+val appVersionCode = readIntProp(versionPropsText, "versionCode")
 
 val appVersionName = "$appVersionMajor.$appVersionMinor.$appVersionPatch"
 

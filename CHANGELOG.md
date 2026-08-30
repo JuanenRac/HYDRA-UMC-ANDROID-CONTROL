@@ -1,12 +1,5 @@
 # Changelog
 
-## Unreleased
-
-- Extracted the GitHub Release metadata gate into the JVM-testable
-  `ReleaseMetadataParser`. New tests prove that only a newer stable release
-  with the exact HTTPS APK asset is offered; draft, prerelease, malformed,
-  missing-asset, HTTP and non-newer metadata never initiate a download.
-
 All notable changes to HYDRA-UMC CONTROL (Android) are summarized here.
 This public changelog records release-relevant work rather than a
 session-by-session diary.
@@ -16,8 +9,40 @@ in [README.md](README.md#-versioning). Entries recorded before that policy
 existed are grouped under the pre-policy version `0.0.0` the repo carried
 at the time.
 
-## [Unreleased] - Paired Watch relay and language resources
+## [0.4.5] - E-STOP moved into the 3D viewport, real Gradle version-drift fix
 
+- **E-STOP/play/pause/stop console now lives inside the 3D viewport
+  itself** (`PlaybackConsole.kt`, new) - a real request from live device
+  testing: this control surface used to exist only on the Control tab,
+  never on the 3D tab, portrait or fullscreen-landscape. Extracted
+  ControlScreen.kt's own floating console into this shared composable
+  (same real long-press E-STOP/STOP protection, not a second copy of that
+  safety logic) and wired it into `ThreeDScreen.kt`'s portrait view and
+  its fullscreen-landscape overlay, bottom-center in both. The E-STOP
+  itself now pulses continuously (animated red glow) instead of sitting
+  static - meant to read as the one control that must be found instantly,
+  not just another button.
+- **Fullscreen-landscape joystick thumb zones re-centered** - `JoystickXYPad`/
+  `JoystickZColumn` moved from `BottomStart`/`BottomEnd` to `CenterStart`/
+  `CenterEnd`: anchored to the bottom, both sat noticeably lower than where
+  a thumb naturally rests holding the phone landscape.
+- **Fixed a real version-mirror drift bug in `app/build.gradle.kts`** -
+  found live, mid-session: it wrote `version.properties` itself at Gradle
+  CONFIGURATION time on *any* real task (`assembleDebug`, `compileDebugKotlin`,
+  ...) unless `-PhydraUmcReadOnly=true`/`HYDRA_UMC_CI=1` was passed - two
+  plain verification compiles this session silently advanced
+  versionPatch/versionCode twice with the manifest never moving, exactly
+  the drift class this ecosystem's version-mirror convention exists to
+  prevent (same bug already fixed in HYDRA-UMC-WATCH's own
+  `build.gradle.kts`). Gradle now only *reads* `version.properties`;
+  `bump_manifest_version.py` + `bump_version_code.py`, run from
+  `build-android.bat`/`.sh` before Gradle, are the only real source of a
+  version bump - `bump_version_code.py`'s own docstring already documented
+  this exact contract, the code just hadn't matched it yet.
+- Extracted the GitHub Release metadata gate into the JVM-testable
+  `ReleaseMetadataParser`. New tests prove that only a newer stable release
+  with the exact HTTPS APK asset is offered; draft, prerelease, malformed,
+  missing-asset, HTTP and non-newer metadata never initiate a download.
 - Added `WatchVoiceRelayService` using Wear OS Data Layer. It accepts only
   bounded recognised text or a health-card request from the paired Watch,
   loads the phone's encrypted Server session and returns the typed reply. It
@@ -25,7 +50,6 @@ at the time.
 - Added the official `play-services-wearable` dependency. Both Android and
   Watch use the same application ID/signing certificate, which Data Layer
   enforces before it accepts a message.
-
 - New `values-zh/strings.xml` (Simplified Chinese) and `values-ja/strings.xml`
   (Japanese) - full translation of all 147 strings, matching the coverage
   of the existing values-es/values-de/values-fr/values-it resource sets.
@@ -37,7 +61,6 @@ at the time.
   each via a real XML parse).
 - New `README_zho.md` / `README_jpn.md` documentation translations, plus
   the 5 existing README files' language selectors updated to link them.
-
 - **New `Parol6Kinematics.kt`** - a faithful Kotlin port of HYDRA-UMC-STUDIO's
   own real Parol6 inverse kinematics (`src/examples/parol6Kinematics.ts`:
   the same 6-step PAROL6.urdf transform chain and multi-seeded
@@ -58,6 +81,13 @@ at the time.
   Every other model/target still jogs `pos.x/y/z` exactly as this app
   always has - the same gap every other non-STUDIO client (iOS, DSI,
   SUITE) still has for every model besides Parol6, not a regression.
+- **Not confirmed this pass**: a live report that the fullscreen-landscape
+  3D viewport only fills roughly the top half of the screen. Read through
+  `ThreeDScreen.kt`'s WebView setup, `MainScreen.kt`'s fullscreen bypass,
+  and STUDIO's own `viewportOnly` flex-height chain (already a real,
+  verified-in-desktop-browser 100%-height chain) without finding a
+  reproducible cause - needs a live device to actually pin down, same as
+  the still-open Android/STUDIO 3D-sync investigation.
 
 ## [0.4.4]
 
