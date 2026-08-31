@@ -102,8 +102,39 @@ fun ThreeDScreen(viewModel: RobotViewModel) {
     // Key used to force WebView recreation on refresh
     var refreshKey by remember { mutableIntStateOf(0) }
 
-    // We target the specific robot in the Studio UI via URL parameters
-    val token = viewModel.apiClient?.authToken ?: ""
+    // We target the specific robot in the Studio UI via URL parameters.
+    // Real bug fix: reads viewModel.authTokenState.value (a real Compose
+    // State<String?>), NOT viewModel.apiClient?.authToken directly -
+    // apiClient is a plain var and HydraApiClient.authToken is a plain var
+    // on it too, so a login or host/port reconnect that happens AFTER this
+    // screen has already composed once (e.g. the app auto-connects on a
+    // saved profile while the user is already sitting on this tab, or the
+    // user changes server settings from elsewhere in the app) never
+    // triggered a recomposition here - this val kept re-evaluating to
+    // whatever apiClient reference/token happened to be current the LAST
+    // time something else recomposed this screen, which could be stale or
+    // empty. The embedded WebView then loaded STUDIO's own page with a
+    // stale/invalid token, so its OWN WebSocket connection (a completely
+    // separate session from this app's native REST/WS calls, which read
+    // apiClient directly and kept working fine) never authenticated or
+    // never opened at all.
+    //
+    // Note on the wider investigation (see this repo's own CHANGELOG
+    // [0.4.6] and HYDRA-UMC-STUDIO's [0.2.2]/[0.2.8]): the live desync +
+    // wrong-camera-panel report this fix responds to was already
+    // root-caused mostly on the STUDIO/Server side - a hardcoded :3000 in
+    // apiBase.ts (fixed in STUDIO 0.2.8) and, more importantly, the CM5's
+    // deployed Server was found serving an hours-stale STUDIO build that
+    // predated STUDIO 0.2.2's own real Camera-PIP-vs-disabled-camera fix.
+    // [0.4.6] explicitly noted that redeploy was "not yet re-confirmed
+    // against a live device". This token-staleness bug is independent of
+    // that and real on its own merits (a plain, non-Compose-observable
+    // var read from a @Composable is objectively wrong regardless of
+    // whether it was the exact live symptom's proximate cause) - fixed
+    // here as a genuine defensive correctness fix, not as a claim that it
+    // was the actual live root cause instead of the stale-build
+    // explanation already on record above.
+    val token = viewModel.authTokenState.value ?: ""
     val url = "http://$ip:$port/?hideUI=true&robotId=$selectedId&token=$token"
 
     // Tracks what was last actually pushed into the WebView via loadUrl() -

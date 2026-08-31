@@ -234,6 +234,19 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
 
     var state = HydraState.empty()
     var apiClient: HydraApiClient? = null
+    // Real, Compose-observable mirror of apiClient?.authToken - apiClient
+    // itself is a plain var and HydraApiClient.authToken is a plain var on
+    // it too, so reassigning either (auto-login from a saved profile,
+    // interactive login, or a host/port reconnect - all 3 real call sites
+    // below) never triggers recomposition on its own. Any @Composable that
+    // needs the CURRENT token (ThreeDScreen.kt building its embedded
+    // WebView URL is the real one - a stale token there silently points
+    // the embedded viewport at a dead/wrong session, which looks exactly
+    // like "the 3D view never updates" even though the native app's own
+    // REST/WS calls, which read apiClient directly rather than through
+    // Compose state, keep working fine) must read THIS instead of
+    // reaching into apiClient?.authToken directly.
+    val authTokenState = mutableStateOf<String?>(null)
     private var ws: HydraWebSocket? = null
     private var bleClient: HydraBleClient? = null
     private val prefs = ConnectionPrefs(application)
@@ -348,6 +361,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                 val client = HydraApiClient(ipAddress.value, port.value.toIntOrNull() ?: 3000)
                 client.authToken = profile.token
                 apiClient = client
+                authTokenState.value = profile.token
             }
 
             if (profile.rememberMe && profile.isLoggedIn) {
@@ -441,6 +455,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                 if (response.optBoolean("success")) {
                     val token = response.optString("token")
                     client.authToken = token
+                    authTokenState.value = token
                     isLoggedIn.value = true
                     loginUsername.value = user
                     loginPassword.value = pass
@@ -662,6 +677,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
             val client = HydraApiClient(host, portInt)
             client.authToken = token
             apiClient = client
+            authTokenState.value = token
 
             prefs.save(host, portValue)
 
@@ -1366,7 +1382,8 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         ws?.disconnect()
         bleClient?.disconnect()
         apiClient = null
-        
+        authTokenState.value = null
+
         lastError.value = null
         connectionStatus.value = getApplication<Application>().getString(R.string.status_connecting)
         

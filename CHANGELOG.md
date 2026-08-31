@@ -9,6 +9,34 @@ in [README.md](README.md#-versioning). Entries recorded before that policy
 existed are grouped under the pre-policy version `0.0.0` the repo carried
 at the time.
 
+## [0.4.7] - RobotViewModel's auth token is now real Compose state
+
+- **`RobotViewModel.apiClient` and `HydraApiClient.authToken` are plain
+  Kotlin `var`s, not `mutableStateOf`** - a `@Composable` reading
+  `viewModel.apiClient?.authToken` as a plain `val` has no reliable
+  recomposition signal when a login or reconnect happens after that
+  screen has already composed once (e.g. auto-connect on a saved profile
+  while the user is already sitting on a tab, or a settings change made
+  from elsewhere in the app). `ThreeDScreen.kt` did exactly this to build
+  the embedded WebView's URL
+  (`http://$ip:$port/?hideUI=true&robotId=...&token=...`), so a stale or
+  empty token could reach STUDIO's own page, breaking that WebView's own
+  independent WebSocket session while this app's native REST/WS calls
+  (which read `apiClient` directly, not through Compose) kept working.
+  Added `RobotViewModel.authTokenState` (`mutableStateOf<String?>`),
+  updated at all 3 real token-write sites plus the BLE-only
+  disconnect path, and changed `ThreeDScreen.kt` to read that instead of
+  reaching into `apiClient` directly. A real, independent correctness
+  fix - not a claim that it was the proximate cause of the live desync
+  report `[0.4.6]` already investigated: that report's most likely real
+  explanation (a stale STUDIO build deployed on the CM5, predating
+  STUDIO's own `[0.2.2]`/`[0.2.8]` fixes) is still on record there and
+  not yet re-confirmed against a live device.
+
+Verified: `tools/build_test.py` (`gradlew.bat assembleDebug
+-PhydraUmcReadOnly=true`) passes. Not yet re-tested on a live device -
+the CM5 this would be tested against is mid-flash as of this entry.
+
 ## [0.4.6] - Watch relay calls now identify themselves distinctly to Server
 
 - **`HydraApiClient`'s shared interceptor is no longer unconditional** -
