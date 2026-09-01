@@ -40,6 +40,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.zIndex
 import com.hydraumc.control.R
 import com.hydraumc.control.viewmodel.RobotViewModel
 
@@ -383,13 +384,28 @@ fun ThreeDScreen(viewModel: RobotViewModel) {
         }
 
         if (isLandscape) {
-            FullscreenJogOverlay(
-                viewModel = viewModel,
-                selectedRobot = selectedRobot,
-                jogStep = jogStep,
-                onJogStepChange = { jogStep = it },
-                onExit = { activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED },
-            )
+            // Real feedback from live testing: the XY/Z joysticks inside
+            // this overlay stopped responding to touch, while the WebView's
+            // own top control bar and (before this same pass removed it)
+            // the native console still worked - this overlay is the ONLY
+            // place native Compose touch targets sit directly on top of the
+            // embedded WebView's own full-screen bounds (ControlScreen.kt's
+            // joysticks live on a completely separate screen, no WebView
+            // underneath). A default-z-order Compose sibling of an
+            // AndroidView isn't always guaranteed to win hit-testing over
+            // that AndroidView's own native touch handling (WebView reads
+            // raw touch itself, for the 3D canvas's own orbit-drag) -
+            // explicit zIndex is the standard, documented fix to make sure
+            // this overlay's pointerInput handlers see the touch first.
+            Box(modifier = Modifier.fillMaxSize().zIndex(1f)) {
+                FullscreenJogOverlay(
+                    viewModel = viewModel,
+                    selectedRobot = selectedRobot,
+                    jogStep = jogStep,
+                    onJogStepChange = { jogStep = it },
+                    onExit = { activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED },
+                )
+            }
         }
         // The E-STOP/play/pause/stop console used to be duplicated inside
         // this 3D viewport too (both portrait and the fullscreen-landscape
