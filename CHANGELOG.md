@@ -9,8 +9,28 @@ in [README.md](README.md#-versioning). Entries recorded before that policy
 existed are grouped under the pre-policy version `0.0.0` the repo carried
 at the time.
 
-## [Unreleased]
+## [0.4.8] - 3D viewport no longer duplicates the Robot Control console; update dialog now opens the Updates screen
 
+- **`ThreeDScreen.kt` - the 3D viewport duplicated the Robot Control menu's
+  own E-STOP/play/pause/stop console**: real feedback from live testing.
+  Both the portrait 3D view and the fullscreen-landscape jog overlay each
+  rendered their own copy of `PlaybackConsole` - identical to, and
+  redundant with, the one `ControlScreen.kt`'s Robot Control menu already
+  shows. This is what the note just below (kept for its own remaining
+  question about the hidden `Scaffold`) had flagged as worth a second
+  look. Removed from both orientations; the 3D viewer is jog/view-only.
+- **The "Update and install" button on the update dialog never opened the
+  Updates screen**: tapping it only called `downloadAndInstall()` - the
+  dialog's own visibility condition (`updateState is
+  AppUpdateState.Available`) stops matching the instant the state moves
+  on to `Downloading`, so the dialog just vanished and the operator was
+  dropped back on whatever screen was underneath with no way to see
+  download progress, the install-permission prompt, or a failure.
+  `MainScreen.kt` now also navigates to Settings on that same tap, and
+  `SettingsScreen.kt` opens directly on its own Updates tab whenever an
+  update is actively in flight (`Available`/`Downloading`/
+  `InstallPermissionRequired`/`Installing`/`Failed`) instead of always
+  defaulting to Wi-Fi.
 - **`ThreeDScreen.kt` - the fullscreen-landscape button locked orientation
   and never released it**: tapping the 3D viewport's fullscreen button set
   `requestedOrientation = SCREEN_ORIENTATION_LANDSCAPE`, which the OS
@@ -31,6 +51,10 @@ at the time.
   together with the project owner: is that the "los botones" behavior
   being reported, or a separate issue - not changed here since it is a
   deliberate, already-audited design choice, not an obvious bug.
+
+Verified: `compileDebugKotlin` passes. Live-confirmed by the project owner
+after installing the previous build: the duplicated console and the
+update-dialog redirect were both real, reproducible issues.
 
 ## [0.4.7] - RobotViewModel's auth token is now real Compose state
 
