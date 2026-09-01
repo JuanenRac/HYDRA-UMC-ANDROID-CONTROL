@@ -49,9 +49,30 @@ fun SettingsScreen(
     updateViewModel: AppUpdateViewModel,
     onEnableBluetooth: () -> Unit = {},
 ) {
-    /** Index of the currently selected settings tab. */
-    var selectedTabIndex by remember { mutableIntStateOf(0) }
     val updateState by updateViewModel.state.collectAsState()
+    // Real regression fix, live-reproduced: tapping "Download and install"
+    // on the update dialog (MainScreen.kt) used to just start the download
+    // and dismiss the dialog - it never navigated here at all, so the
+    // operator had no way to see progress/the install-permission prompt/a
+    // failure short of remembering to open Settings > Updates themselves.
+    // MainScreen.kt now navigates to this screen on that same tap; this
+    // screen in turn opens directly on the Updates tab whenever there's an
+    // update actively in flight, instead of always defaulting to Wi-Fi.
+    // Evaluated once, at this screen's own first composition - not a race
+    // with downloadAndInstall's own coroutine: the state at the moment the
+    // button was tapped was Available (that's the only way the dialog
+    // could have been showing), and Available is itself one of the
+    // "actively in flight" states below, so whichever of Available/
+    // Downloading the coroutine has reached by the time this screen first
+    // composes, the outcome is the same tab.
+    val initialTabIndex = when (updateState) {
+        is AppUpdateState.Available, is AppUpdateState.Downloading,
+        is AppUpdateState.InstallPermissionRequired, AppUpdateState.Installing,
+        is AppUpdateState.Failed -> 3
+        else -> 0
+    }
+    /** Index of the currently selected settings tab. */
+    var selectedTabIndex by remember { mutableIntStateOf(initialTabIndex) }
     /** List of tab items for Wi-Fi, Bluetooth, notifications and application updates. */
     val tabs = listOf(
         TabItem(stringResource(R.string.tab_wifi), Icons.Default.Wifi),

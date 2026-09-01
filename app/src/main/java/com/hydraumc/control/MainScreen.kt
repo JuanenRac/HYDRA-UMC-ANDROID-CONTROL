@@ -120,7 +120,25 @@ fun MainScreen(
         AlertDialog(
             onDismissRequest = updateViewModel::dismiss,
             title = { Text(stringResource(R.string.app_updates)) },
-            text = { UpdateAvailableContent(update) { updateViewModel.downloadAndInstall(update) } },
+            text = {
+                UpdateAvailableContent(update) {
+                    // Real regression fix, live-reproduced: this used to
+                    // only start the download and let the dialog vanish
+                    // (its own visibility condition stops matching the
+                    // instant state leaves Available) - the operator was
+                    // dropped back on whatever screen was underneath with
+                    // no way to see download/install progress. Now also
+                    // navigates to Settings, which opens directly on its
+                    // own Updates tab for exactly this in-flight state (see
+                    // SettingsScreen.kt's own initialTabIndex comment).
+                    updateViewModel.downloadAndInstall(update)
+                    navController.navigate(Screen.Settings.route) {
+                        popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                }
+            },
             confirmButton = {},
             dismissButton = {
                 TextButton(onClick = updateViewModel::dismiss) {
