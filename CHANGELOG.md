@@ -9,6 +9,26 @@ in [README.md](README.md#-versioning). Entries recorded before that policy
 existed are grouped under the pre-policy version `0.0.0` the repo carried
 at the time.
 
+## [0.4.9] - Fullscreen-landscape joysticks now win touch priority over the embedded WebView
+
+- **`ThreeDScreen.kt` - the XY/Z joysticks in fullscreen-landscape mode
+  stopped responding to touch**: real feedback from live testing after
+  `[0.4.8]`'s console removal - the top control bar and (before that
+  removal) the native console still worked, but the two thumb-pad
+  joysticks did not. `FullscreenJogOverlay` is the only place this app
+  renders native Compose touch targets directly on top of the embedded
+  WebView's own full-screen bounds (`ControlScreen.kt`'s joysticks live
+  on a completely separate screen with no WebView underneath) - a plain
+  Compose sibling of an `AndroidView` isn't always guaranteed to win
+  hit-testing over that `AndroidView`'s own native touch handling
+  (WebView reads raw touch itself, for the embedded 3D canvas's own
+  orbit-drag). Wrapped the overlay in an explicit `Modifier.zIndex(1f)`
+  Box - the standard, documented fix for a Compose overlay losing touch
+  priority to an `AndroidView` sibling. Not independently reproducible
+  without a physical device this pass; needs the project owner's live
+  confirmation on the next build, same as several other WebView-adjacent
+  fixes already on record in this file.
+
 ## [0.4.8] - 3D viewport no longer duplicates the Robot Control console; update dialog now opens the Updates screen
 
 - **`ThreeDScreen.kt` - the 3D viewport duplicated the Robot Control menu's
