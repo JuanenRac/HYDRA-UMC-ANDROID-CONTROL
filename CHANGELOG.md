@@ -9,6 +9,29 @@ in [README.md](README.md#-versioning). Entries recorded before that policy
 existed are grouped under the pre-policy version `0.0.0` the repo carried
 at the time.
 
+## [Unreleased]
+
+- **`ThreeDScreen.kt` - the fullscreen-landscape button locked orientation
+  and never released it**: tapping the 3D viewport's fullscreen button set
+  `requestedOrientation = SCREEN_ORIENTATION_LANDSCAPE`, which the OS
+  honors over the accelerometer - physically rotating the device back to
+  portrait afterward did nothing until the user found the small
+  in-viewport exit "X" (`FullscreenJogOverlay`'s own `onExit`), which is
+  the only place that reset it back to `UNSPECIFIED`. Found reading the
+  code directly (no live Android device available this pass - not yet
+  confirmed as THE cause of a specific field report, but a real,
+  independent bug on its own merits regardless). Now releases the lock
+  back to `UNSPECIFIED` the moment `isLandscape` actually becomes true -
+  the button only ever nudges the device into landscape once, it never
+  fights a later physical rotation back to portrait.
+- Separately, `MainScreen.kt`'s own `isLandscape && isOnThreeDScreen`
+  early return (real, by design - see that file's own comment on why it
+  was narrowed there) hides the entire `Scaffold` - all navigation and
+  buttons - while on the 3D tab in landscape. Worth a second look
+  together with the project owner: is that the "los botones" behavior
+  being reported, or a separate issue - not changed here since it is a
+  deliberate, already-audited design choice, not an obvious bug.
+
 ## [0.4.7] - RobotViewModel's auth token is now real Compose state
 
 - **`RobotViewModel.apiClient` and `HydraApiClient.authToken` are plain

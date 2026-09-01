@@ -77,6 +77,28 @@ fun ThreeDScreen(viewModel: RobotViewModel) {
     val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
     var jogStep by remember { mutableStateOf(1.0) }
 
+    // Real bug, found by reading this code rather than a live device (no
+    // physical Android hardware available this pass - see this repo's own
+    // established rigor of not claiming a fix confirmed without one): the
+    // fullscreen button above forces requestedOrientation to LANDSCAPE and
+    // NEVER released it except through the in-viewport exit "X"
+    // (FullscreenJogOverlay's own onExit). Physically rotating the device
+    // back to portrait did nothing while that lock was held - the OS
+    // honors the app's own forced orientation over the accelerometer, so
+    // the screen stayed landscape-locked until the user found that small
+    // on-screen control, reading as "orientation is broken" from outside.
+    // Releasing the lock back to UNSPECIFIED the moment isLandscape
+    // actually becomes true (i.e. the forced rotation already succeeded)
+    // means the button only ever NUDGES the device into landscape once -
+    // it never fights a later physical rotation back to portrait, which
+    // is the real, expected behavior for a forced-orientation button like
+    // this.
+    LaunchedEffect(isLandscape) {
+        if (isLandscape) {
+            activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+        }
+    }
+
     // Real request from live device testing: the system's own bottom
     // gesture-nav bar (visible by default on a Samsung A13 and most other
     // real devices) stayed on screen in fullscreen landscape mode,
