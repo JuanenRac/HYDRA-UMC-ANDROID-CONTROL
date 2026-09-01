@@ -390,15 +390,13 @@ fun ThreeDScreen(viewModel: RobotViewModel) {
                 onJogStepChange = { jogStep = it },
                 onExit = { activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED },
             )
-        } else if (selectedRobot != null) {
-            // Portrait: the E-STOP/play/pause/stop console lives inside the
-            // 3D viewport itself, same as the fullscreen-landscape overlay
-            // above - a real request from live testing, not just visual
-            // parity with ControlScreen.kt's own floating console.
-            Box(modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(12.dp)) {
-                PlaybackConsole(viewModel = viewModel, selectedRobot = selectedRobot)
-            }
         }
+        // The E-STOP/play/pause/stop console used to be duplicated inside
+        // this 3D viewport too (both portrait and the fullscreen-landscape
+        // overlay below) - real feedback from live testing: it's identical
+        // to, and redundant with, the one ControlScreen.kt's own Robot
+        // Control menu already shows. Removed from both orientations; the
+        // 3D viewer is jog/view-only now.
     }
 }
 
@@ -488,24 +486,8 @@ private fun FullscreenJogOverlay(
     ) {
         JoystickZColumn(onJog = onJog, enabled = enabled)
     }
-
-    // E-STOP/play/pause/stop console - bottom-center, same real console
-    // ThreeDScreen's own portrait mode and ControlScreen.kt both use (see
-    // PlaybackConsole.kt). Below the now-centered thumb zones above, out of
-    // their way. A fixed width (not fillMaxWidth like the portrait
-    // placement) - landscape is much wider than the console was designed
-    // for, and PlaybackConsole's own Surface fills whatever width its
-    // container gives it, so this Box's own explicit width is what
-    // actually keeps the four buttons together instead of spread edge to
-    // edge across the whole screen.
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(bottom = 12.dp),
-        contentAlignment = Alignment.BottomCenter,
-    ) {
-        Box(modifier = Modifier.width(360.dp)) {
-            PlaybackConsole(viewModel = viewModel, selectedRobot = selectedRobot)
-        }
-    }
+    // The E-STOP/play/pause/stop console that used to sit bottom-center
+    // here was identical to, and redundant with, ControlScreen.kt's own
+    // Robot Control menu console - removed per live-testing feedback (see
+    // this file's other removal note above). This overlay is jog-only now.
 }
