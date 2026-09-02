@@ -107,11 +107,15 @@ APK は `app/build/outputs/apk/debug/app-debug.apk` に生成されます。`adb
 HYDRA-UMC-ANDROID-CONTROL/
 ├── app/
 │   ├── build.gradle.kts          # アプリモジュールの Gradle 設定——AGP/Kotlin/Compose バージョン、依存関係、デバッグ署名の release ビルドタイプ
+│   ├── version.properties        # オドメーター式アプリバージョン + Android の versionCode。bump_manifest_version.py/bump_version_code.py が同期
+│   ├── proguard-rules.pro        # release ビルド用のコード縮小/難読化ルール
 │   └── src/main/
 │       ├── AndroidManifest.xml   # 権限、activity/receiver 宣言、usesCleartextTraffic（プレーン HTTP LAN サーバー、TLS なし）
 │       ├── java/com/hydraumc/control/
 │       │   ├── MainActivity.kt          # エントリポイント——スプラッシュ、ログイン/メイン画面ゲーティング、コールドスタートセーフなグローバル緊急停止処理
 │       │   ├── MainScreen.kt            # ボトムナビゲーションのスキャフォールド、トップバー（サーバーセレクター、プロフィール、テレメトリ、設定）
+│       │   ├── kinematics/
+│       │   │   └── Parol6Kinematics.kt   # Parol6 固有の順運動学/逆運動学
 │       │   ├── model/
 │       │   │   ├── BleDevice.kt          # Bluetooth LE スキャン結果データクラス
 │       │   │   └── HydraState.kt         # settings.json のフィールド単位のミラー（RobotView/ControllerView/JobView）+ ServerInfo ディスカバリーモデル
@@ -128,9 +132,11 @@ HYDRA-UMC-ANDROID-CONTROL/
 │       │   │   ├── CameraScreen.kt         # ロボットごとの MJPEG カメラフィード + ビジョンオン/オフスイッチ
 │       │   │   ├── ControlScreen.kt        # 手動ジョグ制御、長押し保護付き緊急停止/再生/一時停止/停止
 │       │   │   ├── DashboardScreen.kt      # 3D カルーセルロボットピッカー + システムヘルス + モジュールマトリクス
+│       │   │   ├── Joystick3D.kt           # 再利用可能な 2 軸ジョイスティックコンポーネント
 │       │   │   ├── LoginScreen.kt          # ユーザー名/パスワード + IP/ポート入力、生体認証ログイン
 │       │   │   ├── MjpegPlayer.kt          # MJPEG ストリームパーサー + Canvas レンダラー
 │       │   │   ├── NativeThreeDScreen.kt   # Google Filament ネイティブ 3D ビューアー——まだナビゲーションに接続されておらず、.glb パイプラインもなし
+│       │   │   ├── PlaybackConsole.kt      # 共有のフローティング緊急停止/再生/一時停止/停止コンソール
 │       │   │   ├── SettingsScreen.kt       # Wi-Fi/Bluetooth スキャン UI、接続設定
 │       │   │   ├── SplashScreen.kt         # カスタム Compose スプラッシュスクリーン
 │       │   │   ├── TelemetryScreen.kt      # ターミナル風のイベント/同期ログビューアー
@@ -139,24 +145,47 @@ HYDRA-UMC-ANDROID-CONTROL/
 │       │   │   └── theme/
 │       │   │       ├── Color.kt, Theme.kt, Typography.kt   # Material 3 配色スキーム、テーマラッパー、タイプスケール
 │       │   │       └── HydraButton.kt, IndustrialComponents.kt, IndustrialStyle.kt   # 共有の産業風 UI ビルディングブロック
+│       │   ├── update/
+│       │   │   ├── GitHubReleaseUpdater.kt   # 安全な GitHub Release アップデートクライアント
+│       │   │   ├── ReleaseMetadataParser.kt  # 安全な GitHub Release メタデータパーサー
+│       │   │   └── SemanticVersion.kt        # アップデート用の厳密なセマンティックバージョンパーサー
 │       │   ├── util/
 │       │   │   ├── BiometricHelper.kt      # androidx.biometric プロンプトラッパー
-│       │   │   └── NotificationHelper.kt   # ジョブ完了/安全プッシュ通知
+│       │   │   ├── NotificationHelper.kt   # ジョブ完了/安全プッシュ通知
+│       │   │   └── NotificationPrefs.kt    # アプリ内通知トグルの永続ストレージ
 │       │   ├── viewmodel/
+│       │   │   ├── AppUpdateViewModel.kt   # ライフサイクルを意識したアプリ更新状態
 │       │   │   └── RobotViewModel.kt   # 共有 ViewModel——ネットワーキング、認証、ディスカバリー、原子的指令ディスパッチ、すべての UI 状態
+│       │   ├── wear/
+│       │   │   ├── WatchCompanionProtocol.kt    # Watch コンパニオンのバージョン状態ワイヤ契約
+│       │   │   ├── WatchVoiceRelayContract.kt   # 認証付き Watch 音声リレーワイヤ契約
+│       │   │   └── WatchVoiceRelayService.kt    # Wear OS 音声リレーサービス
 │       │   └── widget/
 │       │       └── GlobalStopWidget.kt # アプリを開かずにグローバル緊急停止を行うためのホーム画面ウィジェット
 │       └── res/
 │           ├── drawable/, layout/, mipmap*/, xml/   # アイコン、ウィジェットレイアウト、ランチャーアイコン、バックアップ/データ抽出ルール
 │           └── values/, values-es/, values-de/, values-fr/, values-it/, values-zh/, values-ja/   # 7 言語の文字列、色、テーマ
 ├── docs/
-│   └── ARCHITECTURE.md           # 設計/アーキテクチャノート
+│   ├── ARCHITECTURE.md              # 設計/アーキテクチャノート
+│   ├── GITHUB_RELEASE_UPDATES.md    # アプリ内アップデート確認/ダウンロード/インストールフロー
+│   └── WATCH_VOICE_RELAY.md         # Watch-電話-サーバー間の音声リレー契約
 ├── images/                       # README バナー + スプラッシュスクリーンのソースアセット
+├── tools/
+│   ├── build_test.py             # バージョンを更新しないビルド/コンパイル確認
+│   └── ci_validate.py            # CI が使用する manifest/CHANGELOG/docs の検証
+├── dist/                         # 署名済みリリース APK 出力（gitignore 対象）
 ├── build-android.bat / .sh       # ワンショットビルド + adb インストールの便利スクリプト
+├── build-test.bat / .sh          # バージョンを更新しないビルド/コンパイル確認
+├── prepare-github-release.bat / .sh  # バージョンを更新せず、プライベート署名された安定版リリース APK をビルド
+├── publish-github-release.ps1 / .sh  # ローカル限定：dist/ の APK を GitHub Release として公開
+├── bump_manifest_version.py      # hydra-umc.project.json のバージョンをネイティブ側と同期（--sync）
+├── bump_version_code.py          # app/version.properties 内の Android 独自の versionCode カウンターを増加
 ├── gradlew, gradlew.bat          # Gradle ラッパー
 ├── build.gradle.kts, settings.gradle.kts, gradle.properties   # ルート Gradle プロジェクト設定
 ├── local.properties              # ローカルの Android SDK パス（マシン固有、コミットされない）
+├── keystore.properties.example   # プライベートリリース署名設定のテンプレート
 ├── .env.example                  # 環境変数の例
+├── metadata.json                 # アプリストア掲載メタデータ（名前/説明）
 ├── README.md                     # 本ファイル
 ├── README_spa.md / README_ita.md / README_fra.md / README_deu.md / README_zho.md / README_jpn.md   # 翻訳
 └── LICENSE                       # GPL-3.0

@@ -107,11 +107,15 @@ The running version is visible live in the **About** dialog (`BuildConfig.VERSIO
 HYDRA-UMC-ANDROID-CONTROL/
 ├── app/
 │   ├── build.gradle.kts          # App module Gradle config - AGP/Kotlin/Compose versions, dependencies, debug-signed release build type
+│   ├── version.properties        # Odometer-versioned app version + Android versionCode, kept in sync by bump_manifest_version.py/bump_version_code.py
+│   ├── proguard-rules.pro        # Release-build code shrinking/obfuscation rules
 │   └── src/main/
 │       ├── AndroidManifest.xml   # Permissions, activity/receiver declarations, usesCleartextTraffic (plain-HTTP LAN server, no TLS)
 │       ├── java/com/hydraumc/control/
 │       │   ├── MainActivity.kt          # Entry point - splash, login/main screen gating, cold-start-safe global E-STOP handling
 │       │   ├── MainScreen.kt            # Bottom-nav scaffold, top bar (server selector, profile, telemetry, settings)
+│       │   ├── kinematics/
+│       │   │   └── Parol6Kinematics.kt   # Parol6-specific forward/inverse kinematics
 │       │   ├── model/
 │       │   │   ├── BleDevice.kt          # Bluetooth LE scan result data class
 │       │   │   └── HydraState.kt         # settings.json field-by-field mirror (RobotView/ControllerView/JobView) + ServerInfo discovery model
@@ -128,9 +132,11 @@ HYDRA-UMC-ANDROID-CONTROL/
 │       │   │   ├── CameraScreen.kt         # Per-robot MJPEG camera feed + vision on/off switch
 │       │   │   ├── ControlScreen.kt        # Manual jog controls, E-STOP/play/pause/stop with long-press protection
 │       │   │   ├── DashboardScreen.kt      # 3D carousel robot picker + system health + module matrix
+│       │   │   ├── Joystick3D.kt           # Reusable 2-axis joystick control component
 │       │   │   ├── LoginScreen.kt          # Username/password + IP/port entry, biometric login
 │       │   │   ├── MjpegPlayer.kt          # MJPEG stream parser + Canvas renderer
 │       │   │   ├── NativeThreeDScreen.kt   # Google Filament native 3D visor - not wired into navigation yet, no .glb pipeline
+│       │   │   ├── PlaybackConsole.kt      # Shared floating E-STOP/play/pause/stop console
 │       │   │   ├── SettingsScreen.kt       # Wi-Fi/Bluetooth scan UI, connection settings
 │       │   │   ├── SplashScreen.kt         # Custom Compose splash screen
 │       │   │   ├── TelemetryScreen.kt      # Terminal-style event/sync log viewer
@@ -139,24 +145,47 @@ HYDRA-UMC-ANDROID-CONTROL/
 │       │   │   └── theme/
 │       │   │       ├── Color.kt, Theme.kt, Typography.kt   # Material 3 color scheme, theme wrapper, type scale
 │       │   │       └── HydraButton.kt, IndustrialComponents.kt, IndustrialStyle.kt   # Shared industrial-styled UI building blocks
+│       │   ├── update/
+│       │   │   ├── GitHubReleaseUpdater.kt   # Safe GitHub Release update client
+│       │   │   ├── ReleaseMetadataParser.kt  # Safe GitHub Release metadata parser
+│       │   │   └── SemanticVersion.kt        # Strict semantic version parser for updates
 │       │   ├── util/
 │       │   │   ├── BiometricHelper.kt      # androidx.biometric prompt wrapper
-│       │   │   └── NotificationHelper.kt   # Job-complete/safety push notifications
+│       │   │   ├── NotificationHelper.kt   # Job-complete/safety push notifications
+│       │   │   └── NotificationPrefs.kt    # Persistent storage for the in-app notifications toggle
 │       │   ├── viewmodel/
+│       │   │   ├── AppUpdateViewModel.kt   # Lifecycle-aware application update state
 │       │   │   └── RobotViewModel.kt   # Shared ViewModel - networking, auth, discovery, atomic command dispatch, all UI state
+│       │   ├── wear/
+│       │   │   ├── WatchCompanionProtocol.kt    # Watch companion version-status wire contract
+│       │   │   ├── WatchVoiceRelayContract.kt   # Authenticated Watch voice relay wire contract
+│       │   │   └── WatchVoiceRelayService.kt    # Wear OS voice relay service
 │       │   └── widget/
 │       │       └── GlobalStopWidget.kt # Home-screen widget for a global E-STOP without opening the app
 │       └── res/
 │           ├── drawable/, layout/, mipmap*/, xml/   # Icons, widget layout, launcher icons, backup/data-extraction rules
-│           └── values/, values-es/, values-de/, values-fr/, values-it/   # Strings in 5 languages, colors, theme
+│           └── values/, values-es/, values-de/, values-fr/, values-it/, values-ja/, values-zh/   # Strings in 7 languages, colors, theme
 ├── docs/
-│   └── ARCHITECTURE.md           # Design/architecture notes
+│   ├── ARCHITECTURE.md              # Design/architecture notes
+│   ├── GITHUB_RELEASE_UPDATES.md    # In-app update check/download/install flow
+│   └── WATCH_VOICE_RELAY.md         # Watch-to-phone-to-server voice relay contract
 ├── images/                       # README banner + splash screen source assets
+├── tools/
+│   ├── build_test.py             # Build/compile check without bumping version
+│   └── ci_validate.py            # Manifest/CHANGELOG/docs validation used by CI
+├── dist/                         # Signed release APK output (gitignored)
 ├── build-android.bat / .sh       # One-shot build + adb install convenience scripts
+├── build-test.bat / .sh          # Non-versioning build/compile check
+├── prepare-github-release.bat / .sh  # Builds a privately signed, stable release APK without bumping version
+├── publish-github-release.ps1 / .sh  # Local-only: publishes dist/'s APK as a GitHub Release
+├── bump_manifest_version.py      # Syncs hydra-umc.project.json's version to the native one (--sync)
+├── bump_version_code.py          # Increments Android's own versionCode counter in app/version.properties
 ├── gradlew, gradlew.bat          # Gradle wrapper
 ├── build.gradle.kts, settings.gradle.kts, gradle.properties   # Root Gradle project config
 ├── local.properties              # Local Android SDK path (machine-specific, not committed)
+├── keystore.properties.example   # Private release signing configuration template
 ├── .env.example                  # Example environment variables
+├── metadata.json                 # App Store listing metadata (name/description)
 ├── README.md                     # This file
 ├── README_spa.md / README_ita.md / README_fra.md / README_deu.md / README_zho.md / README_jpn.md   # Translations
 └── LICENSE                       # GPL-3.0

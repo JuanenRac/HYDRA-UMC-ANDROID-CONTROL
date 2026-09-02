@@ -107,11 +107,15 @@ La versione in esecuzione è visibile in tempo reale nella finestra **Informazio
 HYDRA-UMC-ANDROID-CONTROL/
 ├── app/
 │   ├── build.gradle.kts          # Configurazione Gradle del modulo app - versioni AGP/Kotlin/Compose, dipendenze, tipo di build release firmato con la chiave di debug
+│   ├── version.properties        # Versione app stile contachilometri + versionCode Android, sincronizzati da bump_manifest_version.py/bump_version_code.py
+│   ├── proguard-rules.pro        # Regole di riduzione/offuscamento del codice per il build di release
 │   └── src/main/
 │       ├── AndroidManifest.xml   # Permessi, dichiarazioni activity/receiver, usesCleartextTraffic (server LAN HTTP semplice, senza TLS)
 │       ├── java/com/hydraumc/control/
 │       │   ├── MainActivity.kt          # Punto di ingresso - splash, gating login/schermata principale, gestione dell'E-STOP globale sicura in avvio a freddo
 │       │   ├── MainScreen.kt            # Struttura di navigazione inferiore, top bar (selettore server, profilo, telemetria, impostazioni)
+│       │   ├── kinematics/
+│       │   │   └── Parol6Kinematics.kt   # Cinematica diretta/inversa specifica del Parol6
 │       │   ├── model/
 │       │   │   ├── BleDevice.kt          # Data class per il risultato della scansione Bluetooth LE
 │       │   │   └── HydraState.kt         # Specchio campo per campo di settings.json (RobotView/ControllerView/JobView) + modello di discovery ServerInfo
@@ -128,9 +132,11 @@ HYDRA-UMC-ANDROID-CONTROL/
 │       │   │   ├── CameraScreen.kt         # Feed camera MJPEG per robot + interruttore visione on/off
 │       │   │   ├── ControlScreen.kt        # Controlli jog manuali, E-STOP/play/pause/stop con protezione da pressione prolungata
 │       │   │   ├── DashboardScreen.kt      # Selettore robot a carosello 3D + salute del sistema + matrice dei moduli
+│       │   │   ├── Joystick3D.kt           # Componente joystick riutilizzabile a 2 assi
 │       │   │   ├── LoginScreen.kt          # Inserimento username/password + IP/porta, login biometrico
 │       │   │   ├── MjpegPlayer.kt          # Parser dello stream MJPEG + renderer Canvas
 │       │   │   ├── NativeThreeDScreen.kt   # Visore 3D nativo con Google Filament - non ancora collegato alla navigazione, nessuna pipeline .glb
+│       │   │   ├── PlaybackConsole.kt      # Console flottante condivisa di E-STOP/play/pause/stop
 │       │   │   ├── SettingsScreen.kt       # UI di scansione Wi-Fi/Bluetooth, impostazioni di connessione
 │       │   │   ├── SplashScreen.kt         # Schermata di avvio Compose personalizzata
 │       │   │   ├── TelemetryScreen.kt      # Visualizzatore di log eventi/sincronizzazione in stile terminale
@@ -139,24 +145,47 @@ HYDRA-UMC-ANDROID-CONTROL/
 │       │   │   └── theme/
 │       │   │       ├── Color.kt, Theme.kt, Typography.kt   # Schema colori Material 3, wrapper del tema, scala tipografica
 │       │   │       └── HydraButton.kt, IndustrialComponents.kt, IndustrialStyle.kt   # Blocchi UI condivisi con stile industriale
+│       │   ├── update/
+│       │   │   ├── GitHubReleaseUpdater.kt   # Client sicuro di aggiornamento tramite GitHub Release
+│       │   │   ├── ReleaseMetadataParser.kt  # Parser sicuro dei metadati di GitHub Release
+│       │   │   └── SemanticVersion.kt        # Parser rigoroso della versione semantica per gli aggiornamenti
 │       │   ├── util/
 │       │   │   ├── BiometricHelper.kt      # Wrapper del prompt di androidx.biometric
-│       │   │   └── NotificationHelper.kt   # Notifiche push di lavoro completato/sicurezza
+│       │   │   ├── NotificationHelper.kt   # Notifiche push di lavoro completato/sicurezza
+│       │   │   └── NotificationPrefs.kt    # Archiviazione persistente dell'interruttore delle notifiche in-app
 │       │   ├── viewmodel/
+│       │   │   ├── AppUpdateViewModel.kt   # Stato di aggiornamento dell'app consapevole del ciclo di vita
 │       │   │   └── RobotViewModel.kt   # ViewModel condiviso - rete, autenticazione, discovery, dispatch dei comandi atomici, tutto lo stato UI
+│       │   ├── wear/
+│       │   │   ├── WatchCompanionProtocol.kt    # Contratto wire dello stato versione del Watch companion
+│       │   │   ├── WatchVoiceRelayContract.kt   # Contratto wire autenticato del relay vocale del Watch
+│       │   │   └── WatchVoiceRelayService.kt    # Servizio relay vocale per Wear OS
 │       │   └── widget/
 │       │       └── GlobalStopWidget.kt # Widget della schermata home per un E-STOP globale senza aprire l'app
 │       └── res/
 │           ├── drawable/, layout/, mipmap*/, xml/   # Icone, layout del widget, icone del launcher, regole di backup/estrazione dati
-│           └── values/, values-es/, values-de/, values-fr/, values-it/   # Stringhe in 5 lingue, colori, tema
+│           └── values/, values-es/, values-de/, values-fr/, values-it/, values-ja/, values-zh/   # Stringhe in 7 lingue, colori, tema
 ├── docs/
-│   └── ARCHITECTURE.md           # Note di design/architettura
+│   ├── ARCHITECTURE.md              # Note di design/architettura
+│   ├── GITHUB_RELEASE_UPDATES.md    # Flusso in-app di verifica/download/installazione aggiornamenti
+│   └── WATCH_VOICE_RELAY.md         # Contratto del relay vocale watch-telefono-server
 ├── images/                       # Asset sorgente del banner del README + schermata di avvio
+├── tools/
+│   ├── build_test.py             # Controllo build/compilazione senza incremento di versione
+│   └── ci_validate.py            # Validazione manifest/CHANGELOG/docs usata dalla CI
+├── dist/                         # Output dell'APK di release firmato (ignorato da git)
 ├── build-android.bat / .sh       # Script di comodità build + installazione adb in un unico passaggio
+├── build-test.bat / .sh          # Controllo build/compilazione senza incremento di versione
+├── prepare-github-release.bat / .sh  # Compila un APK di release firmato privatamente e stabile, senza incrementare la versione
+├── publish-github-release.ps1 / .sh  # Solo locale: pubblica l'APK di dist/ come GitHub Release
+├── bump_manifest_version.py      # Sincronizza la versione di hydra-umc.project.json con quella nativa (--sync)
+├── bump_version_code.py          # Incrementa il contatore versionCode proprio di Android in app/version.properties
 ├── gradlew, gradlew.bat          # Wrapper di Gradle
 ├── build.gradle.kts, settings.gradle.kts, gradle.properties   # Configurazione root del progetto Gradle
 ├── local.properties              # Percorso locale dell'Android SDK (specifico della macchina, non committato)
+├── keystore.properties.example   # Template di configurazione privata per la firma di release
 ├── .env.example                  # Esempio di variabili d'ambiente
+├── metadata.json                 # Metadati della scheda store (nome/descrizione)
 ├── README.md                     # Questo file
 ├── README_spa.md / README_ita.md / README_fra.md / README_deu.md / README_zho.md / README_jpn.md   # Traduzioni
 └── LICENSE                       # GPL-3.0

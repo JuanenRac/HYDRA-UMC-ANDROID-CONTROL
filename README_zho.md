@@ -107,11 +107,15 @@ APK 会生成在 `app/build/outputs/apk/debug/app-debug.apk`。使用 `adb insta
 HYDRA-UMC-ANDROID-CONTROL/
 ├── app/
 │   ├── build.gradle.kts          # 应用模块 Gradle 配置——AGP/Kotlin/Compose 版本、依赖、debug 签名的 release 构建类型
+│   ├── version.properties        # 里程表式应用版本 + Android versionCode，由 bump_manifest_version.py/bump_version_code.py 同步
+│   ├── proguard-rules.pro        # release 构建的代码压缩/混淆规则
 │   └── src/main/
 │       ├── AndroidManifest.xml   # 权限、activity/receiver 声明、usesCleartextTraffic（纯 HTTP 局域网服务器，无 TLS）
 │       ├── java/com/hydraumc/control/
 │       │   ├── MainActivity.kt          # 入口点——启动画面、登录/主界面门禁、冷启动安全的全局紧急停止处理
 │       │   ├── MainScreen.kt            # 底部导航脚手架、顶部栏（服务器选择器、资料、遥测、设置）
+│       │   ├── kinematics/
+│       │   │   └── Parol6Kinematics.kt   # Parol6 专用的正/逆运动学
 │       │   ├── model/
 │       │   │   ├── BleDevice.kt          # 蓝牙 LE 扫描结果数据类
 │       │   │   └── HydraState.kt         # settings.json 逐字段镜像（RobotView/ControllerView/JobView）+ ServerInfo 发现模型
@@ -128,9 +132,11 @@ HYDRA-UMC-ANDROID-CONTROL/
 │       │   │   ├── CameraScreen.kt         # 每机器人 MJPEG 摄像头画面 + 视觉开关
 │       │   │   ├── ControlScreen.kt        # 手动点动控制、带长按保护的紧急停止/播放/暂停/停止
 │       │   │   ├── DashboardScreen.kt      # 3D 轮播机器人选择器 + 系统健康状态 + 模块矩阵
+│       │   │   ├── Joystick3D.kt           # 可复用的双轴摇杆控件
 │       │   │   ├── LoginScreen.kt          # 用户名/密码 + IP/端口输入，生物识别登录
 │       │   │   ├── MjpegPlayer.kt          # MJPEG 流解析器 + Canvas 渲染器
 │       │   │   ├── NativeThreeDScreen.kt   # Google Filament 原生 3D 视图——尚未接入导航，无 .glb 流程
+│       │   │   ├── PlaybackConsole.kt      # 共享的悬浮式紧急停止/播放/暂停/停止控制台
 │       │   │   ├── SettingsScreen.kt       # Wi-Fi/蓝牙扫描界面、连接设置
 │       │   │   ├── SplashScreen.kt         # 自定义 Compose 启动画面
 │       │   │   ├── TelemetryScreen.kt      # 终端风格的事件/同步日志查看器
@@ -139,24 +145,47 @@ HYDRA-UMC-ANDROID-CONTROL/
 │       │   │   └── theme/
 │       │   │       ├── Color.kt, Theme.kt, Typography.kt   # Material 3 配色方案、主题包装器、字体比例
 │       │   │       └── HydraButton.kt, IndustrialComponents.kt, IndustrialStyle.kt   # 共享的工业风 UI 构建组件
+│       │   ├── update/
+│       │   │   ├── GitHubReleaseUpdater.kt   # 安全的 GitHub Release 更新客户端
+│       │   │   ├── ReleaseMetadataParser.kt  # 安全的 GitHub Release 元数据解析器
+│       │   │   └── SemanticVersion.kt        # 用于更新的严格语义化版本解析器
 │       │   ├── util/
 │       │   │   ├── BiometricHelper.kt      # androidx.biometric 提示包装器
-│       │   │   └── NotificationHelper.kt   # 作业完成/安全推送通知
+│       │   │   ├── NotificationHelper.kt   # 作业完成/安全推送通知
+│       │   │   └── NotificationPrefs.kt    # 应用内通知开关的持久化存储
 │       │   ├── viewmodel/
+│       │   │   ├── AppUpdateViewModel.kt   # 感知生命周期的应用更新状态
 │       │   │   └── RobotViewModel.kt   # 共享 ViewModel——网络、认证、发现、原子指令分发、所有 UI 状态
+│       │   ├── wear/
+│       │   │   ├── WatchCompanionProtocol.kt    # 手表伴生设备版本状态通信契约
+│       │   │   ├── WatchVoiceRelayContract.kt   # 已认证的手表语音中继通信契约
+│       │   │   └── WatchVoiceRelayService.kt    # Wear OS 语音中继服务
 │       │   └── widget/
 │       │       └── GlobalStopWidget.kt # 无需打开应用即可实现全局紧急停止的主屏幕小组件
 │       └── res/
 │           ├── drawable/, layout/, mipmap*/, xml/   # 图标、小组件布局、启动器图标、备份/数据提取规则
 │           └── values/, values-es/, values-de/, values-fr/, values-it/, values-zh/, values-ja/   # 7 种语言的字符串、颜色、主题
 ├── docs/
-│   └── ARCHITECTURE.md           # 设计/架构说明
+│   ├── ARCHITECTURE.md              # 设计/架构说明
+│   ├── GITHUB_RELEASE_UPDATES.md    # 应用内更新检查/下载/安装流程
+│   └── WATCH_VOICE_RELAY.md         # 手表-手机-服务器语音中继契约
 ├── images/                       # README 横幅 + 启动画面源资产
+├── tools/
+│   ├── build_test.py             # 不递增版本号的构建/编译检查
+│   └── ci_validate.py            # CI 使用的 manifest/CHANGELOG/docs 校验
+├── dist/                         # 已签名发布 APK 输出（已被 gitignore）
 ├── build-android.bat / .sh       # 一键构建 + adb 安装便捷脚本
+├── build-test.bat / .sh          # 不递增版本号的构建/编译检查
+├── prepare-github-release.bat / .sh  # 构建一个私密签名、稳定的发布 APK，不递增版本号
+├── publish-github-release.ps1 / .sh  # 仅限本地：将 dist/ 中的 APK 发布为 GitHub Release
+├── bump_manifest_version.py      # 将 hydra-umc.project.json 的版本与原生版本同步（--sync）
+├── bump_version_code.py          # 递增 app/version.properties 中 Android 自身的 versionCode 计数器
 ├── gradlew, gradlew.bat          # Gradle 包装器
 ├── build.gradle.kts, settings.gradle.kts, gradle.properties   # 根 Gradle 项目配置
 ├── local.properties              # 本地 Android SDK 路径（机器特定，不提交）
+├── keystore.properties.example   # 私密发布签名配置模板
 ├── .env.example                  # 环境变量示例
+├── metadata.json                 # 应用商店信息元数据（名称/描述）
 ├── README.md                     # 本文件
 ├── README_spa.md / README_ita.md / README_fra.md / README_deu.md / README_zho.md / README_jpn.md   # 翻译
 └── LICENSE                       # GPL-3.0
