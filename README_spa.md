@@ -167,6 +167,10 @@ HYDRA-UMC-ANDROID-CONTROL/
 Este proyecto forma parte de un ecosistema robótico más amplio del mismo autor (JuanenRac / Electro Hobby 3D). Vale la pena conocerlo, ya que una petición podría en realidad ser sobre uno de estos en vez de sobre este repositorio:
 
 **Directamente Relacionados** — proyectos que se conectan directamente con esta app
+- **[HYDRA-UMC-SERVER](https://github.com/JuanenRac/HYDRA-UMC-SERVER)** — el backend contra el que corren el descubrimiento, la autenticación y la sincronización por WebSocket de esta app.
+- **[HYDRA-UMC-STUDIO](https://github.com/JuanenRac/HYDRA-UMC-STUDIO)** — su visor 3D en tiempo real está incrustado directamente en la propia pantalla de Vista 3D de esta app vía WebView.
+- **[HYDRA-UMC-SUITE](https://github.com/JuanenRac/HYDRA-UMC-SUITE)** — cliente hermano de escritorio que habla exactamente el mismo contrato `REMOTE_API.md` que esta app.
+- **[HYDRA-UMC-IOS-CONTROL](https://github.com/JuanenRac/HYDRA-UMC-IOS-CONTROL)** — la contraparte directa iOS/iPadOS de esta app, con el mismo conjunto de funciones.
 - **[HYDRA-UMC-WATCH](https://github.com/JuanenRac/HYDRA-UMC-WATCH)** — la app complementaria para WearOS de esta misma app, con estado del robot y control rápido desde la muñeca.
 - **[HYDRA-UMC-HIL-BRIDGE](https://github.com/JuanenRac/HYDRA-UMC-HIL-BRIDGE)** — permite el control remoto del gemelo digital directamente desde esta app.
 
