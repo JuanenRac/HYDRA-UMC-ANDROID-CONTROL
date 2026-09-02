@@ -130,7 +130,14 @@ data class RobotState(
     val endstops: Map<String, Boolean>,
     val valves: List<Boolean>,
     val pumps: List<Boolean>,
-    val recordedPointsCount: Int
+    val recordedPointsCount: Int,
+    // Real, server-synced jog step (server.ts's own 'jogStep' atomic
+    // command) - was a local `var jogStep by remember {...}` in
+    // ThreeDScreen.kt/`stepSize` in ControlScreen.kt, so the step shown/
+    // used here never matched STUDIO's own. Falls back to 1.0 for any
+    // robot that hasn't had this field set yet (a fresh settings.json, or
+    // one saved before this field existed).
+    val jogStep: Double
 )
 
 /** 
@@ -200,7 +207,8 @@ private fun RobotView.toDisplay(): RobotState = RobotState(
             add(false); add(false)
         }
     },
-    recordedPointsCount = raw.optJSONArray("recordedPoints")?.length() ?: 0
+    recordedPointsCount = raw.optJSONArray("recordedPoints")?.length() ?: 0,
+    jogStep = raw.optDouble("jogStep", 1.0)
 )
 
 /**
@@ -1234,6 +1242,21 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         // mechanism jogXYZ() already uses above.
         val params = JSONObject().put("axis", "x").put("amount", 0.0).put("target", "robot").put("joints", jointsParam)
         sendAtomicCommand("jog", params) { r -> r.setJoint("j1", newJ1) }
+    }
+
+    /**
+     * Real, server-synced jog step - was a local `var jogStep by
+     * remember {...}` in ThreeDScreen.kt / `stepSize` in ControlScreen.kt,
+     * so the step size shown/used here never matched STUDIO's own or
+     * another Android session's. Routed through the same atomic command
+     * channel every other write in this app already uses (see
+     * sendAtomicCommand's own header comment), so a step chosen here is
+     * both persisted AND broadcast live to every other connected client -
+     * real request from live testing ("Házlo un ajuste real sincronizado").
+     */
+    fun setJogStep(value: Double) {
+        val params = JSONObject().put("value", value)
+        sendAtomicCommand("jogStep", params) { r -> r.setJogStep(value) }
     }
 
     fun toggleValve(index: Int) {

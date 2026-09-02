@@ -109,6 +109,13 @@ class RobotView(val raw: JSONObject) {
         raw.put("tool", value)
     }
 
+    /** Real, server-synced jog step (server.ts's own 'jogStep' atomic
+     * command) - shared across every client viewing this robot rather than
+     * each keeping its own independent local default. */
+    fun setJogStep(value: Double) {
+        raw.put("jogStep", value)
+    }
+
     /** Gets the list of valves as a JSONArray. */
     val valves: JSONArray get() = raw.optJSONArray("valves") ?: JSONArray().also { raw.put("valves", it) }
     

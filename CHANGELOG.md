@@ -9,6 +9,49 @@ in [README.md](README.md#-versioning). Entries recorded before that policy
 existed are grouped under the pre-policy version `0.0.0` the repo carried
 at the time.
 
+## [0.5.0] - Fullscreen-landscape 3D view: exit orientation, hidden Refresh button, and real cross-client sync for jog step/reset
+
+- **`ThreeDScreen.kt` - the fullscreen-landscape overlay's exit "X" did
+  nothing if the phone was still held sideways**: real feedback from live
+  testing. `onExit` set `SCREEN_ORIENTATION_UNSPECIFIED`, which only
+  releases the forced-landscape lock and defers to whatever the physical/
+  sensor orientation currently is - with the phone still held sideways,
+  the screen stayed landscape and the button looked broken. Now forces
+  `SCREEN_ORIENTATION_PORTRAIT` instead, matching the actual request
+  ("al darle debería poner el móvil en modo vertical"); the existing
+  `LaunchedEffect(isLandscape)` that already released the Fullscreen
+  button's own forced-landscape lock now releases this forced-portrait
+  lock the same way once portrait is actually reached, so neither button
+  fights a later physical rotation back the other way.
+- **`ThreeDScreen.kt` - the Refresh button became unreachable in
+  landscape, silently eaten by the exit "X"**: the top control bar's
+  title `Column` carried a `weight(1f)` with no `fillMaxWidth()` on the
+  `Row` itself - a weighted child still forces a Row to expand to the
+  full available width, which in landscape stretched the whole bar (and
+  the Refresh button at its right edge) into the exit "X"'s own `TopEnd`
+  corner, a higher-`zIndex` sibling that silently intercepted every tap
+  meant for Refresh. `weight(1f)` removed; the bar stays compact at its
+  intended top-left corner.
+- **Jog step (1mm/10mm/50mm) is now a real, server-synced setting**
+  (`robot.jogStep`, new atomic `jogStep` command) instead of a
+  component-local default kept independently by `ThreeDScreen.kt`,
+  `ControlScreen.kt`, and HYDRA-UMC-STUDIO's own step selector - a step
+  chosen on one client silently never matched another. Real request from
+  live multi-client testing ("Házlo un ajuste real sincronizado").
+- **Reset, Reset 3D, and the XY table (joystick and position controls)
+  now really sync across every connected client, in both directions** -
+  real feedback from live testing found none of them did. Root cause:
+  HYDRA-UMC-STUDIO's own Reset/HOME/HOME XY buttons and XY table sliders
+  (rendered natively on desktop, and inside this app's own embedded 3D
+  WebView in landscape mode) wrote through `updateRobot()`, an
+  optimistic-local + 500ms-debounced-full-tree-save path that never
+  broadcasts to any OTHER connected client. Moved to the same atomic,
+  broadcasting command channel this app's own jog/play/pause/stop
+  already use (`sendRobotCommand`/two new server commands, `reset` and
+  `reset3D`, plus `absolute` support added to the existing `jog`
+  command) - see HYDRA-UMC-STUDIO's and HYDRA-UMC-SERVER's own
+  changelogs for the full server-side detail.
+
 ## [0.4.9] - Fullscreen-landscape joysticks now win touch priority over the embedded WebView
 
 - **`ThreeDScreen.kt` - the XY/Z joysticks in fullscreen-landscape mode

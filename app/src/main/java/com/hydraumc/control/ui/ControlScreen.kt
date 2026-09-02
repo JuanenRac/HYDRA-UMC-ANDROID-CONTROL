@@ -130,7 +130,13 @@ fun ControlScreen(viewModel: RobotViewModel) {
     val selectedRobot = robots.find { it.id == selectedId }
 
     var expandedRobot by remember { mutableStateOf(false) }
-    var stepSize by remember { mutableDoubleStateOf(10.0) }
+    // Real, server-synced jog step (was a local `var stepSize by
+    // remember {...}` defaulting to 10.0 here, independently of
+    // ThreeDScreen.kt's own local default of 1.0 - the two never agreed,
+    // let alone matched STUDIO's) - see RobotViewModel.setJogStep's own
+    // header comment. `?? 1.0` matches every other reader of this same
+    // field (STUDIO's RobotDetail.tsx, ThreeDScreen.kt).
+    val stepSize = selectedRobot?.jogStep ?: 1.0
     var activeTarget by remember { mutableStateOf("robot") }
     
     var speedState by remember(selectedRobot?.speed) { mutableFloatStateOf(selectedRobot?.speed?.toFloat() ?: 100f) }
@@ -308,7 +314,7 @@ fun ControlScreen(viewModel: RobotViewModel) {
 
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             listOf(1.0, 10.0, 50.0).forEach { size ->
-                                FilterChip(selected = stepSize == size, onClick = { stepSize = size }, label = { Text("${size.toInt()}mm") })
+                                FilterChip(selected = stepSize == size, onClick = { viewModel.setJogStep(size) }, label = { Text("${size.toInt()}mm") })
                             }
                         }
 

@@ -76,7 +76,10 @@ fun ThreeDScreen(viewModel: RobotViewModel) {
     val context = LocalContext.current
     val activity = context as? Activity
     val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
-    var jogStep by remember { mutableStateOf(1.0) }
+    // Real, server-synced jog step (was a local `var jogStep by
+    // remember {...}`, so the step shown/used here never matched STUDIO's
+    // own) - see RobotViewModel.setJogStep's own header comment.
+    val jogStep = selectedRobot?.jogStep ?: 1.0
 
     // Real bug, found by reading this code rather than a live device (no
     // physical Android hardware available this pass - see this repo's own
@@ -89,15 +92,14 @@ fun ThreeDScreen(viewModel: RobotViewModel) {
     // the screen stayed landscape-locked until the user found that small
     // on-screen control, reading as "orientation is broken" from outside.
     // Releasing the lock back to UNSPECIFIED the moment isLandscape
-    // actually becomes true (i.e. the forced rotation already succeeded)
-    // means the button only ever NUDGES the device into landscape once -
-    // it never fights a later physical rotation back to portrait, which
-    // is the real, expected behavior for a forced-orientation button like
-    // this.
+    // actually changes (i.e. the forced rotation already succeeded, in
+    // EITHER direction - the Fullscreen button forces LANDSCAPE, the
+    // overlay's exit "X" forces PORTRAIT) means either button only ever
+    // NUDGES the device once - it never fights a later physical rotation
+    // back the other way, which is the real, expected behavior for a
+    // forced-orientation button like this.
     LaunchedEffect(isLandscape) {
-        if (isLandscape) {
-            activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
-        }
+        activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
     }
 
     // Real request from live device testing: the system's own bottom
@@ -358,7 +360,14 @@ fun ThreeDScreen(viewModel: RobotViewModel) {
                 .padding(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(modifier = Modifier.weight(1f)) {
+            Column {
+                // No weight(1f) here on purpose: a weighted child forces this
+                // Row to expand to the full available width even though the
+                // Row itself has no fillMaxWidth() - in landscape that
+                // stretched this bar (and the Refresh button at its right
+                // edge) all the way into the exit "X"'s own TopEnd corner
+                // below, which sits at a higher zIndex and silently ate every
+                // tap meant for Refresh. Real feedback from live testing.
                 Text(
                     text = "3D VIEWPORT: ${selectedRobot?.name ?: "UNKNOWN"}",
                     style = MaterialTheme.typography.labelMedium,
@@ -402,8 +411,15 @@ fun ThreeDScreen(viewModel: RobotViewModel) {
                     viewModel = viewModel,
                     selectedRobot = selectedRobot,
                     jogStep = jogStep,
-                    onJogStepChange = { jogStep = it },
-                    onExit = { activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED },
+                    onJogStepChange = { viewModel.setJogStep(it) },
+                    // Real feedback from live testing: UNSPECIFIED only releases
+                // the forced-landscape lock, deferring to whatever the
+                // physical/sensor orientation currently is - if the phone is
+                // still held sideways when "X" is tapped, the screen stayed
+                // landscape and the button looked like it did nothing.
+                // Forcing PORTRAIT here matches the actual request ("al darle
+                // debería poner el móvil en modo vertical").
+                onExit = { activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT },
                 )
             }
         }
