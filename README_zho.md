@@ -42,6 +42,8 @@
 - **原子化指令同步**（`viewmodel/RobotViewModel.kt` 自身的 `sendAtomicCommand()`）—— 每一次写入（启用/禁用/播放/暂停/停止/点动/阀门/泵/速度/视觉）都发送一个小型的、单机器人的原子指令,而非整棵设置树——服务器自行计算哪些合并机器人也会受到影响,持久化到磁盘,并向所有其他已连接客户端广播。启用/禁用会以与播放/暂停/停止相同的方式传播到机器人自身的 `combinedWith` 同伴,因为它们都共享相同的受影响机器人计算逻辑。
 - **紧急管理小组件**（`widget/GlobalStopWidget.kt`）—— 专用的**主屏幕小组件**,用于关键安全场景。提供一个高可见性、即时访问的**全局紧急停止**按钮,无需打开应用即可冻结整个集群的所有机器人操作——即使从完全冷启动开始（进程尚未运行）,也能可靠地等待机器人名册真正加载完成后再执行操作。
 - **工业触觉与安全**（`ui/ControlScreen.kt`）—— 高级感官反馈系统。紧急停止和停止按钮具备真正的**长按保护**（快速轻触不会产生任何效果,只有短促的振动+提示;只有真正的长按才会发送指令）,以及差异化的触觉特征（成功、错误和紧急脉冲）,在嘈杂环境中为操作员提供物理层面的确认。
+- **应用内更新渠道**（`update/GitHubReleaseUpdater.kt`、`update/ReleaseMetadataParser.kt`、`update/SemanticVersion.kt`）—— 启动时以及从「设置 → 更新」检查最新的稳定版 GitHub Release;仅下载来自非草稿、非预发布标签的确切 `HYDRA-UMC-ANDROID-CONTROL-release.apk` 资源,从不自动安装 —— 最终同意由 Android 自身的软件包安装程序请求。完整发布契约:[`docs/GITHUB_RELEASE_UPDATES.md`](docs/GITHUB_RELEASE_UPDATES.md)。
+- **配对的 Wear OS 伴侣应用与语音中继**（`wear/WatchVoiceRelayService.kt`、`wear/WatchCompanionProtocol.kt`）—— 将来自配对的 [HYDRA-UMC-WATCH](https://github.com/JuanenRac/HYDRA-UMC-WATCH) 应用、已识别且由用户发起的语音回合,通过本应用自身经过认证的 Server 会话中继到 `HYDRA-UMC-VOICE-UI`,并向手表返回类型化的回复;无论是此中继还是手表的系统状态卡片,都从不发出机器人指令或直接操作 `HydraState` —— 与运动相关的回复会被明确标记为 `requiresConfirmation`,必须通过主控制 UI 进行确认。完整契约:[`docs/WATCH_VOICE_RELAY.md`](docs/WATCH_VOICE_RELAY.md)。
 - **工具链与项目质量** —— AGP 9.3.1、Kotlin 2.2.10、Gradle 9.7.0、compileSdk 36、**JDK 21**（`compileOptions`、`gradle-daemon-jvm.properties`,以及 `.idea/`/`.vscode/` 项目文件都实际以此为目标,而不仅仅是这行文档）。构建输出干净,零警告,经过优化的 R8 生产变体,以及高级的 **Roborazzi** 截图测试。
 
 **状态：Wi-Fi、蓝牙、生物识别和通知均已实现。** 本应用是一款为任务关键型机器人操作准备就绪的高等级工业控制台。

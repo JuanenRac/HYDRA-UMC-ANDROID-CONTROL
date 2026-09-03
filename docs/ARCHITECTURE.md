@@ -30,7 +30,9 @@ no code shared between the three clients.
   `GET /api/hydra-info` concurrently across the phone's own `/24`, including its own LAN IP and `127.0.0.1` - a
   direct Kotlin port of HYDRA-UMC-SUITE's `discovery.py`. (2) An NSD/mDNS listener as a secondary path, useful when
   it works but not relied upon alone since Android multicast reliability varies by AP/chipset. Server identity is
-  matched on the `product` field, not `remoteApiVersion`.
+  matched purely on the presence of `remoteApiVersion` in the response, the same test `HydraApiClient.getHydraInfo()`
+  uses for the manual-IP path - not the `product` field, which is just the operator's configurable server name and
+  would silently drop any server its owner ever renamed away from the default.
 - **State cache** (`StateCache.kt`): persists the last known state via DataStore so the dashboard has something to
   show immediately on cold start and while offline.
 - **Credentials** (`AuthPrefs.kt`): username/password/token cache is stored via `androidx.security.crypto`
@@ -93,6 +95,8 @@ app/src/main/java/com/hydraumc/control/
 │       ├── Typography.kt
 │       ├── HydraButton.kt          # Shared industrial-styled button
 │       └── IndustrialComponents.kt / IndustrialStyle.kt   # Shared industrial-look Compose primitives
+├── kinematics/
+│   └── Parol6Kinematics.kt      # Parol6-specific forward/inverse kinematics
 ├── model/
 │   ├── HydraState.kt            # JSONObject views + delta merge logic (mergeArrays, pos.tx/ty mirroring)
 │   └── BleDevice.kt             # Discovered BLE device (name/address/rssi)
@@ -104,12 +108,21 @@ app/src/main/java/com/hydraumc/control/
 │   ├── StateCache.kt            # Persistent DataStore state storage (offline/cold-start view)
 │   ├── AuthPrefs.kt             # Encrypted (security-crypto) credential + biometric settings persistence
 │   └── ConnectionPrefs.kt       # DataStore persistence for manually entered IP/port
+├── update/
+│   ├── GitHubReleaseUpdater.kt  # Safe GitHub Release update client - see docs/GITHUB_RELEASE_UPDATES.md
+│   ├── ReleaseMetadataParser.kt # Safe GitHub Release metadata parser
+│   └── SemanticVersion.kt       # Strict semantic version parser for updates
 ├── util/
 │   ├── BiometricHelper.kt       # Fingerprint/face authentication manager
 │   └── NotificationHelper.kt    # High-priority mission alert dispatcher
+├── wear/
+│   ├── WatchCompanionProtocol.kt   # Watch companion version-status wire contract
+│   ├── WatchVoiceRelayContract.kt  # Authenticated Watch voice relay wire contract
+│   └── WatchVoiceRelayService.kt   # Wear OS voice relay service - see docs/WATCH_VOICE_RELAY.md
 ├── widget/
 │   └── GlobalStopWidget.kt      # Home-screen Glance widget, launches ACTION_GLOBAL_ESTOP
 └── viewmodel/
+    ├── AppUpdateViewModel.kt    # Lifecycle-aware application update state
     └── RobotViewModel.kt        # Central orchestration: connectJob-guarded connect/reconnect, metrics polling
 ```
 
@@ -125,8 +138,10 @@ per its own comment ("for stable runtime behavior"); confirm with the owner if t
   `androidx.security.crypto`, `Glance AppWidget 1.1.1` (home-screen widget), `Navigation Compose`,
   `kotlinx.coroutines`, and the `Filament 1.75.0` family (`filament-android`/`gltfio`/`filamat`/`utils`) for the
   currently-unused `NativeThreeDScreen.kt`.
-- **Tests**: JUnit + Robolectric + Roborazzi dependencies are declared, but only the default Android Studio template
-  test package (`com.example`) exists today - no real tests of `com.hydraumc.control` yet.
+- **Tests**: JUnit + Robolectric + Roborazzi dependencies are declared; the default Android Studio template package
+  (`com.example`) is still there (including the Roborazzi screenshot test), but real `com.hydraumc.control` unit
+  tests now exist too - `Parol6KinematicsTest.kt`, `RobotViewContractTest.kt`, `ReleaseMetadataParserTest.kt`,
+  `SemanticVersionTest.kt`, and `WatchCompanionProtocolTest.kt` (18 `@Test` methods total across those 5 files).
 
 ## 7. Relationship to the rest of the ecosystem
 
