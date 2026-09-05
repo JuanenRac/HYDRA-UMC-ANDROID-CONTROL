@@ -390,7 +390,7 @@ class HydraState(val raw: JSONObject) {
      * Merges source array into target array. If elements have 'id', they are updated
      * instead of appended. Non-id elements or new IDs are appended.
      *
-     * NOTE: as of the 2026-08-21 audit, nothing in this app calls [merge] any
+     * NOTE: as of a real audit, nothing in this app calls [merge] any
      * more for its primary WebSocket sync path (see RobotViewModel.kt's
      * onSettings handler) - every WS push from HYDRA-UMC-SERVER's server.ts,
      * whether labeled "settings" or "delta", carries the FULL current state
