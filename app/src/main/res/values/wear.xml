@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  WATCH-01 (found in an ecosystem-wide software-improvements audit, P2):
+  HYDRA-UMC-WATCH's own WatchRelayTransport used to pick
+  connectedNodes.firstOrNull() with no way to tell whether that node
+  actually had this companion app installed - two connected nodes, only
+  one running HYDRA-UMC-ANDROID-CONTROL, could send to the wrong one.
+
+  Declaring this real Wear OS capability (Google's own documented
+  mechanism - CapabilityClient, not a homegrown handshake) lets the
+  Watch query Wearable.getCapabilityClient(...).getCapability(...) and
+  only ever pick a node this exact app is actually installed and
+  running on. WatchVoiceRelayService.kt's own WearableListenerService
+  registration already makes this phone reachable for messages; this
+  capability name is what makes that reachability DISCOVERABLE from the
+  Watch side instead of assumed from "any connected node".
+-->
+<resources>
+    <string-array name="android_wear_capabilities">
+        <item>hydra_umc_phone_companion</item>
+    </string-array>
+</resources>
