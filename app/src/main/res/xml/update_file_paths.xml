@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- =============================================================================
+     HYDRA-UMC-ANDROID-CONTROL - FileProvider paths for verified update APKs
+     Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
+     GPL-3.0 - see LICENSE
+     ============================================================================= -->
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <cache-path name="hydra_umc_updates" path="updates/" />
+</paths>

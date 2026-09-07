@@ -1,0 +1,20 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "gradle: assembleDebug",
+      "type": "shell",
+      "command": "./gradlew assembleDebug",
+      "windows": { "command": ".\\gradlew.bat assembleDebug" },
+      "group": { "kind": "build", "isDefault": true },
+      "detail": "Requires a real gradlew wrapper first - see build.gradle.kts's own header comment."
+    },
+    {
+      "label": "gradle: installDebug (deploy to connected device/emulator)",
+      "type": "shell",
+      "command": "./gradlew installDebug",
+      "windows": { "command": ".\\gradlew.bat installDebug" },
+      "group": "build"
+    }
+  ]
+}
