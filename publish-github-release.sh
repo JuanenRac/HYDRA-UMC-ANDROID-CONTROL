@@ -45,14 +45,26 @@ http_status="$(curl -s -o /tmp/hydra_release_existing.json -w '%{http_code}' \
 if [[ "$http_status" == "200" ]]; then
   echo "publish-github-release.sh: release ${tag} already exists - replacing its APK asset."
   release_id="$(grep -o '"id": *[0-9]*' /tmp/hydra_release_existing.json | head -1 | grep -o '[0-9]*')"
+  # Real bug found and fixed 2026-09-09: python3 was handed the bare path
+  # '/tmp/hydra_release_existing.json' to open() itself - on a Windows
+  # dev machine using Git Bash, that path is a real, bash-resolvable MSYS
+  # mount, but the plain Windows python3.exe this line actually invokes
+  # has no idea what to do with it and threw FileNotFoundError, silently
+  # leaving stale_asset_id empty (the enclosing $(...) still "succeeds"
+  # from bash's point of view) - so the stale APK asset below was never
+  # actually deleted, and a later "replace" run just left an old,
+  # already-shipped versionCode's APK live under the new tag until this
+  # was caught by hand. Piping the file in via stdin (bash itself opens
+  # it, not python3) sidesteps the whole path-resolution mismatch, and
+  # works identically on a real POSIX shell too.
   stale_asset_id="$(python3 -c "
-import json
-d = json.load(open('/tmp/hydra_release_existing.json', encoding='utf-8'))
+import json, sys
+d = json.load(sys.stdin)
 for a in d.get('assets', []):
     if a['name'] == 'HYDRA-UMC-ANDROID-CONTROL-release.apk':
         print(a['id'])
         break
-")"
+" < /tmp/hydra_release_existing.json)"
   if [[ -n "${stale_asset_id:-}" ]]; then
     curl -s -X DELETE -H "$auth_header" -H "Accept: application/vnd.github+json" \
       "${repo_api}/releases/assets/${stale_asset_id}" > /dev/null
