@@ -9,6 +9,31 @@ in [README.md](README.md#-versioning). Entries recorded before that policy
 existed are grouped under the pre-policy version `0.0.0` the repo carried
 at the time.
 
+## [0.5.5] - C08: silent recovery from a WS 1008 close using the stored remember-me password
+
+A WS 1008 close (`server.ts`'s own token-expiry/revocation close, most
+commonly the access token's real 30-day time-based expiry) forced this
+app straight back to LoginScreen, even on a still-genuinely-logged-in
+account. `RobotViewModel` now tries a silent re-login first
+(`attemptSilentRelogin()`), reusing the same username/password `AuthPrefs`
+already encrypts at rest for "remember me" - no new server-side mechanism
+needed the way HYDRA-UMC-STUDIO's browser-only JWT model required (its
+own refresh-token support, HYDRA-UMC-SERVER 0.6.2): this app already had
+the real credential on hand. Falls through to today's existing forced
+logout exactly when it should - no remembered password, a genuinely
+revoked account (wrong password now, deleted), or the recovery attempt
+itself failing for any reason (the whole function runs inside one
+try/catch specifically so a failure here can never leave the app in a
+silently dead, unrecoverable state instead of a visible logout).
+
+Honesty note: the happy path (a remembered password actually recovering
+the session) has no automated test - `AuthPrefs`' `EncryptedSharedPreferences`
+needs a real `AndroidKeyStore`, unavailable under Robolectric's JVM, the
+same real constraint every other test in this app's `viewmodel` package
+already works around by never exercising `login()`/`AuthPrefs` at all.
+What the fail-safe (a recovery failure still producing a real, visible
+logout, never a hang) does get real coverage for.
+
 ## [0.5.4] - Hardware-accelerated MJPEG frame decode
 
 `MjpegPlayer`'s own stream decode used `BitmapFactory.decodeByteArray()`

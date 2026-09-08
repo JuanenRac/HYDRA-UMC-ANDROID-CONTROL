@@ -573,6 +573,79 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    // C08: silent recovery from a WS 1008 close, using the SAME stored
+    // (remember-me) username/password AuthPrefs already encrypts at rest
+    // for this exact purpose (see AuthPrefs.kt's own header comment) - no
+    // new server-side mechanism needed the way STUDIO's browser-only JWT
+    // model required (its own refresh-token support, HYDRA-UMC-SERVER
+    // 0.6.2): this app already has the real credential on hand, just
+    // never used it for anything but pre-filling the login form. A real
+    // logout()/clearAuth() call already wipes this password, so a session
+    // the user (or an admin) actually ended never has anything to retry
+    // with - this only ever recovers a real time-based token expiry on an
+    // account that's still genuinely logged in. A revoked account (wrong
+    // password now, deleted) fails the login() call below exactly like a
+    // fresh manual attempt would, and this correctly falls through to the
+    // existing forced-logout path in setupWebSocket()'s own onError.
+    //
+    // Honesty note: no automated test exercises this function's own real
+    // recovery path end-to-end. AuthPrefs.kt's EncryptedSharedPreferences
+    // needs a real AndroidKeyStore, unavailable under Robolectric's JVM
+    // ("AndroidKeyStore not found" - confirmed by actually running a
+    // MockWebServer-backed attempt at this test) - the same real
+    // constraint every OTHER test in this package already works around by
+    // never calling login()/touching authPrefs at all (they inject
+    // viewModel.apiClient directly instead, bypassing this entire code
+    // path). What IS verified: the fail-safe this function's own try/catch
+    // guarantees - a failure for ANY reason (including authPrefs.loadAuth()
+    // itself throwing, reproduced live in that same abandoned test)
+    // degrades to today's real forced logout rather than a silently dead,
+    // unrecoverable app - see the try/catch's own placement comment below.
+    // Verifying the actual happy path needs either a real device/emulator
+    // (a real AndroidKeyStore) or introducing dependency injection for
+    // AuthPrefs across this ViewModel - out of scope for this change.
+    private suspend fun attemptSilentRelogin(): Boolean {
+        // The ENTIRE body is inside this try, deliberately including
+        // authPrefs.loadAuth() itself - a real, defense-in-depth reason,
+        // not just tidiness: loadAuth() touches EncryptedSharedPreferences/
+        // AndroidKeyStore (see AuthPrefs.kt), which can genuinely throw on
+        // a real device too (a corrupted keystore, a post-restore
+        // migration edge case - see AuthPrefs.kt's own header comment on
+        // exactly this class of failure). Before this fix, an exception
+        // here would propagate straight out of the coroutine this runs in
+        // (setupWebSocket's onError launch{}), silently killing it WITHOUT
+        // ever reaching the existing forced-logout fallback - the app
+        // would be left in a dead, unrecoverable state (WS closed, no
+        // error shown, nothing reconnects) instead of the one guarantee
+        // this whole feature must never break: a failure here always
+        // degrades to today's real forced logout, never to nothing at all.
+        return try {
+            val profile = authPrefs.loadAuth()
+            if (!profile.rememberMe || profile.username.isBlank() || profile.password.isBlank()) return false
+            val host = ipAddress.value.trim()
+            val portInt = port.value.trim().toIntOrNull() ?: return false
+            val client = HydraApiClient(host, portInt)
+            val response = client.login(profile.username, profile.password)
+            if (!response.optBoolean("success")) return false
+            val token = response.optString("token")
+            if (token.isEmpty()) return false
+            client.authToken = token
+            apiClient = client
+            authTokenState.value = token
+            authPrefs.saveAuth(profile.copy(token = token, isLoggedIn = true))
+            logTelemetry("Session silently renewed after token expiry")
+            // Reuses the exact same reconnect path a manual "Retry" would -
+            // re-resolves REST state and reopens the WebSocket with the
+            // fresh token via setupWebSocket()'s own
+            // authPrefs.loadAuth().token read.
+            connect()
+            true
+        } catch (e: Exception) {
+            logTelemetry("Silent re-login failed: ${e.message}")
+            false
+        }
+    }
+
     private fun logTelemetry(message: String) {
         val timestamp = java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.US).format(java.util.Date())
         telemetryLogs.value = (listOf("[$timestamp] $message") + telemetryLogs.value).take(50)
@@ -834,11 +907,22 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                 onDelta = { msg -> applyRobotDelta(msg) },
             ) { message ->
                 if (!isSwitchingServer) {
-                    lastError.value = message 
+                    lastError.value = message
                     if (message.contains("autorizada") || message.contains("Access denied")) {
-                        isLoggedIn.value = false
-                        connectionStatus.value = getApplication<Application>().getString(R.string.status_disconnected)
-                        ws?.disconnect()
+                        // C08: try attemptSilentRelogin() before forcing the
+                        // user back to LoginScreen - see its own doc comment.
+                        // Only the failure path still does today's forced
+                        // logout; a successful silent relogin already calls
+                        // connect() itself, which supersedes everything
+                        // below (new WebSocket, connectionStatus updated by
+                        // its own onStatus callback).
+                        viewModelScope.launch {
+                            if (!attemptSilentRelogin()) {
+                                isLoggedIn.value = false
+                                connectionStatus.value = getApplication<Application>().getString(R.string.status_disconnected)
+                                ws?.disconnect()
+                            }
+                        }
                     }
                 }
             }.also { it.connect() }
