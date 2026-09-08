@@ -9,6 +9,20 @@ in [README.md](README.md#-versioning). Entries recorded before that policy
 existed are grouped under the pre-policy version `0.0.0` the repo carried
 at the time.
 
+## [0.5.6] - Real coverage for cancelling an in-flight robot order
+
+Found in the same 2026-09-08 audit as C08: `sendCommand("stop")` only
+ever had real test coverage starting from an idle robot (every existing
+`RobotViewModelSendAtomicCommandTest` scenario begins with
+`isPlaying=false`) - no test exercised the real "cancel an order actually
+in flight" case the audit specifically named. 3 new tests, same real
+`MockWebServer` convention as the rest of this file: cancelling an
+in-flight order optimistically stops both the target robot and its
+`combinedWith` sibling before the network round-trip completes, the real
+POST carries `command=stop`, and a failed cancel rolls both robots back
+to still-playing (the order never actually reached the robot, so the UI
+must not show it as cancelled).
+
 ## [0.5.5] - C08: silent recovery from a WS 1008 close using the stored remember-me password
 
 A WS 1008 close (`server.ts`'s own token-expiry/revocation close, most
