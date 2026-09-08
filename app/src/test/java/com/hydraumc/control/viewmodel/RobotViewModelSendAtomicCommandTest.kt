@@ -175,4 +175,69 @@ class RobotViewModelSendAtomicCommandTest {
         val request = server.takeRequest(5, TimeUnit.SECONDS)
         assertEquals("/api/robot/1/command", request?.path)
     }
+
+    /** Same 2 combined robots as newViewModel(), but already mid-flight
+     * (isPlaying=true on both) - the real precondition for a "cancel an
+     * in-flight order" test, as opposed to every test above's own
+     * starting-from-idle "play" scenario. */
+    private fun newViewModelAlreadyPlaying(): RobotViewModel {
+        val application = ApplicationProvider.getApplicationContext<Application>()
+        val viewModel = RobotViewModel(application)
+        viewModel.apiClient = HydraApiClient("127.0.0.1", server.port)
+        viewModel.state = rawStateWith(robot1Playing = true, robot2Playing = true)
+        viewModel.selectedRobotId.value = 1
+        return viewModel
+    }
+
+    // C08 (item #14 de la lista de pendientes): "cancelar una orden de
+    // robot en curso" - hasta ahora sendCommand("stop") solo tenia
+    // cobertura real partiendo de un robot YA idle (las pruebas de arriba
+    // arrancan con isPlaying=false); ningun test partia de un robot
+    // realmente EN VUELO y cancelaba esa orden real, el escenario real que
+    // "un pedido en curso" describe.
+    @Test
+    fun `stop cancels an in-flight order optimistically on both the target robot and its combinedWith sibling`() {
+        server.enqueue(MockResponse().setResponseCode(200).setBody("{}"))
+        val viewModel = newViewModelAlreadyPlaying()
+
+        viewModel.sendCommand("stop")
+
+        // Optimistic: the in-flight order is cancelled in the UI
+        // synchronously, before the network round-trip even starts -
+        // mirrors the existing "play mutates ... optimistically" test's
+        // own timing assertion, just for the opposite transition.
+        assertFalse("robot 1's in-flight order must be cancelled immediately", viewModel.state.robotById(1)!!.isPlaying)
+        assertFalse("the combinedWith sibling's order must be cancelled too", viewModel.state.robotById(2)!!.isPlaying)
+    }
+
+    @Test
+    fun `stop sends the real POST command=stop to the real per-robot command endpoint`() {
+        server.enqueue(MockResponse().setResponseCode(200).setBody("{}"))
+        val viewModel = newViewModelAlreadyPlaying()
+
+        viewModel.sendCommand("stop")
+
+        val request = server.takeRequest(5, TimeUnit.SECONDS)
+        assertEquals("POST", request?.method)
+        assertEquals("/api/robot/1/command", request?.path)
+        val body = JSONObject(request!!.body.readUtf8())
+        assertEquals("stop", body.getString("command"))
+    }
+
+    @Test
+    fun `a failed cancel rolls the in-flight order back to still-playing on both robots`() {
+        server.enqueue(MockResponse().setResponseCode(500).setBody("server error"))
+        val viewModel = newViewModelAlreadyPlaying()
+
+        viewModel.sendCommand("stop")
+
+        // Real rollback happens asynchronously, after the real failed
+        // response comes back - if a cancel request itself fails, the real
+        // robot never actually stopped, so the UI must not keep showing it
+        // as idle.
+        waitUntil { viewModel.lastError.value != null }
+
+        assertTrue("robot 1 must be rolled back to still-playing - the cancel never actually reached the robot", viewModel.state.robotById(1)!!.isPlaying)
+        assertTrue("the combinedWith sibling must be rolled back too", viewModel.state.robotById(2)!!.isPlaying)
+    }
 }
