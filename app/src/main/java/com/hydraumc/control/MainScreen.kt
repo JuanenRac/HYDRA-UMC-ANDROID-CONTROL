@@ -83,8 +83,8 @@ fun MainScreen(
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
-    // Hoisted above the bottomBar's own read of the same state (audit
-    // idea: "modo landscape optimizado para tablets" -
+    // Hoisted above the bottomBar's own read of the same state (review
+    // note: "modo landscape optimizado para tablets" -
     // BUG (found while
     // implementing that idea): landscape used to unconditionally force
     // the fullscreen 3D view regardless of which tab was open, so a
