@@ -13,9 +13,10 @@ at the time.
 
 The self-update download path had zero tests of its own -
 `ReleaseMetadataParserTest` only covers the pure metadata gate that runs
-*before* any bytes are fetched. The 2026-09-08 audit named "rollback
-after a failed install attempt" as untested; `download()`'s real job
-there is to make sure a rejected download leaves no half-written or stale
+*before* any bytes are fetched. An ecosystem-wide software-improvements
+audit named "rollback after a failed install attempt" as untested;
+`download()`'s real job there is to make sure a rejected download leaves
+no half-written or stale
 APK that `cachedInstallableApk()` could later hand to Android's
 installer. New `GitHubReleaseUpdaterTest` (Robolectric + a real
 `MockWebServer` over loopback, `ShadowPackageManager` standing in for the
@@ -29,8 +30,9 @@ up to a previously cached APK. 7 tests.
 
 ## [0.5.6] - Real coverage for cancelling an in-flight robot order
 
-Found in the same 2026-09-08 audit as C08: `sendCommand("stop")` only
-ever had real test coverage starting from an idle robot (every existing
+Found in the same ecosystem-wide software-improvements audit as C08:
+`sendCommand("stop")` only ever had real test coverage starting from an
+idle robot (every existing
 `RobotViewModelSendAtomicCommandTest` scenario begins with
 `isPlaying=false`) - no test exercised the real "cancel an order actually
 in flight" case the audit specifically named. 3 new tests, same real
