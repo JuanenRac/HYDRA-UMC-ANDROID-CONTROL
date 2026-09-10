@@ -161,6 +161,7 @@ HYDRA-UMC-ANDROID-CONTROL/
 │       │   │   ├── AppUpdateViewModel.kt   # État de mise à jour de l'app conscient du cycle de vie
 │       │   │   └── RobotViewModel.kt   # ViewModel partagé - réseau, authentification, découverte, envoi des commandes atomiques, tout l'état de l'interface
 │       │   ├── wear/
+│       │   │   ├── BoundedRequestScope.kt     # Portee des taches en cours par requestId ; une tentative remplacee est annulee, cancelAll() a la destruction du service
 │       │   │   ├── WatchCompanionProtocol.kt    # Contrat filaire de statut de version du companion Watch
 │       │   │   ├── WatchVoiceRelayContract.kt   # Contrat filaire authentifié du relais vocal Watch
 │       │   │   └── WatchVoiceRelayService.kt    # Service de relais vocal Wear OS

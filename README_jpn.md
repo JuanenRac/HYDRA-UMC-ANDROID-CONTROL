@@ -161,6 +161,7 @@ HYDRA-UMC-ANDROID-CONTROL/
 │       │   │   ├── AppUpdateViewModel.kt   # ライフサイクルを意識したアプリ更新状態
 │       │   │   └── RobotViewModel.kt   # 共有 ViewModel——ネットワーキング、認証、ディスカバリー、原子的指令ディスパッチ、すべての UI 状態
 │       │   ├── wear/
+│       │   │   ├── BoundedRequestScope.kt     # requestId 単位の実行中ジョブスコープ。置き換えられた試行はキャンセルされ、サービス破棄時に cancelAll()
 │       │   │   ├── WatchCompanionProtocol.kt    # Watch コンパニオンのバージョン状態ワイヤ契約
 │       │   │   ├── WatchVoiceRelayContract.kt   # 認証付き Watch 音声リレーワイヤ契約
 │       │   │   └── WatchVoiceRelayService.kt    # Wear OS 音声リレーサービス
