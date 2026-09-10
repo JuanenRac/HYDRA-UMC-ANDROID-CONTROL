@@ -26,7 +26,7 @@ import org.junit.Before
 import org.junit.Test
 
 /**
- * Found in an ecosystem-wide software-improvements audit: HydraWebSocket's
+ * Found while auditing the code: HydraWebSocket's
  * own real WS_CLOSE_POLICY_VIOLATION (1008) handling - stop reconnecting
  * and surface a re-authentication error instead of spinning forever
  * against a token the server will never accept again - had real code but

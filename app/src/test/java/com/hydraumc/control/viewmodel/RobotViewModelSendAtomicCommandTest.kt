@@ -29,7 +29,7 @@ import org.robolectric.annotation.Config
 import java.util.concurrent.TimeUnit
 
 /**
- * Found in an ecosystem-wide software-improvements audit:
+ * Found while auditing the code:
  * RobotViewModel.sendAtomicCommand()'s optimistic-mutate-then-rollback-on-
  * failure flow and its combinedWith fan-out have no test at all, unlike
  * other parts of this app (kinematics, state parsing, updates) that

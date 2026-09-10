@@ -3,7 +3,7 @@
 // Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
 // GPL-3.0 - see LICENSE
 //
-// Found in an ecosystem-wide software-improvements audit (ANDROID-01):
+// Found while auditing the code (ANDROID-01):
 // WatchVoiceRelayService's own CoroutineScope(SupervisorJob() + Dispatchers.IO)
 // was never cancelled in onDestroy(), and every onMessageReceived() call
 // launched a new, completely unbounded coroutine - no limit on how many
@@ -13,7 +13,7 @@
 // service recreation (Android can and does recreate a Service instance)
 // left every already-launched coroutine running to completion regardless,
 // which is exactly the "trabajo retenido/duplicado durante recreaciones"
-// risk the audit named.
+// risk noted while auditing the code.
 //
 // This is deliberately extracted into its own plain class with no
 // Android/GMS dependency at all: WatchVoiceRelayService's own onDestroy()

@@ -7,7 +7,7 @@
 // Google Play services Data Layer. The package/signature boundary protects
 // this channel; the Server JWT remains encrypted only on the phone.
 //
-// Found in an ecosystem-wide software-improvements audit (ANDROID-01): this
+// Found while auditing the code (ANDROID-01): this
 // used to launch every request on a CoroutineScope that was never cancelled
 // in onDestroy(), with no concurrency bound and no timeout per request, and
 // silently dropped any sendMessage() failure. Fixed: onDestroy() now cancels
