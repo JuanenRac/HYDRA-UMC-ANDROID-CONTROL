@@ -45,7 +45,7 @@ http_status="$(curl -s -o /tmp/hydra_release_existing.json -w '%{http_code}' \
 if [[ "$http_status" == "200" ]]; then
   echo "publish-github-release.sh: release ${tag} already exists - replacing its APK asset."
   release_id="$(grep -o '"id": *[0-9]*' /tmp/hydra_release_existing.json | head -1 | grep -o '[0-9]*')"
-  # Real bug found and fixed 2026-09-09: python3 was handed the bare path
+  # Real bug found and fixed: python3 was handed the bare path
   # '/tmp/hydra_release_existing.json' to open() itself - on a Windows
   # dev machine using Git Bash, that path is a real, bash-resolvable MSYS
   # mount, but the plain Windows python3.exe this line actually invokes

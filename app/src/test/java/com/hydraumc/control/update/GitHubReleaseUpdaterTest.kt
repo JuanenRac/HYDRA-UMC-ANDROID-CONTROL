@@ -9,7 +9,7 @@
 // defensive checks and, crucially, that a rejected download leaves NO
 // half-written / stale APK behind that cachedInstallableApk() could later
 // hand to Android's installer (the "rollback after a failed install
-// attempt" the 2026-09-08 audit named as untested).
+// attempt" an ecosystem-wide software-improvements audit named as untested).
 //
 // A real MockWebServer serves the APK bytes over a real loopback socket
 // (download() only checks the URL scheme via ReleaseMetadataParser, not
