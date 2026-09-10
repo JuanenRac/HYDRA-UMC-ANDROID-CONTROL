@@ -9,6 +9,24 @@ in [README.md](README.md#-versioning). Entries recorded before that policy
 existed are grouped under the pre-policy version `0.0.0` the repo carried
 at the time.
 
+## [0.5.7] - Real coverage for GitHubReleaseUpdater.download()
+
+The self-update download path had zero tests of its own -
+`ReleaseMetadataParserTest` only covers the pure metadata gate that runs
+*before* any bytes are fetched. The 2026-09-08 audit named "rollback
+after a failed install attempt" as untested; `download()`'s real job
+there is to make sure a rejected download leaves no half-written or stale
+APK that `cachedInstallableApk()` could later hand to Android's
+installer. New `GitHubReleaseUpdaterTest` (Robolectric + a real
+`MockWebServer` over loopback, `ShadowPackageManager` standing in for the
+APK-manifest parse and the installed-version lookup): a valid newer APK
+finalises to a ready-to-install file; a mid-stream connection drop, an
+APK whose package name isn't this app's, an APK not newer than what's
+installed, and a file that doesn't parse as a package are each rejected
+*and* leave nothing behind - `cachedInstallableApk()` returns null in
+every failure case, and returns null again once the installed app catches
+up to a previously cached APK. 7 tests.
+
 ## [0.5.6] - Real coverage for cancelling an in-flight robot order
 
 Found in the same 2026-09-08 audit as C08: `sendCommand("stop")` only
