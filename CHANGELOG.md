@@ -13,8 +13,8 @@ at the time.
 
 The self-update download path had zero tests of its own -
 `ReleaseMetadataParserTest` only covers the pure metadata gate that runs
-*before* any bytes are fetched. An ecosystem-wide software-improvements
-audit named "rollback after a failed install attempt" as untested;
+*before* any bytes are fetched. The "rollback after a failed install
+attempt" path had no coverage of its own;
 `download()`'s real job there is to make sure a rejected download leaves
 no half-written or stale
 APK that `cachedInstallableApk()` could later hand to Android's
@@ -30,12 +30,12 @@ up to a previously cached APK. 7 tests.
 
 ## [0.5.6] - Real coverage for cancelling an in-flight robot order
 
-Found in the same ecosystem-wide software-improvements audit as C08:
+Another gap alongside C08:
 `sendCommand("stop")` only ever had real test coverage starting from an
 idle robot (every existing
 `RobotViewModelSendAtomicCommandTest` scenario begins with
 `isPlaying=false`) - no test exercised the real "cancel an order actually
-in flight" case the audit specifically named. 3 new tests, same real
+in flight" case. 3 new tests, same real
 `MockWebServer` convention as the rest of this file: cancelling an
 in-flight order optimistically stops both the target robot and its
 `combinedWith` sibling before the network round-trip completes, the real
@@ -118,8 +118,8 @@ the client-identity header, and the busy/error/success state transitions.
 
 ## [0.5.2] - Declares a real Wear OS companion capability (WATCH-01)
 
-Found in an ecosystem-wide software-improvements audit (WATCH-01,
-located in the paired HYDRA-UMC-WATCH repo, P2): HYDRA-UMC-WATCH's own
+A real gap located in the paired HYDRA-UMC-WATCH repo (WATCH-01):
+HYDRA-UMC-WATCH's own
 relay transport used to pick `connectedNodes.firstOrNull()` - any
 connected node at all, with no proof it was actually running this app.
 New `res/values/wear.xml` declares the real, Google-documented
@@ -136,7 +136,7 @@ command) - the debug APK builds with the new resource in place.
 
 ## [0.5.1] - Wear relay service now cancels its own coroutines on destroy
 
-- **ANDROID-01 (found in an ecosystem-wide software-improvements audit):**
+- **ANDROID-01:**
   `WatchVoiceRelayService`'s own `CoroutineScope(SupervisorJob() + Dispatchers.IO)`
   was never cancelled in `onDestroy()`, had no concurrency bound per
   requestId, and no timeout on the network round trip - a real service
@@ -151,8 +151,8 @@ command) - the debug APK builds with the new resource in place.
   `BoundedRequestScopeTest.kt` using `kotlinx-coroutines-test` directly
   (no mocking library needed - this class has no Android/GMS dependency
   at all).
-- **New `RobotViewModelSendAtomicCommandTest.kt`** (5 tests) - found in an
-  ecosystem-wide software-improvements audit: `RobotViewModel.sendAtomicCommand()`
+- **New `RobotViewModelSendAtomicCommandTest.kt`** (5 tests) -
+  `RobotViewModel.sendAtomicCommand()`
   (the optimistic-mutate-then-rollback-on-failure flow and its
   `combinedWith` fan-out) had no test at all, unlike other parts of this
   app (kinematics, state parsing, updates) that already do - the same
@@ -169,7 +169,7 @@ command) - the debug APK builds with the new resource in place.
   target and its sibling, and a non-combined command (`jogJ1`) never
   propagating to the sibling at all. `./gradlew test` passes (same
   command this repo's own CI runs).
-  Real gaps this does NOT yet close, from the same audit finding, left
+  Real gaps this does NOT yet close, left
   for a follow-up: `HydraWebSocket.kt`'s own reconnection logic and
   `Discovery.kt`'s subnet scan still have no dedicated test, and
   `NativeThreeDScreen.kt` (an unfinished Filament experiment, not wired
