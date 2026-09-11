@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  WATCH-01 (found in an ecosystem-wide software-improvements audit, P2):
+  WATCH-01 (P2):
   HYDRA-UMC-WATCH's own WatchRelayTransport used to pick
   connectedNodes.firstOrNull() with no way to tell whether that node
   actually had this companion app installed - two connected nodes, only
