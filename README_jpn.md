@@ -25,6 +25,8 @@
 
 Wi-Fi または Bluetooth 経由で [HYDRA-UMC](https://github.com/JuanenRac/HYDRA-UMC) プラットフォーム上のロボットを制御する、ネイティブ Android アプリ（Kotlin + Jetpack Compose）です。[HYDRA-UMC SUITE](https://github.com/JuanenRac/HYDRA-UMC-SUITE) が使用しているのとまったく同じ [`REMOTE_API.md`](https://github.com/JuanenRac/HYDRA-UMC-SERVER/blob/main/docs/REMOTE_API.md) 契約を話します——稼働中の [HYDRA-UMC-SERVER](https://github.com/JuanenRac/HYDRA-UMC-SERVER) バックエンド（[HYDRA-UMC STUDIO](https://github.com/JuanenRac/HYDRA-UMC-STUDIO) 自身の Web ダッシュボードが通信しているのと同じもの）に対するディスカバリー、完全な状態の読み書き、リアルタイム WebSocket 同期。[HYDRA-UMC-IOS-CONTROL](https://github.com/JuanenRac/HYDRA-UMC-IOS-CONTROL) の直接的な Android 版対応物です。完全な設計は [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) を参照してください。
 
+> **誠実性チェック - 今日実際に動くもの:** 中核のビジネスロジック - Parol6 運動学（`kinematics/Parol6Kinematics.kt`）、settings ツリーの状態契約（`model/HydraState.kt`）、アトミックコマンド送出と音声リレー（`viewmodel/RobotViewModel.kt`）、WebSocket 再接続処理（`network/HydraWebSocket.kt`）、MJPEG フレーム解析（`ui/MjpegPlayer.kt`）、アプリ内アップデートチャネル（`update/GitHubReleaseUpdater.kt`、`ReleaseMetadataParser.kt`、`SemanticVersion.kt`）、および Wear 音声リレーのリクエスト管理（`wear/BoundedRequestScope.kt`、`WatchCompanionProtocol.kt`）は本物であり、51件の JVM/Robolectric ユニットテストがすべて通過している（`./gradlew testDebugUnitTest`）。これらのテストが構造的に到達できない部分 - そしてこの Windows 専用の開発環境が実機の Android デバイスを持たず検証できない部分 - は `network/AuthPrefs.kt` の実際の Keystore 裏付け `EncryptedSharedPreferences`、`androidx.biometric` の指紋・顔認証プロンプト、`network/HydraBleClient.kt` の Bluetooth GATT トランスポート、そして `MjpegStreamParser` 内の API 28+ ハードウェア `ImageDecoder` パスであり、これらは実装され実際にコンパイルされているコードだが、書かれて以来実機で再検証されていない。基本的な起動・ログインについては、過去のリリースで実機上でのライブ確認が*行われている*(`CHANGELOG.md` の `v0.3.2`/`v0.3.3` の項目を参照)が、それは Bluetooth・生体認証・ハードウェアデコードパスより前の話である。`ui/NativeThreeDScreen.kt` はナビゲーションに接続されていないデッドコードであり、実際の 3D View 画面（`ui/ThreeDScreen.kt`）は代わりに STUDIO 自身の Web ビューアを埋め込んでいる。実際に出荷された内容の詳細、および何がまだハードウェア未検証かの各エントリごとの注記については `CHANGELOG.md` を参照。
+
 ## 🏗️ 実装済みの内容
 
 - **アクセス制御と生体認証**（`ui/LoginScreen.kt`、`util/BiometricHelper.kt`）—— **指紋認証と顔認証**（`androidx.biometric`）に対応したプロフェッショナルなログインシステムで、同じ画面上に IP/ポートフィールドを直接配置しているため、先に設定画面を経由しなくてもサーバーを指定できます。「ログイン情報を記憶する」機能、安全な**ログアウト**機構を備え、**5 言語**で完全にローカライズされています。キャッシュされたユーザー名/パスワード/トークン（`network/AuthPrefs.kt`）は、平文ではなく、Keystore に裏打ちされた**暗号化 SharedPreferences**（AES256-GCM）に保存されます——本エコシステム内のすべてのサーバーは初回起動時にデフォルトの `admin`/`admin` アカウントを用意し、サーバー側の Config > Users から追加の低権限**オペレーター**アカウントを作成できます。
@@ -81,12 +83,12 @@ APK は `app/build/outputs/apk/debug/app-debug.apk` に生成されます。`adb
 
 ## 🔢 バージョン管理
 
-本リポジトリは、エコシステム全体で統一されたポリシーに従います：バージョンは**実際のビルドのたび**に自動的に加算され、`app/build.gradle.kts` の `versionName`/`versionCode` を手動で編集する必要はありません。`app/version.properties` は現在の `versionMajor`/`versionMinor`/`versionPatch`/`versionCode` を保持します。`app/build.gradle.kts` は Gradle の**構成**時にそれを読み取り、加算し、書き戻します——これは実際のすべてのビルド（`assembleDebug`、`compileDebugKotlin`、IDE 同期など）で実行されるため、生成される APK は常に最後のものより厳密に新しい番号を持ちます：
+本リポジトリは、エコシステム全体で統一されたポリシーに従います：バージョンは**実際のビルドのたび**に自動的に加算され、`app/build.gradle.kts` の `versionName`/`versionCode` を手動で編集する必要はありません。`app/version.properties` は現在の `versionMajor`/`versionMinor`/`versionPatch`/`versionCode` を保持します。`build-android.bat`/`.sh` は Gradle を呼び出す*前に* `bump_manifest_version.py`（ネイティブバージョン + `hydra-umc.project.json` マニフェスト + `CHANGELOG.md` を同期）と `bump_version_code.py`（別管理で常に単調増加する Android の `versionCode`）を実行します。`app/build.gradle.kts` 自体は、現在は構成時に `version.properties` を*読み取るだけ*です——以前は実際の Gradle タスクであれば何であっても書き戻していましたが、検証目的の単なる `compileDebugKotlin` 実行でもマニフェストが一切動かないまま `versionPatch`/`versionCode` が静かに進んでしまう(実際に見つかり修正された本物のドリフトバグ——詳細は `CHANGELOG.md` を参照)ため、現在はこの2つの加算スクリプトだけが本当のバージョン加算元です。`build-android.bat`/`.sh`(または同等のリリーススクリプト)を経由すれば、生成される APK は常に最後のものより厳密に新しい番号を持ちます：
 
 - **Patch、オドメーター方式（10 進法）：** 毎回のビルドで +1；9 を超えるとリセットされて 0 になり、代わりに minor が +1 されます——例：`0.0.9` -> `0.1.0`。Major は自動的には決して変更されません。
 - **`versionCode`：** 単純な単調カウンター、毎回のビルドで +1、繰り上がりなし——Android は、これまでに出荷されたすべてのビルドにわたって厳密に増加することを要求します。
 
-現在実行中のバージョンは **About** ダイアログでリアルタイムに確認できます（`BuildConfig.VERSION_NAME`、Gradle がちょうど計算した `versionName` を読み取ります）。バージョン履歴は [CHANGELOG.md](CHANGELOG.md) を参照してください。
+単純に `./gradlew assembleDebug`(上記の「手動ビルド」の方法で、加算スクリプトを先に実行しない場合)を実行しても、`version.properties` に最後にあった値をそのまま使うだけで、それ自体は何も加算しません。現在実行中のバージョンは **About** ダイアログでリアルタイムに確認できます（`BuildConfig.VERSION_NAME`、`version.properties` に最後に保持されていた `versionName` を読み取ります）。バージョン履歴は [CHANGELOG.md](CHANGELOG.md) を参照してください。
 
 ## 📲 実際のサーバーに対するテスト
 
