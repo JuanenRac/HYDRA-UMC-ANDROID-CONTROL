@@ -220,7 +220,7 @@ dependencies {
     testImplementation(libs.roborazzi.junit.rule)
     testImplementation(libs.androidx.compose.ui.test.junit4)
     testImplementation(libs.androidx.compose.ui.test.manifest)
-    // Found in an ecosystem-wide software-improvements audit: real test
+    // Found while auditing the code: real test
     // coverage for RobotViewModel.sendAtomicCommand()'s own optimistic-
     // mutate/rollback fan-out needs a real (if local) HTTP server to POST
     // against, and viewModelScope's coroutines need a real, deterministic
