@@ -25,6 +25,8 @@
 
 一款原生 Android 应用（Kotlin + Jetpack Compose），通过 Wi-Fi 或蓝牙控制 [HYDRA-UMC](https://github.com/JuanenRac/HYDRA-UMC) 平台上的机器人，使用与 [HYDRA-UMC SUITE](https://github.com/JuanenRac/HYDRA-UMC-SUITE) 完全相同的 [`REMOTE_API.md`](https://github.com/JuanenRac/HYDRA-UMC-SERVER/blob/main/docs/REMOTE_API.md) 契约——针对运行中的 [HYDRA-UMC-SERVER](https://github.com/JuanenRac/HYDRA-UMC-SERVER) 后端（与 [HYDRA-UMC STUDIO](https://github.com/JuanenRac/HYDRA-UMC-STUDIO) 自身网页仪表盘所通信的同一个后端）进行发现、完整状态读写以及实时 WebSocket 同步。是 [HYDRA-UMC-IOS-CONTROL](https://github.com/JuanenRac/HYDRA-UMC-IOS-CONTROL) 的直接 Android 版本对应物。完整设计参见 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)。
 
+> **诚实检查——今天真正可运行的部分：** 核心业务逻辑——Parol6 运动学（`kinematics/Parol6Kinematics.kt`）、settings 树状态契约（`model/HydraState.kt`）、原子命令下发与语音中继（`viewmodel/RobotViewModel.kt`）、WebSocket 重连处理（`network/HydraWebSocket.kt`）、MJPEG 帧解析（`ui/MjpegPlayer.kt`）、应用内更新通道（`update/GitHubReleaseUpdater.kt`、`ReleaseMetadataParser.kt`、`SemanticVersion.kt`），以及 Wear 语音中继请求管理（`wear/BoundedRequestScope.kt`、`WatchCompanionProtocol.kt`）都是真实的，并由 51 个通过的 JVM/Robolectric 单元测试覆盖（`./gradlew testDebugUnitTest`）。这些测试在结构上无法触及——而这个仅有 Windows 的开发环境也没有实体 Android 设备可以验证——的是 `network/AuthPrefs.kt` 中真正基于 Keystore 的 `EncryptedSharedPreferences`、`androidx.biometric` 的指纹/面部提示、`network/HydraBleClient.kt` 的蓝牙 GATT 传输，以及 `MjpegStreamParser` 中 API 28+ 的硬件 `ImageDecoder` 路径：这些都是真实、已编译的代码，但自编写以来尚未在真实硬件上重新验证过。早期版本的基本启动/登录*确实*在真实设备上得到过现场确认（见 `CHANGELOG.md` 的 `v0.3.2`/`v0.3.3` 条目），但那早于蓝牙、生物识别和硬件解码路径。`ui/NativeThreeDScreen.kt` 是未接入导航的死代码——真正的 3D 视图界面（`ui/ThreeDScreen.kt`）改为嵌入 STUDIO 自身的网页视图。具体已交付的内容见 `CHANGELOG.md`，其中每条记录也附有关于哪些部分仍未经硬件验证的说明。
+
 ## 🏗️ 已实现的功能
 
 - **访问控制与生物识别**（`ui/LoginScreen.kt`、`util/BiometricHelper.kt`）—— 专业级登录系统，支持**指纹和面部解锁**（`androidx.biometric`），并在同一界面上直接提供 IP/端口字段,无需先单独跳转到设置页面才能指定服务器。包含“记住我”功能、安全的**退出登录**机制,并完全支持**5 种语言**本地化。缓存的用户名/密码/令牌（`network/AuthPrefs.kt`）存放在由 Keystore 支持的**加密 SharedPreferences**（AES256-GCM）中,而非明文——本生态系统中每台服务器在首次启动时都会预置一个默认的 `admin`/`admin` 账户,并可在服务端从 Config > Users 创建额外的低权限**操作员**账户。
@@ -81,12 +83,12 @@ APK 会生成在 `app/build/outputs/apk/debug/app-debug.apk`。使用 `adb insta
 
 ## 🔢 版本管理
 
-本仓库遵循一项全生态系统统一的策略：版本号在**每次真正的构建**时自动递增,无需手动编辑 `app/build.gradle.kts` 的 `versionName`/`versionCode`。`app/version.properties` 保存当前的 `versionMajor`/`versionMinor`/`versionPatch`/`versionCode`;`app/build.gradle.kts` 会在 Gradle **配置**阶段读取、递增并重写它——这一阶段在每次真正的构建（`assembleDebug`、`compileDebugKotlin`、IDE 同步等）中都会运行——因此生成的 APK 始终携带一个严格新于上一次的版本号：
+本仓库遵循一项全生态系统统一的策略：版本号在**每次真正的构建**时自动递增,无需手动编辑 `app/build.gradle.kts` 的 `versionName`/`versionCode`。`app/version.properties` 保存当前的 `versionMajor`/`versionMinor`/`versionPatch`/`versionCode`;`build-android.bat`/`.sh` 会在调用 Gradle *之前*先运行 `bump_manifest_version.py`（同步原生版本号 + `hydra-umc.project.json` 清单 + `CHANGELOG.md`）和 `bump_version_code.py`（独立的、始终单调递增的 Android `versionCode`）。`app/build.gradle.kts` 本身现在只会在配置阶段*读取* `version.properties`——它以前也会在任何真正的 Gradle 任务上写入该文件,但这样一来,一次单纯用于验证的 `compileDebugKotlin` 编译就会在清单从未同步移动的情况下悄悄推进 `versionPatch`/`versionCode`（一个真实存在的版本错位缺陷,已被实际发现并修复——见 `CHANGELOG.md`）,因此如今这两个递增脚本才是版本提升的唯一真实来源。通过 `build-android.bat`/`.sh`（或对应的发布脚本）构建,产出的版本号总会严格新于上一次:
 
 - **Patch,里程表方式（十进制）：** 每次构建 +1;一旦超过 9 就重置为 0,并将 minor 加 1——例如 `0.0.9` -> `0.1.0`。Major 从不被自动修改。
 - **`versionCode`：** 一个纯粹的单调计数器,每次构建 +1,不进位——Android 要求它在每一个曾经发布过的构建中都严格递增。
 
-当前运行的版本可在 **About** 对话框中实时查看（`BuildConfig.VERSION_NAME`,读取的正是 Gradle 刚刚计算出的 `versionName`）。完整版本历史见 [CHANGELOG.md](CHANGELOG.md)。
+单纯执行 `./gradlew assembleDebug`（上面的"手动构建"方式,事先不运行任何递增脚本）只会沿用 `version.properties` 中已有的值——它本身不会递增任何东西。当前运行的版本可在 **About** 对话框中实时查看（`BuildConfig.VERSION_NAME`,读取的是 `version.properties` 中最后保存的 `versionName`）。完整版本历史见 [CHANGELOG.md](CHANGELOG.md)。
 
 ## 📲 针对真实服务器进行测试
 
