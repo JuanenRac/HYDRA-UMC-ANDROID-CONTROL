@@ -56,6 +56,75 @@ class WatchCompanionProtocolTest {
         assertEquals(original, WatchAssistantReply.fromJson(original.toJson()))
     }
 
+    // H062: a reply with no errorCode at all (every real AI reply, whose
+    // own `text` is already correctly localized upstream) must round-trip
+    // with errorCode staying null - no field magically appears in the wire
+    // JSON, and none is required to parse a message that never had one.
+    @Test
+    fun `assistant reply with no errorCode omits the field from the wire JSON`() {
+        val original = WatchAssistantReply(
+            requestId = "watch-voice-004",
+            text = "Robot 3 is online and idle.",
+            level = "NOMINAL",
+            speak = true,
+            requiresConfirmation = false,
+        )
+        val json = original.toJson()
+
+        assertTrue(!json.has("errorCode"))
+        assertEquals(original, WatchAssistantReply.fromJson(json))
+        assertEquals(null, WatchAssistantReply.fromJson(json).errorCode)
+    }
+
+    // The real H062 scenario: WatchVoiceRelayService's own connection-
+    // unavailable fallback must carry the stable errorCode the watch
+    // resolves to a real localized string, alongside the English text
+    // kept only as a fallback for an old watch build.
+    @Test
+    fun `assistant reply with a real errorCode round-trips it exactly`() {
+        val original = WatchAssistantReply(
+            requestId = "watch-voice-005",
+            text = "HYDRA-UMC connection unavailable. Check the paired phone session.",
+            level = "ATTENTION",
+            speak = true,
+            requiresConfirmation = false,
+            errorCode = "connection_unavailable",
+        )
+        val json = original.toJson()
+
+        assertEquals("connection_unavailable", json.getString("errorCode"))
+        assertEquals(original, WatchAssistantReply.fromJson(json))
+    }
+
+    @Test
+    fun `system status with a real errorCode round-trips it exactly`() {
+        val original = WatchSystemStatus(
+            headline = "HYDRA-UMC offline",
+            detail = "Check the paired phone connection and Server session.",
+            level = "OFFLINE",
+            speak = false,
+            errorCode = "offline",
+        )
+        val json = original.toJson()
+
+        assertEquals("offline", json.getString("errorCode"))
+        assertEquals(original, WatchSystemStatus.fromJson(json))
+    }
+
+    @Test
+    fun `system status with no errorCode omits the field from the wire JSON`() {
+        val original = WatchSystemStatus(
+            headline = "All systems nominal",
+            detail = "8 robots online, 0 alerts.",
+            level = "NOMINAL",
+            speak = false,
+        )
+        val json = original.toJson()
+
+        assertTrue(!json.has("errorCode"))
+        assertEquals(null, WatchSystemStatus.fromJson(json).errorCode)
+    }
+
     @Test(expected = IllegalArgumentException::class)
     fun `voice turn rejects an oversized transcript`() {
         WatchVoiceTurn("watch-voice-002", "x".repeat(501), "en-US")
