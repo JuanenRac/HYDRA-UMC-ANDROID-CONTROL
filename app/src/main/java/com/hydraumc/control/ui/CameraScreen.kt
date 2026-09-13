@@ -13,7 +13,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.hydraumc.control.R
 import com.hydraumc.control.viewmodel.RobotViewModel
 import com.hydraumc.control.ui.theme.metallicIndustrial
 
@@ -53,10 +55,11 @@ fun CameraScreen(viewModel: RobotViewModel) {
             modifier = Modifier.fillMaxWidth()
         ) {
             OutlinedTextField(
-                value = selectedRobot?.name ?: "Robot Camera $selectedCameraId",
+                value = selectedRobot?.name
+                    ?: stringResource(R.string.robot_camera_fallback_name, selectedCameraId),
                 onValueChange = {},
                 readOnly = true,
-                label = { Text("Select Camera Feed") },
+                label = { Text(stringResource(R.string.select_camera_feed)) },
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                 modifier = Modifier
                     .menuAnchor(type = MenuAnchorType.PrimaryNotEditable)
@@ -90,7 +93,7 @@ fun CameraScreen(viewModel: RobotViewModel) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = if (cameraEnabled) "Camera Enabled" else "Camera Disabled",
+                text = if (cameraEnabled) stringResource(R.string.camera_enabled_label) else stringResource(R.string.camera_disabled_label),
                 style = MaterialTheme.typography.labelMedium,
                 color = if (cameraEnabled) Color(0xFF4CAF50) else Color(0xFFEF5350)
             )
@@ -119,7 +122,11 @@ fun CameraScreen(viewModel: RobotViewModel) {
                     modifier = Modifier.fillMaxSize()
                 )
                 Text(
-                    text = "LIVE: ${selectedRobot?.name ?: "ROBOT $selectedCameraId"}",
+                    text = stringResource(
+                        R.string.camera_live_label,
+                        selectedRobot?.name
+                            ?: stringResource(R.string.robot_camera_fallback_name, selectedCameraId),
+                    ),
                     style = MaterialTheme.typography.labelSmall,
                     color = Color.Green.copy(alpha = 0.7f),
                     modifier = Modifier.align(Alignment.TopStart).padding(8.dp)
@@ -129,12 +136,12 @@ fun CameraScreen(viewModel: RobotViewModel) {
                     Icon(Icons.Default.VideocamOff, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(48.dp))
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "Camera Disabled",
+                        text = stringResource(R.string.camera_disabled_label),
                         style = MaterialTheme.typography.bodyMedium,
                         color = Color.Gray
                     )
                     Text(
-                        text = "Use the switch above to enable it on the server",
+                        text = stringResource(R.string.camera_disabled_hint),
                         style = MaterialTheme.typography.labelSmall,
                         color = Color.Gray.copy(alpha = 0.7f)
                     )

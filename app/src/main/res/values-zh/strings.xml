@@ -4,6 +4,12 @@
     <string name="tab_dashboard">仪表盘</string>
     <string name="tab_control">控制</string>
     <string name="tab_camera">摄像头</string>
+    <string name="select_camera_feed">选择摄像头</string>
+    <string name="robot_camera_fallback_name">机器人摄像头 %d</string>
+    <string name="camera_enabled_label">摄像头已启用</string>
+    <string name="camera_disabled_label">摄像头已禁用</string>
+    <string name="camera_disabled_hint">使用上方的开关在服务器上启用它</string>
+    <string name="camera_live_label">直播:%s</string>
     <string name="tab_3d_view">3D 视图</string>
     <string name="tab_telemetry">遥测</string>
     <string name="tab_settings">设置</string>
@@ -49,6 +55,8 @@
     <string name="servers_found">已找到的服务器</string>
     <string name="connect">连接</string>
     <string name="no_servers_found">未找到任何服务器。</string>
+    <string name="server_selector_with_count">服务器 (%d)</string>
+    <string name="server_selector_none">无服务器</string>
     <string name="example_ip">例如：192.168.1.100</string>
     <string name="example_port">例如：3000</string>
     <string name="error_enter_ip_port">请输入 IP 和端口。</string>
@@ -85,6 +93,8 @@
     <string name="tab_wifi">Wi-Fi</string>
     <string name="tab_bluetooth">蓝牙</string>
     <string name="bt_enable_title">需要启用蓝牙</string>
+    <string name="bt_physically_disabled">蓝牙已被物理禁用。</string>
+    <string name="bt_enable_system_button">启用系统蓝牙</string>
     <string name="bt_enable_description">需要启用蓝牙才能搜索并连接附近的 HYDRA-UMC 设备。</string>
     <string name="bt_enable_button">启用蓝牙</string>
     <string name="bt_scan_button">搜索设备</string>
@@ -102,6 +112,7 @@
     <string name="password_label">密码</string>
     <string name="email_label">电子邮箱地址</string>
     <string name="cancel_button">取消</string>
+    <string name="biometric_auth_failed">身份验证失败</string>
     <string name="accept_button">确定</string>
     <string name="logout_button">退出登录</string>
     <string name="about_title">关于 HYDRA-UMC CONTROL</string>

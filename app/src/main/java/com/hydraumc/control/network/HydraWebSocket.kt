@@ -88,6 +88,17 @@ class HydraWebSocket(
 ) {
     /** The underlying OkHttp WebSocket instance. */
     private var webSocket: WebSocket? = null
+    /**
+     * True only between a real onOpen and the next onClosing/onClosed/
+     * onFailure/disconnect() for THAT SAME [webSocket] instance - not merely
+     * "webSocket is non-null". Before this field existed, [webSocket] stayed
+     * set to the dead instance after a real close/failure (nothing ever
+     * nulled it out except a user-initiated disconnect()), so send()'s own
+     * echo-guard (a repeated payload matching lastPayloadJson) returned
+     * `true` - "sent" - even though nothing had actually reached a live
+     * socket. H001.
+     */
+    private var isSocketOpen = false
     /** Flag to prevent auto-reconnect when the user manually disconnects. */
     private var closingByUser = false
     /** Active coroutine job handling reconnection delays. */
@@ -133,20 +144,37 @@ class HydraWebSocket(
             "ws://$host:$port/ws"
         }
         val request = Request.Builder().url(url).build()
+        isSocketOpen = false
         webSocket = client.newWebSocket(request, object : WebSocketListener() {
-            override fun onOpen(webSocket: WebSocket, response: Response) {
+            // Every callback below takes its own `ws` parameter rather than
+            // shadowing the outer `webSocket` field, and checks `ws ===
+            // webSocket` before touching any shared state. Without that
+            // check, a stale callback from a superseded attempt (e.g. a slow
+            // onFailure arriving just after a fresh reconnect already
+            // succeeded and replaced [webSocket]) could flip isSocketOpen/
+            // onStatus back to DISCONNECTED for a connection that is, in
+            // reality, still open - "un callback viejo no altera la conexion
+            // nueva" (H001's own acceptance criterion).
+            override fun onOpen(ws: WebSocket, response: Response) {
+                if (ws !== webSocket) return
+                isSocketOpen = true
                 mainScope.launch { onStatus(WsStatus.CONNECTED) }
             }
 
-            override fun onMessage(webSocket: WebSocket, text: String) {
+            override fun onMessage(ws: WebSocket, text: String) {
+                if (ws !== webSocket) return
                 handleMessage(text)
             }
 
-            override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
-                webSocket.close(1000, null)
+            override fun onClosing(ws: WebSocket, code: Int, reason: String) {
+                if (ws !== webSocket) return
+                isSocketOpen = false
+                ws.close(1000, null)
             }
 
-            override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
+            override fun onClosed(ws: WebSocket, code: Int, reason: String) {
+                if (ws !== webSocket) return
+                isSocketOpen = false
                 mainScope.launch { onStatus(WsStatus.DISCONNECTED) }
                 if (code == WS_CLOSE_POLICY_VIOLATION) {
                     // server.ts closes the /ws upgrade with 1008 specifically when the
@@ -163,7 +191,9 @@ class HydraWebSocket(
                 scheduleReconnect()
             }
 
-            override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
+            override fun onFailure(ws: WebSocket, t: Throwable, response: Response?) {
+                if (ws !== webSocket) return
+                isSocketOpen = false
                 mainScope.launch {
                     onStatus(WsStatus.DISCONNECTED)
                     onError("Conexión WebSocket perdida: ${t.message ?: t::class.simpleName}")
@@ -224,13 +254,16 @@ class HydraWebSocket(
      * @return True if the message was sent, false if the socket is closed.
      */
     fun send(payload: JSONObject): Boolean {
-        // Check the socket BEFORE the echo-guard, not after - a payload
-        // that happens to match the last one sent/received returns "true"
-        // (nothing to do) below regardless of whether the socket is
-        // actually connected, so checking connectivity second would report
-        // a fake success for exactly the case that matters most: the
-        // reconnect window right after a drop.
-        val socket = webSocket ?: return false
+        // Check real connectivity BEFORE the echo-guard, not after - and
+        // check isSocketOpen, not just "webSocket is non-null" (H001: the
+        // field used to stay non-null, pointing at a dead socket, for the
+        // entire reconnect window after a real close/failure). A payload
+        // that happens to match the last one sent/received would otherwise
+        // return "true" (nothing to do) regardless of whether the socket is
+        // actually connected, reporting a fake success for exactly the case
+        // that matters most: a repeated send right after a drop.
+        val socket = webSocket
+        if (socket == null || !isSocketOpen) return false
         val payloadJson = payload.toString()
         if (payloadJson == lastPayloadJson) return true
         /** Envelope following the REMOTE_API.md contract. */
@@ -257,6 +290,7 @@ class HydraWebSocket(
      */
     fun disconnect() {
         closingByUser = true
+        isSocketOpen = false
         reconnectJob?.cancel()
         webSocket?.close(1000, "App closed")
         webSocket = null
