@@ -21,9 +21,12 @@ import okhttp3.WebSocketListener
 import org.json.JSONObject
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 
 /**
  * Found while auditing the code: HydraWebSocket's
@@ -37,6 +40,7 @@ import org.junit.Test
  * client's real reaction to it.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
+@RunWith(RobolectricTestRunner::class)
 class HydraWebSocketTest {
 
     private lateinit var server: MockWebServer
@@ -153,5 +157,78 @@ class HydraWebSocketTest {
             assertEquals(WsStatus.CONNECTED, events.statuses.receive())
         }
         assertEquals(2, server.requestCount)
+    }
+
+    /**
+     * H001: [webSocket] used to stay non-null (pointing at the now-dead
+     * socket) after a real close/failure - nothing nulled it out except a
+     * user-initiated disconnect() - so send()'s own echo-guard (a repeated
+     * payload matching lastPayloadJson) returned `true` before ever checking
+     * whether anything was actually still connected. Real MockWebServer
+     * close, never a mocked [WebSocket.send].
+     */
+    @Test
+    fun `send reports failure for a repeated payload right after a real close`() = runBlocking {
+        val events = RecordedEvents()
+        val serverOpened = Channel<WebSocket>(capacity = Channel.UNLIMITED)
+        val serverReceived = Channel<String>(capacity = Channel.UNLIMITED)
+        server.enqueue(
+            MockResponse().withWebSocketUpgrade(object : WebSocketListener() {
+                override fun onOpen(webSocket: WebSocket, response: okhttp3.Response) {
+                    serverOpened.trySend(webSocket)
+                }
+                override fun onMessage(webSocket: WebSocket, text: String) {
+                    serverReceived.trySend(text)
+                }
+            })
+        )
+
+        val socket = HydraWebSocket(
+            host = server.hostName,
+            port = server.port,
+            token = "a-valid-token",
+            client = client,
+            onStatus = { events.statuses.trySend(it) },
+            onSettings = {},
+            onError = { events.errors.trySend(it) },
+        )
+        socket.connect()
+
+        val payload = JSONObject().put("foo", "bar")
+
+        val serverSocket = withTimeout(5_000) {
+            assertEquals(WsStatus.CONNECTING, events.statuses.receive())
+            assertEquals(WsStatus.CONNECTED, events.statuses.receive())
+            serverOpened.receive()
+        }
+
+        // First send on a genuinely open socket must succeed and really reach
+        // the server - not just report true.
+        assertTrue("first send on a live socket must succeed", socket.send(payload))
+        withTimeout(5_000) {
+            val received = JSONObject(serverReceived.receive())
+            assertEquals("bar", received.getJSONObject("payload").getString("foo"))
+        }
+
+        // Server closes for real (e.g. going away) - an ordinary code, not a
+        // policy violation.
+        serverSocket.close(1001, "server restarting")
+        withTimeout(5_000) {
+            assertEquals(WsStatus.DISCONNECTED, events.statuses.receive())
+        }
+
+        // Before the fix this returned true: the echo-guard short-circuited
+        // on the exact same payload before ever checking connectivity.
+        assertFalse(
+            "repeating the exact same payload right after a real close must " +
+                "report failure, not a fake success",
+            socket.send(payload),
+        )
+        // A genuinely different payload must fail too - not just the
+        // dedup-guarded case.
+        assertFalse(
+            "a fresh payload right after a real close must also report failure",
+            socket.send(JSONObject().put("foo", "baz")),
+        )
     }
 }

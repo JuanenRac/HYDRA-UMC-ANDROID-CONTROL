@@ -4,6 +4,12 @@
     <string name="tab_dashboard">Dashboard</string>
     <string name="tab_control">Control</string>
     <string name="tab_camera">Cámara</string>
+    <string name="select_camera_feed">Seleccionar cámara</string>
+    <string name="robot_camera_fallback_name">Cámara del robot %d</string>
+    <string name="camera_enabled_label">Cámara activada</string>
+    <string name="camera_disabled_label">Cámara desactivada</string>
+    <string name="camera_disabled_hint">Usa el interruptor de arriba para activarla en el servidor</string>
+    <string name="camera_live_label">EN VIVO: %s</string>
     <string name="tab_3d_view">Vista 3D</string>
     <string name="tab_telemetry">Telemetría</string>
     <string name="tab_settings">Ajustes</string>
@@ -49,6 +55,8 @@
     <string name="servers_found">Servidores Encontrados</string>
     <string name="connect">Conectar</string>
     <string name="no_servers_found">No se encontraron servidores.</string>
+    <string name="server_selector_with_count">Servidores (%d)</string>
+    <string name="server_selector_none">Sin servidores</string>
     <string name="example_ip">Ej: 192.168.1.100</string>
     <string name="example_port">Ej: 3000</string>
     <string name="error_enter_ip_port">Introduce una IP y un puerto.</string>
@@ -85,6 +93,8 @@
     <string name="tab_wifi">Wi-Fi</string>
     <string name="tab_bluetooth">Bluetooth</string>
     <string name="bt_enable_title">Se requiere Bluetooth</string>
+    <string name="bt_physically_disabled">Bluetooth está físicamente desactivado.</string>
+    <string name="bt_enable_system_button">ACTIVAR BT DEL SISTEMA</string>
     <string name="bt_enable_description">Se necesita Bluetooth para buscar y conectarse a dispositivos HYDRA-UMC cercanos.</string>
     <string name="bt_enable_button">Activar Bluetooth</string>
     <string name="bt_scan_button">Buscar Dispositivos</string>
@@ -102,6 +112,7 @@
     <string name="password_label">Contraseña</string>
     <string name="email_label">Correo Electrónico</string>
     <string name="cancel_button">CANCELAR</string>
+    <string name="biometric_auth_failed">Fallo en la autenticación</string>
     <string name="accept_button">ACEPTAR</string>
     <string name="logout_button">CERRAR SESIÓN</string>
     <string name="about_title">Acerca de HYDRA-UMC CONTROL</string>

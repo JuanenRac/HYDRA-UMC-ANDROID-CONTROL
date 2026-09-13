@@ -9,6 +9,40 @@ in [README.md](README.md#-versioning). Entries recorded before that policy
 existed are grouped under the pre-policy version `0.0.0` the repo carried
 at the time.
 
+## [0.5.8] - WebSocket send() no longer reports success against a dead socket, and 9 literal UI strings now honor the selected language
+
+- **`HydraWebSocket.send()` could report success right after a real close/
+  failure.** `webSocket` stayed non-null - pointing at the dead socket -
+  for the entire reconnect window after `onClosed`/`onFailure`, since
+  nothing nulled it out except a user-initiated `disconnect()`. `send()`'s
+  own echo-guard (a payload matching the last one sent/received) returned
+  `true` without ever checking real connectivity. Fixed with a real
+  `isSocketOpen` flag, set only between a genuine `onOpen` and the next
+  `onClosing`/`onClosed`/`onFailure`/`disconnect()` for that *same* socket
+  instance - every listener callback now also checks `ws === webSocket`
+  before touching shared state, so a stale callback from a superseded
+  connection attempt can no longer flip a newer, still-open connection
+  back to disconnected. 1 new test (real `MockWebServer` close, not a
+  mocked `WebSocket.send`).
+- **9 literal, unlocalized strings replaced with real string resources**
+  across the login/main screen, the camera feed screen, biometric prompts
+  and the Bluetooth settings screen - all 9 previously showed the same
+  hardcoded English or Spanish text no matter which of the 7 supported
+  languages was selected (`MainScreen.kt`'s server selector and 3 icon
+  content descriptions, `CameraScreen.kt`'s feed selector label and
+  enabled/disabled/live indicators, `BiometricHelper.kt`'s cancel button
+  and failure message, `SettingsScreen.kt`'s Bluetooth-disabled notice).
+  New/reused string resources added to all 7 language catalogs.
+- Corrected two stale claims about server credentials and localization
+  scope: the login screen's own description said "5 languages" (this app
+  has shipped 7 for a long time) and said every server seeds a default
+  `admin`/`admin` account - true only for a *development* server; a real
+  production server (`NODE_ENV=production`) requires
+  `HYDRA_UMC_BOOTSTRAP_ADMIN_USERNAME`/`HYDRA_UMC_BOOTSTRAP_ADMIN_PASSWORD`
+  instead and never falls back to `admin`/`admin` silently.
+
+52 tests passing (`./gradlew test`), 1 new.
+
 ## [0.5.7] - Real coverage for GitHubReleaseUpdater.download()
 
 The self-update download path had zero tests of its own -

@@ -4,6 +4,12 @@
     <string name="tab_dashboard">Dashboard</string>
     <string name="tab_control">Control</string>
     <string name="tab_camera">Camera</string>
+    <string name="select_camera_feed">Select Camera Feed</string>
+    <string name="robot_camera_fallback_name">Robot Camera %d</string>
+    <string name="camera_enabled_label">Camera Enabled</string>
+    <string name="camera_disabled_label">Camera Disabled</string>
+    <string name="camera_disabled_hint">Use the switch above to enable it on the server</string>
+    <string name="camera_live_label">LIVE: %s</string>
     <string name="tab_3d_view">3D View</string>
     <string name="tab_telemetry">Telemetry</string>
     <string name="tab_settings">Settings</string>
@@ -49,6 +55,8 @@
     <string name="servers_found">Servers Found</string>
     <string name="connect">Connect</string>
     <string name="no_servers_found">No servers found.</string>
+    <string name="server_selector_with_count">Servers (%d)</string>
+    <string name="server_selector_none">No Servers</string>
     <string name="example_ip">Ex: 192.168.1.100</string>
     <string name="example_port">Ex: 3000</string>
     <string name="error_enter_ip_port">Please enter an IP and port.</string>
@@ -85,6 +93,8 @@
     <string name="tab_wifi">Wi-Fi</string>
     <string name="tab_bluetooth">Bluetooth</string>
     <string name="bt_enable_title">Bluetooth is required</string>
+    <string name="bt_physically_disabled">Bluetooth is physically disabled.</string>
+    <string name="bt_enable_system_button">ENABLE SYSTEM BT</string>
     <string name="bt_enable_description">Bluetooth is needed to search and connect to HYDRA-UMC devices nearby.</string>
     <string name="bt_enable_button">Enable Bluetooth</string>
     <string name="bt_scan_button">Search Devices</string>
@@ -102,6 +112,7 @@
     <string name="password_label">Password</string>
     <string name="email_label">Email Address</string>
     <string name="cancel_button">CANCEL</string>
+    <string name="biometric_auth_failed">Authentication failed</string>
     <string name="accept_button">ACCEPT</string>
     <string name="logout_button">LOGOUT</string>
     <string name="about_title">About HYDRA-UMC CONTROL</string>

@@ -484,10 +484,10 @@ private fun BluetoothSettings(viewModel: RobotViewModel, onEnableBluetooth: () -
                 contentAlignment = Alignment.Center
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("Bluetooth is physically disabled.", color = Color.White)
+                    Text(stringResource(R.string.bt_physically_disabled), color = Color.White)
                     Spacer(modifier = Modifier.height(12.dp))
                     HydraButton(
-                        text = "ENABLE SYSTEM BT",
+                        text = stringResource(R.string.bt_enable_system_button),
                         onClick = onEnableBluetooth
                     )
                 }

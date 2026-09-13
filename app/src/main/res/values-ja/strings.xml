@@ -4,6 +4,12 @@
     <string name="tab_dashboard">ダッシュボード</string>
     <string name="tab_control">制御</string>
     <string name="tab_camera">カメラ</string>
+    <string name="select_camera_feed">カメラを選択</string>
+    <string name="robot_camera_fallback_name">ロボットカメラ %d</string>
+    <string name="camera_enabled_label">カメラ有効</string>
+    <string name="camera_disabled_label">カメラ無効</string>
+    <string name="camera_disabled_hint">上のスイッチでサーバー側で有効にしてください</string>
+    <string name="camera_live_label">ライブ: %s</string>
     <string name="tab_3d_view">3D ビュー</string>
     <string name="tab_telemetry">テレメトリ</string>
     <string name="tab_settings">設定</string>
@@ -49,6 +55,8 @@
     <string name="servers_found">見つかったサーバー</string>
     <string name="connect">接続</string>
     <string name="no_servers_found">サーバーが見つかりませんでした。</string>
+    <string name="server_selector_with_count">サーバー (%d)</string>
+    <string name="server_selector_none">サーバーなし</string>
     <string name="example_ip">例：192.168.1.100</string>
     <string name="example_port">例：3000</string>
     <string name="error_enter_ip_port">IP とポートを入力してください。</string>
@@ -85,6 +93,8 @@
     <string name="tab_wifi">Wi-Fi</string>
     <string name="tab_bluetooth">Bluetooth</string>
     <string name="bt_enable_title">Bluetooth が必要です</string>
+    <string name="bt_physically_disabled">Bluetooth は物理的に無効になっています。</string>
+    <string name="bt_enable_system_button">システム BT を有効にする</string>
     <string name="bt_enable_description">近くの HYDRA-UMC デバイスを検索・接続するには Bluetooth が必要です。</string>
     <string name="bt_enable_button">Bluetooth を有効化</string>
     <string name="bt_scan_button">デバイスを検索</string>
@@ -102,6 +112,7 @@
     <string name="password_label">パスワード</string>
     <string name="email_label">メールアドレス</string>
     <string name="cancel_button">キャンセル</string>
+    <string name="biometric_auth_failed">認証に失敗しました</string>
     <string name="accept_button">決定</string>
     <string name="logout_button">ログアウト</string>
     <string name="about_title">HYDRA-UMC CONTROL について</string>

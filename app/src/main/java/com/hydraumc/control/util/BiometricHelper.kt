@@ -10,6 +10,7 @@ import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
 import androidx.fragment.app.FragmentActivity
 import androidx.core.content.ContextCompat
+import com.hydraumc.control.R
 
 /**
  * Helper class to manage Biometric (Fingerprint/Face) authentication.
@@ -56,7 +57,7 @@ object BiometricHelper {
 
                 override fun onAuthenticationFailed() {
                     super.onAuthenticationFailed()
-                    onError("Authentication failed")
+                    onError(activity.getString(R.string.biometric_auth_failed))
                 }
             },
         )
@@ -64,7 +65,7 @@ object BiometricHelper {
         val promptInfo = BiometricPrompt.PromptInfo.Builder()
             .setTitle(title)
             .setSubtitle(subtitle)
-            .setNegativeButtonText("Cancel")
+            .setNegativeButtonText(activity.getString(R.string.cancel_button))
             .setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_STRONG or 
                                      BiometricManager.Authenticators.BIOMETRIC_WEAK)
             .build()

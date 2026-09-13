@@ -225,7 +225,10 @@ fun MainScreen(
                             Icon(Icons.Default.Dns, contentDescription = null, modifier = Modifier.size(18.dp))
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
-                                text = if (discoveredServers.isNotEmpty()) "Servers (${discoveredServers.size})" else "No Servers",
+                                text = if (discoveredServers.isNotEmpty())
+                                    stringResource(R.string.server_selector_with_count, discoveredServers.size)
+                                else
+                                    stringResource(R.string.server_selector_none),
                                 style = MaterialTheme.typography.labelMedium
                             )
                             Icon(Icons.Default.ArrowDropDown, contentDescription = null)
@@ -237,7 +240,7 @@ fun MainScreen(
                         ) {
                             if (discoveredServers.isEmpty()) {
                                 DropdownMenuItem(
-                                    text = { Text("No se encontraron servidores") },
+                                    text = { Text(stringResource(R.string.no_servers_found)) },
                                     onClick = { serverDropdownExpanded = false }
                                 )
                             } else {
@@ -257,7 +260,7 @@ fun MainScreen(
                     // Icons (Right)
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         IconButton(onClick = { showProfileDialog = true }) {
-                            Icon(Icons.Default.Person, contentDescription = "Usuario", tint = MaterialTheme.colorScheme.primary)
+                            Icon(Icons.Default.Person, contentDescription = stringResource(R.string.user_profile_title), tint = MaterialTheme.colorScheme.primary)
                         }
                         IconButton(onClick = { showVoiceAssistantDialog = true }) {
                             Icon(Icons.Default.Mic, contentDescription = stringResource(R.string.voice_assistant_title), tint = MaterialTheme.colorScheme.primary)
@@ -271,7 +274,7 @@ fun MainScreen(
                                 }
                             }
                         ) {
-                            Icon(Icons.Default.Terminal, contentDescription = "Telemetría", tint = MaterialTheme.colorScheme.primary)
+                            Icon(Icons.Default.Terminal, contentDescription = stringResource(R.string.tab_telemetry), tint = MaterialTheme.colorScheme.primary)
                         }
                         IconButton(
                             onClick = { 
@@ -282,10 +285,10 @@ fun MainScreen(
                                 }
                             }
                         ) {
-                            Icon(Icons.Default.Settings, contentDescription = "Ajustes", tint = MaterialTheme.colorScheme.primary)
+                            Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.tab_settings), tint = MaterialTheme.colorScheme.primary)
                         }
                         IconButton(onClick = { showAboutDialog = true }) {
-                            Icon(Icons.Default.Info, contentDescription = "Acerca de", tint = MaterialTheme.colorScheme.primary)
+                            Icon(Icons.Default.Info, contentDescription = stringResource(R.string.about_title), tint = MaterialTheme.colorScheme.primary)
                         }
                     }
                 }
