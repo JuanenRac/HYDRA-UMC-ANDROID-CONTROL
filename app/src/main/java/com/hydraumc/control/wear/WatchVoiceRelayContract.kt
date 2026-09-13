@@ -36,13 +36,28 @@ data class WatchVoiceTurn(
     }
 }
 
-/** Safe reply returned by Server after it relays a Watch turn to Voice UI. */
+/**
+ * Safe reply returned by Server after it relays a Watch turn to Voice UI.
+ *
+ * H062: [errorCode] is a stable, NEVER-translated protocol identifier for
+ * this relay's own SYSTEM fallback replies (WatchVoiceRelayService's own
+ * catch block below, generated locally on the phone, in English, with no
+ * access to the watch's own locale) - as opposed to [text], which for a
+ * REAL AI reply is already correctly localized upstream (Voice UI answers
+ * in the request's own locale) and needs no translation here at all. The
+ * watch (not this phone) resolves a known [errorCode] to a real localized
+ * string from its own strings.xml (see HYDRA-UMC-WATCH's own
+ * errorCodeToStringRes()) instead of ever speaking/showing this phone's
+ * own English [text] fallback. `null` means "trust [text] as-is", which
+ * covers every real AI reply.
+ */
 data class WatchAssistantReply(
     val requestId: String,
     val text: String,
     val level: String,
     val speak: Boolean,
     val requiresConfirmation: Boolean,
+    val errorCode: String? = null,
 ) {
     fun toJson(): JSONObject = JSONObject()
         .put("type", "assistant_reply")
@@ -51,6 +66,7 @@ data class WatchAssistantReply(
         .put("level", level)
         .put("speak", speak)
         .put("requiresConfirmation", requiresConfirmation)
+        .apply { errorCode?.let { put("errorCode", it) } }
 
     companion object {
         fun fromJson(json: JSONObject): WatchAssistantReply {
@@ -61,17 +77,23 @@ data class WatchAssistantReply(
                 level = json.getString("level"),
                 speak = json.getBoolean("speak"),
                 requiresConfirmation = json.getBoolean("requiresConfirmation"),
+                errorCode = if (json.has("errorCode")) json.getString("errorCode") else null,
             )
         }
     }
 }
 
-/** Read-only system-health card that can later be forwarded to the watch. */
+/**
+ * Read-only system-health card that can later be forwarded to the watch.
+ * [errorCode] is the same H062 mechanism as [WatchAssistantReply]'s own -
+ * see that field's header comment.
+ */
 data class WatchSystemStatus(
     val headline: String,
     val detail: String,
     val level: String,
     val speak: Boolean,
+    val errorCode: String? = null,
 ) {
     fun toJson(): JSONObject = JSONObject()
         .put("type", "system_status")
@@ -79,6 +101,7 @@ data class WatchSystemStatus(
         .put("detail", detail)
         .put("level", level)
         .put("speak", speak)
+        .apply { errorCode?.let { put("errorCode", it) } }
 
     companion object {
         fun fromJson(json: JSONObject): WatchSystemStatus {
@@ -88,6 +111,7 @@ data class WatchSystemStatus(
                 detail = json.getString("detail"),
                 level = json.getString("level"),
                 speak = json.getBoolean("speak"),
+                errorCode = if (json.has("errorCode")) json.getString("errorCode") else null,
             )
         }
     }

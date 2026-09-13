@@ -77,12 +77,18 @@ class WatchVoiceRelayService : WearableListenerService() {
                 withTimeoutOrNull(REQUEST_TIMEOUT_MS) { authenticatedClient().postWatchVoiceTurn(turn) }
                     ?: error("voice turn request timed out after ${REQUEST_TIMEOUT_MS}ms")
             }.getOrElse {
+                // H062: text stays here as a real, honest fallback for a
+                // watch build too old to recognize errorCode - but the
+                // watch itself now resolves errorCode to a real localized
+                // string instead of ever speaking this English text, since
+                // this phone has no access to the watch's own locale.
                 WatchAssistantReply(
                     requestId = turn.requestId,
                     text = "HYDRA-UMC connection unavailable. Check the paired phone session.",
                     level = "ATTENTION",
                     speak = true,
                     requiresConfirmation = false,
+                    errorCode = "connection_unavailable",
                 )
             }
             send(event.sourceNodeId, WatchRelayPaths.ASSISTANT_REPLY, reply.toJson().toString())
@@ -98,11 +104,16 @@ class WatchVoiceRelayService : WearableListenerService() {
                 withTimeoutOrNull(REQUEST_TIMEOUT_MS) { authenticatedClient().getWatchSystemStatus() }
                     ?: error("system status request timed out after ${REQUEST_TIMEOUT_MS}ms")
             }.getOrElse {
+                // H062: same mechanism as relayVoiceTurn's own fallback
+                // above - headline/detail stay as an honest fallback for
+                // an old watch build, errorCode is what a current one
+                // actually resolves and shows/speaks.
                 WatchSystemStatus(
                     headline = "HYDRA-UMC offline",
                     detail = "Check the paired phone connection and Server session.",
                     level = "OFFLINE",
                     speak = false,
+                    errorCode = "offline",
                 )
             }
             send(event.sourceNodeId, WatchRelayPaths.SYSTEM_STATUS, status.toJson().toString())

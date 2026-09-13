@@ -9,6 +9,26 @@ in [README.md](README.md#-versioning). Entries recorded before that policy
 existed are grouped under the pre-policy version `0.0.0` the repo carried
 at the time.
 
+## [0.5.9] - H062: Watch voice-relay error text no longer stuck in English
+
+- `WatchVoiceRelayService`'s own connection-timeout/no-session fallback
+  replies (`WatchAssistantReply`/`WatchSystemStatus`) always carried
+  hardcoded English text with `speak=true` for the assistant reply -
+  spoken by the paired watch's own TTS engine regardless of its
+  configured language, since this phone has no access to that watch's
+  own locale when it generates this SYSTEM fallback text itself (as
+  opposed to a real AI reply, whose own text already comes back
+  correctly localized from Voice UI). Added an optional, stable, never-
+  translated `errorCode` field (`"connection_unavailable"`/`"offline"`)
+  the watch itself now resolves to a real localized string from its own
+  strings.xml, instead of ever speaking/showing this phone's own English
+  text. The English text stays as an honest fallback for an older watch
+  build that doesn't recognize the code yet.
+- Add real regression coverage in `WatchCompanionProtocolTest`: a reply
+  with no `errorCode` still omits the field from the wire JSON
+  (unchanged, backward-compatible shape), and a real `errorCode` round-
+  trips exactly for both `WatchAssistantReply` and `WatchSystemStatus`.
+
 ## [0.5.8] - WebSocket send() no longer reports success against a dead socket, and 9 literal UI strings now honor the selected language
 
 - **`HydraWebSocket.send()` could report success right after a real close/
