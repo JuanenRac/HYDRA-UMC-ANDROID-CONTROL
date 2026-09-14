@@ -288,7 +288,20 @@ fun MainScreen(
                             Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.tab_settings), tint = MaterialTheme.colorScheme.primary)
                         }
                         IconButton(onClick = { showAboutDialog = true }) {
-                            Icon(Icons.Default.Info, contentDescription = stringResource(R.string.about_title), tint = MaterialTheme.colorScheme.primary)
+                            // Real feedback from live testing: Icons.Default.Info renders
+                            // visibly smaller than Person/Mic/Terminal/Settings even though
+                            // all 5 share the same default 24dp Icon size here - Material's
+                            // own "Info" glyph just draws with more internal padding inside
+                            // its 24x24 viewBox than the others. Sized up explicitly so it
+                            // reads as the same size as its neighbors, not adjusted for real
+                            // touch-target concerns (IconButton's own 48dp minimum still
+                            // applies either way).
+                            Icon(
+                                Icons.Default.Info,
+                                contentDescription = stringResource(R.string.about_title),
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(28.dp)
+                            )
                         }
                     }
                 }

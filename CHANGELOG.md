@@ -9,6 +9,18 @@ in [README.md](README.md#-versioning). Entries recorded before that policy
 existed are grouped under the pre-policy version `0.0.0` the repo carried
 at the time.
 
+## [0.6.0] - The About icon looked visibly smaller than its 4 neighbors
+
+Live report: the toolbar's Profile/Voice/Telemetry/Settings/About icon
+row (`MainScreen.kt`) - all 5 use the same default `IconButton`/`Icon`
+size with no explicit modifier - still read as noticeably uneven, the
+About (`Icons.Default.Info`) icon looking smaller than the other 4. Not
+a sizing bug in this code: Material's own "Info" glyph draws with more
+internal padding inside its 24x24dp viewBox than Person/Mic/Terminal/
+Settings do, so the same nominal size reads smaller. Given an explicit
+`Modifier.size(28.dp)` so it visually matches its neighbors; `IconButton`'s
+own 48dp minimum touch target is unaffected either way.
+
 ## [0.5.9] - H062: Watch voice-relay error text no longer stuck in English
 
 - `WatchVoiceRelayService`'s own connection-timeout/no-session fallback
