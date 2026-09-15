@@ -215,8 +215,21 @@ fun MainScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Server Selector (Left)
-                    Box {
+                    // Server Selector (Left) - real bug found live: this Box had no
+                    // width limit of its own, and this outer Row has no weights at
+                    // all - in a locale whose translated server_selector_with_count/
+                    // _none string is wide enough (Spanish "Servidores (N)" vs English
+                    // "Servers (N)", for one real example), this button's own natural
+                    // width grew past what's left on screen, pushing the icon Row
+                    // below partly off the right edge - NOT actually shrinking any
+                    // icon's own size, just clipping most of the last one (About)
+                    // off-screen, which reads exactly like "the About icon is tiny".
+                    // weight(1f, fill = false) caps this Box at its fair share of the
+                    // row instead of its full unbounded natural width, so the icon
+                    // Row (unweighted, real fixed content) always gets to keep its
+                    // own full natural width - the label truncates with an ellipsis
+                    // instead, in whichever locale ever needs to.
+                    Box(modifier = Modifier.weight(1f, fill = false)) {
                         OutlinedButton(
                             onClick = { serverDropdownExpanded = true },
                             modifier = Modifier.height(40.dp),
@@ -229,7 +242,10 @@ fun MainScreen(
                                     stringResource(R.string.server_selector_with_count, discoveredServers.size)
                                 else
                                     stringResource(R.string.server_selector_none),
-                                style = MaterialTheme.typography.labelMedium
+                                style = MaterialTheme.typography.labelMedium,
+                                maxLines = 1,
+                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                                modifier = Modifier.weight(1f, fill = false)
                             )
                             Icon(Icons.Default.ArrowDropDown, contentDescription = null)
                         }

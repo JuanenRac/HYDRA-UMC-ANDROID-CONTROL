@@ -9,6 +9,33 @@ in [README.md](README.md#-versioning). Entries recorded before that policy
 existed are grouped under the pre-policy version `0.0.0` the repo carried
 at the time.
 
+## [0.6.1] - The real cause: a long server-selector label pushed the icon row off-screen
+
+0.6.0's own 28dp size fix did not actually fix the live report - the
+owner's own follow-up correctly traced it to the server-selector label's
+real width, not the About icon's own size. `MainScreen.kt`'s Sub-header
+Row had no width limit on the server-selector `Box` at all: a wide enough
+translated label (Spanish `Servidores (N)` is measurably wider than
+English `Servers (N)`) grew past what's left on screen, pushing the
+trailing icon row (Profile/Voice/Telemetry/Settings/About) partly past
+the right edge - clipping mostly the LAST one (About), which reads
+exactly like "the About icon is tiny", never actually a per-icon sizing
+bug at all.
+
+Fixed with `Modifier.weight(1f, fill = false)` on the server-selector
+`Box` (caps it to its fair share of the row instead of an unbounded
+natural width) and on its own `Text` (`maxLines = 1` +
+`TextOverflow.Ellipsis`, so a long label truncates instead of pushing
+anything) - the icon row keeps its own full natural width and stays
+fully on-screen regardless of label length.
+
+New `SubHeaderRowLayoutTest.kt` (Robolectric + Compose UI testing, a real
+Pixel8-width device): confirmed this actually reproduces without the fix
+(2 of 3 real assertions fail against the un-weighted structure) and
+passes with it, for a realistic long label, a deliberately extreme one,
+and confirms the About icon keeps its real full 28dp size when there's
+plenty of room.
+
 ## [0.6.0] - The About icon looked visibly smaller than its 4 neighbors
 
 Live report: the toolbar's Profile/Voice/Telemetry/Settings/About icon
