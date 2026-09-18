@@ -47,9 +47,7 @@ import com.hydraumc.control.viewmodel.RobotViewModel
 /**
  * Composable that displays the 3D view by embedding the server's own web
  * interface (the same Three.js viewport HYDRA-UMC STUDIO's browser UI
- * renders) in a WebView. This is the real, working 3D view - the native
- * Filament path (NativeThreeDScreen.kt) needs an actual .glb asset pipeline
- * that doesn't exist yet, so it stays unused rather than half-wired-in.
+ * renders) in a WebView. This is the real, working 3D view.
  *
  * @param viewModel The shared RobotViewModel containing connection info.
  */

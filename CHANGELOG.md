@@ -9,6 +9,18 @@ in [README.md](README.md#-versioning). Entries recorded before that policy
 existed are grouped under the pre-policy version `0.0.0` the repo carried
 at the time.
 
+## [0.6.2] - Removed the disconnected experimental Filament 3D screen
+
+`ui/NativeThreeDScreen.kt` was an unfinished Google Filament native 3D
+viewer, declared but never wired into any navigation route and without a
+real `.glb` asset pipeline - genuinely dead code, confirmed unreferenced
+anywhere else in the app module before removal. The real, currently-shipping
+3D View (`ui/ThreeDScreen.kt`) embeds HYDRA-UMC STUDIO's own web viewport in
+a WebView and is unaffected. The now-unused Filament Gradle dependencies
+(`filament-android`/`gltfio`/`filamat`/`utils`, declared solely for the
+removed screen) were removed from `app/build.gradle.kts` and
+`gradle/libs.versions.toml` alongside it.
+
 ## [0.6.1] - The real cause: a long server-selector label pushed the icon row off-screen
 
 0.6.0's own 28dp size fix did not actually fix the live report - the

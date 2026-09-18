@@ -1,7 +1,7 @@
 # HYDRA-UMC Android Control - Architecture
 
 **Status: Industrial console implementation, Wi-Fi transport fully working, Bluetooth transport still a stub.**
-`app/src/` contains a Kotlin + Jetpack Compose console with biometric login, persistent state caching, atomic-command networking, a home-screen emergency-stop widget, and an embedded 3D viewer. A native (Filament) 3D engine exists in the tree but is not wired into navigation yet.
+`app/src/` contains a Kotlin + Jetpack Compose console with biometric login, persistent state caching, atomic-command networking, a home-screen emergency-stop widget, and an embedded 3D viewer.
 
 ## 1. What this app is
 
@@ -67,8 +67,6 @@ actually talk to a robot today regardless of how solid the Android-side client c
 - **3D visualization**: `ui/ThreeDScreen.kt` embeds the server's own 3D scene in a WebView with `?hideUI=true` to
   hide the server-side chrome. Its `update` block pushes token/IP/robotId changes into the WebView after the first
   load (previously a new value never reached an already-loaded page).
-  `ui/NativeThreeDScreen.kt` (Filament engine) is separate dead code: present in the tree, not reachable from any
-  navigation route, no real `.glb` loading. Kept pending an explicit decision to resume or archive it.
 
 ## 5. Actual source layout
 
@@ -84,7 +82,6 @@ app/src/main/java/com/hydraumc/control/
 │   ├── CameraScreen.kt          # MJPEG viewer screen wrapping MjpegPlayer
 │   ├── MjpegPlayer.kt           # Canvas-based MJPEG frame decoder/renderer
 │   ├── ThreeDScreen.kt          # Embedded 3D scene (WebView, headless mode)
-│   ├── NativeThreeDScreen.kt    # Filament-based 3D viewer - dead code, not routed
 │   ├── TelemetryScreen.kt       # Terminal-style real-time log console
 │   ├── SettingsScreen.kt        # Manual IP/port + Bluetooth device picker
 │   ├── UserProfileDialog.kt     # Account management + biometric toggle
@@ -136,8 +133,7 @@ per its own comment ("for stable runtime behavior"); confirm with the owner if t
 - **Build scripts**: `build-android.bat/sh`, localized in English, with pre-flight environment checks.
 - **Key dependencies**: `OkHttp 4.10`, `DataStore Preferences 1.1.7`, `Biometric 1.2.0-alpha05`, `Media 1.7.0`,
   `androidx.security.crypto`, `Glance AppWidget 1.1.1` (home-screen widget), `Navigation Compose`,
-  `kotlinx.coroutines`, and the `Filament 1.75.0` family (`filament-android`/`gltfio`/`filamat`/`utils`) for the
-  currently-unused `NativeThreeDScreen.kt`.
+  `kotlinx.coroutines`.
 - **Tests**: JUnit + Robolectric + Roborazzi dependencies are declared; the default Android Studio template package
   (`com.example`) is still there (including the Roborazzi screenshot test), but real `com.hydraumc.control` unit
   tests now exist too - `Parol6KinematicsTest.kt`, `RobotViewContractTest.kt`, `ReleaseMetadataParserTest.kt`,
