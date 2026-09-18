@@ -86,6 +86,9 @@ app/src/main/java/com/hydraumc/control/
 │   ├── SettingsScreen.kt        # Manual IP/port + Bluetooth device picker
 │   ├── UserProfileDialog.kt     # Account management + biometric toggle
 │   ├── AboutDialog.kt           # Credits/version dialog
+│   ├── Joystick3D.kt            # Reusable 2-axis joystick control component
+│   ├── PlaybackConsole.kt       # Shared floating E-STOP/play/pause/stop console
+│   ├── VoiceAssistantDialog.kt  # In-app mic/text button to HYDRA-UMC-VOICE-UI
 │   └── theme/
 │       ├── Color.kt
 │       ├── Theme.kt
@@ -111,8 +114,10 @@ app/src/main/java/com/hydraumc/control/
 │   └── SemanticVersion.kt       # Strict semantic version parser for updates
 ├── util/
 │   ├── BiometricHelper.kt       # Fingerprint/face authentication manager
-│   └── NotificationHelper.kt    # High-priority mission alert dispatcher
+│   ├── NotificationHelper.kt    # High-priority mission alert dispatcher
+│   └── NotificationPrefs.kt     # Persistent storage for the in-app notifications toggle
 ├── wear/
+│   ├── BoundedRequestScope.kt      # Per-requestId in-flight job scope; a superseded attempt is cancelled
 │   ├── WatchCompanionProtocol.kt   # Watch companion version-status wire contract
 │   ├── WatchVoiceRelayContract.kt  # Authenticated Watch voice relay wire contract
 │   └── WatchVoiceRelayService.kt   # Wear OS voice relay service - see docs/WATCH_VOICE_RELAY.md
@@ -136,8 +141,12 @@ per its own comment ("for stable runtime behavior"); confirm with the owner if t
   `kotlinx.coroutines`.
 - **Tests**: JUnit + Robolectric + Roborazzi dependencies are declared; the default Android Studio template package
   (`com.example`) is still there (including the Roborazzi screenshot test), but real `com.hydraumc.control` unit
-  tests now exist too - `Parol6KinematicsTest.kt`, `RobotViewContractTest.kt`, `ReleaseMetadataParserTest.kt`,
-  `SemanticVersionTest.kt`, and `WatchCompanionProtocolTest.kt` (18 `@Test` methods total across those 5 files).
+  tests now exist too - `Parol6KinematicsTest.kt`, `RobotViewContractTest.kt`, `HydraWebSocketTest.kt`,
+  `SubHeaderRowLayoutTest.kt`, `MjpegStreamParserTest.kt`, `GitHubReleaseUpdaterTest.kt`,
+  `ReleaseMetadataParserTest.kt`, `SemanticVersionTest.kt`, `RobotViewModelSendAtomicCommandTest.kt`,
+  `RobotViewModelSendVoiceTurnTest.kt`, `BoundedRequestScopeTest.kt`, and `WatchCompanionProtocolTest.kt`
+  (59 `@Test` methods total across those files plus the `com.example` template, all passing via
+  `./gradlew testDebugUnitTest`).
 
 ## 7. Relationship to the rest of the ecosystem
 
