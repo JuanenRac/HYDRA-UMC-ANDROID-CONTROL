@@ -182,12 +182,6 @@ dependencies {
     implementation(libs.accompanist.permissions)
     implementation(libs.androidx.biometric)
     implementation(libs.androidx.media)
-    
-    // Filament 3D engine
-    implementation(libs.filament.android)
-    implementation(libs.filament.gltfio)
-    implementation(libs.filament.filamat)
-    implementation(libs.filament.utils)
 
     // Glance Widgets
     implementation(libs.glance.appwidget)
