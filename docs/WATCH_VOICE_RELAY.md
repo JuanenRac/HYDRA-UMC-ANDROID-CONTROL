@@ -1,6 +1,6 @@
 <!-- =============================================================================
 HYDRA-UMC-ANDROID-CONTROL - Paired Watch voice relay contract
-Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
+Copyright (C) JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
 GPL-3.0 - see LICENSE
 ============================================================================= -->
 
