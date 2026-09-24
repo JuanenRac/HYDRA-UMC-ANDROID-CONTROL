@@ -160,7 +160,7 @@ class HydraWebSocketTest {
     }
 
     /**
-     * H001: [webSocket] used to stay non-null (pointing at the now-dead
+     * [webSocket] used to stay non-null (pointing at the now-dead
      * socket) after a real close/failure - nothing nulled it out except a
      * user-initiated disconnect() - so send()'s own echo-guard (a repeated
      * payload matching lastPayloadJson) returned `true` before ever checking

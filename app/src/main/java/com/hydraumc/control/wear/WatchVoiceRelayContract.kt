@@ -39,7 +39,7 @@ data class WatchVoiceTurn(
 /**
  * Safe reply returned by Server after it relays a Watch turn to Voice UI.
  *
- * H062: [errorCode] is a stable, NEVER-translated protocol identifier for
+ * [errorCode] is a stable, NEVER-translated protocol identifier for
  * this relay's own SYSTEM fallback replies (WatchVoiceRelayService's own
  * catch block below, generated locally on the phone, in English, with no
  * access to the watch's own locale) - as opposed to [text], which for a
@@ -85,7 +85,7 @@ data class WatchAssistantReply(
 
 /**
  * Read-only system-health card that can later be forwarded to the watch.
- * [errorCode] is the same H062 mechanism as [WatchAssistantReply]'s own -
+ * [errorCode] is the same mechanism as [WatchAssistantReply]'s own -
  * see that field's header comment.
  */
 data class WatchSystemStatus(

@@ -7,7 +7,7 @@
 // Google Play services Data Layer. The package/signature boundary protects
 // this channel; the Server JWT remains encrypted only on the phone.
 //
-// Found while auditing the code (ANDROID-01): this
+// Found while auditing the code: this
 // used to launch every request on a CoroutineScope that was never cancelled
 // in onDestroy(), with no concurrency bound and no timeout per request, and
 // silently dropped any sendMessage() failure. Fixed: onDestroy() now cancels
@@ -42,7 +42,7 @@ private const val TAG = "WatchVoiceRelay"
 
 /** How long a single relayed request may run before it's treated as failed -
  * a hung phone/Server round trip must not hold a slot (or, before the
- * ANDROID-01 fix, the whole service) open indefinitely. */
+ * fix, the whole service) open indefinitely. */
 private const val REQUEST_TIMEOUT_MS = 15_000L
 
 class WatchVoiceRelayService : WearableListenerService() {
@@ -50,7 +50,7 @@ class WatchVoiceRelayService : WearableListenerService() {
     private val requests = BoundedRequestScope(scope)
 
     override fun onDestroy() {
-        // The real ANDROID-01 fix: previously nothing here at all, so every
+        // The real fix: previously nothing here at all, so every
         // in-flight (or future, already-queued) coroutine from this scope
         // kept running past a real service recreation.
         requests.cancelAll()
@@ -77,7 +77,7 @@ class WatchVoiceRelayService : WearableListenerService() {
                 withTimeoutOrNull(REQUEST_TIMEOUT_MS) { authenticatedClient().postWatchVoiceTurn(turn) }
                     ?: error("voice turn request timed out after ${REQUEST_TIMEOUT_MS}ms")
             }.getOrElse {
-                // H062: text stays here as a real, honest fallback for a
+                // text stays here as a real, honest fallback for a
                 // watch build too old to recognize errorCode - but the
                 // watch itself now resolves errorCode to a real localized
                 // string instead of ever speaking this English text, since
@@ -104,7 +104,7 @@ class WatchVoiceRelayService : WearableListenerService() {
                 withTimeoutOrNull(REQUEST_TIMEOUT_MS) { authenticatedClient().getWatchSystemStatus() }
                     ?: error("system status request timed out after ${REQUEST_TIMEOUT_MS}ms")
             }.getOrElse {
-                // H062: same mechanism as relayVoiceTurn's own fallback
+                // same mechanism as relayVoiceTurn's own fallback
                 // above - headline/detail stay as an honest fallback for
                 // an old watch build, errorCode is what a current one
                 // actually resolves and shows/speaks.

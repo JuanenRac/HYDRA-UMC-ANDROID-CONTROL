@@ -56,7 +56,7 @@ class WatchCompanionProtocolTest {
         assertEquals(original, WatchAssistantReply.fromJson(original.toJson()))
     }
 
-    // H062: a reply with no errorCode at all (every real AI reply, whose
+    // a reply with no errorCode at all (every real AI reply, whose
     // own `text` is already correctly localized upstream) must round-trip
     // with errorCode staying null - no field magically appears in the wire
     // JSON, and none is required to parse a message that never had one.
@@ -76,7 +76,7 @@ class WatchCompanionProtocolTest {
         assertEquals(null, WatchAssistantReply.fromJson(json).errorCode)
     }
 
-    // The real H062 scenario: WatchVoiceRelayService's own connection-
+    // The real scenario: WatchVoiceRelayService's own connection-
     // unavailable fallback must carry the stable errorCode the watch
     // resolves to a real localized string, alongside the English text
     // kept only as a fallback for an old watch build.

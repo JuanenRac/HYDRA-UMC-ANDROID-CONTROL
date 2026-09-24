@@ -3,7 +3,7 @@
 // Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
 // GPL-3.0 - see LICENSE
 //
-// Found while auditing the code (ANDROID-01):
+// Found while auditing the code:
 // WatchVoiceRelayService's own CoroutineScope(SupervisorJob() + Dispatchers.IO)
 // was never cancelled in onDestroy(), and every onMessageReceived() call
 // launched a new, completely unbounded coroutine - no limit on how many
