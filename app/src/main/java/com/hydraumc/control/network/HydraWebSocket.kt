@@ -96,7 +96,7 @@ class HydraWebSocket(
      * nulled it out except a user-initiated disconnect()), so send()'s own
      * echo-guard (a repeated payload matching lastPayloadJson) returned
      * `true` - "sent" - even though nothing had actually reached a live
-     * socket. H001.
+     * socket. .
      */
     private var isSocketOpen = false
     /** Flag to prevent auto-reconnect when the user manually disconnects. */
@@ -154,7 +154,7 @@ class HydraWebSocket(
             // succeeded and replaced [webSocket]) could flip isSocketOpen/
             // onStatus back to DISCONNECTED for a connection that is, in
             // reality, still open - "un callback viejo no altera la conexion
-            // nueva" (H001's own acceptance criterion).
+            // nueva" (this project's own acceptance criterion).
             override fun onOpen(ws: WebSocket, response: Response) {
                 if (ws !== webSocket) return
                 isSocketOpen = true
@@ -255,7 +255,7 @@ class HydraWebSocket(
      */
     fun send(payload: JSONObject): Boolean {
         // Check real connectivity BEFORE the echo-guard, not after - and
-        // check isSocketOpen, not just "webSocket is non-null" (H001: the
+        // check isSocketOpen, not just "webSocket is non-null" (the
         // field used to stay non-null, pointing at a dead socket, for the
         // entire reconnect window after a real close/failure). A payload
         // that happens to match the last one sent/received would otherwise

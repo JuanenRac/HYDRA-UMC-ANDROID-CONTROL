@@ -60,7 +60,7 @@ Settings do, so the same nominal size reads smaller. Given an explicit
 `Modifier.size(28.dp)` so it visually matches its neighbors; `IconButton`'s
 own 48dp minimum touch target is unaffected either way.
 
-## [0.5.9] - H062: Watch voice-relay error text no longer stuck in English
+## [0.5.9] - Watch voice-relay error text no longer stuck in English
 
 - `WatchVoiceRelayService`'s own connection-timeout/no-session fallback
   replies (`WatchAssistantReply`/`WatchSystemStatus`) always carried
@@ -135,7 +135,7 @@ up to a previously cached APK. 7 tests.
 
 ## [0.5.6] - Real coverage for cancelling an in-flight robot order
 
-Another gap alongside C08:
+Another gap alongside :
 `sendCommand("stop")` only ever had real test coverage starting from an
 idle robot (every existing
 `RobotViewModelSendAtomicCommandTest` scenario begins with
@@ -148,7 +148,7 @@ POST carries `command=stop`, and a failed cancel rolls both robots back
 to still-playing (the order never actually reached the robot, so the UI
 must not show it as cancelled).
 
-## [0.5.5] - C08: silent recovery from a WS 1008 close using the stored remember-me password
+## [0.5.5] - silent recovery from a WS 1008 close using the stored remember-me password
 
 A WS 1008 close (`server.ts`'s own token-expiry/revocation close, most
 commonly the access token's real 30-day time-based expiry) forced this
@@ -221,9 +221,9 @@ is first used (same flow as Bluetooth/location earlier in this app).
 convention as `RobotViewModelSendAtomicCommandTest`) cover the real POST,
 the client-identity header, and the busy/error/success state transitions.
 
-## [0.5.2] - Declares a real Wear OS companion capability (WATCH-01)
+## [0.5.2] - Declares a real Wear OS companion capability
 
-A real gap located in the paired HYDRA-UMC-WATCH repo (WATCH-01):
+A real gap located in the paired HYDRA-UMC-WATCH repo:
 HYDRA-UMC-WATCH's own
 relay transport used to pick `connectedNodes.firstOrNull()` - any
 connected node at all, with no proof it was actually running this app.
@@ -241,7 +241,7 @@ command) - the debug APK builds with the new resource in place.
 
 ## [0.5.1] - Wear relay service now cancels its own coroutines on destroy
 
-- **ANDROID-01:**
+- 
   `WatchVoiceRelayService`'s own `CoroutineScope(SupervisorJob() + Dispatchers.IO)`
   was never cancelled in `onDestroy()`, had no concurrency bound per
   requestId, and no timeout on the network round trip - a real service

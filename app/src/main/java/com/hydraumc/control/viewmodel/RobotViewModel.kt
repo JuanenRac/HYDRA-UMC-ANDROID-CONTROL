@@ -573,7 +573,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    // C08: silent recovery from a WS 1008 close, using the SAME stored
+    // silent recovery from a WS 1008 close, using the SAME stored
     // (remember-me) username/password AuthPrefs already encrypts at rest
     // for this exact purpose (see AuthPrefs.kt's own header comment) - no
     // new server-side mechanism needed the way STUDIO's browser-only JWT
@@ -909,7 +909,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                 if (!isSwitchingServer) {
                     lastError.value = message
                     if (message.contains("autorizada") || message.contains("Access denied")) {
-                        // C08: try attemptSilentRelogin() before forcing the
+                        // try attemptSilentRelogin before forcing the
                         // user back to LoginScreen - see its own doc comment.
                         // Only the failure path still does today's forced
                         // logout; a successful silent relogin already calls
