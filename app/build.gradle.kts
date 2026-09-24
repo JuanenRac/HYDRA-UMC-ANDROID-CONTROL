@@ -83,7 +83,11 @@ val appVersionMinor = readIntProp(versionPropsText, "versionMinor")
 val appVersionPatch = readIntProp(versionPropsText, "versionPatch")
 val appVersionCode = readIntProp(versionPropsText, "versionCode")
 
-val appVersionName = "$appVersionMajor.$appVersionMinor.$appVersionPatch"
+// Versions from 0.8.0 on carry a fourth component, kept in its own optional
+// `versionBuild` line.
+val appVersionBuild = Regex("(?m)^versionBuild=(\\d+)\\s*$").find(versionPropsText)?.groupValues?.get(1)?.toInt()
+val appVersionName = "$appVersionMajor.$appVersionMinor.$appVersionPatch" +
+    if (appVersionBuild != null && appVersionMajor * 10000 + appVersionMinor * 100 + appVersionPatch >= 800) ".$appVersionBuild" else ""
 
 android {
     namespace = "com.hydraumc.control"

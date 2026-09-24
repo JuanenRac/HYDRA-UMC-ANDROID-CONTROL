@@ -22,7 +22,8 @@
     "pattern": {
       "major": "^versionMajor\\s*=\\s*(\\d+)",
       "minor": "^versionMinor\\s*=\\s*(\\d+)",
-      "patch": "^versionPatch\\s*=\\s*(\\d+)"
+      "patch": "^versionPatch\\s*=\\s*(\\d+)",
+      "build": "^versionBuild\\s*=\\s*(\\d+)"
     }
   }
 }
