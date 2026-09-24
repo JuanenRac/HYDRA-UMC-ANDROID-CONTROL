@@ -29,4 +29,14 @@ class SemanticVersionTest {
         assertTrue(SemanticVersion(0, 1, 9) < SemanticVersion(0, 2, 0))
         assertTrue(SemanticVersion(1, 0, 0) > SemanticVersion(0, 9, 9))
     }
+
+    @Test
+    fun `reads and orders an optional fourth component`() {
+        assertEquals(SemanticVersion(0, 8, 0, 3), SemanticVersion.parseStable("v0.8.0.3"))
+        assertEquals("0.8.0.3", SemanticVersion.parseStable("0.8.0.3").toString())
+        assertNull(SemanticVersion.parseStable("0.8.0.3.1"))
+        assertTrue(SemanticVersion(0, 7, 9) < SemanticVersion(0, 8, 0, 0))
+        assertTrue(SemanticVersion(0, 8, 0, 9) < SemanticVersion(0, 8, 1, 0))
+        assertEquals(0, SemanticVersion(0, 8, 0).compareTo(SemanticVersion(0, 8, 0, 0)))
+    }
 }
