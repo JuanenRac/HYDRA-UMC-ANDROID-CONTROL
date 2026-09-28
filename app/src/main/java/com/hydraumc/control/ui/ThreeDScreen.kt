@@ -158,7 +158,11 @@ fun ThreeDScreen(viewModel: RobotViewModel) {
     // was the actual live root cause instead of the stale-build
     // explanation already on record above.
     val token = viewModel.authTokenState.value ?: ""
-    val url = "http://$ip:$port/?hideUI=true&robotId=$selectedId&token=$token"
+    // Matches whatever scheme HydraApiClient.getHydraInfo() actually
+    // confirmed this server answers on - see that class's own comment,
+    // and CameraScreen.kt's matching fix.
+    val scheme = if (viewModel.apiClient?.usesTls == true) "https" else "http"
+    val url = "$scheme://$ip:$port/?hideUI=true&robotId=$selectedId&token=$token"
 
     // Tracks what was last actually pushed into the WebView via loadUrl() -
     // compared against `url` in `update` below (not against webView.url,

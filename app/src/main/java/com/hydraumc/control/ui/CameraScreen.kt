@@ -35,12 +35,17 @@ fun CameraScreen(viewModel: RobotViewModel) {
     val robots = viewModel.robots.value
     val ip = viewModel.ipAddress.value
     val port = viewModel.port.value
+    // Matches whatever scheme HydraApiClient.getHydraInfo() actually
+    // confirmed this server answers on (see that class's own comment) -
+    // never guessed independently, since an <img>/WebView load has no
+    // response of its own to detect TLS-only from.
+    val scheme = if (viewModel.apiClient?.usesTls == true) "https" else "http"
 
     val selectedRobot = robots.find { it.id == selectedCameraId }
     val cameraEnabled = selectedRobot?.hasCamera ?: false
 
     // Industrial MJPEG stream URL
-    val streamUrl = "http://$ip:$port/api/camera/$selectedCameraId/stream"
+    val streamUrl = "$scheme://$ip:$port/api/camera/$selectedCameraId/stream"
 
     Column(
         modifier = Modifier
