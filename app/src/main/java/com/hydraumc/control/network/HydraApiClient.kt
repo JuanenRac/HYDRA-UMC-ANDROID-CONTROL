@@ -61,9 +61,19 @@ class HydraApiException(message: String, cause: Throwable? = null) : IOException
  */
 class HydraApiClient(host: String, port: Int, private val client: OkHttpClient = sharedHttpClient) {
 
-    /** Base URL of the target HYDRA-UMC server. */
-    val baseUrl: String = "http://$host:$port"
-    
+    /** Base URL of the target HYDRA-UMC server - starts as plain HTTP, and
+     * getHydraInfo() below switches it to HTTPS the first time a plain-HTTP
+     * probe gets no answer at all and an HTTPS one does. */
+    var baseUrl: String = "http://$host:$port"
+        private set
+
+    /** True once getHydraInfo() has confirmed this server only answers over
+     * HTTPS (server.ts's own optional TLS_CERT_PATH/TLS_KEY_PATH - see that
+     * file's own comment - switches it to HTTPS/WSS-only, no HTTP fallback
+     * of its own). Callers that build their own URL against a server (the
+     * camera stream, the embedded 3D view) read this to match. */
+    val usesTls: Boolean get() = baseUrl.startsWith("https://")
+
     /** Current authentication token. */
     var authToken: String? = null
 
@@ -79,8 +89,31 @@ class HydraApiClient(host: String, port: Int, private val client: OkHttpClient =
      * @return The JSON response if successful and identified, null otherwise.
      */
     suspend fun getHydraInfo(): JSONObject? = withContext(Dispatchers.IO) {
+        val direct = probeHydraInfo(baseUrl)
+        if (direct != null) return@withContext direct
+        // A server with TLS_CERT_PATH/TLS_KEY_PATH set answers nothing
+        // sensible to plain HTTP (a raw TLS-less socket read of a TLS
+        // handshake, not a real HTTP response) - retry once over HTTPS
+        // before giving up, and remember it via baseUrl for every later
+        // call through this same client. Never the other way around: a
+        // plain-HTTP server that fails is just offline, not a reason to
+        // guess at HTTPS.
+        if (baseUrl.startsWith("http://")) {
+            val httpsUrl = baseUrl.replaceFirst("http://", "https://")
+            val viaHttps = probeHydraInfo(httpsUrl)
+            if (viaHttps != null) {
+                baseUrl = httpsUrl
+                return@withContext viaHttps
+            }
+        }
+        null
+    }
+
+    /** One real probe of GET {base}/api/hydra-info, never throwing - see
+     * getHydraInfo()'s own comment for why this exists as its own function. */
+    private suspend fun probeHydraInfo(base: String): JSONObject? = withContext(Dispatchers.IO) {
         try {
-            val request = Request.Builder().url("$baseUrl/api/hydra-info").get().build()
+            val request = Request.Builder().url("$base/api/hydra-info").get().build()
             client.newCall(request).execute().use { response ->
                 if (!response.isSuccessful) return@withContext null
                 val body = response.body?.string() ?: return@withContext null

@@ -805,7 +805,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                 isSwitchingServer = false
             }
 
-            setupWebSocket(host, portInt)
+            setupWebSocket(host, portInt, client.usesTls)
         }
     }
 
@@ -850,12 +850,13 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    private fun setupWebSocket(host: String, port: Int) {
+    private fun setupWebSocket(host: String, port: Int, useTls: Boolean = false) {
         viewModelScope.launch {
             val token = authPrefs.loadAuth().token
             ws = HydraWebSocket(
                 host = host,
                 port = port,
+                useTls = useTls,
                 token = if (token.isNotEmpty()) token else null,
                 onStatus = { status ->
                     connectionStatus.value = when (status) {

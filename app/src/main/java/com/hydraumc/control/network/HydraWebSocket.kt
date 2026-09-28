@@ -69,6 +69,11 @@ enum class WsStatus {
 class HydraWebSocket(
     private val host: String,
     private val port: Int,
+    /** True to open wss:// instead of ws:// - set this from the same
+     * HydraApiClient.usesTls that already probed this server (see that
+     * class's own getHydraInfo()), never guessed independently: a plain
+     * WebSocket has no HTTP response of its own to detect TLS-only from. */
+    private val useTls: Boolean = false,
     private val token: String? = null,
     private val client: OkHttpClient = HydraApiClient.sharedHttpClient,
     private val onStatus: (WsStatus) -> Unit,
@@ -138,10 +143,11 @@ class HydraWebSocket(
         // delta - reused from GET /api/hydra-info's own field name (see
         // DISEÑO_SYNC_DELTAS.txt section 3/8q3). A server that doesn't recognize it
         // just keeps sending the full tree under "delta" like before.
+        val scheme = if (useTls) "wss" else "ws"
         val url = if (token != null) {
-            "ws://$host:$port/ws?token=$token&remoteApiVersion=2"
+            "$scheme://$host:$port/ws?token=$token&remoteApiVersion=2"
         } else {
-            "ws://$host:$port/ws"
+            "$scheme://$host:$port/ws"
         }
         val request = Request.Builder().url(url).build()
         isSocketOpen = false

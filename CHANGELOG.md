@@ -9,6 +9,10 @@ in [README.md](README.md#-versioning). Entries recorded before that policy
 existed are grouped under the pre-policy version `0.0.0` the repo carried
 at the time.
 
+## [0.6.3] - Could no longer reach a server with TLS turned on
+
+- **Real bug, found live against the real CM5 test bench the same day HYDRA-UMC-SERVER's own optional `TLS_CERT_PATH`/`TLS_KEY_PATH` (server.ts) was turned on there:** `HydraApiClient`, `HydraWebSocket`, the camera stream URL and the embedded 3D view URL all had `http://`/`ws://` hardcoded, with no way to reach a server that switched to HTTPS/WSS-only. `HydraApiClient.getHydraInfo()` now probes the current scheme first and, only if that gets no answer at all, retries once over HTTPS - remembered for every later call through that same client (`usesTls`), and threaded into the WebSocket, the camera stream and the 3D view URLs it also opens. A plain-HTTP server (today's default, and every server that hasn't opted in) behaves exactly as before - the extra probe only ever happens once HTTP has already failed.
+
 ## [0.6.2] - Removed the disconnected experimental Filament 3D screen
 
 `ui/NativeThreeDScreen.kt` was an unfinished Google Filament native 3D
