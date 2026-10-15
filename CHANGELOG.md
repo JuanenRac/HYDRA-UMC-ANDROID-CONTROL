@@ -388,7 +388,7 @@ command) - the debug APK builds with the new resource in place.
   buttons - while on the 3D tab in landscape. Worth a second look
   together with the project owner: is that the "los botones" behavior
   being reported, or a separate issue - not changed here since it is a
-  deliberate, already-audited design choice, not an obvious bug.
+  deliberate, already-reviewed design choice, not an obvious bug.
 
 Verified: `compileDebugKotlin` passes. Live-confirmed by the project owner
 after installing the previous build: the duplicated console and the
