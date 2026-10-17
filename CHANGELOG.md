@@ -13,6 +13,7 @@ at the time.
 
 - **A JSON `null` is no longer the word "null":** `JSONObject.optString` answers the four letters `null` for a field that is present but JSON `null`. Robot names, models, roles and tools, server names and ids, job names, project fields of the ecosystem screen, the release name and notes of the update check, the WebSocket `type`/`error` and the controller id of incoming messages all went through it. A release published without notes showed `null` as its notes, a robot without a name was called `null`, and a login answering `"token": null` stored the token `null`. A new helper (`util/JsonText.kt`, `optStr`) treats a JSON null like a missing key and gives the fallback; all 32 call sites use it.
 - Four new Robolectric tests (`JsonTextTest`): the platform behaviour the helper avoids, missing keys and real values unchanged, a robot full of nulls showing its defaults, and release notes that are null coming out empty. `versionCode` 59.
+- **Portuguese:** `values-pt/strings.xml` (193 strings, the same keys and format specifiers as English), so the app now ships in 8 languages, and `LocalizedStringsTest` fails when any language misses a key or changes a format specifier. A README_por.md joins the other seven. The unit suite is 67 tests.
 
 ## [0.6.3] - Could no longer reach a server with TLS turned on
 
