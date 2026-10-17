@@ -9,6 +9,11 @@ in [README.md](README.md#-versioning). Entries recorded before that policy
 existed are grouped under the pre-policy version `0.0.0` the repo carried
 at the time.
 
+## [0.6.4] - JSON null fields no longer read as the text null
+
+- **A JSON `null` is no longer the word "null":** `JSONObject.optString` answers the four letters `null` for a field that is present but JSON `null`. Robot names, models, roles and tools, server names and ids, job names, project fields of the ecosystem screen, the release name and notes of the update check, the WebSocket `type`/`error` and the controller id of incoming messages all went through it. A release published without notes showed `null` as its notes, a robot without a name was called `null`, and a login answering `"token": null` stored the token `null`. A new helper (`util/JsonText.kt`, `optStr`) treats a JSON null like a missing key and gives the fallback; all 32 call sites use it.
+- Four new Robolectric tests (`JsonTextTest`): the platform behaviour the helper avoids, missing keys and real values unchanged, a robot full of nulls showing its defaults, and release notes that are null coming out empty. `versionCode` 59.
+
 ## [0.6.3] - Could no longer reach a server with TLS turned on
 
 - **Real bug, found live against the real CM5 test bench the same day HYDRA-UMC-SERVER's own optional `TLS_CERT_PATH`/`TLS_KEY_PATH` (server.ts) was turned on there:** `HydraApiClient`, `HydraWebSocket`, the camera stream URL and the embedded 3D view URL all had `http://`/`ws://` hardcoded, with no way to reach a server that switched to HTTPS/WSS-only. `HydraApiClient.getHydraInfo()` now probes the current scheme first and, only if that gets no answer at all, retries once over HTTPS - remembered for every later call through that same client (`usesTls`), and threaded into the WebSocket, the camera stream and the 3D view URLs it also opens. A plain-HTTP server (today's default, and every server that hasn't opted in) behaves exactly as before - the extra probe only ever happens once HTTP has already failed.

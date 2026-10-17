@@ -5,6 +5,7 @@
 // =============================================================================
 package com.hydraumc.control.viewmodel
 
+import com.hydraumc.control.util.optStr
 import android.app.Application
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -464,7 +465,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                 logTelemetry("Logging in to $host:$portInt...")
                 val response = client.login(user, pass)
                 if (response.optBoolean("success")) {
-                    val token = response.optString("token")
+                    val token = response.optStr("token")
                     client.authToken = token
                     authTokenState.value = token
                     isLoggedIn.value = true
@@ -627,7 +628,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
             val client = HydraApiClient(host, portInt)
             val response = client.login(profile.username, profile.password)
             if (!response.optBoolean("success")) return false
-            val token = response.optString("token")
+            val token = response.optStr("token")
             if (token.isEmpty()) return false
             client.authToken = token
             apiClient = client
@@ -686,13 +687,13 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                         val p = arr.optJSONObject(i) ?: continue
                         projects.add(
                             EcosystemProject(
-                                name = p.optString("name"),
-                                role = p.optString("role").takeIf { it.isNotBlank() && !p.isNull("role") },
-                                stack = p.optString("stack").takeIf { it.isNotBlank() && !p.isNull("stack") },
-                                maturity = p.optString("maturity").takeIf { it.isNotBlank() && !p.isNull("maturity") },
-                                family = p.optString("family").takeIf { it.isNotBlank() && !p.isNull("family") },
-                                version = p.optString("version").takeIf { it.isNotBlank() && !p.isNull("version") },
-                                deploymentTarget = p.optString("deploymentTarget").takeIf { it.isNotBlank() && !p.isNull("deploymentTarget") },
+                                name = p.optStr("name"),
+                                role = p.optStr("role").takeIf { it.isNotBlank() && !p.isNull("role") },
+                                stack = p.optStr("stack").takeIf { it.isNotBlank() && !p.isNull("stack") },
+                                maturity = p.optStr("maturity").takeIf { it.isNotBlank() && !p.isNull("maturity") },
+                                family = p.optStr("family").takeIf { it.isNotBlank() && !p.isNull("family") },
+                                version = p.optStr("version").takeIf { it.isNotBlank() && !p.isNull("version") },
+                                deploymentTarget = p.optStr("deploymentTarget").takeIf { it.isNotBlank() && !p.isNull("deploymentTarget") },
                                 servicePort = if (p.isNull("servicePort")) null else p.optInt("servicePort"),
                                 // Tri-state, not optBoolean's own false-when-absent default -
                                 // "never probed" (no service declared) must stay distinct from
@@ -1010,7 +1011,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
      * even though nothing in this app currently reads it back out.
      */
     private fun applyRobotDelta(msg: JSONObject) {
-        val controllerId = msg.optString("controllerId", "")
+        val controllerId = msg.optStr("controllerId", "")
         val robotId = if (msg.has("robotId")) msg.optInt("robotId", Int.MIN_VALUE) else Int.MIN_VALUE
         val patch = msg.optJSONObject("patch")
         if (controllerId.isEmpty() || patch == null) return
@@ -1021,7 +1022,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         if (controllersArr != null) {
             for (i in 0 until controllersArr.length()) {
                 val c = controllersArr.optJSONObject(i) ?: continue
-                if (c.optString("id", "") != controllerId) continue
+                if (c.optStr("id", "") != controllerId) continue
                 c.optJSONArray("robots")?.let { robotsArr ->
                     for (j in 0 until robotsArr.length()) {
                         val r = robotsArr.optJSONObject(j) ?: continue

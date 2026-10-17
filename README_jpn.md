@@ -25,11 +25,11 @@
 
 Wi-Fi または Bluetooth 経由で [HYDRA-UMC](https://github.com/JuanenRac/HYDRA-UMC) プラットフォーム上のロボットを制御する、ネイティブ Android アプリ（Kotlin + Jetpack Compose）です。[HYDRA-UMC SUITE](https://github.com/JuanenRac/HYDRA-UMC-SUITE) が使用しているのとまったく同じ [`REMOTE_API.md`](https://github.com/JuanenRac/HYDRA-UMC-SERVER/blob/main/docs/REMOTE_API.md) 契約を話します——稼働中の [HYDRA-UMC-SERVER](https://github.com/JuanenRac/HYDRA-UMC-SERVER) バックエンド（[HYDRA-UMC STUDIO](https://github.com/JuanenRac/HYDRA-UMC-STUDIO) 自身の Web ダッシュボードが通信しているのと同じもの）に対するディスカバリー、完全な状態の読み書き、リアルタイム WebSocket 同期。[HYDRA-UMC-IOS-CONTROL](https://github.com/JuanenRac/HYDRA-UMC-IOS-CONTROL) の直接的な Android 版対応物です。完全な設計は [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) を参照してください。
 
-> **誠実性チェック - 今日実際に動くもの:** 中核のビジネスロジック - Parol6 運動学（`kinematics/Parol6Kinematics.kt`）、settings ツリーの状態契約（`model/HydraState.kt`）、アトミックコマンド送出と音声リレー（`viewmodel/RobotViewModel.kt`）、WebSocket 再接続処理（`network/HydraWebSocket.kt`）、MJPEG フレーム解析（`ui/MjpegPlayer.kt`）、アプリ内アップデートチャネル（`update/GitHubReleaseUpdater.kt`、`ReleaseMetadataParser.kt`、`SemanticVersion.kt`）、および Wear 音声リレーのリクエスト管理（`wear/BoundedRequestScope.kt`、`WatchCompanionProtocol.kt`）は本物であり、59件の JVM/Robolectric ユニットテストがすべて通過している（`./gradlew testDebugUnitTest`）。これらのテストが構造的に到達できない部分 - そしてこの Windows 専用の開発環境が実機の Android デバイスを持たず検証できない部分 - は `network/AuthPrefs.kt` の実際の Keystore 裏付け `EncryptedSharedPreferences`、`androidx.biometric` の指紋・顔認証プロンプト、`network/HydraBleClient.kt` の Bluetooth GATT トランスポート、そして `MjpegStreamParser` 内の API 28+ ハードウェア `ImageDecoder` パスであり、これらは実装され実際にコンパイルされているコードだが、書かれて以来実機で再検証されていない。基本的な起動・ログインについては、過去のリリースで実機上でのライブ確認が*行われている*(`CHANGELOG.md` の `v0.3.2`/`v0.3.3` の項目を参照)が、それは Bluetooth・生体認証・ハードウェアデコードパスより前の話である。実際に出荷された内容の詳細、および何がまだハードウェア未検証かの各エントリごとの注記については `CHANGELOG.md` を参照。
+> **誠実性チェック - 今日実際に動くもの:** 中核のビジネスロジック - Parol6 運動学（`kinematics/Parol6Kinematics.kt`）、settings ツリーの状態契約（`model/HydraState.kt`）、アトミックコマンド送出と音声リレー（`viewmodel/RobotViewModel.kt`）、WebSocket 再接続処理（`network/HydraWebSocket.kt`）、MJPEG フレーム解析（`ui/MjpegPlayer.kt`）、アプリ内アップデートチャネル（`update/GitHubReleaseUpdater.kt`、`ReleaseMetadataParser.kt`、`SemanticVersion.kt`）、および Wear 音声リレーのリクエスト管理（`wear/BoundedRequestScope.kt`、`WatchCompanionProtocol.kt`）は本物であり、67件の JVM/Robolectric ユニットテストがすべて通過している（`./gradlew testDebugUnitTest`）。これらのテストが構造的に到達できない部分 - そしてこの Windows 専用の開発環境が実機の Android デバイスを持たず検証できない部分 - は `network/AuthPrefs.kt` の実際の Keystore 裏付け `EncryptedSharedPreferences`、`androidx.biometric` の指紋・顔認証プロンプト、`network/HydraBleClient.kt` の Bluetooth GATT トランスポート、そして `MjpegStreamParser` 内の API 28+ ハードウェア `ImageDecoder` パスであり、これらは実装され実際にコンパイルされているコードだが、書かれて以来実機で再検証されていない。基本的な起動・ログインについては、過去のリリースで実機上でのライブ確認が*行われている*(`CHANGELOG.md` の `v0.3.2`/`v0.3.3` の項目を参照)が、それは Bluetooth・生体認証・ハードウェアデコードパスより前の話である。実際に出荷された内容の詳細、および何がまだハードウェア未検証かの各エントリごとの注記については `CHANGELOG.md` を参照。
 
 ## 🏗️ 実装済みの内容
 
-- **アクセス制御と生体認証**（`ui/LoginScreen.kt`、`util/BiometricHelper.kt`）—— **指紋認証と顔認証**（`androidx.biometric`）に対応したプロフェッショナルなログインシステムで、同じ画面上に IP/ポートフィールドを直接配置しているため、先に設定画面を経由しなくてもサーバーを指定できます。「ログイン情報を記憶する」機能、安全な**ログアウト**機構を備え、**7 言語**で完全にローカライズされています。キャッシュされたユーザー名/パスワード/トークン（`network/AuthPrefs.kt`）は、平文ではなく、Keystore に裏打ちされた**暗号化 SharedPreferences**（AES256-GCM）に保存されます——開発用サーバー（`NODE_ENV` 未設定）は初回起動時にデフォルトの `admin`/`admin` アカウントを用意しますが、本番用サーバー（`NODE_ENV=production`）は代わりに `HYDRA_UMC_BOOTSTRAP_ADMIN_USERNAME`/`HYDRA_UMC_BOOTSTRAP_ADMIN_PASSWORD` を必須とし、`admin`/`admin` に黙って戻ることはありません — 本番構成の詳細は HYDRA-UMC-SERVER 自身の README を参照してください。追加の低権限**オペレーター**アカウントはいずれの場合もサーバー側の Config > Users から作成できます。
+- **アクセス制御と生体認証**（`ui/LoginScreen.kt`、`util/BiometricHelper.kt`）—— **指紋認証と顔認証**（`androidx.biometric`）に対応したプロフェッショナルなログインシステムで、同じ画面上に IP/ポートフィールドを直接配置しているため、先に設定画面を経由しなくてもサーバーを指定できます。「ログイン情報を記憶する」機能、安全な**ログアウト**機構を備え、**8 言語**で完全にローカライズされています。キャッシュされたユーザー名/パスワード/トークン（`network/AuthPrefs.kt`）は、平文ではなく、Keystore に裏打ちされた**暗号化 SharedPreferences**（AES256-GCM）に保存されます——開発用サーバー（`NODE_ENV` 未設定）は初回起動時にデフォルトの `admin`/`admin` アカウントを用意しますが、本番用サーバー（`NODE_ENV=production`）は代わりに `HYDRA_UMC_BOOTSTRAP_ADMIN_USERNAME`/`HYDRA_UMC_BOOTSTRAP_ADMIN_PASSWORD` を必須とし、`admin`/`admin` に黙って戻ることはありません — 本番構成の詳細は HYDRA-UMC-SERVER 自身の README を参照してください。追加の低権限**オペレーター**アカウントはいずれの場合もサーバー側の Config > Users から作成できます。
 - **オフラインモードと状態キャッシュ**（`network/StateCache.kt`）—— **DataStore** を使用した統合永続化エンジン。本アプリは最後に確認されたシステム状態を自動的にキャッシュし、アクティブな Wi-Fi 接続がなくても即座にダッシュボードの閲覧や設定の確認ができます。
 - **ミッション通知とアラート**（`util/NotificationHelper.kt`）—— 産業グレードのアラートシステム。ロボットがジョブシーケンスを完了したとき、または重大なハードウェアイベントが発生したときに、高優先度のプッシュ通知を送信し、アプリがバックグラウンドにある場合でも操作員に確実に通知します。
 - **産業用テレメトリターミナル**（`ui/TelemetryScreen.kt`）—— ターミナル風のインターフェースを備えた専用のリアルタイムログビューアー。システムイベント、REST/WebSocket 同期を追跡し、色分けされた診断情報を提供します（成功はマトリックスグリーン、エラーはインダストリアルレッド）。
@@ -170,7 +170,7 @@ HYDRA-UMC-ANDROID-CONTROL/
 │       │       └── GlobalStopWidget.kt # アプリを開かずにグローバル緊急停止を行うためのホーム画面ウィジェット
 │       └── res/
 │           ├── drawable/, layout/, mipmap*/, xml/   # アイコン、ウィジェットレイアウト、ランチャーアイコン、バックアップ/データ抽出ルール
-│           └── values/, values-es/, values-de/, values-fr/, values-it/, values-zh/, values-ja/   # 7 言語の文字列、色、テーマ
+│           └── values/, values-es/, values-de/, values-fr/, values-it/, values-zh/, values-ja/, values-pt/   # 8 言語の文字列、色、テーマ
 ├── docs/
 │   ├── ARCHITECTURE.md              # 設計/アーキテクチャノート
 │   ├── GITHUB_RELEASE_UPDATES.md    # アプリ内アップデート確認/ダウンロード/インストールフロー
@@ -193,7 +193,7 @@ HYDRA-UMC-ANDROID-CONTROL/
 ├── .env.example                  # 環境変数の例
 ├── metadata.json                 # アプリストア掲載メタデータ（名前/説明）
 ├── README.md                     # 本ファイル
-├── README_spa.md / README_ita.md / README_fra.md / README_deu.md / README_zho.md / README_jpn.md   # 翻訳
+├── README_spa.md / README_ita.md / README_fra.md / README_deu.md / README_zho.md / README_jpn.md / README_por.md   # 翻訳
 └── LICENSE                       # GPL-3.0
 ```
 
@@ -308,4 +308,4 @@ HYDRA-UMC-ANDROID-CONTROL/
 
 ソースコードは **GNU General Public License v3.0（GPL-3.0）**——[`LICENSE`](LICENSE) を参照してください。
 
-本ドキュメント（本 README およびその自身の翻訳版——`README_spa.md`、`README_ita.md`、`README_fra.md`、`README_deu.md`、`README_zho.md`、`README_jpn.md`）は、**クリエイティブ・コモンズ 表示-継承 4.0 国際（CC BY-SA 4.0）** の下で提供されます。全文は https://creativecommons.org/licenses/by-sa/4.0/ を参照してください。
+本ドキュメント（本 README およびその自身の翻訳版——`README_spa.md`、`README_ita.md`、`README_fra.md`、`README_deu.md`、`README_zho.md`、`README_jpn.md`、`README_por.md`）は、**クリエイティブ・コモンズ 表示-継承 4.0 国際（CC BY-SA 4.0）** の下で提供されます。全文は https://creativecommons.org/licenses/by-sa/4.0/ を参照してください。

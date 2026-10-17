@@ -27,6 +27,7 @@
 // =============================================================================
 package com.hydraumc.control.network
 
+import com.hydraumc.control.util.optStr
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -222,13 +223,13 @@ class HydraWebSocket(
         }
 
         // Handle server-side error messages (e.g. Auth failure before close)
-        val error = json.optString("error")
+        val error = json.optStr("error")
         if (error.isNotEmpty()) {
             mainScope.launch { onError(error) }
             return
         }
 
-        val type = json.optString("type")
+        val type = json.optStr("type")
         if (type == "delta" && json.optInt("schema") == 2 && json.has("robotId")) {
             val handler = onDelta
             if (handler != null) {

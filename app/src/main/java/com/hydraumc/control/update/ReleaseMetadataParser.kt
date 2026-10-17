@@ -5,6 +5,7 @@
 // =============================================================================
 package com.hydraumc.control.update
 
+import com.hydraumc.control.util.optStr
 import org.json.JSONObject
 
 /**
@@ -20,7 +21,7 @@ object ReleaseMetadataParser {
         if (release.optBoolean("draft") || release.optBoolean("prerelease")) {
             return UpdateCheckResult.UpToDate
         }
-        val remoteVersion = SemanticVersion.parseStable(release.optString("tag_name"))
+        val remoteVersion = SemanticVersion.parseStable(release.optStr("tag_name"))
             ?: return UpdateCheckResult.Failed("Latest GitHub Release tag is not a stable vMAJOR.MINOR.PATCH value.")
         val localVersion = SemanticVersion.parseStable(installedVersionName)
             ?: return UpdateCheckResult.Failed("Installed application version is not stable semver.")
@@ -31,17 +32,17 @@ object ReleaseMetadataParser {
         val asset = (0 until assets.length())
             .asSequence()
             .map { assets.optJSONObject(it) }
-            .firstOrNull { it?.optString("name") == REQUIRED_ASSET_NAME }
+            .firstOrNull { it?.optStr("name") == REQUIRED_ASSET_NAME }
             ?: return UpdateCheckResult.Failed("Release v$remoteVersion has no $REQUIRED_ASSET_NAME asset.")
-        val assetUrl = asset.optString("browser_download_url")
+        val assetUrl = asset.optStr("browser_download_url")
         if (!assetUrl.startsWith("https://")) {
             return UpdateCheckResult.Failed("Release APK URL is not HTTPS.")
         }
         return UpdateCheckResult.Available(
             AvailableUpdate(
                 version = remoteVersion,
-                releaseName = release.optString("name", "HYDRA-UMC CONTROL v$remoteVersion"),
-                notes = release.optString("body").trim(),
+                releaseName = release.optStr("name", "HYDRA-UMC CONTROL v$remoteVersion"),
+                notes = release.optStr("body").trim(),
                 assetUrl = assetUrl,
             ),
         )

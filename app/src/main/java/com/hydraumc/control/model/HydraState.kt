@@ -24,6 +24,7 @@
 // =============================================================================
 package com.hydraumc.control.model
 
+import com.hydraumc.control.util.optStr
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -40,15 +41,15 @@ class RobotView(val raw: JSONObject) {
     /** Unique identifier for the robot. */
     val id: Int get() = raw.optInt("id", 0)
     /** Human-readable name of the robot. */
-    val name: String get() = raw.optString("name", "Robot ${id}")
+    val name: String get() = raw.optStr("name", "Robot ${id}")
     /** Connection status of the robot. */
     val online: Boolean get() = raw.optBoolean("online", false)
     /** The mechanical model type of the robot. */
-    val model: String get() = raw.optString("model", "Generic (6-DOF)")
+    val model: String get() = raw.optStr("model", "Generic (6-DOF)")
     /** Current operational role assigned to the robot. */
-    val role: String get() = raw.optString("role", "Idle")
+    val role: String get() = raw.optStr("role", "Idle")
     /** Currently attached tool. */
-    val tool: String get() = raw.optString("tool", "None")
+    val tool: String get() = raw.optStr("tool", "None")
     /** Whether the robot is mounted on an independent XY table. */
     val hasXYTable: Boolean get() = raw.optBoolean("hasXYTable", false)
 
@@ -265,7 +266,7 @@ class RobotView(val raw: JSONObject) {
             val tools = atc.optJSONArray("tools") ?: return emptyList()
             return (0 until tools.length()).mapNotNull { i ->
                 val t = tools.optJSONObject(i) ?: return@mapNotNull null
-                AtcTool(t.optInt("slot", 0), t.optString("tool", "None"))
+                AtcTool(t.optInt("slot", 0), t.optStr("tool", "None"))
             }
         }
     
@@ -281,11 +282,11 @@ class RobotView(val raw: JSONObject) {
  */
 class ControllerView(val raw: JSONObject) {
     /** Unique ID of the controller. */
-    val id: String get() = raw.optString("id", "")
+    val id: String get() = raw.optStr("id", "")
     /** Human-readable name of the controller. */
-    val name: String get() = raw.optString("name", id)
+    val name: String get() = raw.optStr("name", id)
     /** Network IP address of the controller. */
-    val ip: String get() = raw.optString("ip", "")
+    val ip: String get() = raw.optStr("ip", "")
 
     /** Kinematic Brain Stage (Controller-level XY table) */
     val kinematicBrainStage: JSONObject 
@@ -322,11 +323,11 @@ class ControllerView(val raw: JSONObject) {
  */
 class JobView(val raw: JSONObject) {
     /** Unique name of the job file. */
-    val name: String get() = raw.optString("name", "Unknown Job")
+    val name: String get() = raw.optStr("name", "Unknown Job")
     /** File size in bytes. */
     val size: Long get() = raw.optLong("size", 0)
     /** Last modification timestamp. */
-    val lastModified: String get() = raw.optString("lastModified", "")
+    val lastModified: String get() = raw.optStr("lastModified", "")
 }
 
 /** 
@@ -342,7 +343,7 @@ class HydraState(val raw: JSONObject) {
         }
 
     /** The ID of the currently active controller. */
-    val activeControllerId: String get() = raw.optString("activeControllerId", "")
+    val activeControllerId: String get() = raw.optStr("activeControllerId", "")
 
     /** Flattened list of all robots across all controllers. */
     val allRobots: List<RobotView> get() = controllers.flatMap { it.robots }
@@ -499,10 +500,10 @@ data class ServerInfo(
         fun fromHydraInfo(host: String, port: Int, payload: JSONObject): ServerInfo = ServerInfo(
             host = host,
             port = port,
-            product = payload.optString("product", ""),
+            product = payload.optStr("product", ""),
             remoteApiVersion = payload.optInt("remoteApiVersion", 0),
-            appVersion = payload.optString("appVersion", ""),
-            hostname = payload.optString("hostname", ""),
+            appVersion = payload.optStr("appVersion", ""),
+            hostname = payload.optStr("hostname", ""),
             controllerCount = payload.optInt("controllerCount", 0),
             robotCount = payload.optInt("robotCount", 0),
             uptimeSeconds = payload.optInt("uptimeSeconds", 0),
