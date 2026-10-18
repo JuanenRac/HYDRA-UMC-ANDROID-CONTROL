@@ -27,12 +27,14 @@
 
 > **诚实检查——今天真正可运行的部分：** 核心业务逻辑——Parol6 运动学（`kinematics/Parol6Kinematics.kt`）、settings 树状态契约（`model/HydraState.kt`）、原子命令下发与语音中继（`viewmodel/RobotViewModel.kt`）、WebSocket 重连处理（`network/HydraWebSocket.kt`）、MJPEG 帧解析（`ui/MjpegPlayer.kt`）、应用内更新通道（`update/GitHubReleaseUpdater.kt`、`ReleaseMetadataParser.kt`、`SemanticVersion.kt`），以及 Wear 语音中继请求管理（`wear/BoundedRequestScope.kt`、`WatchCompanionProtocol.kt`）都是真实的，并由 90 个通过的 JVM/Robolectric 单元测试覆盖（`./gradlew testDebugUnitTest`）。这些测试在结构上无法触及——而这个仅有 Windows 的开发环境也没有实体 Android 设备可以验证——的是 `network/AuthPrefs.kt` 中真正基于 Keystore 的 `EncryptedSharedPreferences`、`androidx.biometric` 的指纹/面部提示、`network/HydraBleClient.kt` 的蓝牙 GATT 传输，以及 `MjpegStreamParser` 中 API 28+ 的硬件 `ImageDecoder` 路径：这些都是真实、已编译的代码，但自编写以来尚未在真实硬件上重新验证过。早期版本的基本启动/登录*确实*在真实设备上得到过现场确认（见 `CHANGELOG.md` 的 `v0.3.2`/`v0.3.3` 条目），但那早于蓝牙、生物识别和硬件解码路径。具体已交付的内容见 `CHANGELOG.md`，其中每条记录也附有关于哪些部分仍未经硬件验证的说明。
 
+> **安全与安防现状:**本生态系统不是经认证的安全系统。目前尚无硬件 E-STOP 通路,没有由固件强制执行的限位或联锁,也没有经过验证的运动指令;固件映像使用 CRC32 和共享密钥的 HMAC-SHA256 校验,而非非对称签名;TLS 与双向 TLS 均为可选项,默认关闭;自制电路板尚未组装或测试。在依赖此处任何说法来保障人身安全之前,请先阅读[安全基线](https://github.com/JuanenRac/HYDRA-UMC-DOCS/blob/main/docs/SECURITY_BASELINE.md)和[威胁模型](https://github.com/JuanenRac/HYDRA-UMC-DOCS/blob/main/docs/THREAT_MODEL.md)。
+
 ## 📋 速览
 
 | | |
 |---|---|
-| 版本 | `0.6.9` |
-| 成熟度 | 成熟 |
+| 版本 | `0.7.0` |
+| 成熟度 | 可用 |
 | 测试 | 98 (`./gradlew testDebugUnitTest`) |
 | 技术栈 | Kotlin / Jetpack / biometric auth / WebSocket client |
 | 目标 | Android 手机或平板 |
@@ -42,20 +44,20 @@
 
 - **访问控制与生物识别**（`ui/LoginScreen.kt`、`util/BiometricHelper.kt`）—— 专业级登录系统，支持**指纹和面部解锁**（`androidx.biometric`），并在同一界面上直接提供 IP/端口字段,无需先单独跳转到设置页面才能指定服务器。包含“记住我”功能、安全的**退出登录**机制,并完全支持**8 种语言**本地化。缓存的用户名/密码/令牌（`network/AuthPrefs.kt`）存放在由 Keystore 支持的**加密 SharedPreferences**（AES256-GCM）中,而非明文——开发服务器(未设置 `NODE_ENV`)会在首次启动时预置默认的 `admin`/`admin` 账户;生产服务器(`NODE_ENV=production`)则要求改用 `HYDRA_UMC_BOOTSTRAP_ADMIN_USERNAME`/`HYDRA_UMC_BOOTSTRAP_ADMIN_PASSWORD`,绝不会静默回退到 `admin`/`admin` —— 完整的生产环境配置请参见 HYDRA-UMC-SERVER 自身的 README。无论哪种情况,额外的低权限**操作员**账户都可以在服务端从 Config > Users 创建。
 - **离线模式与状态缓存**（`network/StateCache.kt`）—— 使用 **DataStore** 集成的持久化引擎。本应用会自动缓存最后已知的系统状态,即使没有活动的 Wi-Fi 连接,也能实现即时的仪表盘查看和配置审查。
-- **任务通知与警报**（`util/NotificationHelper.kt`）—— 工业级警报系统。当机器人完成一个作业序列或发生关键硬件事件时,发送高优先级推送通知,确保即使应用在后台运行,操作员也能收到通知。
+- **任务通知与警报**（`util/NotificationHelper.kt`）—— 警报系统。当机器人完成一个作业序列或发生关键硬件事件时,发送高优先级推送通知,确保即使应用在后台运行,操作员也能收到通知。
 - **工业遥测终端**（`ui/TelemetryScreen.kt`）—— 一个采用终端风格界面的专用实时日志查看器。跟踪系统事件、REST/WebSocket 同步,并提供颜色编码的诊断信息（成功为矩阵绿色,错误为工业红色）。
 - **高级仪表盘**（`ui/DashboardScreen.kt`）—— 具有透视滑动效果的高保真 **3D 水平轮播**。显示丰富的机器人元数据：**制造商**（Source Robotics、Annin、Universal Robots、AgileX 等）、**机器人角色**（CNC、激光、PnP）,以及一个**工业模块矩阵**,显示 CAM、XY、ATC、PNP、CNC、LSR、BED、VAC 和 RCK 模块的实时状态。
 - **系统健康监视器**（`ui/DashboardScreen.kt`）—— 针对已连接的 Compute Module 5 的实时指标,包括**主机名**、**格式化的运行时间**（例如“2天4小时15分钟”）,以及控制器和机器人的活动计数。
 - **增强型手动控制**（`ui/ControlScreen.kt`）—— 具有专业的纵向布局,配备**放大 50% 的摇杆按钮**以实现最大精度。
-- **安全与回放面板**（`ui/ControlScreen.kt`、`ui/PlaybackConsole.kt`）—— 固定的底部控制栏,容纳红色 **STOP** 按钮（下文的全局 STOP）以及**启动**、**暂停**、**停止**（仅所选机器人）按钮。这些控件始终可见,并提供**触觉反馈**作为物理感官确认。
-- **全局 STOP**（`ui/GlobalStop.kt`、`network/HydraApiClient.kt`、`viewmodel/RobotViewModel.kt`）—— 每个界面的顶部栏、控制界面的控制台以及 3D 视图（竖屏和全屏）中都有一个红色 **STOP** 按钮（说明文字“全部停止”,已翻译为 8 种语言）。轻点一下,无需长按,无需确认：立即发送 `POST /api/stop-all` 并停止所有机器人,即使被其他账户预约。它会显示结果（哪些机器人已停止、哪些没有、哪些被他人预约,以及服务器无法保存停止状态时的警告）,无人应答时重试一次,服务器限制调用（429）时逐台停止机器人,并保持常驻的 **STOP 未确认** 横幅,直到之后的 STOP 成功。
+- **回放面板**（`ui/ControlScreen.kt`、`ui/PlaybackConsole.kt`）—— 固定的底部控制栏,容纳红色 **STOP** 按钮（下文的全局 STOP）以及**启动**、**暂停**、**停止**（仅所选机器人）按钮。这些控件始终可见,并提供**触觉反馈**作为物理感官确认。
+- **全局 STOP**（`ui/GlobalStop.kt`、`network/HydraApiClient.kt`、`viewmodel/RobotViewModel.kt`）—— 每个界面的顶部栏、控制界面的控制台以及 3D 视图（竖屏和全屏）中都有一个红色 **STOP** 按钮（说明文字“全部停止”,已翻译为 8 种语言）。轻点一下,无需长按,无需确认：立即发送 `POST /api/stop-all` 并停止所有机器人,即使被其他账户预约。它会显示结果（哪些机器人已停止、哪些没有、哪些被他人预约,以及服务器无法保存停止状态时的警告）,无人应答时重试一次,服务器限制调用（429）时逐台停止机器人,并保持常驻的 **STOP 未确认** 横幅,直到之后的 STOP 成功。这是服务器的软件停止，不是硬件 E-STOP，也不会切断任何设备的电源。
 - **3D 视图**（`ui/ThreeDScreen.kt`）—— 通过 WebView 嵌入 HYDRA-UMC STUDIO 自身的实时 3D 视口（`?hideUI=true&robotId=&token=`）,而非原生渲染器。这种 WebView 方式免费获得了真实的、当前正在使用的 STUDIO 3D 场景（每一个真实的机器人网格/运动学）,而无需原生重新实现——代价是 WebView 渲染开销,并非电池最优,但今天功能上是完整的。
-- **实时八路视觉**（`ui/CameraScreen.kt`、`ui/MjpegPlayer.kt`）—— 工业级**原生 MJPEG 流播放器**。具备自主的后台解析器和基于 Canvas 的渲染器,实现零延迟视频遥测,当机器人的视觉系统关闭时会显示一个明确的“摄像头已禁用”状态（而非静默显示空白画面）,并配有一个可直接从服务器打开/关闭机器人摄像头的开关。在手动控制界面中支持自动**画中画（PIP）**叠加,通过服务器的摄像头配置映射到特定的机器人。在 API 28+ 上,每一帧都通过平台自身硬件加速的 `ImageDecoder` 路径解码（一个驻留在 GPU 中的位图,省去了 CPU 端的解码/上传）,并具备自动、自愈式回退到原有 CPU 解码的能力。
+- **实时八路视觉**（`ui/CameraScreen.kt`、`ui/MjpegPlayer.kt`）—— **原生 MJPEG 流播放器**。具备后台解析器和基于 Canvas 的渲染器,实现低延迟视频,当机器人的视觉系统关闭时会显示一个明确的“摄像头已禁用”状态（而非静默显示空白画面）,并配有一个可直接从服务器打开/关闭机器人摄像头的开关。在手动控制界面中支持自动**画中画（PIP）**叠加,通过服务器的摄像头配置映射到特定的机器人。在 API 28+ 上,每一帧都通过平台自身硬件加速的 `ImageDecoder` 路径解码（一个驻留在 GPU 中的位图,省去了 CPU 端的解码/上传）,并具备自动、自愈式回退到原有 CPU 解码的能力。
 - **智能发现与连接**（`network/Discovery.kt`、`network/HydraApiClient.kt`、`network/HydraWebSocket.kt`）—— 针对手机自身 /24 网段上的每一个候选主机（包括手机自身的局域网 IP 和 localhost,而不仅仅是其他主机）进行并发子网扫描,探测 `GET /api/hydra-info`,并仅通过 `remoteApiVersion` 字段的存在来识别真实服务器——与手动输入 IP 路径所使用的检测方式相同,因此即使服务器所有者将其重命名为默认产品字符串以外的名称,也依然能被找到。一个 **NsdManager**（mDNS/Bonjour）监听器与其并行运行——服务器确实会以 `_hydra._tcp`（`bonjour-service`）的形式广播自身,`MainActivity` 会预先请求此功能所需的运行时位置/附近设备权限（仅在清单中声明,在 API 23+ 上从不会自动授予）——但由于 Wi-Fi 上的组播可达性本身不如纯粹的 HTTP 探测可靠,子网扫描仍然是主要路径。本应用会在启动时自动激活 Wi-Fi,扫描本地工厂网络,并对第一个可用的 HYDRA-UMC 服务器执行**零点击自动连接**。
-- **安全工业访问**（`network/HydraApiClient.kt`、`ui/LoginScreen.kt`）—— 使用 **JWT（JSON Web Token）** 的专业安全层。每一条控制指令（点动、播放、紧急停止）都由服务器使用签名令牌进行验证,通过原子化的 `POST /api/robot/:id/command` 端点发送（见下文“原子化指令同步”）——`admin` 或 `operator` 角色均可使用,不同于完整的 `POST /api/settings` 写入（仅限服务端 admin）。每个请求还携带一个 `X-Hydra-Client: android` 请求头,以便服务器自身的 Config > Remote Access 选项卡可以独立于 SUITE/iOS 来允许/阻止本应用。与**生物识别认证**（指纹/面部）无缝集成,用于安全的令牌续期。以代码 `1008`（无效/过期令牌）关闭的 WebSocket 会被视为“需要重新登录”,而不会进入重连循环重试（`network/HydraWebSocket.kt`）。
+- **JWT 访问**（`network/HydraApiClient.kt`、`ui/LoginScreen.kt`）—— 使用 **JWT（JSON Web Token）** 登录。每一条控制指令（点动、播放、服务器的全局停止）都由服务器使用签名令牌进行验证,通过原子化的 `POST /api/robot/:id/command` 端点发送（见下文“原子化指令同步”）——`admin` 或 `operator` 角色均可使用,不同于完整的 `POST /api/settings` 写入（仅限服务端 admin）。每个请求还携带一个 `X-Hydra-Client: android` 请求头,以便服务器自身的 Config > Remote Access 选项卡可以独立于 SUITE/iOS 来允许/阻止本应用。与**生物识别认证**（指纹/面部）无缝集成,用于安全的令牌续期。以代码 `1008`（无效/过期令牌）关闭的 WebSocket 会被视为“需要重新登录”,而不会进入重连循环重试（`network/HydraWebSocket.kt`）。
 - **原子化指令同步**（`viewmodel/RobotViewModel.kt` 自身的 `sendAtomicCommand()`）—— 每一次写入（播放/暂停/停止/点动/点动步长/阀门/泵/速度/视觉/工具）都发送一个小型的、单机器人的原子指令,而非整棵设置树——服务器自行计算哪些合并机器人也会受到影响,持久化到磁盘,并向所有其他已连接客户端广播。启用/禁用会以与播放/暂停/停止相同的方式传播到机器人自身的 `combinedWith` 同伴,因为它们都共享相同的受影响机器人计算逻辑。
-- **紧急管理小组件**（`widget/GlobalStopWidget.kt`）—— 专用的**主屏幕小组件**,用于关键安全场景。提供一个高可见度、可立即访问的**全局 STOP** 按钮——与上面相同的调用：轻点后应用回到前台,服务器连接一建立就发送停止,即使是完全冷启动（进程尚未运行）也是如此；如果无法连接服务器,则显示 STOP 未确认。通知中的操作作用相同。
-- **工业触觉与安全**（`ui/ControlScreen.kt`）—— 高级感官反馈系统。全局 STOP 在轻点时立即以两次短振动回应；每个机器人自己的停止按钮保留**长按保护**（快速轻点只有一次短振动和提示；只有真正长按才会发送命令）。差异化的触觉特征（成功、错误和紧急脉冲）在嘈杂环境中为操作员提供物理确认。
+- **全局 STOP 小组件**（`widget/GlobalStopWidget.kt`）—— 专用的**主屏幕小组件**,用于快速访问。提供一个高可见度、可立即访问的**全局 STOP** 按钮——与上面相同的调用：轻点后应用回到前台,服务器连接一建立就发送停止,即使是完全冷启动（进程尚未运行）也是如此；如果无法连接服务器,则显示 STOP 未确认。通知中的操作作用相同。这是服务器的软件停止，不是硬件 E-STOP，也不会切断任何设备的电源。
+- **触觉反馈**（`ui/ControlScreen.kt`）—— 高级感官反馈系统。全局 STOP 在轻点时立即以两次短振动回应；每个机器人自己的停止按钮保留**长按保护**（快速轻点只有一次短振动和提示；只有真正长按才会发送命令）。差异化的触觉特征（成功、错误和紧急脉冲）在嘈杂环境中为操作员提供物理确认。
 - **应用内更新渠道**（`update/GitHubReleaseUpdater.kt`、`update/ReleaseMetadataParser.kt`、`update/SemanticVersion.kt`）—— 启动时以及从「设置 → 更新」检查最新的稳定版 GitHub Release;仅下载来自非草稿、非预发布标签的确切 `HYDRA-UMC-ANDROID-CONTROL-release.apk` 资源,从不自动安装 —— 最终同意由 Android 自身的软件包安装程序请求。完整发布契约:[`docs/GITHUB_RELEASE_UPDATES.md`](docs/GITHUB_RELEASE_UPDATES.md)。
 - **配对的 Wear OS 伴侣应用与语音中继**（`wear/WatchVoiceRelayService.kt`、`wear/WatchCompanionProtocol.kt`）—— 将来自配对的 [HYDRA-UMC-WATCH](https://github.com/JuanenRac/HYDRA-UMC-WATCH) 应用、已识别且由用户发起的语音回合,通过本应用自身经过认证的 Server 会话中继到 `HYDRA-UMC-VOICE-UI`,并向手表返回类型化的回复;无论是此中继还是手表的系统状态卡片,都从不发出机器人指令或直接操作 `HydraState` —— 与运动相关的回复会被明确标记为 `requiresConfirmation`,必须通过主控制 UI 进行确认。完整契约:[`docs/WATCH_VOICE_RELAY.md`](docs/WATCH_VOICE_RELAY.md)。
 - **应用内语音助手**(`ui/VoiceAssistantDialog.kt`)—— 顶部栏中的麦克风图标会打开一个对话框,可输入问题/指令,或使用本手机自带的语音识别(`RecognizerIntent`,与手表语音按钮已使用的真实模式相同)。识别出的文字会通过与手表中继相同的 `POST /api/voice/turn` 路由发送,但作为本手机自身的普通流量(`HydraApiClient.postVoiceTurn()`)而非中继 —— 因此“配置 > 远程访问”可以独立于配对的手表来允许/阻止此按钮。绝不上传音频,回复也绝不会直接发出机器人指令。
@@ -154,7 +156,7 @@ HYDRA-UMC-ANDROID-CONTROL/
 │       │   │   ├── Joystick3D.kt           # 可复用的双轴摇杆控件
 │       │   │   ├── LoginScreen.kt          # 用户名/密码 + IP/端口输入，生物识别登录
 │       │   │   ├── MjpegPlayer.kt          # MJPEG 流解析器 + Canvas 渲染器
-│       │   │   ├── PlaybackConsole.kt      # 共享的悬浮式紧急停止/播放/暂停/停止控制台
+│       │   │   ├── PlaybackConsole.kt      # 共享的悬浮式停止/播放/暂停/停止控制台
 │       │   │   ├── SettingsScreen.kt       # Wi-Fi/蓝牙扫描界面、连接设置
 │       │   │   ├── SplashScreen.kt         # 自定义 Compose 启动画面
 │       │   │   ├── TelemetryScreen.kt      # 终端风格的事件/同步日志查看器
@@ -223,25 +225,25 @@ HYDRA-UMC-ANDROID-CONTROL/
 - **[HYDRA-UMC-SUITE](https://github.com/JuanenRac/HYDRA-UMC-SUITE)** —— 面向多台服务器的桌面(PySide6)集群指挥中心,打包为独立可执行文件;与本应用使用完全相同的 `REMOTE_API.md` 契约。
 - **[HYDRA-UMC-IOS-CONTROL](https://github.com/JuanenRac/HYDRA-UMC-IOS-CONTROL)** —— 具有实时 WebSocket 同步的 iOS/iPadOS 控制应用(Flutter);本应用直接对应的 iOS/iPadOS 版本,功能集相同。
 - **[HYDRA-UMC-DSI](https://github.com/JuanenRac/HYDRA-UMC-DSI)** —— 面向机载 7 英寸 DSI 触摸屏的原生触控界面,直接嵌入 CM5 本体。
-- **[HYDRA-UMC-BRIDGE-AMR](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-AMR)** —— 通过真实的 VDA 5050 MQTT 发布者为 AGV/AMR 车队提供的协调边界。
-- **[HYDRA-UMC-BRIDGE-CNC](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-CNC)** —— 具备真实 GRBL 状态/控制字节访问能力的高层 CNC 单元协调器。
-- **[HYDRA-UMC-BRIDGE-DROIDS](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-DROIDS)** —— 面向足式/人形机器人的协调边界,具备真实的 Boston Dynamics Spot 指令发送器。
-- **[HYDRA-UMC-BRIDGE-LASER](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-LASER)** —— 读取 3 项真实钥匙/外壳/联锁 GPIO 安全信号的激光单元安全协调器。
+- **[HYDRA-UMC-BRIDGE-AMR](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-AMR)** —— 通过 VDA 5050 MQTT 发布者为 AGV/AMR 车队提供的协调边界(仅针对仿真车队测试)。
+- **[HYDRA-UMC-BRIDGE-CNC](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-CNC)** —— 具备 GRBL 状态/控制字节访问能力的高层 CNC 单元协调器(仅针对模拟器测试)。
+- **[HYDRA-UMC-BRIDGE-DROIDS](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-DROIDS)** —— 面向足式/人形机器人的协调边界,带有 Boston Dynamics Spot 指令发送器(仅针对模拟器测试)。
+- **[HYDRA-UMC-BRIDGE-LASER](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-LASER)** —— 读取 3 路钥匙/外壳/联锁 GPIO 信号的激光单元协调器(仅针对模拟芯片测试;无法使激光器上膛或发射)。
 - **[HYDRA-UMC-BRIDGE-OPENPNP](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-OPENPNP)** —— 面向 OpenPnP 贴片机板级流程的安全高层协调器。
 - **[HYDRA-UMC-BRIDGE-PRINTER3D](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-PRINTER3D)** —— 面向 Moonraker/Klipper 3D 打印机的安全协调边界,具备真实的受控作业指令。
-- **[HYDRA-UMC-BRIDGE-ROS2](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-ROS2)** —— 具备真实的惰性导入 rclpy ROS 2 传输层的安全协调器。
-- **[HYDRA-UMC-BRIDGE-UAV](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-UAV)** —— 面向搭载摄像头的无人机的协调边界,具备真实的 MAVLink 指令发送器。
+- **[HYDRA-UMC-BRIDGE-ROS2](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-ROS2)** —— 带有惰性导入 rclpy ROS 2 传输层的协调器(尚未在 ROS 2 环境中运行)。
+- **[HYDRA-UMC-BRIDGE-UAV](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-UAV)** —— 面向搭载摄像头的无人机的协调边界,带有 MAVLink 指令发送器(仅针对模拟器测试)。
 
 **直接相关**
-- **[HYDRA-UMC-WATCH](https://github.com/JuanenRac/HYDRA-UMC-WATCH)** —— 具备真实触觉提醒与配对手机语音中继功能的 WearOS 伴侣应用;本应用的 WearOS 伴侣,可从手腕一目了然地查看机器人状态并进行控制。
-- **[HYDRA-UMC-HIL-BRIDGE](https://github.com/JuanenRac/HYDRA-UMC-HIL-BRIDGE)** —— 在仿真与真实硬件之间路由指令的真实硬件在环安全联锁;支持直接从本应用远程控制数字孪生。
+- **[HYDRA-UMC-WATCH](https://github.com/JuanenRac/HYDRA-UMC-WATCH)** —— 带有触觉提醒模式与配对手机语音中继的 WearOS 伴侣应用(尚未在实体手表上运行);本应用的 WearOS 伴侣,可从手腕一目了然地查看机器人状态并进行控制。
+- **[HYDRA-UMC-HIL-BRIDGE](https://github.com/JuanenRac/HYDRA-UMC-HIL-BRIDGE)** —— 在仿真与真实硬件之间带有软件碰撞联锁的硬件在环路由器(未在真实硬件上测试);支持直接从本应用远程控制数字孪生。
 
 **生态系统中的其他项目**
 
 *核心硬件与平台*
-- **[HYDRA-UMC](https://github.com/JuanenRac/HYDRA-UMC)** —— 机器人手臂的真实主板——CM5 主机 + 双核 STM32H745,通过 CAN-OTA/SPI-OTA 协调最多 8 条工具臂。
+- **[HYDRA-UMC](https://github.com/JuanenRac/HYDRA-UMC)** —— 机器人手臂主板设计——CM5 主机 + 双核 STM32H745,目标是通过 CAN-OTA/SPI-OTA 协调最多 8 条工具臂(固件处于早期阶段,尚无已组装的电路板)。
 - **[HYDRA-UMC-OS](https://github.com/JuanenRac/HYDRA-UMC-OS)** —— 面向 CM5 的可复现 Raspberry Pi OS 产品层——只读代理、经过验证的配置/配置文件、WiFi 首次配网。
-- **[HYDRA-UMC-SDK](https://github.com/JuanenRac/HYDRA-UMC-SDK)** —— 每个桥接都据此校验自身指令的共享 JSON-Schema 契约与安全门限边界。
+- **[HYDRA-UMC-SDK](https://github.com/JuanenRac/HYDRA-UMC-SDK)** —— 每个桥接都据此校验自身指令的共享 JSON-Schema 契约与软件作业门限边界(并非经认证的安全功能)。
 - **[HYDRA-UMC-CONNECTOR-HUB](https://github.com/JuanenRac/HYDRA-UMC-CONNECTOR-HUB)** — 面向外部机器连接器的声明式适配器清单注册与校验工具；把 SDK 自身的契约理念扩展到外部机器，而不取代工业网关类项目。
 
 *核心后端与客户端*
@@ -258,8 +260,8 @@ HYDRA-UMC-ANDROID-CONTROL/
 - **[HYDRA-UMC-VISION-NODE](https://github.com/JuanenRac/HYDRA-UMC-VISION-NODE)** —— 面向 Hailo-8 视觉流水线的集成中枢,具备逐阶段的真实硬件就绪检测。
 - **[HYDRA-UMC-DETECTION-HEF](https://github.com/JuanenRac/HYDRA-UMC-DETECTION-HEF)** —— 具备 Hailo 架构/校验和安全加载验证的真实编译模型注册表。
 - **[HYDRA-UMC-VISION-STREAMER](https://github.com/JuanenRac/HYDRA-UMC-VISION-STREAMER)** —— 具备真实 HailoRT 集成边界的真实 GStreamer 流水线 + MediaMTX 配置生成器。
-- **[HYDRA-UMC-VISUAL-SERVOING-API](https://github.com/JuanenRac/HYDRA-UMC-VISUAL-SERVOING-API)** —— 具备真实 Position-Based Visual Servoing 修正律,并依据上游区域状态进行安全门控。
-- **[HYDRA-UMC-SAFETY-ZONES](https://github.com/JuanenRac/HYDRA-UMC-SAFETY-ZONES)** —— 具备校准新鲜度强制检查的真实区域入侵检测与 E-STOP 请求。
+- **[HYDRA-UMC-VISUAL-SERVOING-API](https://github.com/JuanenRac/HYDRA-UMC-VISUAL-SERVOING-API)** —— 以区域状态为授权条件的 Position-Based Visual Servoing 修正律;尚无摄像头位姿估计。
+- **[HYDRA-UMC-SAFETY-ZONES](https://github.com/JuanenRac/HYDRA-UMC-SAFETY-ZONES)** —— 从文件读取物体位置的 v0 区域入侵、校准新鲜度与 E-STOP 请求逻辑;没有检测器为其供数,也尚未连接任何物理 E-STOP。
 
 *认知 AI 节点(Hailo-10)*
 - **[HYDRA-UMC-COGNITIVE-NODE](https://github.com/JuanenRac/HYDRA-UMC-COGNITIVE-NODE)** —— 面向 Hailo-10 认知流水线(LLM/VLA/语音编排)的集成中枢。

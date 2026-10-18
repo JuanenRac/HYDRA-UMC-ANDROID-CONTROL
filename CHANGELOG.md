@@ -9,6 +9,11 @@ in [README.md](README.md#-versioning). Entries recorded before that policy
 existed are grouped under the pre-policy version `0.0.0` the repo carried
 at the time.
 
+## [0.7.0]
+
+- Maturity is functional: nothing here has been verified on real hardware yet.
+- The READMEs say, in the eight languages, what is planned and what has only been tested against fakes, emulators or fixtures, and carry a short safety and security status note.
+
 ## [0.6.9] - STOP on a server without the route, and network failures while reading an answer
 
 - **Global STOP:** a server that does not have `POST /api/stop-all` (HTTP 404) now gets the stop of every known robot one by one, like a rate limited one (429) already did and like the tablet and iPhone apps do, instead of leaving the STOP "not confirmed".
