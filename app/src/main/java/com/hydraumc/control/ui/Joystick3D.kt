@@ -1,7 +1,7 @@
 // =============================================================================
 // HYDRA-UMC CONTROL - UI Control Component: Joystick3D.kt
 // Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-// GPL-3.0 - see LICENSE
+// GPL-3.0-or-later - see LICENSE
 // =============================================================================
 // A jog-pendant-style directional pad for X/Y/Z - a straight Compose port of
 // HYDRA-UMC-STUDIO's own src/components/Joystick3D.tsx (same name, same

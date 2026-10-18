@@ -4,7 +4,7 @@
 # Produces a privately signed, stable GitHub Release APK without changing the
 # manifest version or CHANGELOG. The normal build script owns version bumps.
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-# GPL-3.0 - see LICENSE
+# GPL-3.0-or-later - see LICENSE
 # =============================================================================
 set -euo pipefail
 
@@ -14,7 +14,7 @@ echo " Mode      : READ-ONLY SIGNED RELEASE PACKAGE"
 echo " Author    : JuanenRac (Electro Hobby 3D)"
 echo " Email     : electrohobby3d@gmail.com"
 echo " Copyright : (C) 2026 JuanenRac"
-echo " License   : GPL-3.0 - see LICENSE"
+echo " License   : GPL-3.0-or-later - see LICENSE"
 echo "============================================================================="
 
 if [[ ! -f keystore.properties ]]; then

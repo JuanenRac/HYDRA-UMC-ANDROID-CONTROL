@@ -1,7 +1,7 @@
 // =============================================================================
 // HYDRA-UMC CONTROL - Core state model wrapping the remote API JSON structure
 // Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-// GPL-3.0 - see LICENSE
+// GPL-3.0-or-later - see LICENSE
 //
 // Deliberately NOT a strict data-class schema that (de)serializes the full
 // settings.json shape field-by-field. HYDRA-UMC STUDIO's own real state

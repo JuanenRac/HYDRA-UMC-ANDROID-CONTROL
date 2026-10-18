@@ -2,7 +2,7 @@
 # =============================================================================
 # HYDRA-UMC-ANDROID-CONTROL - publish-github-release.sh
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-# GPL-3.0 - see LICENSE
+# GPL-3.0-or-later - see LICENSE
 #
 # POSIX sibling of publish-github-release.ps1 - see that file's own header
 # for the full rationale (why this is a local-only, personal-token step,

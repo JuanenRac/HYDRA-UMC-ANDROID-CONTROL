@@ -1,7 +1,7 @@
 // =============================================================================
 // HYDRA-UMC CONTROL - REST API client for communication with the HYDRA-UMC-SERVER backend
 // Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-// GPL-3.0 - see LICENSE
+// GPL-3.0-or-later - see LICENSE
 //
 // Talks the exact contract in HYDRA-UMC-SERVER/docs/REMOTE_API.md (that
 // document itself admits it can drift from server.ts, the real source of

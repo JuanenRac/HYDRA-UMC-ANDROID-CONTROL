@@ -1,7 +1,7 @@
 // =============================================================================
 // HYDRA-UMC-ANDROID-CONTROL - Parol6-specific kinematics: Parol6Kinematics.kt
 // Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-// GPL-3.0 - see LICENSE
+// GPL-3.0-or-later - see LICENSE
 //
 // Faithful Kotlin port of HYDRA-UMC-STUDIO's own
 // src/examples/parol6Kinematics.ts (same 6-step PAROL6.urdf transform

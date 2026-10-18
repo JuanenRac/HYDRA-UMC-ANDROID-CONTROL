@@ -1,7 +1,7 @@
 # =============================================================================
 # HYDRA-UMC-ANDROID-CONTROL - publish-github-release.ps1
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-# GPL-3.0 - see LICENSE
+# GPL-3.0-or-later - see LICENSE
 #
 # Publishes dist\HYDRA-UMC-ANDROID-CONTROL-release.apk (produced by
 # prepare-github-release.bat/.sh) as a GitHub Release for the current

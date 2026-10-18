@@ -1,7 +1,7 @@
 // =============================================================================
 // HYDRA-UMC-ANDROID-CONTROL - Parol6 kinematics port unit tests
 // Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-// GPL-3.0 - see LICENSE
+// GPL-3.0-or-later - see LICENSE
 //
 // Expected values are a real oracle: HYDRA-UMC-STUDIO's own
 // src/examples/parol6Kinematics.ts, run with the real three.js library

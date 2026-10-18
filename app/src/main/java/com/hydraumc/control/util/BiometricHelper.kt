@@ -1,7 +1,7 @@
 // =============================================================================
 // HYDRA-UMC CONTROL - Utility helper for biometric authentication
 // Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-// GPL-3.0 - see LICENSE
+// GPL-3.0-or-later - see LICENSE
 // =============================================================================
 package com.hydraumc.control.util
 

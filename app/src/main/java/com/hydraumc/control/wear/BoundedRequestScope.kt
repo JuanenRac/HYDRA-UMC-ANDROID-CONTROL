@@ -1,7 +1,7 @@
 // =============================================================================
 // HYDRA-UMC-ANDROID-CONTROL - Bounded per-requestId coroutine launcher
 // Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-// GPL-3.0 - see LICENSE
+// GPL-3.0-or-later - see LICENSE
 //
 // Found while auditing the code:
 // WatchVoiceRelayService's own CoroutineScope(SupervisorJob() + Dispatchers.IO)

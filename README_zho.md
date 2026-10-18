@@ -16,7 +16,7 @@
 
 
 <p align="center">
-  <img src="https://img.shields.io/badge/License-GPL%203.0-blue.svg" alt="GPL 3.0">
+  <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Language-Kotlin-7F52FF.svg" alt="Kotlin">
   <img src="https://img.shields.io/badge/UI-Jetpack%20Compose-4285F4.svg" alt="Compose">
   <img src="https://img.shields.io/badge/Platform-Android-3DDC84.svg" alt="Android">
@@ -197,7 +197,7 @@ HYDRA-UMC-ANDROID-CONTROL/
 ├── metadata.json                 # 应用商店信息元数据（名称/描述）
 ├── README.md                     # 本文件
 ├── README_spa.md / README_ita.md / README_fra.md / README_deu.md / README_zho.md / README_jpn.md / README_por.md   # 翻译
-└── LICENSE                       # GPL-3.0
+└── LICENSE                       # GPL-3.0-or-later
 ```
 
 ## 🔗 相关项目
@@ -309,6 +309,6 @@ HYDRA-UMC-ANDROID-CONTROL/
 
 ## 📜 许可证
 
-源代码采用 **GNU 通用公共许可证 v3.0（GPL-3.0）**——见 [`LICENSE`](LICENSE)。
+源代码采用 **GNU 通用公共许可证 v3.0（GPL-3.0-or-later）**——见 [`LICENSE`](LICENSE)。
 
 本文档（本 README 及其自身的翻译版本——`README_spa.md`、`README_ita.md`、`README_fra.md`、`README_deu.md`、`README_zho.md`、`README_jpn.md`、`README_por.md`）依据 **知识共享 署名-相同方式共享 4.0 国际许可协议（CC BY-SA 4.0）** 提供。完整文本见 https://creativecommons.org/licenses/by-sa/4.0/。

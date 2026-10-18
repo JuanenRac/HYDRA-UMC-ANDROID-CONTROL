@@ -1,7 +1,7 @@
 // =============================================================================
 // HYDRA-UMC CONTROL - Result of the global STOP (POST /api/stop-all)
 // Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-// GPL-3.0 - see LICENSE
+// GPL-3.0-or-later - see LICENSE
 // =============================================================================
 package com.hydraumc.control.network
 

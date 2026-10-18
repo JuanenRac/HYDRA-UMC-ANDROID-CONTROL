@@ -16,7 +16,7 @@
 
 
 <p align="center">
-  <img src="https://img.shields.io/badge/License-GPL%203.0-blue.svg" alt="GPL 3.0">
+  <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Language-Kotlin-7F52FF.svg" alt="Kotlin">
   <img src="https://img.shields.io/badge/UI-Jetpack%20Compose-4285F4.svg" alt="Compose">
   <img src="https://img.shields.io/badge/Platform-Android-3DDC84.svg" alt="Android">
@@ -197,7 +197,7 @@ HYDRA-UMC-ANDROID-CONTROL/
 ├── metadata.json                 # アプリストア掲載メタデータ（名前/説明）
 ├── README.md                     # 本ファイル
 ├── README_spa.md / README_ita.md / README_fra.md / README_deu.md / README_zho.md / README_jpn.md / README_por.md   # 翻訳
-└── LICENSE                       # GPL-3.0
+└── LICENSE                       # GPL-3.0-or-later
 ```
 
 ## 🔗 関連プロジェクト
@@ -309,6 +309,6 @@ HYDRA-UMC-ANDROID-CONTROL/
 
 ## 📜 ライセンス
 
-ソースコードは **GNU General Public License v3.0（GPL-3.0）**——[`LICENSE`](LICENSE) を参照してください。
+ソースコードは **GNU General Public License v3.0（GPL-3.0-or-later）**——[`LICENSE`](LICENSE) を参照してください。
 
 本ドキュメント（本 README およびその自身の翻訳版——`README_spa.md`、`README_ita.md`、`README_fra.md`、`README_deu.md`、`README_zho.md`、`README_jpn.md`、`README_por.md`）は、**クリエイティブ・コモンズ 表示-継承 4.0 国際（CC BY-SA 4.0）** の下で提供されます。全文は https://creativecommons.org/licenses/by-sa/4.0/ を参照してください。

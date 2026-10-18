@@ -1,7 +1,7 @@
 <!-- =============================================================================
      HYDRA-UMC-ANDROID-CONTROL - GitHub Release update-channel operation guide
      Copyright (C) JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-     GPL-3.0 - see LICENSE
+     GPL-3.0-or-later - see LICENSE
      ============================================================================= -->
 
 # HYDRA-UMC-ANDROID-CONTROL GitHub Release updates

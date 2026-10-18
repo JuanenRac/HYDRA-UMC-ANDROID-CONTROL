@@ -1,7 +1,7 @@
 // =============================================================================
 // HYDRA-UMC-ANDROID-CONTROL - Wear OS voice relay service
 // Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-// GPL-3.0 - see LICENSE
+// GPL-3.0-or-later - see LICENSE
 // =============================================================================
 // Receives bounded recognised text/status requests from the paired Watch via
 // Google Play services Data Layer. The package/signature boundary protects

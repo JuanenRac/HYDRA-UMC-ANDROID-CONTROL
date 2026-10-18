@@ -5,7 +5,7 @@ rem HYDRA-UMC-ANDROID-CONTROL - prepare-github-release.bat
 rem Produces a privately signed, stable GitHub Release APK without changing
 rem the manifest version or CHANGELOG. The normal build script owns bumps.
 rem Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-rem GPL-3.0 - see LICENSE
+rem GPL-3.0-or-later - see LICENSE
 rem =============================================================================
 
 echo =============================================================================
@@ -14,7 +14,7 @@ echo  Mode      : READ-ONLY SIGNED RELEASE PACKAGE
 echo  Author    : JuanenRac ^(Electro Hobby 3D^)
 echo  Email     : electrohobby3d@gmail.com
 echo  Copyright : ^(C^) 2026 JuanenRac
-echo  License   : GPL-3.0 - see LICENSE
+echo  License   : GPL-3.0-or-later - see LICENSE
 echo =============================================================================
 echo.
 

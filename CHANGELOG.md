@@ -9,6 +9,11 @@ in [README.md](README.md#-versioning). Entries recorded before that policy
 existed are grouped under the pre-policy version `0.0.0` the repo carried
 at the time.
 
+## [0.6.7]
+
+- Build version synchronized with `hydra-umc.project.json` and the repository-native version source.
+- The licence is written as GPL-3.0-or-later in every header and in the package metadata.
+
 ## [0.6.6] - Global STOP
 
 - **One-tap global STOP:** a red **STOP** button (caption "Stop all", translated in the 8 languages) sits in the top bar of every screen, so it is reachable from the dashboard, the control screen, the camera, the 3D view and the settings. The pulsing round STOP of the control console and of the 3D view (portrait and fullscreen, now shown even with no robot selected) is the same control. No long press and no confirmation: a tap sends `POST /api/stop-all` at once, without waiting for the robot list or a refresh, and stops every robot, including those reserved by another account.
@@ -1113,7 +1118,7 @@ own bump code stays inert during a real build.
   alongside credentials.
 - **README translations** - `README_spa/ita/fra/deu.md` added as full
   translations (not summaries), plus a "Repository Structure" section and
-  a licensing note (code GPL-3.0, docs CC BY-SA 4.0), matching the pattern
+  a licensing note (code GPL-3.0-or-later, docs CC BY-SA 4.0), matching the pattern
   already used by `URTC-FLASHER`/`URTC-TESTER`.
 - **Line-by-line review (5 parallel sub-agents)** - Full read of all 34
   real `.kt` files, consolidated into targeted fixes: `clearAuth()` now

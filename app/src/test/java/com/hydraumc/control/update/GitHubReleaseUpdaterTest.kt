@@ -1,7 +1,7 @@
 // =============================================================================
 // HYDRA-UMC-ANDROID-CONTROL - app/src/test/java/com/hydraumc/control/update/GitHubReleaseUpdaterTest.kt
 // Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-// GPL-3.0 - see LICENSE
+// GPL-3.0-or-later - see LICENSE
 // =============================================================================
 // GitHubReleaseUpdater.download() had zero test coverage of its own -
 // ReleaseMetadataParserTest only covers the pure metadata gate that runs

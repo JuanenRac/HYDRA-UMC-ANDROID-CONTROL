@@ -17,7 +17,7 @@
 
 
 <p align="center">
-  <img src="https://img.shields.io/badge/License-GPL%203.0-blue.svg" alt="GPL 3.0">
+  <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Language-Kotlin-7F52FF.svg" alt="Kotlin">
   <img src="https://img.shields.io/badge/UI-Jetpack%20Compose-4285F4.svg" alt="Compose">
   <img src="https://img.shields.io/badge/Platform-Android-3DDC84.svg" alt="Android">
@@ -198,7 +198,7 @@ HYDRA-UMC-ANDROID-CONTROL/
 ├── metadata.json                 # App Store listing metadata (name/description)
 ├── README.md                     # This file
 ├── README_spa.md / README_ita.md / README_fra.md / README_deu.md / README_zho.md / README_jpn.md / README_por.md   # Translations
-└── LICENSE                       # GPL-3.0
+└── LICENSE                       # GPL-3.0-or-later
 ```
 
 ## 🔗 Related Projects
@@ -310,6 +310,6 @@ This project is part of the HYDRA-UMC robotics ecosystem by the same author (Jua
 
 ## 📜 LICENSE
 
-**GNU General Public License v3.0 (GPL-3.0)** for the source code - see [`LICENSE`](LICENSE).
+**GNU General Public License v3.0 or later (GPL-3.0-or-later)** for the source code - see [`LICENSE`](LICENSE).
 
 This documentation (this README and its own translations - `README_spa.md`, `README_ita.md`, `README_fra.md`, `README_deu.md`, `README_zho.md`, `README_jpn.md`, `README_por.md`) is available under **Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)**. Full text at https://creativecommons.org/licenses/by-sa/4.0/.

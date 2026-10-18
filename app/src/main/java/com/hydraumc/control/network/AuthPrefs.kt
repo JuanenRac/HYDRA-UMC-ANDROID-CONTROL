@@ -1,7 +1,7 @@
 // =============================================================================
 // HYDRA-UMC CONTROL - Persistent storage for authentication credentials
 // Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-// GPL-3.0 - see LICENSE
+// GPL-3.0-or-later - see LICENSE
 // =============================================================================
 // The username/password/bearer token this class caches (only ever used to
 // prefill the login form and to silently restore a session via the stored

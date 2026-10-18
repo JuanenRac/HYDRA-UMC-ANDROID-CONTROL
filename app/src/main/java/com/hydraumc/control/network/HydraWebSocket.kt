@@ -1,7 +1,7 @@
 // =============================================================================
 // HYDRA-UMC CONTROL - WebSocket client for real-time state synchronization
 // Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-// GPL-3.0 - see LICENSE
+// GPL-3.0-or-later - see LICENSE
 //
 // /ws live-sync connection (REMOTE_API.md section 3). On connect, the server
 // immediately sends one {"type":"settings","payload":{...}} message with the

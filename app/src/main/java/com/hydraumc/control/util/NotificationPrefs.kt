@@ -1,7 +1,7 @@
 // =============================================================================
 // HYDRA-UMC CONTROL - Persistent storage for the in-app notifications toggle
 // Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-// GPL-3.0 - see LICENSE
+// GPL-3.0-or-later - see LICENSE
 // =============================================================================
 // Separate from Android's own per-app system notification permission/toggle
 // (Settings > Apps > HYDRA-UMC Control > Notifications) - this is an
