@@ -1,5 +1,10 @@
 @echo off
 setlocal EnableExtensions EnableDelayedExpansion
+cd /d "%~dp0"
+rem Keep the window open for people, never in automation (CI / HYDRA_UMC_CI).
+set "KEEP_OPEN=pause"
+if defined CI set "KEEP_OPEN=ver >nul"
+if "%HYDRA_UMC_CI%"=="1" set "KEEP_OPEN=ver >nul"
 rem =============================================================================
 rem HYDRA-UMC-ANDROID-CONTROL - prepare-github-release.bat
 rem Produces a privately signed, stable GitHub Release APK without changing
@@ -84,5 +89,5 @@ echo GITHUB RELEASE PREPARATION COMPLETED.
 set "EXIT_CODE=0"
 
 :end
-pause
+%KEEP_OPEN%
 exit /b %EXIT_CODE%

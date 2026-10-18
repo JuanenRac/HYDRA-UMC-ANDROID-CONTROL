@@ -27,10 +27,14 @@ echo ***************************************************************************
 echo.
 REM HYDRA_UMC_SCRIPT_STANDARD_BANNER_END
 setlocal
+rem Keep the window open for people, never in automation (CI / HYDRA_UMC_CI).
+set "KEEP_OPEN=pause"
+if defined CI set "KEEP_OPEN=ver >nul"
+if "%HYDRA_UMC_CI%"=="1" set "KEEP_OPEN=ver >nul"
 REM HYDRA_UMC_SCRIPT_STANDARD_VERSION_CAPTURE_BEFORE
 for /f "usebackq delims=" %%V in (`python -c "import json; print(json.load(open(r'%~dp0hydra-umc.project.json', encoding='utf-8'))['version'])"`) do set "HYDRA_UMC_VERSION_BEFORE=%%V"
 python "%~dp0bump_manifest_version.py"
-if errorlevel 1 ( echo VERSION BUMP FAILED. & pause & exit /b 1 )
+if errorlevel 1 ( echo VERSION BUMP FAILED. & %KEEP_OPEN% & exit /b 1 )
 REM HYDRA_UMC_SCRIPT_STANDARD_VERSION_CAPTURE_AFTER
 for /f "usebackq delims=" %%V in (`python -c "import json; print(json.load(open(r'%~dp0hydra-umc.project.json', encoding='utf-8'))['version'])"`) do set "HYDRA_UMC_VERSION_AFTER=%%V"
 if not defined HYDRA_UMC_VERSION_BEFORE set "HYDRA_UMC_VERSION_BEFORE=unknown"
@@ -44,14 +48,14 @@ echo ***************************************************************************
 echo.
 echo.
 python "%~dp0bump_version_code.py"
-if errorlevel 1 ( echo VERSION BUMP FAILED. & pause & exit /b 1 )
+if errorlevel 1 ( echo VERSION BUMP FAILED. & %KEEP_OPEN% & exit /b 1 )
 cd /d "%~dp0"
 
 :: Check for gradlew.bat
 if not exist "gradlew.bat" (
     echo [X] Error: gradlew.bat not found in %CD%.
     echo Please ensure the Gradle wrapper files are present in the repository.
-    pause
+    %KEEP_OPEN%
     exit /b 1
 )
 
@@ -84,7 +88,7 @@ call ".\gradlew.bat" assembleDebug -PhydraUmcReadOnly=true
 if %ERRORLEVEL% neq 0 (
     echo.
     echo [X] Error: APK build failed. Please check the logs above.
-    pause
+    %KEEP_OPEN%
     exit /b %ERRORLEVEL%
 )
 echo [OK] APK generated successfully.
@@ -97,7 +101,7 @@ if %ERRORLEVEL% neq 0 (
     echo The APK was generated at: app\build\outputs\apk\debug\app-debug.apk
     echo.
     echo Install Android Platform Tools or transfer the APK manually.
-    pause
+    %KEEP_OPEN%
     exit /b 1
 )
 
@@ -121,4 +125,4 @@ if %ERRORLEVEL% equ 0 (
 )
 
 echo.
-pause
+%KEEP_OPEN%
