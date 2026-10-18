@@ -31,7 +31,7 @@
 
 | | |
 |---|---|
-| 版本 | `0.6.8` |
+| 版本 | `0.6.9` |
 | 成熟度 | 成熟 |
 | 测试 | 98 (`./gradlew testDebugUnitTest`) |
 | 技术栈 | Kotlin / Jetpack / biometric auth / WebSocket client |

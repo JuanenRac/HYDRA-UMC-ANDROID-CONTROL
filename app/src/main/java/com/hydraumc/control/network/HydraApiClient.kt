@@ -38,6 +38,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import com.hydraumc.control.wear.WatchAssistantReply
 import com.hydraumc.control.wear.WatchSystemStatus
 import com.hydraumc.control.wear.WatchVoiceTurn
+import com.hydraumc.control.util.optStr
 import org.json.JSONObject
 import java.io.IOException
 import java.util.concurrent.TimeUnit
@@ -72,6 +73,9 @@ class HydraApiException(
 
     /** The server is rate limiting this client (429). */
     val isRateLimited: Boolean get() = httpCode == 429
+
+    /** The server does not have the route (an older server answers 404). */
+    val isNotFound: Boolean get() = httpCode == 404
 
     /** The server refused the command itself (an unknown command, a value it cannot take). */
     val isRejectedCommand: Boolean get() = httpCode == 400
@@ -349,7 +353,12 @@ class HydraApiClient(host: String, port: Int, private val client: OkHttpClient =
             throw HydraApiException("Could not reach $baseUrl: ${e.message}", e)
         }
         response.use {
-            val bodyString = it.body?.string()
+            // a connection that dies while the body is read is a network failure like any other
+            val bodyString = try {
+                it.body?.string()
+            } catch (e: IOException) {
+                throw HydraApiException("Could not read the answer from $baseUrl: ${e.message}", e)
+            }
             if (!it.isSuccessful) {
                 // The server's error body carries a reason (`error`) and, for the
                 // auth middleware, a stable `code` - keep both so the caller can
@@ -363,8 +372,8 @@ class HydraApiClient(host: String, port: Int, private val client: OkHttpClient =
                 throw HydraApiException(
                     "HTTP ${it.code} from $baseUrl${request.url.encodedPath}",
                     httpCode = it.code,
-                    serverCode = errorBody?.optString("code", "")?.ifEmpty { null },
-                    serverMessage = errorBody?.optString("error", "")?.ifEmpty { null },
+                    serverCode = errorBody?.optStr("code")?.ifEmpty { null },
+                    serverMessage = errorBody?.optStr("error")?.ifEmpty { null },
                 )
             }
             if (bodyString == null) {

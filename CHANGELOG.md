@@ -9,6 +9,13 @@ in [README.md](README.md#-versioning). Entries recorded before that policy
 existed are grouped under the pre-policy version `0.0.0` the repo carried
 at the time.
 
+## [0.6.9] - STOP on a server without the route, and network failures while reading an answer
+
+- **Global STOP:** a server that does not have `POST /api/stop-all` (HTTP 404) now gets the stop of every known robot one by one, like a rate limited one (429) already did and like the tablet and iPhone apps do, instead of leaving the STOP "not confirmed".
+- **Answers cut short:** a connection that timed out or broke while the body of an answer was being read escaped as a raw socket exception instead of the app's own API error, so any caller that only expects the API error was missed. It is now reported as a network failure.
+- **Error codes:** an error body with `"code": null` produced the code "null"; a JSON null is now no code.
+- Tests: the 404 fallback, the exact meaning of every status flag, the global STOP answer read field by field with fields of the wrong type, the client against answers that are not JSON objects, what is sent (token only in the header, app identity) and the renewal budget at its limits and under concurrency.
+
 ## [0.6.8]
 
 - Fixed an endless sign-out / sign-in loop: when the server closed the connection with 1008 saying that a token in the address is not accepted, the app took it for an expired session, signed in again, reconnected the same way and repeated until the server's login limit stopped it. That close now only makes the app reconnect the safer way (no renewal, no new sign-in).

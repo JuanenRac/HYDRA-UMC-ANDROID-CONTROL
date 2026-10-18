@@ -1460,7 +1460,8 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                 return StopAllStatus.Done(client.postStopAll())
             } catch (e: HydraApiException) {
                 when {
-                    e.isRateLimited -> return stopRobotsOneByOne(client)
+                    // 429: over the server's rate limit. 404: a server that does not have the route yet.
+                    e.isRateLimited || e.isNotFound -> return stopRobotsOneByOne(client)
                     e.isSessionProblem && !sessionRenewed -> {
                         sessionRenewed = true
                         if (!attemptSilentRelogin()) {

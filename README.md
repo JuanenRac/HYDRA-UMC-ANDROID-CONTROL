@@ -32,7 +32,7 @@ A native Android app (Kotlin + Jetpack Compose) that controls a robot on the [HY
 
 | | |
 |---|---|
-| Version | `0.6.8` |
+| Version | `0.6.9` |
 | Maturity | Established |
 | Tests | 98 (`./gradlew testDebugUnitTest`) |
 | Stack | Kotlin / Jetpack / biometric auth / WebSocket client |

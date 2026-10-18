@@ -190,6 +190,25 @@ class RobotViewModelGlobalStopTest {
     }
 
     @Test
+    fun `a server without the route falls back to the stop of every known robot too`() {
+        server.enqueue(MockResponse().setResponseCode(404).setBody("""{"error":"Cannot POST /api/stop-all"}"""))
+        server.enqueue(MockResponse().setResponseCode(200).setBody("{}"))
+        server.enqueue(MockResponse().setResponseCode(200).setBody("{}"))
+        val viewModel = newViewModel()
+
+        viewModel.globalStop()
+        waitUntil { finished(viewModel) }
+
+        assertEquals("/api/stop-all", server.takeRequest().path)
+        val paths = listOf(server.takeRequest(), server.takeRequest())
+        assertEquals(setOf("/api/robot/1/command", "/api/robot/2/command"), paths.map { it.path }.toSet())
+        val result = (viewModel.stopAllStatus.value as StopAllStatus.Done).result
+        assertTrue(result.viaFallback)
+        assertEquals(2, result.stoppedCount)
+        assertFalse(viewModel.state.robotById(1)!!.isPlaying)
+    }
+
+    @Test
     fun `the fallback reports the robot that would not stop`() {
         server.enqueue(MockResponse().setResponseCode(429).setBody("{}"))
         server.enqueue(MockResponse().setResponseCode(200).setBody("{}"))
