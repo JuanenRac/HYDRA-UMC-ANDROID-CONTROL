@@ -130,6 +130,12 @@ class HydraWebSocket(
      */
     @Volatile
     private var useQueryToken = false
+    /**
+     * True once a "no token provided" close was answered by switching to the token in the address, until the server delivers its first state. It keeps a server that
+     * rejects both ways from bouncing between them forever: the second refusal is a real rejection.
+     */
+    @Volatile
+    private var queryFallbackTried = false
     /** Flag to prevent auto-reconnect when the user manually disconnects. */
     @Volatile
     private var closingByUser = false
@@ -227,6 +233,16 @@ class HydraWebSocket(
                     scheduleReconnect()
                     return
                 }
+                if (code == WS_CLOSE_POLICY_VIOLATION && token != null && !useQueryToken && !queryFallbackTried &&
+                    reason.contains("No token provided", ignoreCase = true)
+                ) {
+                    // A server that predates the subprotocol does not fail the upgrade: it accepts it, finds no ?token= and closes with 1008 "No token provided".
+                    // That is not a rejected session (a renewal gets the same answer, which is the sign-in loop): use the token in the address, right away.
+                    useQueryToken = true
+                    queryFallbackTried = true
+                    openSocket()
+                    return
+                }
                 if (code == WS_CLOSE_POLICY_VIOLATION) {
                     // server.ts closes the /ws upgrade with 1008 specifically when the
                     // token query param is missing/invalid/expired (see this class's own
@@ -305,6 +321,7 @@ class HydraWebSocket(
         if (payloadJson == lastPayloadJson) return
 
         lastPayloadJson = payloadJson
+        queryFallbackTried = false
         // Dispatched to Main, not called directly from this (background)
         // thread - see mainScope's own comment above.
         mainScope.launch { onSettings(payload) }

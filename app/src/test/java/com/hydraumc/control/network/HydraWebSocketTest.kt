@@ -381,4 +381,70 @@ class HydraWebSocketTest {
         socket.connect()
         withTimeout(5_000) { unauthorized.receive() }
     }
+
+    @Test
+    fun `a server that accepts the upgrade but finds no token in the address is retried with the token in the address`() = runBlocking {
+        val events = RecordedEvents()
+        val unauthorized = Channel<Unit>(capacity = Channel.UNLIMITED)
+        val settings = Channel<JSONObject>(capacity = Channel.UNLIMITED)
+        // A server from before the subprotocol: it accepts the upgrade, reads only ?token= and closes with 1008 when there is none.
+        server.enqueue(MockResponse().withWebSocketUpgrade(object : WebSocketListener() {
+            override fun onOpen(webSocket: WebSocket, response: okhttp3.Response) {
+                webSocket.send("{\"error\":\"Access denied: No token provided\"}")
+                webSocket.close(1008, "Access denied: No token provided")
+            }
+        }))
+        server.enqueue(MockResponse().withWebSocketUpgrade(object : WebSocketListener() {
+            override fun onOpen(webSocket: WebSocket, response: okhttp3.Response) {
+                webSocket.send("{\"type\":\"settings\",\"payload\":{\"robots\":[]}}")
+            }
+            override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
+                webSocket.close(1000, null)
+            }
+        }))
+        val socket = HydraWebSocket(
+            host = server.hostName,
+            port = server.port,
+            token = "tok.en-3",
+            client = client,
+            onStatus = { events.statuses.trySend(it) },
+            onSettings = { settings.trySend(it) },
+            onUnauthorized = { unauthorized.trySend(Unit) },
+            onError = { events.errors.trySend(it) },
+        )
+        socket.connect()
+        withTimeout(5_000) { settings.receive() }
+        val first = server.takeRequest(5, java.util.concurrent.TimeUnit.SECONDS)!!
+        val second = server.takeRequest(5, java.util.concurrent.TimeUnit.SECONDS)!!
+        assertEquals("hydra.bearer, tok.en-3", first.getHeader("Sec-WebSocket-Protocol"))
+        assertTrue("the retry carries ?token=: ${second.path}", second.path!!.contains("token=tok.en-3"))
+        assertTrue("the session must not be reported as rejected", unauthorized.isEmpty)
+        socket.disconnect()
+    }
+
+    @Test
+    fun `a server that rejects the token both ways reports an unauthorized session once`() = runBlocking {
+        val unauthorized = Channel<Unit>(capacity = Channel.UNLIMITED)
+        repeat(2) {
+            server.enqueue(MockResponse().withWebSocketUpgrade(object : WebSocketListener() {
+                override fun onOpen(webSocket: WebSocket, response: okhttp3.Response) {
+                    webSocket.close(1008, "Access denied: No token provided")
+                }
+            }))
+        }
+        val socket = HydraWebSocket(
+            host = server.hostName,
+            port = server.port,
+            token = "tok.en-4",
+            client = client,
+            onStatus = {},
+            onSettings = {},
+            onUnauthorized = { unauthorized.trySend(Unit) },
+            onError = {},
+        )
+        socket.connect()
+        withTimeout(5_000) { unauthorized.receive() }
+        assertEquals(2, server.requestCount)
+        socket.disconnect()
+    }
 }
