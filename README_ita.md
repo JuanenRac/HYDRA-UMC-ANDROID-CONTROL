@@ -27,6 +27,17 @@ Un'app Android nativa (Kotlin + Jetpack Compose) che controlla un robot sulla pi
 
 > **Verifica di onestà - cosa funziona davvero oggi:** la logica di business principale - la cinematica Parol6 (`kinematics/Parol6Kinematics.kt`), il contratto di stato dell'albero di settings (`model/HydraState.kt`), l'invio di comandi atomici e il relay vocale (`viewmodel/RobotViewModel.kt`), la riconnessione WebSocket (`network/HydraWebSocket.kt`), il parsing dei frame MJPEG (`ui/MjpegPlayer.kt`), il canale di aggiornamento interno (`update/GitHubReleaseUpdater.kt`, `ReleaseMetadataParser.kt`, `SemanticVersion.kt`), e la gestione delle richieste del relay vocale Wear (`wear/BoundedRequestScope.kt`, `WatchCompanionProtocol.kt`) sono reali e coperti da 90 test unitari JVM/Robolectric che passano (`./gradlew testDebugUnitTest`). Ciò che questi test strutturalmente non possono raggiungere - e ciò che questo ambiente di sviluppo solo-Windows non ha un dispositivo Android fisico per verificare - è il vero `EncryptedSharedPreferences` basato su Keystore di `network/AuthPrefs.kt`, il prompt impronta/volto di `androidx.biometric`, il trasporto Bluetooth GATT di `network/HydraBleClient.kt`, e il percorso `ImageDecoder` hardware in API 28+ dentro `MjpegStreamParser`: codice reale e compilato che non è stato riverificato su hardware da quando è stato scritto. L'avvio/login di base *è stato* confermato dal vivo su un dispositivo reale per release precedenti (vedi le voci `v0.3.2`/`v0.3.3` di `CHANGELOG.md`), ma questo precede Bluetooth, biometria e il percorso di decodifica hardware. Vedi `CHANGELOG.md` per cosa è stato esattamente consegnato, incluse le sue stesse note per voce su cosa resta non verificato su hardware.
 
+## 📋 In breve
+
+| | |
+|---|---|
+| Versione | `0.6.8` |
+| Maturità | Consolidato |
+| Test | 98 (`./gradlew testDebugUnitTest`) |
+| Tecnologia | Kotlin / Jetpack / biometric auth / WebSocket client |
+| Destinazione | Uno smartphone o tablet Android |
+| Su hardware reale | Non ancora: per questa versione non risulta alcuna esecuzione su hardware reale |
+
 ## 🏗️ Cosa è implementato
 
 - **Controllo Accessi e Biometria** (`ui/LoginScreen.kt`, `util/BiometricHelper.kt`) - Sistema di login professionale con supporto per **Impronta digitale e Sblocco con il Volto** (`androidx.biometric`), più campi IP/porta direttamente nella stessa schermata così un server può essere selezionato senza passare prima dalle Impostazioni. Include la funzione "Ricordami", un meccanismo di **Logout** sicuro, ed è completamente localizzato in **8 lingue**. Nome utente/password/token in cache (`network/AuthPrefs.kt`) risiedono in **EncryptedSharedPreferences** basate su Keystore (AES256-GCM), non in chiaro - un server di sviluppo (`NODE_ENV` non impostato) crea un account predefinito `admin`/`admin` al primo avvio; un server di produzione (`NODE_ENV=production`) richiede invece `HYDRA_UMC_BOOTSTRAP_ADMIN_USERNAME`/`HYDRA_UMC_BOOTSTRAP_ADMIN_PASSWORD` e non ricade mai silenziosamente su `admin`/`admin` - vedere il README di HYDRA-UMC-SERVER per la configurazione completa di produzione. Account aggiuntivi a privilegio inferiore di tipo **operator** restano creabili lato server da Config > Users in entrambi i casi.

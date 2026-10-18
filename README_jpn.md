@@ -27,6 +27,17 @@ Wi-Fi または Bluetooth 経由で [HYDRA-UMC](https://github.com/JuanenRac/HYD
 
 > **誠実性チェック - 今日実際に動くもの:** 中核のビジネスロジック - Parol6 運動学（`kinematics/Parol6Kinematics.kt`）、settings ツリーの状態契約（`model/HydraState.kt`）、アトミックコマンド送出と音声リレー（`viewmodel/RobotViewModel.kt`）、WebSocket 再接続処理（`network/HydraWebSocket.kt`）、MJPEG フレーム解析（`ui/MjpegPlayer.kt`）、アプリ内アップデートチャネル（`update/GitHubReleaseUpdater.kt`、`ReleaseMetadataParser.kt`、`SemanticVersion.kt`）、および Wear 音声リレーのリクエスト管理（`wear/BoundedRequestScope.kt`、`WatchCompanionProtocol.kt`）は本物であり、90件の JVM/Robolectric ユニットテストがすべて通過している（`./gradlew testDebugUnitTest`）。これらのテストが構造的に到達できない部分 - そしてこの Windows 専用の開発環境が実機の Android デバイスを持たず検証できない部分 - は `network/AuthPrefs.kt` の実際の Keystore 裏付け `EncryptedSharedPreferences`、`androidx.biometric` の指紋・顔認証プロンプト、`network/HydraBleClient.kt` の Bluetooth GATT トランスポート、そして `MjpegStreamParser` 内の API 28+ ハードウェア `ImageDecoder` パスであり、これらは実装され実際にコンパイルされているコードだが、書かれて以来実機で再検証されていない。基本的な起動・ログインについては、過去のリリースで実機上でのライブ確認が*行われている*(`CHANGELOG.md` の `v0.3.2`/`v0.3.3` の項目を参照)が、それは Bluetooth・生体認証・ハードウェアデコードパスより前の話である。実際に出荷された内容の詳細、および何がまだハードウェア未検証かの各エントリごとの注記については `CHANGELOG.md` を参照。
 
+## 📋 ひと目で
+
+| | |
+|---|---|
+| バージョン | `0.6.8` |
+| 成熟度 | 確立 |
+| テスト | 98 (`./gradlew testDebugUnitTest`) |
+| 技術 | Kotlin / Jetpack / biometric auth / WebSocket client |
+| 対象 | Android のスマートフォンまたはタブレット |
+| 実機での確認 | まだです：このバージョンについて実機での動作記録はありません |
+
 ## 🏗️ 実装済みの内容
 
 - **アクセス制御と生体認証**（`ui/LoginScreen.kt`、`util/BiometricHelper.kt`）—— **指紋認証と顔認証**（`androidx.biometric`）に対応したプロフェッショナルなログインシステムで、同じ画面上に IP/ポートフィールドを直接配置しているため、先に設定画面を経由しなくてもサーバーを指定できます。「ログイン情報を記憶する」機能、安全な**ログアウト**機構を備え、**8 言語**で完全にローカライズされています。キャッシュされたユーザー名/パスワード/トークン（`network/AuthPrefs.kt`）は、平文ではなく、Keystore に裏打ちされた**暗号化 SharedPreferences**（AES256-GCM）に保存されます——開発用サーバー（`NODE_ENV` 未設定）は初回起動時にデフォルトの `admin`/`admin` アカウントを用意しますが、本番用サーバー（`NODE_ENV=production`）は代わりに `HYDRA_UMC_BOOTSTRAP_ADMIN_USERNAME`/`HYDRA_UMC_BOOTSTRAP_ADMIN_PASSWORD` を必須とし、`admin`/`admin` に黙って戻ることはありません — 本番構成の詳細は HYDRA-UMC-SERVER 自身の README を参照してください。追加の低権限**オペレーター**アカウントはいずれの場合もサーバー側の Config > Users から作成できます。

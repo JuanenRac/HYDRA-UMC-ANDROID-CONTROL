@@ -27,6 +27,17 @@
 
 > **诚实检查——今天真正可运行的部分：** 核心业务逻辑——Parol6 运动学（`kinematics/Parol6Kinematics.kt`）、settings 树状态契约（`model/HydraState.kt`）、原子命令下发与语音中继（`viewmodel/RobotViewModel.kt`）、WebSocket 重连处理（`network/HydraWebSocket.kt`）、MJPEG 帧解析（`ui/MjpegPlayer.kt`）、应用内更新通道（`update/GitHubReleaseUpdater.kt`、`ReleaseMetadataParser.kt`、`SemanticVersion.kt`），以及 Wear 语音中继请求管理（`wear/BoundedRequestScope.kt`、`WatchCompanionProtocol.kt`）都是真实的，并由 90 个通过的 JVM/Robolectric 单元测试覆盖（`./gradlew testDebugUnitTest`）。这些测试在结构上无法触及——而这个仅有 Windows 的开发环境也没有实体 Android 设备可以验证——的是 `network/AuthPrefs.kt` 中真正基于 Keystore 的 `EncryptedSharedPreferences`、`androidx.biometric` 的指纹/面部提示、`network/HydraBleClient.kt` 的蓝牙 GATT 传输，以及 `MjpegStreamParser` 中 API 28+ 的硬件 `ImageDecoder` 路径：这些都是真实、已编译的代码，但自编写以来尚未在真实硬件上重新验证过。早期版本的基本启动/登录*确实*在真实设备上得到过现场确认（见 `CHANGELOG.md` 的 `v0.3.2`/`v0.3.3` 条目），但那早于蓝牙、生物识别和硬件解码路径。具体已交付的内容见 `CHANGELOG.md`，其中每条记录也附有关于哪些部分仍未经硬件验证的说明。
 
+## 📋 速览
+
+| | |
+|---|---|
+| 版本 | `0.6.8` |
+| 成熟度 | 成熟 |
+| 测试 | 98 (`./gradlew testDebugUnitTest`) |
+| 技术栈 | Kotlin / Jetpack / biometric auth / WebSocket client |
+| 目标 | Android 手机或平板 |
+| 真实硬件 | 尚未：此版本没有在真实硬件上运行的记录 |
+
 ## 🏗️ 已实现的功能
 
 - **访问控制与生物识别**（`ui/LoginScreen.kt`、`util/BiometricHelper.kt`）—— 专业级登录系统，支持**指纹和面部解锁**（`androidx.biometric`），并在同一界面上直接提供 IP/端口字段,无需先单独跳转到设置页面才能指定服务器。包含“记住我”功能、安全的**退出登录**机制,并完全支持**8 种语言**本地化。缓存的用户名/密码/令牌（`network/AuthPrefs.kt`）存放在由 Keystore 支持的**加密 SharedPreferences**（AES256-GCM）中,而非明文——开发服务器(未设置 `NODE_ENV`)会在首次启动时预置默认的 `admin`/`admin` 账户;生产服务器(`NODE_ENV=production`)则要求改用 `HYDRA_UMC_BOOTSTRAP_ADMIN_USERNAME`/`HYDRA_UMC_BOOTSTRAP_ADMIN_PASSWORD`,绝不会静默回退到 `admin`/`admin` —— 完整的生产环境配置请参见 HYDRA-UMC-SERVER 自身的 README。无论哪种情况,额外的低权限**操作员**账户都可以在服务端从 Config > Users 创建。
