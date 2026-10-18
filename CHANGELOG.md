@@ -9,6 +9,16 @@ in [README.md](README.md#-versioning). Entries recorded before that policy
 existed are grouped under the pre-policy version `0.0.0` the repo carried
 at the time.
 
+## [0.6.8]
+
+- Fixed an endless sign-out / sign-in loop: when the server closed the connection with 1008 saying that a token in the address is not accepted, the app took it for an expired session, signed in again, reconnected the same way and repeated until the server's login limit stopped it. That close now only makes the app reconnect the safer way (no renewal, no new sign-in).
+- The fallback to the token in the address is only tried when the server really answered and refused the upgrade, not after a network error.
+- The session is renewed by itself at most three times in ten minutes and never twice within twenty seconds; past that the app goes back to the sign-in with a clear message instead of looping.
+- A saved password that the server refused once is not tried again until the password is typed by hand.
+- Tests for the three cases and for the renewal budget.
+
+- Build version synchronized with `hydra-umc.project.json` and the repository-native version source.
+
 ## [0.6.7]
 
 - Build version synchronized with `hydra-umc.project.json` and the repository-native version source.

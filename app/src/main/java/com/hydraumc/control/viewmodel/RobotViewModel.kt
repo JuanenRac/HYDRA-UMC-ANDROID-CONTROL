@@ -276,6 +276,12 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
     // command that is in flight, and each used to start its own login.
     private var reloginJob: kotlinx.coroutines.Job? = null
 
+    // Renewals the app may do by itself are rationed (see RenewalBudget): past that it goes back to the sign-in instead of looping.
+    private val renewalBudget = com.hydraumc.control.util.RenewalBudget()
+
+    // The password saved with "remember me" was refused by the server once: it is not tried again until the person signs in by hand.
+    private var savedCredentialsRefused = false
+
     // Jog commands currently on the wire, per robot. A press-and-hold repeats
     // every 150 ms; on a slow link the POSTs used to pile up and arrive after
     // the button was released (or after a stop). While one is in flight the
@@ -489,6 +495,8 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                     client.refreshToken = response.optStr("refreshToken").ifEmpty { null }
                     authTokenState.value = token
                     isLoggedIn.value = true
+                    renewalBudget.reset()
+                    savedCredentialsRefused = false
                     loginUsername.value = user
                     loginPassword.value = pass
                     loginRememberMe.value = remember
@@ -689,9 +697,15 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                 }
             }
             if (response == null) {
-                if (!profile.rememberMe || profile.username.isBlank() || profile.password.isBlank()) return false
-                val login = client.login(profile.username, profile.password)
-                if (!login.optBoolean("success")) return false
+                if (savedCredentialsRefused || !profile.rememberMe || profile.username.isBlank() || profile.password.isBlank()) return false
+                val login = try {
+                    client.login(profile.username, profile.password)
+                } catch (e: Exception) {
+                    // A 401/403/429 answer: do not insist with the same password.
+                    if ((e as? HydraApiException)?.httpCode != null) savedCredentialsRefused = true
+                    throw e
+                }
+                if (!login.optBoolean("success")) { savedCredentialsRefused = true; return false }
                 response = login
             }
             val token = response.optStr("token")
@@ -714,6 +728,14 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
      */
     private fun renewSessionOrLogout() {
         if (reloginJob?.isActive == true) return
+        if (!renewalBudget.tryAcquire()) {
+            logTelemetry("The session was rejected again right after being renewed: back to the sign-in")
+            isLoggedIn.value = false
+            connectionStatus.value = getApplication<Application>().getString(R.string.status_disconnected)
+            lastError.value = "The server keeps rejecting the session right after renewing it. Sign in again; if it repeats, check the server."
+            ws?.disconnect()
+            return
+        }
         reloginJob = viewModelScope.launch {
             if (!attemptSilentRelogin()) {
                 isLoggedIn.value = false

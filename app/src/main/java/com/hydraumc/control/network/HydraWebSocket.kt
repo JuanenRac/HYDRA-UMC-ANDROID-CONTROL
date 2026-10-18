@@ -219,6 +219,14 @@ class HydraWebSocket(
                 if (ws !== webSocket) return
                 isSocketOpen = false
                 mainScope.launch { onStatus(WsStatus.DISCONNECTED) }
+                if (code == WS_CLOSE_POLICY_VIOLATION && reason.contains("token in the address", ignoreCase = true)) {
+                    // The server closed the ?token= fallback because it no longer reads a token from the address. That is not a rejected session: a new login would
+                    // be refused the same way, so go back to the subprotocol and try again after the usual delay (no renewal, no login).
+                    useQueryToken = false
+                    mainScope.launch { onError("The server does not accept the token in the address; trying again the safer way") }
+                    scheduleReconnect()
+                    return
+                }
                 if (code == WS_CLOSE_POLICY_VIOLATION) {
                     // server.ts closes the /ws upgrade with 1008 specifically when the
                     // token query param is missing/invalid/expired (see this class's own
@@ -240,9 +248,9 @@ class HydraWebSocket(
             override fun onFailure(ws: WebSocket, t: Throwable, response: Response?) {
                 if (ws !== webSocket) return
                 isSocketOpen = false
-                if (!opened && token != null && !useQueryToken && !closingByUser) {
-                    // Refused before it ever opened: an older server that only
-                    // reads ?token=. Try that once, right away.
+                if (!opened && token != null && !useQueryToken && !closingByUser && response != null) {
+                    // The server answered the upgrade but refused it before it ever opened: an older server that only
+                    // reads ?token=. Try that once, right away. (No answer at all is a network problem, not a protocol one.)
                     useQueryToken = true
                     openSocket()
                     return

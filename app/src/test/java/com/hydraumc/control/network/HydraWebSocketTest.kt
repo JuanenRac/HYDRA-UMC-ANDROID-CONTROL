@@ -118,6 +118,70 @@ class HydraWebSocketTest {
     }
 
     @Test
+    fun `a 1008 that says the token in the address is refused is not a rejected session and tries the safer way again`() = runBlocking {
+        val events = RecordedEvents()
+        val unauthorized = Channel<Unit>(capacity = Channel.UNLIMITED)
+        // First connection: a server that no longer reads ?token= closes it with 1008 and says why.
+        server.enqueue(
+            MockResponse().withWebSocketUpgrade(object : WebSocketListener() {
+                override fun onOpen(webSocket: WebSocket, response: okhttp3.Response) {
+                    webSocket.close(1008, "Access denied: token in the address")
+                }
+            })
+        )
+        // Second connection: it accepts and stays open.
+        server.enqueue(MockResponse().withWebSocketUpgrade(object : WebSocketListener() {}))
+
+        val socket = HydraWebSocket(
+            host = server.hostName,
+            port = server.port,
+            token = "a-valid-token",
+            client = client,
+            onStatus = { events.statuses.trySend(it) },
+            onSettings = {},
+            onError = { events.errors.trySend(it) },
+            onUnauthorized = { unauthorized.trySend(Unit) },
+        )
+        socket.connect()
+
+        withTimeout(7_000) {
+            assertEquals(WsStatus.CONNECTING, events.statuses.receive())
+            assertEquals(WsStatus.CONNECTED, events.statuses.receive())
+            assertEquals(WsStatus.DISCONNECTED, events.statuses.receive())
+            assertEquals(WsStatus.CONNECTING, events.statuses.receive()) // it tried again by itself
+            assertEquals(WsStatus.CONNECTED, events.statuses.receive())
+        }
+        assertTrue("a refused fallback must never ask for a session renewal", unauthorized.tryReceive().isFailure)
+        assertEquals(2, server.requestCount)
+    }
+
+    @Test
+    fun `a refused upgrade falls back to the token in the address, a network failure does not`() = runBlocking {
+        val events = RecordedEvents()
+        // The server answers the upgrade with an HTTP error (an older server): the fallback goes straight to ?token=.
+        server.enqueue(MockResponse().setResponseCode(400).setHeader("Connection", "close"))
+        server.enqueue(MockResponse().withWebSocketUpgrade(object : WebSocketListener() {}))
+
+        val socket = HydraWebSocket(
+            host = server.hostName,
+            port = server.port,
+            token = "a-valid-token",
+            client = client,
+            onStatus = { events.statuses.trySend(it) },
+            onSettings = {},
+            onError = { events.errors.trySend(it) },
+        )
+        socket.connect()
+
+        withTimeout(5_000) {
+            while (events.statuses.receive() != WsStatus.CONNECTED) { /* wait for the second attempt */ }
+        }
+        server.takeRequest()
+        val second = server.takeRequest()
+        assertTrue("the second attempt must carry the token in the address", (second.path ?: "").contains("token=a-valid-token"))
+    }
+
+    @Test
     fun `onClosed with an ordinary code schedules a real reconnect`() = runBlocking {
         val events = RecordedEvents()
         // First connection: server closes with an ordinary code (not 1008) -
