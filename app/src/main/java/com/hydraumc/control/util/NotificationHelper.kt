@@ -97,6 +97,8 @@ object NotificationHelper {
         // Intent for E-STOP action
         val estopIntent = Intent(context, MainActivity::class.java).apply {
             action = "ACTION_GLOBAL_ESTOP"
+            // Reaches the running activity (launchMode singleTop) instead of stacking a second one.
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
         }
         val estopPendingIntent = PendingIntent.getActivity(
             context,

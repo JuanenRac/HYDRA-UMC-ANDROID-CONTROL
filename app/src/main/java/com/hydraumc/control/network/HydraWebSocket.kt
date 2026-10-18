@@ -31,6 +31,8 @@ import com.hydraumc.control.util.optStr
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
@@ -45,6 +47,12 @@ private const val RECONNECT_DELAY_MS = 3_000L
 
 /** RFC 6455 close code the server sends for a missing/invalid/expired auth token. */
 private const val WS_CLOSE_POLICY_VIOLATION = 1008
+
+/** `Sec-WebSocket-Protocol` value the server reads a token from: `hydra.bearer, <token>`. It keeps the token out of the address, which proxies and logs record. */
+private const val WS_TOKEN_SUBPROTOCOL = "hydra.bearer"
+
+/** The message [HydraWebSocket] reports when the server closes with 1008 (a missing, expired or invalid token). */
+const val WS_UNAUTHORIZED_MESSAGE = "Session not authorized: sign in again"
 
 /** 
  * Enumeration of possible WebSocket connection statuses. 
@@ -90,9 +98,17 @@ class HydraWebSocket(
      * setupWebSocket() binds to.
      */
     private val onDelta: ((JSONObject) -> Unit)? = null,
+    /**
+     * Called (after [onError]) when the server closes the socket with 1008:
+     * the token is expired or invalid, so the caller renews the session
+     * instead of matching on a message text. Placed BEFORE onError so that
+     * onError stays the parameter a trailing lambda binds to.
+     */
+    private val onUnauthorized: (() -> Unit)? = null,
     private val onError: (String) -> Unit,
 ) {
     /** The underlying OkHttp WebSocket instance. */
+    @Volatile
     private var webSocket: WebSocket? = null
     /**
      * True only between a real onOpen and the next onClosing/onClosed/
@@ -104,13 +120,23 @@ class HydraWebSocket(
      * `true` - "sent" - even though nothing had actually reached a live
      * socket. .
      */
+    @Volatile
     private var isSocketOpen = false
+    /**
+     * True after a server that predates the `hydra.bearer` subprotocol
+     * refused the upgrade: the token then goes in the address (`?token=`)
+     * as it always did. Reset when that fallback fails too, so the next
+     * round starts with the subprotocol again.
+     */
+    @Volatile
+    private var useQueryToken = false
     /** Flag to prevent auto-reconnect when the user manually disconnects. */
+    @Volatile
     private var closingByUser = false
     /** Active coroutine job handling reconnection delays. */
     private var reconnectJob: Job? = null
     /** Coroutine scope for management tasks. */
-    private val scope = CoroutineScope(Dispatchers.IO)
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     // OkHttp's WebSocketListener callbacks (onOpen/onMessage/onClosing/
     // onClosed/onFailure) run on OkHttp's own internal dispatcher threads,
     // never Dispatchers.Main - but onSettings/onStatus/onError all flow into
@@ -121,7 +147,7 @@ class HydraWebSocket(
     // (handleMessage's JSONObject(text) call) stays off this scope, running
     // on the caller's own (background) thread, since a full state payload
     // can be large enough that parsing it on Main would visibly jank the UI.
-    private val mainScope = CoroutineScope(Dispatchers.Main.immediate)
+    private val mainScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
     /** Rationale: The server broadcasts every write back to the sender too. */
     private var lastPayloadJson: String? = null
@@ -145,13 +171,19 @@ class HydraWebSocket(
         // DISEÑO_SYNC_DELTAS.txt section 3/8q3). A server that doesn't recognize it
         // just keeps sending the full tree under "delta" like before.
         val scheme = if (useTls) "wss" else "ws"
-        val url = if (token != null) {
-            "$scheme://$host:$port/ws?token=$token&remoteApiVersion=2"
+        val request = if (token == null) {
+            Request.Builder().url("$scheme://$host:$port/ws").build()
+        } else if (useQueryToken) {
+            Request.Builder().url("$scheme://$host:$port/ws?token=$token&remoteApiVersion=2").build()
         } else {
-            "$scheme://$host:$port/ws"
+            // The token travels as a subprotocol, never in the address.
+            Request.Builder()
+                .url("$scheme://$host:$port/ws?remoteApiVersion=2")
+                .header("Sec-WebSocket-Protocol", "$WS_TOKEN_SUBPROTOCOL, $token")
+                .build()
         }
-        val request = Request.Builder().url(url).build()
         isSocketOpen = false
+        var opened = false
         webSocket = client.newWebSocket(request, object : WebSocketListener() {
             // Every callback below takes its own `ws` parameter rather than
             // shadowing the outer `webSocket` field, and checks `ws ===
@@ -164,7 +196,11 @@ class HydraWebSocket(
             // nueva" (this project's own acceptance criterion).
             override fun onOpen(ws: WebSocket, response: Response) {
                 if (ws !== webSocket) return
+                opened = true
                 isSocketOpen = true
+                // A reconnect can miss deltas: the first full snapshot after it
+                // must never be mistaken for the echo of the last one.
+                lastPayloadJson = null
                 mainScope.launch { onStatus(WsStatus.CONNECTED) }
             }
 
@@ -192,7 +228,10 @@ class HydraWebSocket(
                     // needs to re-authenticate. Surface it instead and stop reconnecting;
                     // the ViewModel's own login() supplies a fresh token to try again.
                     closingByUser = true
-                    mainScope.launch { onError("Sesión no autorizada: inicia sesión de nuevo") }
+                    mainScope.launch {
+                        onError(WS_UNAUTHORIZED_MESSAGE)
+                        onUnauthorized?.invoke()
+                    }
                     return
                 }
                 scheduleReconnect()
@@ -201,9 +240,17 @@ class HydraWebSocket(
             override fun onFailure(ws: WebSocket, t: Throwable, response: Response?) {
                 if (ws !== webSocket) return
                 isSocketOpen = false
+                if (!opened && token != null && !useQueryToken && !closingByUser) {
+                    // Refused before it ever opened: an older server that only
+                    // reads ?token=. Try that once, right away.
+                    useQueryToken = true
+                    openSocket()
+                    return
+                }
+                if (!opened) useQueryToken = false
                 mainScope.launch {
                     onStatus(WsStatus.DISCONNECTED)
-                    onError("Conexión WebSocket perdida: ${t.message ?: t::class.simpleName}")
+                    onError("WebSocket connection lost: ${t.message ?: t::class.simpleName}")
                 }
                 scheduleReconnect()
             }
@@ -218,7 +265,7 @@ class HydraWebSocket(
         val json = try {
             JSONObject(text)
         } catch (e: Exception) {
-            mainScope.launch { onError("Mensaje WebSocket no es JSON válido: ${e.message}") }
+            mainScope.launch { onError("The WebSocket message is not valid JSON: ${e.message}") }
             return
         }
 
@@ -301,5 +348,7 @@ class HydraWebSocket(
         reconnectJob?.cancel()
         webSocket?.close(1000, "App closed")
         webSocket = null
+        scope.cancel()
+        mainScope.cancel()
     }
 }

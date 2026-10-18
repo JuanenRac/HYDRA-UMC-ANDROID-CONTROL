@@ -65,6 +65,15 @@
     <string name="error_not_connected">未连接到服务器——指令未发送。</string>
     <string name="error_command_failed">指令失败：%1$s（已撤销更改）</string>
     <string name="error_unknown_command">未知指令：%s</string>
+    <string name="estop_hold_to_confirm">长按以确认紧急停止</string>
+    <string name="estop_label">紧急停止</string>
+    <string name="stop_hold_to_confirm">长按以确认停止</string>
+    <string name="error_command_not_applied">服务器未应用 %1$s：%2$s（已撤销更改）</string>
+    <string name="error_stop_not_confirmed">服务器未确认停止：请再按一次，或使用物理急停</string>
+    <string name="error_session_expired">会话已过期：正在重新登录</string>
+    <string name="error_robot_reserved">该机器人已被其他账户预留：%1$s</string>
+    <string name="error_permission_denied">权限被拒绝：此账户无法执行该操作</string>
+    <string name="error_command_rejected">服务器拒绝了 %1$s：%2$s（已撤销更改）</string>
     <string name="error_no_tool_in_slot">插槽 %d 中不存在任何工具。</string>
     <string name="error_global_estop_no_robots">全局紧急停止未发送：尚无已知机器人。请打开应用并检查连接。</string>
     <string name="control_robots">机器人控制</string>

@@ -51,7 +51,7 @@ actually talk to a robot today regardless of how solid the Android-side client c
 ## 4. Other industrial features
 
 - **Biometric login**: `BiometricHelper.kt` + `androidx.biometric`, fingerprint/face unlock gating `LoginScreen.kt`.
-- **Home-screen Global E-STOP widget** (`widget/GlobalStopWidget.kt`, Glance `AppWidgetProvider`): a single tap
+- **Home-screen Global E-STOP widget** (`widget/GlobalStopWidget.kt`, a classic `AppWidgetProvider` with `RemoteViews`): a single tap
   fires an `ACTION_GLOBAL_ESTOP` intent that launches `MainActivity`. `MainActivity` doesn't stop anything itself -
   it sets a `pendingGlobalEstop` flag, and a `LaunchedEffect` keyed on `(pendingGlobalEstop, robots.value)` sends
   `stop` to every known robot once the roster is actually populated (handles the cold-start case where
@@ -122,7 +122,7 @@ app/src/main/java/com/hydraumc/control/
 │   ├── WatchVoiceRelayContract.kt  # Authenticated Watch voice relay wire contract
 │   └── WatchVoiceRelayService.kt   # Wear OS voice relay service - see docs/WATCH_VOICE_RELAY.md
 ├── widget/
-│   └── GlobalStopWidget.kt      # Home-screen Glance widget, launches ACTION_GLOBAL_ESTOP
+│   └── GlobalStopWidget.kt      # Home-screen widget (RemoteViews), launches ACTION_GLOBAL_ESTOP
 └── viewmodel/
     ├── AppUpdateViewModel.kt    # Lifecycle-aware application update state
     └── RobotViewModel.kt        # Central orchestration: connectJob-guarded connect/reconnect, metrics polling
@@ -130,7 +130,7 @@ app/src/main/java/com/hydraumc/control/
 
 ## 6. Build tooling
 
-The project targets **Android 15 (API 36 compile / API 35 target)** - `targetSdk` intentionally trails `compileSdk`
+The project targets **Android 16 (API 36 compile) / Android 15 (API 35 target)** - `targetSdk` intentionally trails `compileSdk`
 per its own comment ("for stable runtime behavior"); confirm with the owner if that should change. It builds with
 **Gradle 9.7.0** and **JDK/toolchain 21** (`sourceCompatibility`/`targetCompatibility` = `VERSION_21`,
 `gradle-daemon-jvm.properties` toolchainVersion = 21 - this is now actually applied, not just claimed).
@@ -144,8 +144,8 @@ per its own comment ("for stable runtime behavior"); confirm with the owner if t
   tests now exist too - `Parol6KinematicsTest.kt`, `RobotViewContractTest.kt`, `HydraWebSocketTest.kt`,
   `SubHeaderRowLayoutTest.kt`, `MjpegStreamParserTest.kt`, `GitHubReleaseUpdaterTest.kt`,
   `ReleaseMetadataParserTest.kt`, `SemanticVersionTest.kt`, `RobotViewModelSendAtomicCommandTest.kt`,
-  `RobotViewModelSendVoiceTurnTest.kt`, `BoundedRequestScopeTest.kt`, and `WatchCompanionProtocolTest.kt`
-  (59 `@Test` methods total across those files plus the `com.example` template, all passing via
+  `RobotViewModelSendVoiceTurnTest.kt`, `BoundedRequestScopeTest.kt`, and `WatchCompanionProtocolTest.kt`, `JoystickHoldTest.kt`, `HydraApiClientErrorsTest.kt` and `RobotViewModelCommandErrorsTest.kt`
+  (90 `@Test` methods total across those files plus the `com.example` template, all passing via
   `./gradlew testDebugUnitTest`).
 
 ## 7. Relationship to the rest of the ecosystem

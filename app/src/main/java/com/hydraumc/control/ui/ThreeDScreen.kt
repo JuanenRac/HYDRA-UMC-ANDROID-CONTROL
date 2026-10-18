@@ -425,12 +425,20 @@ fun ThreeDScreen(viewModel: RobotViewModel) {
                 )
             }
         }
-        // The E-STOP/play/pause/stop console used to be duplicated inside
-        // this 3D viewport too (both portrait and the fullscreen-landscape
-        // overlay below) - real feedback from live testing: it's identical
-        // to, and redundant with, the one ControlScreen.kt's own Robot
-        // Control menu already shows. Removed from both orientations; the
-        // 3D viewer is jog/view-only now.
+        // The full play/pause/stop console is not repeated here (the Control
+        // screen has it), but every surface that can MOVE a robot carries an
+        // E-STOP: jogging in this viewport used to mean leaving it and finding
+        // the Control tab before the robot could be stopped.
+        if (selectedRobot != null) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(12.dp)
+                    .zIndex(2f),
+            ) {
+                EStopButton(viewModel)
+            }
+        }
     }
 }
 
@@ -450,7 +458,8 @@ private fun FullscreenJogOverlay(
     onJogStepChange: (Double) -> Unit,
     onExit: () -> Unit,
 ) {
-    val enabled = selectedRobot?.online == true
+    // Not while a trajectory is running: the server's playback and a jog would both write the setpoint.
+    val enabled = selectedRobot?.online == true && !(selectedRobot.isPlaying && !selectedRobot.isPaused)
     val onJog: (Int, Int, Int) -> Unit = { dx, dy, dz ->
         viewModel.jogXYZ("robot", dx, dy, dz, jogStep)
     }

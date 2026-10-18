@@ -42,12 +42,15 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.coroutineScope
@@ -100,6 +103,13 @@ fun JoystickXYPad(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
 ) {
+    // The press-and-hold coroutine below outlives the composition that started
+    // it (pointerInput only restarts when ITS keys change): it must call the
+    // lambda of the latest composition, not the one it captured - otherwise a
+    // new step size or a switch to the XY table is ignored while a button is
+    // held, and the robot moves by the old step or on the old target.
+    val currentOnJog by rememberUpdatedState(onJog)
+
     @Composable
     fun JogButton(
         dx: Int,
@@ -113,6 +123,7 @@ fun JoystickXYPad(
         Box(
             modifier = Modifier
                 .size(size)
+                .testTag("jog_${dx}_${dy}_$dz")
                 .background(Color(0xFF0F172A).copy(alpha = if (active) 0.8f else 0.4f), RoundedCornerShape(8.dp))
                 .border(1.dp, Color(0xFF334155).copy(alpha = if (active) 1f else 0.4f), RoundedCornerShape(8.dp))
                 .pointerInput(dx, dy, dz, active) {
@@ -126,7 +137,7 @@ fun JoystickXYPad(
                             awaitFirstDown(requireUnconsumed = false)
                             val job = launch {
                                 while (isActive) {
-                                    onJog(dx, dy, dz)
+                                    currentOnJog(dx, dy, dz)
                                     delay(REPEAT_MS)
                                 }
                             }
@@ -187,6 +198,7 @@ fun BaseRotationButtons(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
 ) {
+    val currentOnRotate by rememberUpdatedState(onRotate) // see JoystickXYPad
     @Composable
     fun RotateButton(direction: Int, icon: ImageVector) {
         Box(
@@ -203,7 +215,7 @@ fun BaseRotationButtons(
                             awaitFirstDown(requireUnconsumed = false)
                             val job = launch {
                                 while (isActive) {
-                                    onRotate(direction)
+                                    currentOnRotate(direction)
                                     delay(REPEAT_MS)
                                 }
                             }
@@ -235,6 +247,7 @@ fun JoystickZColumn(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
 ) {
+    val currentOnJog by rememberUpdatedState(onJog) // see JoystickXYPad
     @Composable
     fun ZButton(
         dz: Int,
@@ -256,7 +269,7 @@ fun JoystickZColumn(
                             awaitFirstDown(requireUnconsumed = false)
                             val job = launch {
                                 while (isActive) {
-                                    onJog(0, 0, dz)
+                                    currentOnJog(0, 0, dz)
                                     delay(REPEAT_MS)
                                 }
                             }

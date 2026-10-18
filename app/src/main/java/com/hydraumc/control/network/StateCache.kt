@@ -19,11 +19,46 @@ private val KEY_LAST_STATE = stringPreferencesKey("last_known_state")
  * Manages persistence of the last known HydraState for offline viewing.
  */
 class StateCache(private val context: Context) {
-    
-    /** Saves the full JSON state to disk. */
-    suspend fun saveState(state: JSONObject) {
+
+    /**
+     * Saves the state to disk. Takes the already-serialized text, not the live
+     * [JSONObject]: the caller serializes on the main thread (where the tree
+     * is mutated by WebSocket deltas and optimistic commands) because org.json
+     * is not thread-safe, and the DataStore lambda below runs on another one.
+     * The camera credentials an administrator's tree carries are dropped
+     * first - the cache has no use for them.
+     */
+    suspend fun saveState(serializedState: String) {
+        val sanitized = redactSecrets(serializedState)
         context.cacheDataStore.edit { prefs ->
-            prefs[KEY_LAST_STATE] = state.toString()
+            prefs[KEY_LAST_STATE] = sanitized
+        }
+    }
+
+    companion object {
+        /** Keys of the settings tree that hold credentials and never go to disk. */
+        private val SECRET_KEYS = setOf("ipUsername", "ipPassword")
+
+        /** [serializedState] without any [SECRET_KEYS] at any depth; an unreadable text is returned as it came. */
+        fun redactSecrets(serializedState: String): String {
+            val root = try {
+                JSONObject(serializedState)
+            } catch (_: Exception) {
+                return serializedState
+            }
+            strip(root)
+            return root.toString()
+        }
+
+        private fun strip(value: Any?) {
+            when (value) {
+                is JSONObject -> {
+                    SECRET_KEYS.forEach { value.remove(it) }
+                    val keys = value.keys().asSequence().toList()
+                    keys.forEach { strip(value.opt(it)) }
+                }
+                is org.json.JSONArray -> for (i in 0 until value.length()) strip(value.opt(i))
+            }
         }
     }
 

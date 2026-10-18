@@ -9,4 +9,6 @@
     <exclude domain="sharedpref" path="auth_prefs_encrypted.xml"/>
     <exclude domain="sharedpref" path="auth_prefs_encrypted__androidx_security_crypto_encrypted_prefs_key_keyset__.xml"/>
     <exclude domain="sharedpref" path="auth_prefs_encrypted__androidx_security_crypto_encrypted_prefs_value_keyset__.xml"/>
+    <!-- The offline copy of the last known state (and the connection settings) stays on this device. -->
+    <exclude domain="file" path="datastore"/>
 </full-backup-content>

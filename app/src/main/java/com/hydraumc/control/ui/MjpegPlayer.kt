@@ -19,13 +19,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
 import kotlinx.coroutines.Dispatchers
+import com.hydraumc.control.network.HydraApiClient
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.InputStream
 import java.nio.ByteBuffer
+import java.util.concurrent.TimeUnit
 import kotlin.coroutines.coroutineContext
 
 /**
@@ -33,9 +36,12 @@ import kotlin.coroutines.coroutineContext
  * Reads bytes from an OkHttp stream and decodes JPEGs in a background thread.
  */
 @Composable
-fun MjpegPlayer(url: String, modifier: Modifier = Modifier) {
+fun MjpegPlayer(url: String, modifier: Modifier = Modifier, authToken: String? = null) {
     var bitmap by remember { mutableStateOf<Bitmap?>(null) }
-    val client = remember { OkHttpClient() }
+    // The shared client identifies this app to the server (X-Hydra-Client) and,
+    // unlike a bare OkHttpClient, gets a read timeout that is long enough for a
+    // live stream but finite, so a stalled connection is noticed and retried.
+    val client = remember { HydraApiClient.sharedHttpClient.newBuilder().readTimeout(30, TimeUnit.SECONDS).build() }
 
     // On (API 28+), each frame is decoded straight into a GPU-resident
     // Bitmap.Config.HARDWARE buffer instead of a CPU ARGB_8888 one - the
@@ -57,10 +63,22 @@ fun MjpegPlayer(url: String, modifier: Modifier = Modifier) {
     // that may never arrive to "unblock" it.
     var hardwareBitmapsSupported by remember { mutableStateOf(true) }
 
-    LaunchedEffect(url) {
+    LaunchedEffect(url, authToken) {
+      // Reconnects for as long as the screen is shown: a stream that ends or
+      // fails used to leave the last frame frozen on screen with nothing
+      // saying so. Back-off grows to 15 s while nothing arrives and resets
+      // the moment a frame does.
+      var failures = 0
+      while (isActive) {
+        var gotFrame = false
         withContext(Dispatchers.IO) {
             try {
-                val request = Request.Builder().url(url).build()
+                // A server started with HYDRA_UMC_CAMERA_AUTH=required refuses the
+                // picture without a signed-in client: the bearer token goes in a
+                // header, never in the address.
+                val request = Request.Builder().url(url)
+                    .apply { if (!authToken.isNullOrEmpty()) header("Authorization", "Bearer $authToken") }
+                    .build()
                 val call = client.newCall(request)
                 // Ties this blocking OkHttp call to the coroutine's own
                 // cancellation. MjpegStreamParser.readNextFrame() below reads
@@ -83,7 +101,10 @@ fun MjpegPlayer(url: String, modifier: Modifier = Modifier) {
                     MjpegStreamParser(inputStream).use { parser ->
                         while (isActive) {
                             when (val result = parser.readNextFrame(useHardwareBitmap = hardwareBitmapsSupported)) {
-                                is MjpegFrameResult.Frame -> bitmap = result.bitmap
+                                is MjpegFrameResult.Frame -> {
+                                    gotFrame = true
+                                    bitmap = result.bitmap
+                                }
                                 // One undecodable frame (truncated read, a
                                 // corrupt JPEG) used to be indistinguishable
                                 // from the stream genuinely ending - both
@@ -99,9 +120,13 @@ fun MjpegPlayer(url: String, modifier: Modifier = Modifier) {
                     }
                 }
             } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
                 Log.e("MjpegPlayer", "Stream error: ${e.message}")
             }
         }
+        failures = if (gotFrame) 0 else failures + 1
+        delay((1_000L shl failures.coerceAtMost(4)).coerceAtMost(15_000L))
+      }
     }
 
     Canvas(modifier = modifier.fillMaxSize()) {

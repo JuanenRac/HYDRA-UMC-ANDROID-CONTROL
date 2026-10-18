@@ -65,6 +65,15 @@
     <string name="error_not_connected">Not connected to a server - command not sent.</string>
     <string name="error_command_failed">Command failed: %1$s (change reverted)</string>
     <string name="error_unknown_command">Unknown command: %s</string>
+    <string name="estop_hold_to_confirm">Hold to confirm E-STOP</string>
+    <string name="estop_label">E-STOP</string>
+    <string name="stop_hold_to_confirm">Hold to confirm STOP</string>
+    <string name="error_command_not_applied">The server did not apply %1$s: %2$s (change reverted)</string>
+    <string name="error_stop_not_confirmed">STOP not confirmed by the server: press it again or use the physical E-stop</string>
+    <string name="error_session_expired">Session expired: signing in again</string>
+    <string name="error_robot_reserved">The robot is reserved by another account: %1$s</string>
+    <string name="error_permission_denied">Permission denied: this account cannot do that</string>
+    <string name="error_command_rejected">The server rejected %1$s: %2$s (change reverted)</string>
     <string name="error_no_tool_in_slot">No tool exists in slot %d.</string>
     <string name="error_global_estop_no_robots">Global E-STOP not sent: no known robot yet. Open the app and check the connection.</string>
     <string name="control_robots">Robot Control</string>

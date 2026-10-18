@@ -124,6 +124,7 @@ fun CameraScreen(viewModel: RobotViewModel) {
             if (cameraEnabled) {
                 MjpegPlayer(
                     url = streamUrl,
+                    authToken = viewModel.authTokenState.value,
                     modifier = Modifier.fillMaxSize()
                 )
                 Text(

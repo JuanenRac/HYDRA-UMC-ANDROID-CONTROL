@@ -196,8 +196,11 @@ fun scanSubnets(context: Context, client: OkHttpClient, port: Int = DEFAULT_PORT
         }
         override fun onServiceLost(service: NsdServiceInfo) {}
         override fun onDiscoveryStopped(regType: String) {}
-        override fun onStartDiscoveryFailed(regType: String, errorCode: Int) { nsdManager.stopServiceDiscovery(this) }
-        override fun onStopDiscoveryFailed(regType: String, errorCode: Int) { nsdManager.stopServiceDiscovery(this) }
+        // NsdManager has already dropped the listener when it reports either failure:
+        // stopServiceDiscovery() on it throws IllegalArgumentException ("listener not
+        // registered") on NsdManager's own thread, where nothing catches it.
+        override fun onStartDiscoveryFailed(regType: String, errorCode: Int) {}
+        override fun onStopDiscoveryFailed(regType: String, errorCode: Int) {}
     }
 
     nsdManager.discoverServices("_hydra._tcp.", NsdManager.PROTOCOL_DNS_SD, nsdListener)
@@ -218,6 +221,10 @@ fun scanSubnets(context: Context, client: OkHttpClient, port: Int = DEFAULT_PORT
     }
 
     if (hosts.isEmpty()) {
+        // No IPv4 interface (airplane mode, mobile data only): nothing to scan. The
+        // listener started above must still be stopped - returning without awaitClose
+        // left discovery (and its multicast lock) running for good.
+        try { nsdManager.stopServiceDiscovery(nsdListener) } catch (e: Exception) {}
         close()
         return@callbackFlow
     }

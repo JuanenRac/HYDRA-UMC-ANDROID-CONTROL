@@ -50,7 +50,9 @@ internal fun updateAppWidget(
     // Intent to trigger the E-STOP action in MainActivity
     val intent = Intent(context, MainActivity::class.java).apply {
         action = "ACTION_GLOBAL_ESTOP"
-        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        // SINGLE_TOP (with launchMode singleTop) delivers the tap to the running activity (onNewIntent)
+        // instead of rebuilding it, which dropped the live connection before the stop could be sent.
+        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
     }
     
     val pendingIntent = PendingIntent.getActivity(

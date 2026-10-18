@@ -101,10 +101,7 @@ class HydraWebSocketTest {
             assertEquals(WsStatus.CONNECTED, events.statuses.receive())
             assertEquals(WsStatus.DISCONNECTED, events.statuses.receive())
             val message = events.errors.receive()
-            assertTrue(
-                "expected a re-authentication message, got: $message",
-                message.contains("no autorizada", ignoreCase = true),
-            )
+            assertEquals(WS_UNAUTHORIZED_MESSAGE, message)
         }
 
         // Real proof of "never reconnects", not just an absence-of-log
@@ -230,5 +227,94 @@ class HydraWebSocketTest {
             "a fresh payload right after a real close must also report failure",
             socket.send(JSONObject().put("foo", "baz")),
         )
+    }
+
+    @Test
+    fun `the token travels as the hydra bearer subprotocol, never in the address`() = runBlocking {
+        val events = RecordedEvents()
+        server.enqueue(MockResponse().withWebSocketUpgrade(object : WebSocketListener() {
+                override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
+                    webSocket.close(1000, null)
+                }
+            }))
+
+        val socket = HydraWebSocket(
+            host = server.hostName,
+            port = server.port,
+            token = "tok.en-1",
+            client = client,
+            onStatus = { events.statuses.trySend(it) },
+            onSettings = {},
+            onError = { events.errors.trySend(it) },
+        )
+        socket.connect()
+        withTimeout(5_000) {
+            assertEquals(WsStatus.CONNECTING, events.statuses.receive())
+            assertEquals(WsStatus.CONNECTED, events.statuses.receive())
+        }
+        val request = server.takeRequest(5, java.util.concurrent.TimeUnit.SECONDS)!!
+        assertFalse("the token must not be in the address: ${request.path}", request.path!!.contains("tok.en-1"))
+        assertEquals("hydra.bearer, tok.en-1", request.getHeader("Sec-WebSocket-Protocol"))
+        socket.disconnect()
+    }
+
+    @Test
+    fun `a server that refuses the subprotocol upgrade is retried at once with the token in the address`() = runBlocking {
+        val events = RecordedEvents()
+        // An older server: it only reads ?token=, so the first upgrade is refused.
+        server.enqueue(MockResponse().setResponseCode(401))
+        server.enqueue(MockResponse().withWebSocketUpgrade(object : WebSocketListener() {
+                override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
+                    webSocket.close(1000, null)
+                }
+            }))
+
+        val socket = HydraWebSocket(
+            host = server.hostName,
+            port = server.port,
+            token = "tok.en-2",
+            client = client,
+            onStatus = { events.statuses.trySend(it) },
+            onSettings = {},
+            onError = { events.errors.trySend(it) },
+        )
+        socket.connect()
+        withTimeout(5_000) {
+            // CONNECTING (subprotocol attempt), CONNECTING (fallback), CONNECTED
+            assertEquals(WsStatus.CONNECTING, events.statuses.receive())
+            assertEquals(WsStatus.CONNECTING, events.statuses.receive())
+            assertEquals(WsStatus.CONNECTED, events.statuses.receive())
+        }
+        val first = server.takeRequest(5, java.util.concurrent.TimeUnit.SECONDS)!!
+        val second = server.takeRequest(5, java.util.concurrent.TimeUnit.SECONDS)!!
+        assertEquals("hydra.bearer, tok.en-2", first.getHeader("Sec-WebSocket-Protocol"))
+        assertTrue("the fallback carries ?token=: ${second.path}", second.path!!.contains("token=tok.en-2"))
+        assertTrue("no error is shown for the fallback", events.errors.isEmpty)
+        socket.disconnect()
+    }
+
+    @Test
+    fun `a 1008 close tells the caller to renew the session`() = runBlocking {
+        val events = RecordedEvents()
+        val unauthorized = Channel<Unit>(capacity = Channel.UNLIMITED)
+        server.enqueue(
+            MockResponse().withWebSocketUpgrade(object : WebSocketListener() {
+                override fun onOpen(webSocket: WebSocket, response: okhttp3.Response) {
+                    webSocket.close(1008, "invalid token")
+                }
+            })
+        )
+        val socket = HydraWebSocket(
+            host = server.hostName,
+            port = server.port,
+            token = "expired",
+            client = client,
+            onStatus = { events.statuses.trySend(it) },
+            onSettings = {},
+            onUnauthorized = { unauthorized.trySend(Unit) },
+            onError = { events.errors.trySend(it) },
+        )
+        socket.connect()
+        withTimeout(5_000) { unauthorized.receive() }
     }
 }

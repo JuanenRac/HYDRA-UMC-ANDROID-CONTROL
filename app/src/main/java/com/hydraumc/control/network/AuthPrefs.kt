@@ -47,6 +47,7 @@ private const val KEY_REMEMBER_ME = "remember_me"
 private const val KEY_LOGGED_IN = "is_logged_in"
 private const val KEY_BIOMETRIC_ENABLED = "biometric_enabled"
 private const val KEY_TOKEN = "token"
+private const val KEY_REFRESH_TOKEN = "refresh_token"
 
 /**
  * Manages user authentication and profile persistence, encrypted at rest.
@@ -179,6 +180,7 @@ class AuthPrefs(private val context: Context) {
             isLoggedIn = prefs.getBoolean(KEY_LOGGED_IN, false),
             isBiometricEnabled = prefs.getBoolean(KEY_BIOMETRIC_ENABLED, false),
             token = prefs.getString(KEY_TOKEN, "") ?: "",
+            refreshToken = prefs.getString(KEY_REFRESH_TOKEN, "") ?: "",
         )
     }
 
@@ -191,20 +193,28 @@ class AuthPrefs(private val context: Context) {
             .putBoolean(KEY_LOGGED_IN, profile.isLoggedIn)
             .putBoolean(KEY_BIOMETRIC_ENABLED, profile.isBiometricEnabled)
             .putString(KEY_TOKEN, profile.token)
+            .putString(KEY_REFRESH_TOKEN, profile.refreshToken)
             .apply()
         Unit
     }
 
-    suspend fun clearAuth() = withContext(authPrefsDispatcher) {
+    suspend fun clearAuth(wipePassword: Boolean = true) = withContext(authPrefsDispatcher) {
         // Clears the bearer token too, not just the "logged in" flag - without
         // this, connect()/setupWebSocket() (which read loadAuth().token
         // directly as a fallback, not gated on isLoggedIn) would keep
         // reusing the old session's token after an explicit logout, as if
         // the logout had never happened.
-        openEncryptedPrefs().edit()
+        //
+        // A real logout also drops the refresh token and, unless the caller
+        // keeps it for the fingerprint sign-in the user asked for, the saved
+        // password: on a shared tablet the next person must not find the
+        // previous operator's password in the form.
+        val edit = openEncryptedPrefs().edit()
             .putBoolean(KEY_LOGGED_IN, false)
             .putString(KEY_TOKEN, "")
-            .apply()
+            .putString(KEY_REFRESH_TOKEN, "")
+        if (wipePassword) edit.putString(KEY_PASSWORD, "")
+        edit.apply()
         Unit
     }
 }
@@ -219,5 +229,7 @@ data class UserProfile(
     val rememberMe: Boolean,
     val isLoggedIn: Boolean,
     val isBiometricEnabled: Boolean = false,
-    val token: String = ""
+    val token: String = "",
+    /** Opaque refresh token from the last login; empty when there is none. */
+    val refreshToken: String = "",
 )

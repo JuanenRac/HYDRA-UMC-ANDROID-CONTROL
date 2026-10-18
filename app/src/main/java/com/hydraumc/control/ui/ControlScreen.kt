@@ -282,18 +282,8 @@ fun ControlScreen(viewModel: RobotViewModel) {
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Main Enable/Disable
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    HydraButton(
-                        text = if (selectedRobot.online) stringResource(R.string.disable_node) else stringResource(R.string.enable_node),
-                        icon = if (selectedRobot.online) Icons.Default.Block else Icons.Default.CheckCircle,
-                        onClick = { viewModel.sendCommand(if (selectedRobot.online) "disable" else "enable") },
-                        backgroundColor = if (selectedRobot.online) IndustrialDanger else Color(0xFF15803D),
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
+                // (The "Disable node"/"Enable node" button is gone: the server has no
+                // such command, so it answered 400 and the robot was never disabled.)
 
                 // JOYSTICK - same Joystick3D component (and same onJog(dx,dy,dz)
                 // contract) HYDRA-UMC-STUDIO already uses for robot A1's own
@@ -327,9 +317,12 @@ fun ControlScreen(viewModel: RobotViewModel) {
                         // STUDIO's own fixed layout) rather than the geometry
                         // jumping around when toggling Robot/XY Table - it's
                         // just disabled via zEnabled instead.
+                        // While a trajectory runs (playing and not paused) the server's
+                        // playback and a jog would both write the same setpoint.
+                        val jogAllowed = selectedRobot.online && !(selectedRobot.isPlaying && !selectedRobot.isPaused)
                         Joystick3D(
-                            enabled = selectedRobot.online,
-                            zEnabled = selectedRobot.online && activeTarget == "robot",
+                            enabled = jogAllowed,
+                            zEnabled = jogAllowed && activeTarget == "robot",
                             onJog = { dx, dy, dz ->
                                 vibrate()
                                 // jogXYZ resolves the combined delta against this
@@ -349,7 +342,7 @@ fun ControlScreen(viewModel: RobotViewModel) {
                         // Only meaningful for the arm target - the XY table
                         // has no J1 concept, same gate zEnabled above uses.
                         BaseRotationButtons(
-                            enabled = selectedRobot.online && activeTarget == "robot",
+                            enabled = jogAllowed && activeTarget == "robot",
                             onRotate = { direction ->
                                 vibrate()
                                 viewModel.jogJ1(direction, stepSize)
@@ -422,7 +415,7 @@ fun ControlScreen(viewModel: RobotViewModel) {
                         value = accelState,
                         onValueChange = { accelState = it },
                         onValueChangeFinished = { viewModel.setSpeed(speedState.toDouble(), accelState.toDouble()) },
-                        valueRange = 100f..2000f,
+                        valueRange = 10f..500f, // the range the server applies (it ignores values outside 10..500)
                     )
 
                     Spacer(modifier = Modifier.height(24.dp))

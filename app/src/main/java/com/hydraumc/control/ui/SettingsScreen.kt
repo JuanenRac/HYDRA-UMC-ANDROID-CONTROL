@@ -67,8 +67,7 @@ fun SettingsScreen(
     // composes, the outcome is the same tab.
     val initialTabIndex = when (updateState) {
         is AppUpdateState.Available, is AppUpdateState.Downloading,
-        is AppUpdateState.InstallPermissionRequired, AppUpdateState.Installing,
-        is AppUpdateState.Failed -> 3
+        is AppUpdateState.InstallPermissionRequired, AppUpdateState.Installing -> 3
         else -> 0
     }
     /** Index of the currently selected settings tab. */

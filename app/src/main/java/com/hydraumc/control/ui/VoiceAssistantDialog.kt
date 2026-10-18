@@ -71,7 +71,7 @@ fun VoiceAssistantDialog(
                     ) {
                         OutlinedTextField(
                             value = transcript,
-                            onValueChange = { transcript = it },
+                            onValueChange = { transcript = it.take(500) }, // the server accepts 1-500 characters
                             label = { Text(stringResource(R.string.voice_assistant_input_label)) },
                             singleLine = false,
                             maxLines = 3,

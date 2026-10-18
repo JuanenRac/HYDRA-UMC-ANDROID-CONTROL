@@ -25,7 +25,7 @@
 
 Wi-Fi または Bluetooth 経由で [HYDRA-UMC](https://github.com/JuanenRac/HYDRA-UMC) プラットフォーム上のロボットを制御する、ネイティブ Android アプリ（Kotlin + Jetpack Compose）です。[HYDRA-UMC SUITE](https://github.com/JuanenRac/HYDRA-UMC-SUITE) が使用しているのとまったく同じ [`REMOTE_API.md`](https://github.com/JuanenRac/HYDRA-UMC-SERVER/blob/main/docs/REMOTE_API.md) 契約を話します——稼働中の [HYDRA-UMC-SERVER](https://github.com/JuanenRac/HYDRA-UMC-SERVER) バックエンド（[HYDRA-UMC STUDIO](https://github.com/JuanenRac/HYDRA-UMC-STUDIO) 自身の Web ダッシュボードが通信しているのと同じもの）に対するディスカバリー、完全な状態の読み書き、リアルタイム WebSocket 同期。[HYDRA-UMC-IOS-CONTROL](https://github.com/JuanenRac/HYDRA-UMC-IOS-CONTROL) の直接的な Android 版対応物です。完全な設計は [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) を参照してください。
 
-> **誠実性チェック - 今日実際に動くもの:** 中核のビジネスロジック - Parol6 運動学（`kinematics/Parol6Kinematics.kt`）、settings ツリーの状態契約（`model/HydraState.kt`）、アトミックコマンド送出と音声リレー（`viewmodel/RobotViewModel.kt`）、WebSocket 再接続処理（`network/HydraWebSocket.kt`）、MJPEG フレーム解析（`ui/MjpegPlayer.kt`）、アプリ内アップデートチャネル（`update/GitHubReleaseUpdater.kt`、`ReleaseMetadataParser.kt`、`SemanticVersion.kt`）、および Wear 音声リレーのリクエスト管理（`wear/BoundedRequestScope.kt`、`WatchCompanionProtocol.kt`）は本物であり、67件の JVM/Robolectric ユニットテストがすべて通過している（`./gradlew testDebugUnitTest`）。これらのテストが構造的に到達できない部分 - そしてこの Windows 専用の開発環境が実機の Android デバイスを持たず検証できない部分 - は `network/AuthPrefs.kt` の実際の Keystore 裏付け `EncryptedSharedPreferences`、`androidx.biometric` の指紋・顔認証プロンプト、`network/HydraBleClient.kt` の Bluetooth GATT トランスポート、そして `MjpegStreamParser` 内の API 28+ ハードウェア `ImageDecoder` パスであり、これらは実装され実際にコンパイルされているコードだが、書かれて以来実機で再検証されていない。基本的な起動・ログインについては、過去のリリースで実機上でのライブ確認が*行われている*(`CHANGELOG.md` の `v0.3.2`/`v0.3.3` の項目を参照)が、それは Bluetooth・生体認証・ハードウェアデコードパスより前の話である。実際に出荷された内容の詳細、および何がまだハードウェア未検証かの各エントリごとの注記については `CHANGELOG.md` を参照。
+> **誠実性チェック - 今日実際に動くもの:** 中核のビジネスロジック - Parol6 運動学（`kinematics/Parol6Kinematics.kt`）、settings ツリーの状態契約（`model/HydraState.kt`）、アトミックコマンド送出と音声リレー（`viewmodel/RobotViewModel.kt`）、WebSocket 再接続処理（`network/HydraWebSocket.kt`）、MJPEG フレーム解析（`ui/MjpegPlayer.kt`）、アプリ内アップデートチャネル（`update/GitHubReleaseUpdater.kt`、`ReleaseMetadataParser.kt`、`SemanticVersion.kt`）、および Wear 音声リレーのリクエスト管理（`wear/BoundedRequestScope.kt`、`WatchCompanionProtocol.kt`）は本物であり、90件の JVM/Robolectric ユニットテストがすべて通過している（`./gradlew testDebugUnitTest`）。これらのテストが構造的に到達できない部分 - そしてこの Windows 専用の開発環境が実機の Android デバイスを持たず検証できない部分 - は `network/AuthPrefs.kt` の実際の Keystore 裏付け `EncryptedSharedPreferences`、`androidx.biometric` の指紋・顔認証プロンプト、`network/HydraBleClient.kt` の Bluetooth GATT トランスポート、そして `MjpegStreamParser` 内の API 28+ ハードウェア `ImageDecoder` パスであり、これらは実装され実際にコンパイルされているコードだが、書かれて以来実機で再検証されていない。基本的な起動・ログインについては、過去のリリースで実機上でのライブ確認が*行われている*(`CHANGELOG.md` の `v0.3.2`/`v0.3.3` の項目を参照)が、それは Bluetooth・生体認証・ハードウェアデコードパスより前の話である。実際に出荷された内容の詳細、および何がまだハードウェア未検証かの各エントリごとの注記については `CHANGELOG.md` を参照。
 
 ## 🏗️ 実装済みの内容
 
@@ -35,21 +35,21 @@ Wi-Fi または Bluetooth 経由で [HYDRA-UMC](https://github.com/JuanenRac/HYD
 - **産業用テレメトリターミナル**（`ui/TelemetryScreen.kt`）—— ターミナル風のインターフェースを備えた専用のリアルタイムログビューアー。システムイベント、REST/WebSocket 同期を追跡し、色分けされた診断情報を提供します（成功はマトリックスグリーン、エラーはインダストリアルレッド）。
 - **高度なダッシュボード**（`ui/DashboardScreen.kt`）—— 遠近感のあるスワイプ効果を備えた高精細な **3D 水平カルーセル**。豊富なロボットのメタデータを表示します：**メーカー**（Source Robotics、Annin、Universal Robots、AgileX など）、**ロボットの役割**（CNC、レーザー、PnP）、そして CAM、XY、ATC、PNP、CNC、LSR、BED、VAC、RCK モジュールのライブ状態を示す**産業用モジュールマトリクス**。
 - **システムヘルスモニター**（`ui/DashboardScreen.kt`）—— 接続された Compute Module 5 のリアルタイム指標。**ホスト名**、**整形された稼働時間**（例：「2日4時間15分」）、コントローラーとロボットのアクティブ数を含みます。
-- **強化された手動制御**（`ui/ControlScreen.kt`）—— 最大の精度を実現する**50% 拡大されたジョイスティックボタン**を備えた、プロフェッショナルな縦型レイアウト。サーバーから直接ファイルを閲覧・実行できる**ジョブ/軌道セレクター**を含みます。
+- **強化された手動制御**（`ui/ControlScreen.kt`）—— 最大の精度を実現する**50% 拡大されたジョイスティックボタン**を備えた、プロフェッショナルな縦型レイアウト。
 - **安全性と再生パネル**（`ui/ControlScreen.kt`）—— **緊急停止（E-STOP）**、**開始**、**一時停止**、**停止**ボタンを収めた固定の下部コントロールバー。これらのコントロールは常に表示され、物理的な感覚での確認のための**触覚フィードバック**機能を備えています。
 - **3D ビュー**（`ui/ThreeDScreen.kt`）—— ネイティブレンダラーではなく、HYDRA-UMC STUDIO 自身のリアルタイム 3D ビューポートを WebView に埋め込む方式です（`?hideUI=true&robotId=&token=`）。この WebView アプローチにより、実際に、現在提供されている STUDIO の 3D シーン（すべての実際のロボットメッシュ/運動学）をネイティブに再実装することなく無料で得られます——トレードオフは WebView のレンダリングオーバーヘッドで、バッテリー最適ではありませんが、今日の時点で機能的には完全です。
 - **リアルタイム 8 系統ビジョン**（`ui/CameraScreen.kt`、`ui/MjpegPlayer.kt`）—— 産業グレードの**ネイティブ MJPEG ストリーマー**。自律的なバックグラウンドパーサーと Canvas ベースのレンダラーによるゼロレイテンシーの映像テレメトリ、ロボットのビジョンシステムがオフのときに（サイレントに空白のフィードを表示するのではなく）明確な「カメラ無効」状態を表示し、サーバーから直接ロボットのカメラをオン/オフする切り替えスイッチを備えています。手動制御画面での自動**ピクチャーインピクチャー（PIP）**オーバーレイをサポートし、サーバーのカメラ設定を通じて特定のロボットにマッピングされます。API 28 以降では、各フレームはプラットフォーム自身のハードウェアアクセラレーテッドな `ImageDecoder` 経路(GPU 常駐ビットマップ、CPU 側のデコード/アップロードなし)でデコードされ、元の CPU デコードへの自動的かつ自己修復的なフォールバックを備えています。
 - **スマートディスカバリーと接続性**（`network/Discovery.kt`、`network/HydraApiClient.kt`、`network/HydraWebSocket.kt`）—— スマートフォン自身の /24 上のすべての候補ホスト（他のホストだけでなく、スマートフォン自身の LAN IP や localhost も含む）に対する並行サブネットスキャンで、`GET /api/hydra-info` を探査し、`remoteApiVersion` の存在のみによって実際のサーバーを識別します——これは手動 IP 入力パスが使用しているのと同じチェックであるため、所有者がデフォルトの製品文字列から名前を変更したサーバーでも見つけることができます。**NsdManager**（mDNS/Bonjour）リスナーがそれと並行して動作します——サーバーは実際に `_hydra._tcp`（`bonjour-service`）として自身を告知し、`MainActivity` はこれに必要なランタイムの位置情報/近くのデバイス権限を事前にリクエストします（マニフェストの宣言だけでは API 23 以上で決して自動的には付与されません）——ただし、Wi-Fi 上のマルチキャストの到達性はプレーンな HTTP プローブほど本質的に信頼性が高くないため、サブネットスキャンが主要な経路のままです。本アプリは起動時に自動的に Wi-Fi をアクティブ化し、ローカルの工場ネットワークをスキャンし、最初に利用可能な HYDRA-UMC サーバーへ**ゼロクリック自動接続**を実行します。
 - **セキュアな産業アクセス**（`network/HydraApiClient.kt`、`ui/LoginScreen.kt`）—— **JWT（JSON Web Token）** を使用したプロフェッショナルなセキュリティ層。すべての制御指令（ジョグ、再生、緊急停止）は、原子的な `POST /api/robot/:id/command` エンドポイント経由で送信される署名付きトークンを使ってサーバーによって検証されます（下記「原子的な指令同期」参照）——完全な `POST /api/settings` 書き込み（サーバー側で admin 専用）とは異なり、`admin` ロールでも `operator` ロールでも動作します。すべてのリクエストは `X-Hydra-Client: android` ヘッダーも運び、サーバー自身の Config > Remote Access タブが、SUITE/iOS とは独立してこのアプリを許可/ブロックできるようにします。安全なトークンの更新のために**生体認証**（指紋/顔）とシームレスに統合されています。コード `1008`（無効/期限切れトークン）でクローズされた WebSocket は、再接続ループでリトライされるのではなく、「再ログインが必要」として扱われます（`network/HydraWebSocket.kt`）。
-- **原子的な指令同期**（`viewmodel/RobotViewModel.kt` 自身の `sendAtomicCommand()`）—— すべての書き込み（有効化/無効化/再生/一時停止/停止/ジョグ/ジョグ幅/バルブ/ポンプ/速度/ビジョン/ツール）は、設定ツリー全体ではなく、小さな単一ロボットの原子的な指令を送信します——サーバーは、他にどの統合ロボットが影響を受けるかを自ら計算し、ディスクに永続化し、他のすべての接続中クライアントへブロードキャストします。有効化/無効化は、再生/一時停止/停止と同じ方法でロボット自身の `combinedWith` 兄弟へ伝播します。これらはすべて同じ影響を受けるロボットの計算ロジックを共有しているためです。
-- **緊急管理ウィジェット**（`widget/GlobalStopWidget.kt`）—— 重大な安全性のための専用の**ホーム画面ウィジェット**。アプリを開く必要なく群れ全体のすべてのロボット操作を凍結させる、視認性の高い、即座にアクセスできる**グローバル緊急停止**ボタンを提供します——完全なコールドスタート（プロセスがまだ動作していない状態）からでも、ロボット名簿が実際にロードされるのを確実に待ってから動作します。
+- **原子的な指令同期**（`viewmodel/RobotViewModel.kt` 自身の `sendAtomicCommand()`）—— すべての書き込み（再生/一時停止/停止/ジョグ/ジョグ幅/バルブ/ポンプ/速度/ビジョン/ツール）は、設定ツリー全体ではなく、小さな単一ロボットの原子的な指令を送信します——サーバーは、他にどの統合ロボットが影響を受けるかを自ら計算し、ディスクに永続化し、他のすべての接続中クライアントへブロードキャストします。有効化/無効化は、再生/一時停止/停止と同じ方法でロボット自身の `combinedWith` 兄弟へ伝播します。これらはすべて同じ影響を受けるロボットの計算ロジックを共有しているためです。
+- **緊急管理ウィジェット**（`widget/GlobalStopWidget.kt`）—— 重大な安全性のための専用の**ホーム画面ウィジェット**。群れ全体のすべてのロボットを停止させる、視認性の高い、即座にアクセスできる**グローバル緊急停止**ボタンを提供します——タップするとアプリが前面に表示され、完全なコールドスタート（プロセスがまだ動作していない状態）からでも、サーバーからの実際のロボット名簿を待ってから動作します。
 - **産業用ハプティクスと安全性**（`ui/ControlScreen.kt`）—— 高度な感覚フィードバックシステム。緊急停止と停止ボタンには本物の**長押し保護**（すばやいタップでは何も起こらず、短い振動+ヒントのみ；本当に長押しした場合にのみ指令が送信されます）と、差別化された触覚パターン（成功、エラー、緊急のパルス）を備え、騒がしい環境でも操作員に物理的な確認を提供します。
 - **アプリ内アップデートチャンネル**（`update/GitHubReleaseUpdater.kt`、`update/ReleaseMetadataParser.kt`、`update/SemanticVersion.kt`）—— 起動時および「設定 → アップデート」から最新の安定版 GitHub Release を確認します。下書きでもプレリリースでもないタグの、正確な `HYDRA-UMC-ANDROID-CONTROL-release.apk` アセットのみをダウンロードし、自動インストールは一切行いません —— 最終的な同意は Android 自体のパッケージインストーラーが求めます。完全なリリース契約: [`docs/GITHUB_RELEASE_UPDATES.md`](docs/GITHUB_RELEASE_UPDATES.md)。
 - **ペアリングされた Wear OS コンパニオン＆音声リレー**（`wear/WatchVoiceRelayService.kt`、`wear/WatchCompanionProtocol.kt`）—— ペアリングされた [HYDRA-UMC-WATCH](https://github.com/JuanenRac/HYDRA-UMC-WATCH) アプリからの、既に認識済みでユーザーが開始した音声ターンを、本アプリ自身の認証済み Server セッションを通じて `HYDRA-UMC-VOICE-UI` へ中継し、型付きの応答を Watch へ返します。このリレーも Watch のシステムステータスカードも、ロボットコマンドを発行したり `HydraState` を直接操作したりすることは一切ありません —— 動作に関連する応答は明示的に `requiresConfirmation` としてマークされ、プライマリの制御 UI を経由して確認する必要があります。完全な契約: [`docs/WATCH_VOICE_RELAY.md`](docs/WATCH_VOICE_RELAY.md)。
 - **アプリ内音声アシスタント**(`ui/VoiceAssistantDialog.kt`)—— 上部バーのマイクアイコンをタップするとダイアログが開き、質問や指示を入力するか、この端末自体の音声認識(`RecognizerIntent`、Watch の音声ボタンで既に使われているのと同じ実際のパターン)を使用できます。認識されたテキストは、Watch リレーと同じ `POST /api/voice/turn` ルートを経由して送信されますが、リレーとしてではなくこの端末自身の通常トラフィック(`HydraApiClient.postVoiceTurn()`)として扱われます —— そのため設定 > リモートアクセスは、ペアリングされた Watch とは独立してこのボタンを許可/ブロックできます。音声がアップロードされることは一切なく、返信が直接ロボットコマンドを発行することもありません。
 - **ツールチェーンとプロジェクト品質** —— AGP 9.3.1、Kotlin 2.2.10、Gradle 9.7.0、compileSdk 36、**JDK 21**（`compileOptions`、`gradle-daemon-jvm.properties`、そして `.idea/`/`.vscode/` のプロジェクトファイルもすべて、このドキュメントの記述だけでなく実際にそれをターゲットとしています）。警告ゼロのクリーンなビルド出力、最適化された R8 プロダクションバリアント、高度な **Roborazzi** スクリーンショットテスト。
 
-**状態：Wi-Fi、Bluetooth、生体認証、通知が実装済み。** 本アプリは、ミッションクリティカルなロボット運用に対応できる高等級の産業用コンソールです。
+**状態：Wi-Fi、Bluetooth、生体認証、通知が実装済み。** 本アプリは産業用オペレーターコンソールです。Bluetooth はまだ実験的で、どの画面も物理的な非常停止の代わりにはなりません。
 
 ## 🚀 ビルド
 
@@ -103,7 +103,7 @@ APK は `app/build/outputs/apk/debug/app-debug.apk` に生成されます。`adb
 |---|---|---|
 | 通知が来ない | 権限が拒否されている | Android の設定で本アプリの「通知」権限を許可してください |
 | 生体認証がない | ハードウェアが未設定 | Android システムセキュリティに指紋/顔が登録されていることを確認してください |
-| ロボットが動かない | ブラウザ側の脳リンク | 逆運動学処理のために HYDRA-UMC STUDIO のブラウザタブを開いたままにしてください |
+| ロボットが動かない | セッション切れ、別のアカウントによるロボットの予約、または軌道の再生中 | ステータスバーのメッセージを確認してください。軌道はサーバー自身が再生するため、ブラウザタブは不要です |
 | Bluetooth が無効 | 物理チップがオフ | アプリ内の「システム Bluetooth を有効化」3D ボタンを使用してください |
 
 ## 📂 リポジトリ構成
@@ -167,7 +167,7 @@ HYDRA-UMC-ANDROID-CONTROL/
 │       │   │   ├── WatchVoiceRelayContract.kt   # 認証付き Watch 音声リレーワイヤ契約
 │       │   │   └── WatchVoiceRelayService.kt    # Wear OS 音声リレーサービス
 │       │   └── widget/
-│       │       └── GlobalStopWidget.kt # アプリを開かずにグローバル緊急停止を行うためのホーム画面ウィジェット
+│       │       └── GlobalStopWidget.kt # グローバル緊急停止を行うためのホーム画面ウィジェット
 │       └── res/
 │           ├── drawable/, layout/, mipmap*/, xml/   # アイコン、ウィジェットレイアウト、ランチャーアイコン、バックアップ/データ抽出ルール
 │           └── values/, values-es/, values-de/, values-fr/, values-it/, values-zh/, values-ja/, values-pt/   # 8 言語の文字列、色、テーマ

@@ -162,11 +162,10 @@ class RobotView(val raw: JSONObject) {
     /** Sets the value of a specific axis for the XY table. */
     fun setXyTableAxis(axis: String, value: Double) {
         // Update Robot-level xyTable (for UI/Browser sync)
+        // Only xyTable.pos: for a relative jog the server updates that and leaves
+        // robot.pos.tx/ty alone (it mirrors them only for an absolute move), so
+        // writing them here made the local copy differ from the server's.
         xyTablePos.put(axis, value)
-        
-        // Coordinated update: Mirror to pos.tx/ty for kinematic consistency
-        if (axis == "x") pos.put("tx", value)
-        if (axis == "y") pos.put("ty", value)
     }
 
     /** The playback state object for robot movements. */

@@ -65,6 +65,15 @@
     <string name="error_not_connected">Sem ligação a um servidor - comando não enviado.</string>
     <string name="error_command_failed">O comando falhou: %1$s (alteração revertida)</string>
     <string name="error_unknown_command">Comando desconhecido: %s</string>
+    <string name="estop_hold_to_confirm">Mantenha premido para confirmar a PARAGEM DE EMERGÊNCIA</string>
+    <string name="estop_label">PARAGEM DE EMERGÊNCIA</string>
+    <string name="stop_hold_to_confirm">Mantenha premido para confirmar o STOP</string>
+    <string name="error_command_not_applied">O servidor não aplicou %1$s: %2$s (alteração revertida)</string>
+    <string name="error_stop_not_confirmed">STOP não confirmado pelo servidor: prima de novo ou use a paragem de emergência física</string>
+    <string name="error_session_expired">Sessão expirada: a iniciar sessão de novo</string>
+    <string name="error_robot_reserved">O robô está reservado por outra conta: %1$s</string>
+    <string name="error_permission_denied">Permissão negada: esta conta não pode fazer isso</string>
+    <string name="error_command_rejected">O servidor rejeitou %1$s: %2$s (alteração revertida)</string>
     <string name="error_no_tool_in_slot">Não existe nenhuma ferramenta na posição %d.</string>
     <string name="error_global_estop_no_robots">E-STOP global não enviado: ainda não há nenhum robô conhecido. Abra a aplicação e verifique a ligação.</string>
     <string name="control_robots">Controlo do robô</string>

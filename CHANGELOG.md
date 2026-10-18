@@ -9,6 +9,22 @@ in [README.md](README.md#-versioning). Entries recorded before that policy
 existed are grouped under the pre-policy version `0.0.0` the repo carried
 at the time.
 
+## [0.6.5] - Safer jogging and stopping, session renewal, clear server refusals
+
+- **Jog follows the screen:** a held jog button kept calling the lambda of the moment it was pressed, so changing the step or switching to the XY table while holding left the robot moving by the old step or on the old target. The repeat now always calls the current one (`JoystickHoldTest`).
+- **No more queued jogs:** while one jog is on the wire the next tick of a held button is dropped instead of piling up behind a slow link and arriving after release; nothing jogs while a trajectory is running (the Control screen and the fullscreen 3D pad are disabled too).
+- **E-STOP on the 3D view:** the pulsing E-STOP button is also on the 3D viewport, portrait and fullscreen; its hint and label are translated in the 8 languages.
+- **STOP that gets through:** a stop is sent with 2 s timeouts and, when nobody answers, again up to 3 times; if it still fails the message says the STOP was not confirmed and the change is reverted.
+- **Global stop from the widget and the notification:** the tap reaches the running app (`launchMode="singleTop"`) instead of rebuilding it and dropping the live connection, waits for the roster that came from the server (not the offline copy) and stops every robot by id without changing the selected robot.
+- **Clear refusals:** a robot reserved by another account (409), a command the server does not know (400), a missing permission (403) and an expired session each have their own message in the 8 languages; a 200 answer with warnings counts as not applied and is reverted. The acceleration slider now covers 10-500 %, the range the server applies.
+- **No "Disable node" button:** the server has no such command (it answered 400, and before that a false success), so the button and the `enable`/`disable` commands are gone.
+- **Session renewal:** an expired access token is renewed with the refresh token (or the saved login) once, however many requests and socket events notice it, instead of signing the user out; a failed renewal ends the session for real: logout closes the socket and the polling, revokes the refresh token and no longer leaves the password behind unless "remember me" or the fingerprint sign-in needs it. Saving the profile no longer erases the session token.
+- **Token out of the address:** the WebSocket sends the token as the `hydra.bearer` subprotocol (an older server that refuses it gets `?token=` automatically); the camera stream sends the bearer header and reconnects with a growing back-off instead of freezing on the last picture.
+- **Offline copy:** the cached state no longer keeps camera usernames and passwords, is serialized on the main thread, and is excluded from cloud backup and device transfer.
+- **Connection:** the WebSocket is opened only after the REST sync worked and only once per connect, the system health monitor starts when the socket connects, the settings screen no longer opens on the update tab after a failed update check, a scan with no IPv4 interface stops the network discovery it started, and a failed discovery start no longer calls `stopServiceDiscovery` on a listener that is already gone.
+- **Local state:** a relative XY-table jog no longer writes `pos.tx`/`pos.ty` (the server does not), the voice field stops at the 500 characters the server accepts, and `HydraApiException` carries the HTTP status, the server's `code` and its message.
+- 23 new tests: the held joystick, the WebSocket subprotocol and its fallback, the typed refusals, the stop retry and the cache redaction.
+
 ## [0.6.4] - JSON null fields no longer read as the text null
 
 - **A JSON `null` is no longer the word "null":** `JSONObject.optString` answers the four letters `null` for a field that is present but JSON `null`. Robot names, models, roles and tools, server names and ids, job names, project fields of the ecosystem screen, the release name and notes of the update check, the WebSocket `type`/`error` and the controller id of incoming messages all went through it. A release published without notes showed `null` as its notes, a robot without a name was called `null`, and a login answering `"token": null` stored the token `null`. A new helper (`util/JsonText.kt`, `optStr`) treats a JSON null like a missing key and gives the fallback; all 32 call sites use it.

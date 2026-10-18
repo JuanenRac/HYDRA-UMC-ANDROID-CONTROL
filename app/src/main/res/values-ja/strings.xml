@@ -65,6 +65,15 @@
     <string name="error_not_connected">サーバーに接続されていません——指令は送信されませんでした。</string>
     <string name="error_command_failed">指令が失敗しました：%1$s（変更は元に戻されました）</string>
     <string name="error_unknown_command">不明な指令：%s</string>
+    <string name="estop_hold_to_confirm">長押しして非常停止を確定します</string>
+    <string name="estop_label">非常停止</string>
+    <string name="stop_hold_to_confirm">長押しして停止を確定します</string>
+    <string name="error_command_not_applied">サーバーは %1$s を適用しませんでした：%2$s（変更は元に戻されました）</string>
+    <string name="error_stop_not_confirmed">サーバーが停止を確認していません：もう一度押すか、物理の非常停止を使ってください</string>
+    <string name="error_session_expired">セッションの期限が切れました：再ログインします</string>
+    <string name="error_robot_reserved">このロボットは別のアカウントが予約しています：%1$s</string>
+    <string name="error_permission_denied">権限がありません：このアカウントでは実行できません</string>
+    <string name="error_command_rejected">サーバーが %1$s を拒否しました：%2$s（変更は元に戻されました）</string>
     <string name="error_no_tool_in_slot">スロット %d にツールが存在しません。</string>
     <string name="error_global_estop_no_robots">全体緊急停止は送信されませんでした：既知のロボットがまだありません。アプリを開いて接続を確認してください。</string>
     <string name="control_robots">ロボット制御</string>

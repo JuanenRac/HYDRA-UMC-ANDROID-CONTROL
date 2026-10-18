@@ -17,14 +17,13 @@
 //   - POST /api/robot/:id/command   - atomic per-robot command (stop/play/
 //     pause/jog/tool/valve/pump/speed/vision) - server.ts computes
 //     affectedIds (self + combinedWith) itself, persists to disk, and
-//     broadcasts a WS "delta" to every OTHER client on its own. This is what
+//     broadcasts a WS "delta" to every connected client (the sender included). This is what
 //     every mutation in this app (RobotViewModel.kt's own
 //     sendAtomicCommand()) uses: a much smaller payload than a full
 //     POST /api/settings for a single jog tick, and it lets the server (not
 //     every client independently) own the combinedWith fan-out logic.
-//     postSettings() below is reserved for the one-time full sync on
-//     connect() and for factory-reset-shaped writes, not for individual
-//     robot commands.
+//     postSettings() below needs an administrator account and no screen of
+//     this app calls it; individual robot commands never go through it.
 //
 // Deliberately built on plain OkHttp + org.json rather than Retrofit/Gson.
 // =============================================================================
@@ -51,7 +50,29 @@ private val JSON_MEDIA_TYPE = "application/json; charset=utf-8".toMediaType()
  * @param message Human-readable error description.
  * @param cause The underlying cause of the exception.
  */
-class HydraApiException(message: String, cause: Throwable? = null) : IOException(message, cause)
+class HydraApiException(
+    message: String,
+    cause: Throwable? = null,
+    /** HTTP status of the server's answer, or null when there was none (network failure). */
+    val httpCode: Int? = null,
+    /** The stable `code` field of the server's JSON error body (TOKEN_EXPIRED, TOKEN_INVALID, ...), when it sent one. */
+    val serverCode: String? = null,
+    /** The server's own `error` text, when it sent one. */
+    val serverMessage: String? = null,
+) : IOException(message, cause) {
+    /** True when a new login or a refresh would cure this answer: a 401, or a 403 that says the token expired or is invalid. */
+    val isSessionProblem: Boolean
+        get() = httpCode == 401 || (httpCode == 403 && (serverCode == "TOKEN_EXPIRED" || serverCode == "TOKEN_INVALID"))
+
+    /** A 403 that is about the account's role, not about the session. */
+    val isPermissionDenied: Boolean get() = httpCode == 403 && !isSessionProblem
+
+    /** The robot is reserved by another account (the server's 409). */
+    val isReservedByAnother: Boolean get() = httpCode == 409
+
+    /** The server refused the command itself (an unknown command, a value it cannot take). */
+    val isRejectedCommand: Boolean get() = httpCode == 400
+}
 
 /**
  * Client class responsible for making HTTP requests to a HYDRA-UMC server.
@@ -76,6 +97,46 @@ class HydraApiClient(host: String, port: Int, private val client: OkHttpClient =
 
     /** Current authentication token. */
     var authToken: String? = null
+
+    /** Opaque refresh token from the last login, exchanged at /api/refresh for a new access token. */
+    var refreshToken: String? = null
+
+    /** Exchanges [refreshToken] for a new access token (and a rotated refresh token). */
+    suspend fun refresh(token: String): JSONObject = withContext(Dispatchers.IO) {
+        val body = JSONObject().put("refreshToken", token).toString().toRequestBody(JSON_MEDIA_TYPE)
+        executeExpectingJson(Request.Builder().url("$baseUrl/api/refresh").post(body).build())
+    }
+
+    /** Revokes [token] on the server; best effort, never throws. */
+    suspend fun logout(token: String) = withContext(Dispatchers.IO) {
+        try {
+            val body = JSONObject().put("refreshToken", token).toString().toRequestBody(JSON_MEDIA_TYPE)
+            executeExpectingJson(Request.Builder().url("$baseUrl/api/logout").post(body).build())
+        } catch (_: Exception) {
+        }
+        Unit
+    }
+
+    /**
+     * Asks for the short-lived ticket that opens the live camera streams, the
+     * saved photos and the recordings (an image view cannot send an
+     * Authorization header). Returns null when the server has no such route
+     * (an older server) or the call fails - the caller then falls back to the
+     * bearer header, which the server also accepts.
+     */
+    suspend fun fetchCameraTicket(): String? = withContext(Dispatchers.IO) {
+        try {
+            val request = Request.Builder()
+                .url("$baseUrl/api/camera/ticket")
+                .header("Authorization", "Bearer ${authToken ?: ""}")
+                .post("{}".toRequestBody(JSON_MEDIA_TYPE))
+                .build()
+            val ticket = executeExpectingJson(request).optString("ticket", "")
+            ticket.ifEmpty { null }
+        } catch (_: Exception) {
+            null
+        }
+    }
 
     suspend fun login(username: String, password: String): JSONObject = withContext(Dispatchers.IO) {
         val payload = JSONObject().put("username", username).put("password", password)
@@ -156,14 +217,26 @@ class HydraApiClient(host: String, port: Int, private val client: OkHttpClient =
         Unit
     }
 
-    suspend fun postRobotCommand(robotId: Int, payload: JSONObject): JSONObject = withContext(Dispatchers.IO) {
-        val request = Request.Builder()
-            .url("$baseUrl/api/robot/$robotId/command")
-            .header("Authorization", "Bearer ${authToken ?: ""}")
-            .post(payload.toString().toRequestBody(JSON_MEDIA_TYPE))
-            .build()
-        executeExpectingJson(request)
-    }
+    /**
+     * @param urgent True for a STOP: the call gets short timeouts (2 s) so a
+     * stuck connection is given up and retried quickly instead of holding the
+     * stop for the 15 s an ordinary command may wait.
+     */
+    suspend fun postRobotCommand(robotId: Int, payload: JSONObject, urgent: Boolean = false): JSONObject =
+        withContext(Dispatchers.IO) {
+            val request = Request.Builder()
+                .url("$baseUrl/api/robot/$robotId/command")
+                .header("Authorization", "Bearer ${authToken ?: ""}")
+                .post(payload.toString().toRequestBody(JSON_MEDIA_TYPE))
+                .build()
+            executeExpectingJson(request, if (urgent) urgentClient() else client)
+        }
+
+    private fun urgentClient(): OkHttpClient = client.newBuilder()
+        .connectTimeout(2, TimeUnit.SECONDS)
+        .readTimeout(2, TimeUnit.SECONDS)
+        .writeTimeout(2, TimeUnit.SECONDS)
+        .build()
 
     /**
      * Fetches real-time system metrics from the CM5.
@@ -253,22 +326,38 @@ class HydraApiClient(host: String, port: Int, private val client: OkHttpClient =
      * @param request The OkHttp Request to execute.
      * @return The response body parsed as a JSONObject.
      */
-    private fun executeExpectingJson(request: Request): JSONObject {
+    private fun executeExpectingJson(request: Request, callClient: OkHttpClient = client): JSONObject {
         val response = try {
-            client.newCall(request).execute()
+            callClient.newCall(request).execute()
         } catch (e: IOException) {
-            throw HydraApiException("No se pudo contactar con $baseUrl: ${e.message}", e)
+            throw HydraApiException("Could not reach $baseUrl: ${e.message}", e)
         }
         response.use {
-            if (!it.isSuccessful) {
-                throw HydraApiException("HTTP ${it.code} de $baseUrl${request.url.encodedPath}")
-            }
             val bodyString = it.body?.string()
-                ?: throw HydraApiException("Respuesta vacía de $baseUrl${request.url.encodedPath}")
+            if (!it.isSuccessful) {
+                // The server's error body carries a reason (`error`) and, for the
+                // auth middleware, a stable `code` - keep both so the caller can
+                // tell an expired session from a missing permission, an unknown
+                // command (400) or a robot reserved by someone else (409).
+                val errorBody = try {
+                    if (bodyString.isNullOrEmpty()) null else JSONObject(bodyString)
+                } catch (_: Exception) {
+                    null
+                }
+                throw HydraApiException(
+                    "HTTP ${it.code} from $baseUrl${request.url.encodedPath}",
+                    httpCode = it.code,
+                    serverCode = errorBody?.optString("code", "")?.ifEmpty { null },
+                    serverMessage = errorBody?.optString("error", "")?.ifEmpty { null },
+                )
+            }
+            if (bodyString == null) {
+                throw HydraApiException("Empty answer from $baseUrl${request.url.encodedPath}")
+            }
             return try {
                 JSONObject(bodyString)
             } catch (e: Exception) {
-                throw HydraApiException("Respuesta no es JSON válido: ${e.message}", e)
+                throw HydraApiException("The answer is not valid JSON: ${e.message}", e)
             }
         }
     }

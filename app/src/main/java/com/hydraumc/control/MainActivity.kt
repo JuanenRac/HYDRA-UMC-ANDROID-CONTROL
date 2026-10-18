@@ -211,12 +211,13 @@ class MainActivity : FragmentActivity() {
             // starts empty, gets populated moments later from cache/network) still
             // reliably stops every robot once there's actually something to stop.
             val robotsForEstop = robotViewModel.robots.value
-            LaunchedEffect(pendingGlobalEstop, robotsForEstop) {
-                if (pendingGlobalEstop && robotsForEstop.isNotEmpty()) {
-                    robotsForEstop.forEach { robot ->
-                        robotViewModel.selectedRobotId.value = robot.id
-                        robotViewModel.sendCommand("stop")
-                    }
+            // Only a roster that came from the server counts: the first non-empty
+            // list on a cold start is the cached one, which can be days old and
+            // miss robots that exist now.
+            val stateIsLive = robotViewModel.stateIsLive.value
+            LaunchedEffect(pendingGlobalEstop, robotsForEstop, stateIsLive) {
+                if (pendingGlobalEstop && robotsForEstop.isNotEmpty() && stateIsLive) {
+                    robotViewModel.stopAllRobots()
                     pendingGlobalEstop = false
                 }
             }
@@ -234,9 +235,15 @@ class MainActivity : FragmentActivity() {
             LaunchedEffect(pendingGlobalEstop) {
                 if (pendingGlobalEstop) {
                     delay(GLOBAL_ESTOP_TIMEOUT_MS)
-                    if (pendingGlobalEstop && robotViewModel.robots.value.isEmpty()) {
+                    if (pendingGlobalEstop) {
                         pendingGlobalEstop = false
-                        robotViewModel.lastError.value = getString(R.string.error_global_estop_no_robots)
+                        if (robotViewModel.robots.value.isEmpty()) {
+                            robotViewModel.lastError.value = getString(R.string.error_global_estop_no_robots)
+                        } else {
+                            // No live answer in time: still try the last known roster
+                            // (the failure, if any, is shown), rather than doing nothing.
+                            robotViewModel.stopAllRobots()
+                        }
                     }
                 }
             }

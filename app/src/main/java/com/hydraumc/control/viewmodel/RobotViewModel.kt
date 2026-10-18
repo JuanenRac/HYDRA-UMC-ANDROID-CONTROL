@@ -242,6 +242,8 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
     private var bleScanCallback: ScanCallback? = null
 
     var state = HydraState.empty()
+    /** True once a state from the server (not the offline cache) has been applied in this process. */
+    val stateIsLive = mutableStateOf(false)
     var apiClient: HydraApiClient? = null
     // Real, Compose-observable mirror of apiClient?.authToken - apiClient
     // itself is a plain var and HydraApiClient.authToken is a plain var on
@@ -263,6 +265,17 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
     private val notificationPrefs = com.hydraumc.control.util.NotificationPrefs(application)
     private val stateCache = StateCache(application)
     private var isSwitchingServer = false
+
+    // At most one session renewal runs at a time: a rejected token shows up
+    // twice (the server's error message, then the 1008 close) and in every
+    // command that is in flight, and each used to start its own login.
+    private var reloginJob: kotlinx.coroutines.Job? = null
+
+    // Jog commands currently on the wire, per robot. A press-and-hold repeats
+    // every 150 ms; on a slow link the POSTs used to pile up and arrive after
+    // the button was released (or after a stop). While one is in flight the
+    // next tick is dropped instead of queued.
+    private val jogsInFlight = mutableMapOf<Int, Int>()
 
     val isLoggedIn = mutableStateOf(value = false)
     // Real, live-reproduced bug this exists to fix: MainActivity's splash
@@ -372,6 +385,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
             if (profile.token.isNotEmpty()) {
                 val client = HydraApiClient(ipAddress.value, port.value.toIntOrNull() ?: 3000)
                 client.authToken = profile.token
+                client.refreshToken = profile.refreshToken.ifEmpty { null }
                 apiClient = client
                 authTokenState.value = profile.token
             }
@@ -467,20 +481,26 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                 if (response.optBoolean("success")) {
                     val token = response.optStr("token")
                     client.authToken = token
+                    client.refreshToken = response.optStr("refreshToken").ifEmpty { null }
                     authTokenState.value = token
                     isLoggedIn.value = true
                     loginUsername.value = user
                     loginPassword.value = pass
                     loginRememberMe.value = remember
                     
+                    // The password is kept on the device only when the user asked
+                    // for it ("remember me", or the fingerprint sign-in, which
+                    // needs it); the refresh token renews the session without it.
                     authPrefs.saveAuth(
                         com.hydraumc.control.network.UserProfile(
                             username = user,
-                            password = pass,
+                            password = if (remember || isBiometricEnabled.value) pass else "",
                             email = loginEmail.value,
                             rememberMe = remember,
                             isLoggedIn = true,
-                            token = token
+                            isBiometricEnabled = isBiometricEnabled.value,
+                            token = token,
+                            refreshToken = client.refreshToken ?: "",
                         ),
                     )
                     logTelemetry("Login successful")
@@ -490,7 +510,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                 }
             } catch (e: Exception) {
                 logTelemetry("Login error: ${e.message}")
-                lastError.value = e.message
+                lastError.value = (e as? HydraApiException)?.serverMessage ?: e.message
             }
         }
     }
@@ -501,10 +521,12 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         loginEmail.value = email
         isBiometricEnabled.value = biometric
         viewModelScope.launch {
+            // Starts from what is stored: saving the profile used to write an
+            // empty token, which ended the session at the next reconnect.
             authPrefs.saveAuth(
-                com.hydraumc.control.network.UserProfile(
+                authPrefs.loadAuth().copy(
                     username = user,
-                    password = pass,
+                    password = if (loginRememberMe.value || biometric) pass else "",
                     email = email,
                     rememberMe = loginRememberMe.value,
                     isLoggedIn = isLoggedIn.value,
@@ -569,8 +591,25 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
 
     fun logout() {
         isLoggedIn.value = false
+        // The session ends for real: no live socket, no polling, no client
+        // that the widget or the notification could still send commands with.
+        reloginJob?.cancel()
+        connectJob?.cancel()
+        metricsJob?.cancel()
+        ws?.disconnect()
+        ws = null
+        NotificationHelper.hideSafetyNotification(getApplication())
+        connectionStatus.value = getApplication<Application>().getString(R.string.status_disconnected)
+        val client = apiClient
+        apiClient = null
+        authTokenState.value = null
+        val keepPassword = isBiometricEnabled.value
+        if (!keepPassword) loginPassword.value = ""
         viewModelScope.launch {
-            authPrefs.clearAuth()
+            // Revoke the refresh token on the server too (best effort).
+            val refresh = client?.refreshToken ?: authPrefs.loadAuth().refreshToken.ifEmpty { null }
+            if (client != null && refresh != null) client.logout(refresh)
+            authPrefs.clearAuth(wipePassword = !keepPassword)
         }
     }
 
@@ -606,44 +645,76 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
     // (a real AndroidKeyStore) or introducing dependency injection for
     // AuthPrefs across this ViewModel - out of scope for this change.
     private suspend fun attemptSilentRelogin(): Boolean {
-        // The ENTIRE body is inside this try, deliberately including
-        // authPrefs.loadAuth() itself - a real, defense-in-depth reason,
-        // not just tidiness: loadAuth() touches EncryptedSharedPreferences/
-        // AndroidKeyStore (see AuthPrefs.kt), which can genuinely throw on
-        // a real device too (a corrupted keystore, a post-restore
-        // migration edge case - see AuthPrefs.kt's own header comment on
-        // exactly this class of failure). Before this fix, an exception
-        // here would propagate straight out of the coroutine this runs in
-        // (setupWebSocket's onError launch{}), silently killing it WITHOUT
-        // ever reaching the existing forced-logout fallback - the app
-        // would be left in a dead, unrecoverable state (WS closed, no
-        // error shown, nothing reconnects) instead of the one guarantee
-        // this whole feature must never break: a failure here always
-        // degrades to today's real forced logout, never to nothing at all.
+        // The whole body sits in a try on purpose: authPrefs.loadAuth() touches
+        // EncryptedSharedPreferences/AndroidKeyStore and can genuinely throw on
+        // a real device, and a failure here must degrade to the forced logout
+        // below the caller already has, never to a silently dead app.
         return try {
-            val profile = authPrefs.loadAuth()
-            if (!profile.rememberMe || profile.username.isBlank() || profile.password.isBlank()) return false
             val host = ipAddress.value.trim()
             val portInt = port.value.trim().toIntOrNull() ?: return false
             val client = HydraApiClient(host, portInt)
-            val response = client.login(profile.username, profile.password)
-            if (!response.optBoolean("success")) return false
-            val token = response.optStr("token")
-            if (token.isEmpty()) return false
-            client.authToken = token
+            if (!renewTokens(client)) return false
             apiClient = client
-            authTokenState.value = token
-            authPrefs.saveAuth(profile.copy(token = token, isLoggedIn = true))
             logTelemetry("Session silently renewed after token expiry")
-            // Reuses the exact same reconnect path a manual "Retry" would -
-            // re-resolves REST state and reopens the WebSocket with the
-            // fresh token via setupWebSocket()'s own
-            // authPrefs.loadAuth().token read.
+            // Reuses the exact same reconnect path a manual "Retry" would.
             connect()
             true
         } catch (e: Exception) {
             logTelemetry("Silent re-login failed: ${e.message}")
             false
+        }
+    }
+
+    /**
+     * Gets a new access token into [client]: the refresh token first (no
+     * password needed), the stored "remember me" credentials as a fallback.
+     * Stores the result. Returns false when neither works, which is the
+     * caller's cue to send the user back to the login screen.
+     */
+    private suspend fun renewTokens(client: HydraApiClient): Boolean {
+        return try {
+            val profile = authPrefs.loadAuth()
+            val refresh = client.refreshToken ?: profile.refreshToken.ifEmpty { null }
+            var response: JSONObject? = null
+            if (refresh != null) {
+                response = try {
+                    client.refresh(refresh).takeIf { it.optBoolean("success") }
+                } catch (_: Exception) {
+                    null
+                }
+            }
+            if (response == null) {
+                if (!profile.rememberMe || profile.username.isBlank() || profile.password.isBlank()) return false
+                val login = client.login(profile.username, profile.password)
+                if (!login.optBoolean("success")) return false
+                response = login
+            }
+            val token = response.optStr("token")
+            if (token.isEmpty()) return false
+            client.authToken = token
+            client.refreshToken = response.optStr("refreshToken").ifEmpty { null }
+            authTokenState.value = token
+            authPrefs.saveAuth(profile.copy(token = token, refreshToken = client.refreshToken ?: "", isLoggedIn = true))
+            true
+        } catch (e: Exception) {
+            logTelemetry("Session renewal failed: ${e.message}")
+            false
+        }
+    }
+
+    /**
+     * The one entry point for "the server says this session is no longer
+     * valid": renews it once (however many callers notice at the same time)
+     * and only if that fails sends the user back to the login screen.
+     */
+    private fun renewSessionOrLogout() {
+        if (reloginJob?.isActive == true) return
+        reloginJob = viewModelScope.launch {
+            if (!attemptSilentRelogin()) {
+                isLoggedIn.value = false
+                connectionStatus.value = getApplication<Application>().getString(R.string.status_disconnected)
+                ws?.disconnect()
+            }
         }
     }
 
@@ -772,11 +843,14 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         connectJob?.cancel()
         connectJob = viewModelScope.launch {
             // Ensure token is carried over or reloaded from persistence
-            val token = apiClient?.authToken ?: authPrefs.loadAuth().token
+            val profile = authPrefs.loadAuth()
+            val token = apiClient?.authToken ?: profile.token
             val client = HydraApiClient(host, portInt)
             client.authToken = token
+            client.refreshToken = apiClient?.refreshToken ?: profile.refreshToken.ifEmpty { null }
             apiClient = client
             authTokenState.value = token
+            var restSynced = false
 
             prefs.save(host, portValue)
 
@@ -792,12 +866,17 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                     }
                 }
                 
-                val settings = client.getSettings()
+                val settings = try {
+                    client.getSettings()
+                } catch (e: HydraApiException) {
+                    // An expired token at start-up: renew it once and read again
+                    // instead of bouncing the user to the login screen.
+                    if (e.isSessionProblem && renewTokens(client)) client.getSettings() else throw e
+                }
                 logTelemetry("Initial state synchronized via REST")
                 applyState(HydraState(settings))
+                restSynced = true
                 onInitialConnectSucceeded?.invoke()
-
-                startMetricsLoop(client)
             } catch (e: HydraApiException) {
                 logTelemetry("REST Sync Error: ${e.message}")
                 lastError.value = e.message
@@ -806,7 +885,10 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                 isSwitchingServer = false
             }
 
-            setupWebSocket(host, portInt, client.usesTls)
+            // No socket against a server the REST sync could not reach: it would
+            // only retry forever in the background. The metrics poll starts when
+            // the socket reports CONNECTED (see setupWebSocket).
+            if (restSynced) setupWebSocket(host, portInt, client.usesTls)
         }
     }
 
@@ -852,8 +934,13 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private fun setupWebSocket(host: String, port: Int, useTls: Boolean = false) {
-        viewModelScope.launch {
-            val token = authPrefs.loadAuth().token
+        // Runs inside connect()'s own job, with the token that job just
+        // confirmed against the REST sync: it used to be a separate coroutine
+        // that read the token from disk, so two quick connects could leave an
+        // orphan socket that kept reconnecting on its own.
+        ws?.disconnect()
+        run {
+            val token = apiClient?.authToken.orEmpty()
             ws = HydraWebSocket(
                 host = host,
                 port = port,
@@ -881,6 +968,13 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                             getApplication<Application>().getString(R.string.status_disconnected)
                         }
                     }
+                    if (status == WsStatus.CONNECTED) {
+                        // Started here, after the status string above is set: the
+                        // loop only runs while it reads "connected", and starting
+                        // it after the REST sync (before the socket opened) made it
+                        // end on its first check, so CPU/MEM/TEMP never appeared.
+                        apiClient?.let { startMetricsLoop(it) }
+                    }
                 },
                 onSettings = { payload ->
                     // Full replace, not a merge - reaches this callback for
@@ -907,25 +1001,15 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                     applyState(HydraState(payload))
                 },
                 onDelta = { msg -> applyRobotDelta(msg) },
+                onUnauthorized = {
+                    // The server closed the socket with 1008 (expired or invalid
+                    // token). One renewal, however many signals arrive; only a
+                    // failed renewal sends the user back to the login screen.
+                    if (!isSwitchingServer) renewSessionOrLogout()
+                },
             ) { message ->
                 if (!isSwitchingServer) {
                     lastError.value = message
-                    if (message.contains("autorizada") || message.contains("Access denied")) {
-                        // try attemptSilentRelogin before forcing the
-                        // user back to LoginScreen - see its own doc comment.
-                        // Only the failure path still does today's forced
-                        // logout; a successful silent relogin already calls
-                        // connect() itself, which supersedes everything
-                        // below (new WebSocket, connectionStatus updated by
-                        // its own onStatus callback).
-                        viewModelScope.launch {
-                            if (!attemptSilentRelogin()) {
-                                isLoggedIn.value = false
-                                connectionStatus.value = getApplication<Application>().getString(R.string.status_disconnected)
-                                ws?.disconnect()
-                            }
-                        }
-                    }
                 }
             }.also { it.connect() }
         }
@@ -934,6 +1018,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
     private fun applyState(newState: HydraState, isFromCache: Boolean = false) {
         val oldState = state
         state = newState
+        if (!isFromCache) stateIsLive.value = true
         robots.value = newState.allRobots.map { it.toDisplay() }
         jobs.value = newState.allJobs.map { JobState(it.name) }
         
@@ -955,7 +1040,14 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
             stateCacheJob?.cancel()
             stateCacheJob = viewModelScope.launch {
                 kotlinx.coroutines.delay(1000)
-                stateCache.saveState(newState.toJson())
+                // Serialized here, on the main thread that also mutates the tree,
+                // not inside DataStore's own thread.
+                try {
+                    stateCache.saveState(newState.toJson().toString())
+                } catch (e: Exception) {
+                    if (e is kotlinx.coroutines.CancellationException) throw e
+                    logTelemetry("State cache not saved: ${e.message}")
+                }
             }
 
             newState.allRobots.forEach { robot ->
@@ -1171,10 +1263,21 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
             applyState(state)
         }
 
+        val isJog = command == "jog"
         val send: () -> Unit = {
+            if (isJog) jogsInFlight[robotId] = (jogsInFlight[robotId] ?: 0) + 1
             viewModelScope.launch {
                 try {
-                    client.postRobotCommand(robotId, payload)
+                    val answer = postCommandWithRetry(client, robotId, payload, urgent = command == "stop")
+                    val warnings = commandWarnings(answer)
+                    if (warnings != null) {
+                        // The server answered 200 but applied nothing (a speed
+                        // outside its range, a malformed jog): same as a failure.
+                        logTelemetry("TX not applied [$command]: $warnings")
+                        lastError.value = getApplication<Application>().getString(R.string.error_command_not_applied, command, warnings)
+                        rollback()
+                        return@launch
+                    }
                     // Success log for "$command" (play/pause/stop/enable/...) -
                     // previously only the FAILURE path logged anything
                     // (logTelemetry("TX Error [...]") below), so a command
@@ -1190,14 +1293,10 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                     lastError.value = null
                 } catch (e: HydraApiException) {
                     logTelemetry("TX Error [$command]: ${e.message}")
-                    if (e.message?.contains("401") == true) {
-                        lastError.value = "Unauthorized: Session expired"
-                        isLoggedIn.value = false
-                        connectionStatus.value = getApplication<Application>().getString(R.string.status_disconnected)
-                        ws?.disconnect()
-                    } else {
-                        lastError.value = getApplication<Application>().getString(R.string.error_command_failed, command)
-                    }
+                    lastError.value = describeCommandError(command, e)
+                    // An expired session is renewed (once, whoever notices first);
+                    // only a failed renewal returns to the login screen.
+                    if (e.isSessionProblem) renewSessionOrLogout()
                     rollback()
                 } catch (e: Exception) {
                     // Was `catch (e: HydraApiException)` only - a plain
@@ -1205,8 +1304,13 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                     // HydraApiException, so it escaped uncaught, skipping
                     // both the error message AND the rollback below.
                     logTelemetry("TX Error [$command]: ${e.message}")
-                    lastError.value = getApplication<Application>().getString(R.string.error_command_failed, command)
+                    lastError.value = getApplication<Application>().getString(
+                        if (command == "stop") R.string.error_stop_not_confirmed else R.string.error_command_failed,
+                        command,
+                    )
                     rollback()
+                } finally {
+                    if (isJog) jogsInFlight[robotId] = ((jogsInFlight[robotId] ?: 1) - 1).coerceAtLeast(0)
                 }
             }
         }
@@ -1222,10 +1326,77 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    /**
+     * A stop is worth retrying: it is posted with short timeouts, and a
+     * network failure (no answer at all) is tried again up to 3 times in
+     * about a second. An answer from the server, of any kind, is final.
+     */
+    private suspend fun postCommandWithRetry(
+        client: HydraApiClient,
+        robotId: Int,
+        payload: JSONObject,
+        urgent: Boolean,
+    ): JSONObject {
+        var attempt = 0
+        while (true) {
+            try {
+                return client.postRobotCommand(robotId, payload, urgent)
+            } catch (e: HydraApiException) {
+                if (!urgent || e.httpCode != null || attempt >= 2) throw e
+            } catch (e: java.io.IOException) {
+                if (!urgent || attempt >= 2) throw e
+            }
+            attempt++
+            // Waited on a real dispatcher (not the caller's), so the pause is real
+            // time even where the main dispatcher is a virtual-time test one.
+            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) { kotlinx.coroutines.delay(250) }
+        }
+    }
+
+    /** The server's `warnings` of a 200 answer (it applied nothing), joined; null when there are none. */
+    private fun commandWarnings(answer: JSONObject): String? {
+        val warnings = answer.optJSONArray("warnings") ?: return null
+        if (warnings.length() == 0) return null
+        return (0 until warnings.length()).joinToString("; ") { i ->
+            val item = warnings.opt(i)
+            if (item is JSONObject) item.optString("message", item.toString()) else item.toString()
+        }
+    }
+
+    /** The message for a command the server answered with an error, by what the answer says. */
+    private fun describeCommandError(command: String, e: HydraApiException): String {
+        val app = getApplication<Application>()
+        return when {
+            e.isSessionProblem -> app.getString(R.string.error_session_expired)
+            e.isReservedByAnother -> app.getString(R.string.error_robot_reserved, e.serverMessage ?: "")
+            e.isPermissionDenied -> app.getString(R.string.error_permission_denied)
+            e.isRejectedCommand -> app.getString(R.string.error_command_rejected, command, e.serverMessage ?: "")
+            command == "stop" -> app.getString(R.string.error_stop_not_confirmed, command)
+            else -> app.getString(R.string.error_command_failed, command)
+        }
+    }
+
+    /** True while a jog of [robotId] is still on the wire, or the robot is running a trajectory (two writers on one setpoint). */
+    private fun jogBlocked(robotId: Int?): Boolean {
+        if (robotId == null) return true
+        if ((jogsInFlight[robotId] ?: 0) > 0) return true
+        val robot = state.robotById(robotId) ?: return true
+        return robot.isPlaying && !robot.isPaused
+    }
+
+    /**
+     * Stops every robot in the roster, once each (the widget and the
+     * notification action). Each stop goes to its own robot by id: it does not
+     * change the selected robot, and it does not rely on combinedWith fan-out.
+     */
+    fun stopAllRobots() {
+        robots.value.map { it.id }.forEach { id ->
+            sendAtomicCommand("stop", explicitRobotId = id) { it.stop() }
+        }
+    }
+
     fun sendCommand(command: String) {
         when (command) {
-            "enable" -> sendAtomicCommand(command, propagateToCombined = true) { it.setOnline(true) }
-            "disable" -> sendAtomicCommand(command, propagateToCombined = true) { it.setOnline(false) }
             "play" -> sendAtomicCommand(command, propagateToCombined = true) { it.setPlaying(true) }
             // Pause is an explicit desired state, computed once from the
             // selected robot and applied identically to its combined group.
@@ -1244,6 +1415,11 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun jog(target: String, axis: String, amount: Double) {
+        if (jogBlocked(selectedRobotId.value)) return
+        jogAxis(target, axis, amount)
+    }
+
+    private fun jogAxis(target: String, axis: String, amount: Double) {
         val params = JSONObject().put("axis", axis).put("amount", amount).put("target", target)
         sendAtomicCommand("jog", params) { r ->
             if (target == "robot") {
@@ -1274,6 +1450,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
      */
     fun jogXYZ(target: String, dx: Int, dy: Int, dz: Int, jogStep: Double) {
         val robotId = selectedRobotId.value
+        if (jogBlocked(robotId)) return // the previous tick is still on the wire, or a trajectory is running
         val robot = robotId?.let { state.robotById(it) }
         if (target == "robot" && robot != null && robot.model == "Parol6 (6-DOF)") {
             val x = robot.posAxis("x") + dx * jogStep
@@ -1300,9 +1477,9 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
             return
         }
 
-        if (dx != 0) jog(target, "x", dx * jogStep)
-        if (dy != 0) jog(target, "y", dy * jogStep)
-        if (dz != 0) jog(target, "z", dz * jogStep)
+        if (dx != 0) jogAxis(target, "x", dx * jogStep)
+        if (dy != 0) jogAxis(target, "y", dy * jogStep)
+        if (dz != 0) jogAxis(target, "z", dz * jogStep)
     }
 
     /**
@@ -1327,6 +1504,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
      */
     fun jogJ1(direction: Int, jogStep: Double) {
         val robotId = selectedRobotId.value
+        if (jogBlocked(robotId)) return
         val robot = robotId?.let { state.robotById(it) } ?: return
         val (j1Min, j1Max) = if (robot.model == "Parol6 (6-DOF)") {
             PAROL6_JOINT_LIMITS_DEG.getValue("j1")
