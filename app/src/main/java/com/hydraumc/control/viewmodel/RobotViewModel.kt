@@ -26,6 +26,9 @@ import com.hydraumc.control.network.HydraApiException
 import com.hydraumc.control.network.HydraWebSocket
 import com.hydraumc.control.network.HydraBleClient
 import com.hydraumc.control.network.StateCache
+import com.hydraumc.control.network.StopAllResult
+import com.hydraumc.control.network.StopAllRobot
+import com.hydraumc.control.network.StopAllStatus
 import com.hydraumc.control.network.WsStatus
 import com.hydraumc.control.network.scanSubnets
 import com.hydraumc.control.wear.WatchAssistantReply
@@ -229,6 +232,8 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
     val connectionStatus = mutableStateOf(application.getString(R.string.status_disconnected))
 
     val lastError = mutableStateOf<String?>(null)
+    /** What the global STOP is doing or did; null before the first one. */
+    val stopAllStatus = mutableStateOf<StopAllStatus?>(null)
     val lastBtError = mutableStateOf<String?>(null)
 
     val discoveredServers = mutableStateOf<List<ServerInfo>>(emptyList())
@@ -1385,14 +1390,104 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     /**
-     * Stops every robot in the roster, once each (the widget and the
-     * notification action). Each stop goes to its own robot by id: it does not
-     * change the selected robot, and it does not rely on combinedWith fan-out.
+     * The global STOP: one call to the server's stop-all route that stops every
+     * robot, whoever reserved it. It goes out at once (it never waits for the
+     * roster or a refresh), is retried once when nobody answers, falls back to
+     * stopping the known robots one by one when the server rate limits the
+     * global call, and - when nothing confirms it - leaves
+     * [stopAllStatus] at [StopAllStatus.NotConfirmed] until a later stop works.
+     * The widget, the notification action and every STOP button end up here.
      */
-    fun stopAllRobots() {
-        robots.value.map { it.id }.forEach { id ->
-            sendAtomicCommand("stop", explicitRobotId = id) { it.stop() }
+    fun globalStop() {
+        val app = getApplication<Application>()
+        val first = apiClient
+        if (first == null) {
+            val reason = app.getString(R.string.error_not_connected)
+            stopAllStatus.value = StopAllStatus.NotConfirmed(reason)
+            lastError.value = app.getString(R.string.stop_all_not_confirmed)
+            return
         }
+        stopAllStatus.value = StopAllStatus.Sending
+        viewModelScope.launch {
+            val outcome = runStopAll(first)
+            stopAllStatus.value = outcome
+            if (outcome is StopAllStatus.Done) {
+                // Show the stop at once; the next state broadcast confirms or corrects it.
+                outcome.result.robots.filter { it.stopped }.forEach { r -> state.robotById(r.robotId)?.stop() }
+                applyState(state)
+                logTelemetry("TX OK [stop-all] -> ${outcome.result.stoppedCount} stopped, ${outcome.result.failedCount} failed")
+                lastError.value = null
+            } else if (outcome is StopAllStatus.NotConfirmed) {
+                logTelemetry("TX Error [stop-all]: ${outcome.reason}")
+                lastError.value = app.getString(R.string.stop_all_not_confirmed)
+            }
+        }
+    }
+
+    /** Hides the result banner of the global STOP; a STOP that is not confirmed cannot be hidden. */
+    fun dismissStopAllStatus() {
+        if (stopAllStatus.value is StopAllStatus.Done) stopAllStatus.value = null
+    }
+
+    private suspend fun runStopAll(start: HydraApiClient): StopAllStatus {
+        var client = start
+        var networkRetried = false
+        var sessionRenewed = false
+        while (true) {
+            try {
+                return StopAllStatus.Done(client.postStopAll())
+            } catch (e: HydraApiException) {
+                when {
+                    e.isRateLimited -> return stopRobotsOneByOne(client)
+                    e.isSessionProblem && !sessionRenewed -> {
+                        sessionRenewed = true
+                        if (!attemptSilentRelogin()) {
+                            renewSessionOrLogout()
+                            return StopAllStatus.NotConfirmed(getApplication<Application>().getString(R.string.error_session_expired))
+                        }
+                        client = apiClient ?: return StopAllStatus.NotConfirmed(null)
+                    }
+                    e.httpCode == null && !networkRetried -> {
+                        networkRetried = true
+                        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) { kotlinx.coroutines.delay(300) }
+                    }
+                    else -> return StopAllStatus.NotConfirmed(e.serverMessage ?: e.message)
+                }
+            } catch (e: java.io.IOException) {
+                if (networkRetried) return StopAllStatus.NotConfirmed(e.message)
+                networkRetried = true
+                kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) { kotlinx.coroutines.delay(300) }
+            } catch (e: Exception) {
+                return StopAllStatus.NotConfirmed(e.message)
+            }
+        }
+    }
+
+    /** The fallback when the global call is rate limited: the per-robot stop for every known robot. */
+    private suspend fun stopRobotsOneByOne(client: HydraApiClient): StopAllStatus {
+        val known = state.allRobots
+        if (known.isEmpty()) return StopAllStatus.NotConfirmed(getApplication<Application>().getString(R.string.error_robot_not_found))
+        val payload = { JSONObject().put("command", "stop") }
+        val entries = known.map { robot ->
+            val error = try {
+                postCommandWithRetry(client, robot.id, payload(), urgent = true)
+                null
+            } catch (e: Exception) {
+                (e as? HydraApiException)?.serverMessage ?: e.message ?: "error"
+            }
+            StopAllRobot(
+                robotId = robot.id, controllerId = "", name = robot.name,
+                stopped = error == null, valvesOff = false, pumpsOff = false,
+                reservedBy = null, error = error,
+            )
+        }
+        val failed = entries.count { !it.stopped }
+        return StopAllStatus.Done(
+            StopAllResult(
+                success = failed == 0, stoppedCount = entries.size - failed, failedCount = failed,
+                persisted = true, robots = entries, viaFallback = true,
+            ),
+        )
     }
 
     fun sendCommand(command: String) {

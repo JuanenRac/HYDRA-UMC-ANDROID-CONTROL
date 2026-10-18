@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "ecosystem": "HYDRA-UMC",
   "name": "HYDRA-UMC-ANDROID-CONTROL",
-  "version": "0.6.5",
+  "version": "0.6.6",
   "role": "ui",
   "stack": "android",
   "technologies": [
@@ -16,7 +16,7 @@
   "family": "Core Backend & Clients",
   "parent": "HYDRA-UMC-SERVER",
   "build": "./gradlew assembleDebug. Needs Android SDK.",
-  "notes": "Native Android control app with biometric login, talking to HYDRA-UMC-SERVER over Wi-Fi/Bluetooth. It receives paired Wear OS Data Layer voice/status messages, keeps the Server JWT encrypted on the phone and returns bounded replies; that path never issues robot commands. Declares a real Wear OS android_wear_capabilities resource (hydra_umc_phone_companion) so the paired Watch can discover this exact app via CapabilityClient instead of trusting connectedNodes ordering.",
+  "notes": "Native Android control app with biometric login, talking to HYDRA-UMC-SERVER over Wi-Fi/Bluetooth. It receives paired Wear OS Data Layer voice/status messages, keeps the Server JWT encrypted on the phone and returns bounded replies; that path never issues robot commands. Declares a real Wear OS android_wear_capabilities resource (hydra_umc_phone_companion) so the paired Watch can discover this exact app via CapabilityClient instead of trusting connectedNodes ordering. A red STOP button in the top bar of every screen, on the control console and on the 3D view, the home-screen widget and the notification action all send one POST /api/stop-all (no hold, no confirmation) that stops every robot, with a retry, a per-robot fallback on 429 and a persistent STOP NOT CONFIRMED state.",
   "native_version": {
     "file": "app/version.properties",
     "pattern": {

@@ -429,15 +429,14 @@ fun ThreeDScreen(viewModel: RobotViewModel) {
         // screen has it), but every surface that can MOVE a robot carries an
         // E-STOP: jogging in this viewport used to mean leaving it and finding
         // the Control tab before the robot could be stopped.
-        if (selectedRobot != null) {
-            Box(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(12.dp)
-                    .zIndex(2f),
-            ) {
-                EStopButton(viewModel)
-            }
+        // The global STOP needs no selected robot: it is always there.
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(12.dp)
+                .zIndex(2f),
+        ) {
+            EStopButton(viewModel)
         }
     }
 }

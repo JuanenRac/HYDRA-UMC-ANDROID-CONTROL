@@ -102,7 +102,11 @@ fun MainScreen(
     if (isLandscape && isOnThreeDScreen) {
         // Full screen 3D in landscape mode
         Surface(modifier = Modifier.fillMaxSize(), color = Color.Black) {
-            ThreeDScreen(viewModel)
+            Box(Modifier.fillMaxSize()) {
+                ThreeDScreen(viewModel)
+                // ThreeDScreen carries its own STOP button; the result of the last one shows here.
+                StopAllBanner(viewModel, Modifier.align(Alignment.TopCenter))
+            }
         }
         return
     }
@@ -170,7 +174,7 @@ fun MainScreen(
                                     backgroundColor = MaterialTheme.colorScheme.surfaceVariant,
                                     borderColor = MaterialTheme.colorScheme.primary,
                                 )
-                                .padding(horizontal = 16.dp, vertical = 4.dp),
+                                .padding(horizontal = 8.dp, vertical = 4.dp),
                             contentAlignment = Alignment.Center,
                         ) {
                             Text(
@@ -194,12 +198,16 @@ fun MainScreen(
                                         offset = androidx.compose.ui.geometry.Offset(2f, 2f),
                                         blurRadius = 4f,
                                     ),
-                                    letterSpacing = 2.sp,
+                                    letterSpacing = 1.sp,
                                 ),
                                 fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
                                 fontWeight = androidx.compose.ui.text.font.FontWeight.ExtraBold,
                             )
                         }
+                    },
+                    // The global STOP lives here so it is on screen on every tab.
+                    actions = {
+                        GlobalStopButton(viewModel, Modifier.padding(end = 8.dp))
                     },
                     colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                         containerColor = MaterialTheme.colorScheme.background,
@@ -322,6 +330,7 @@ fun MainScreen(
                     }
                 }
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                StopAllBanner(viewModel)
             }
         },
         bottomBar = {

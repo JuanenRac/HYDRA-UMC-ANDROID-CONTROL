@@ -114,7 +114,7 @@ object NotificationHelper {
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setOngoing(true) // Persistent
             .setContentIntent(pendingIntent)
-            .addAction(R.drawable.ic_launcher_foreground, "STOP ALL ROBOTS", estopPendingIntent)
+            .addAction(R.drawable.ic_launcher_foreground, context.getString(R.string.stop_all_action), estopPendingIntent)
             .setStyle(androidx.media.app.NotificationCompat.MediaStyle().setShowActionsInCompactView(0))
 
         val notificationManager: NotificationManager =

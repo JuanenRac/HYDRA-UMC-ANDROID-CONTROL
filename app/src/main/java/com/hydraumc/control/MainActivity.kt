@@ -32,11 +32,11 @@ import com.hydraumc.control.viewmodel.RobotViewModel
 import com.hydraumc.control.viewmodel.AppUpdateViewModel
 import kotlinx.coroutines.delay
 
-// A widget-triggered E-STOP with no robot roster yet (cold start, no cache,
-// server unreachable) used to leave pendingGlobalEstop set forever with no
-// feedback - see the LaunchedEffect pair in setContent{} below. Bounds how
-// long it waits for robots.value to populate before giving up and telling
-// the user instead of hanging silently.
+// A widget or notification STOP that arrives on a cold start has no server
+// connection yet (the saved session is still being restored). It waits this
+// long for the connection and then sends the global STOP anyway, so that a
+// stop which cannot reach the server shows up as "not confirmed" instead of
+// disappearing.
 private const val GLOBAL_ESTOP_TIMEOUT_MS = 15_000L
 
 /**
@@ -49,16 +49,12 @@ class MainActivity : FragmentActivity() {
     /** Checks only public GitHub Release metadata when the app starts. */
     private val appUpdateViewModel: AppUpdateViewModel by viewModels()
 
-    // The widget's E-STOP intent can arrive during a fully cold start (app
-    // process not already alive), when robotViewModel.robots.value is still
-    // empty - it only gets populated later, either asynchronously from the
-    // cached state the ViewModel's own init{} loads (StateCache) or from a
-    // live scanNetwork()/connect(). handleIntent() itself only flags the
-    // request; the actual stop loop lives in a Compose LaunchedEffect (below,
-    // in setContent) that waits for robots.value to actually have entries
-    // before acting, so a cold-start E-STOP still reliably stops every robot
-    // once the roster loads instead of firing once against an empty list -
-    // exactly the scenario a home-screen safety widget needs to survive.
+    // The widget's STOP intent can arrive during a fully cold start (app
+    // process not alive), before the saved session has been restored and the
+    // server connection exists. handleIntent() only flags the request; a
+    // Compose LaunchedEffect (in setContent) sends the global STOP the moment
+    // the connection is there, or after GLOBAL_ESTOP_TIMEOUT_MS regardless.
+    // The global STOP needs no robot list, so nothing else is waited for.
     private var pendingGlobalEstop by mutableStateOf(false)
 
     /** Activity result launcher for enabling Bluetooth. */
@@ -206,45 +202,17 @@ class MainActivity : FragmentActivity() {
                 appUpdateViewModel.checkForUpdate()
             }
 
-            // Deferred global E-STOP - see pendingGlobalEstop's own comment above.
-            // Re-runs whenever robots.value changes, so a cold start (robots.value
-            // starts empty, gets populated moments later from cache/network) still
-            // reliably stops every robot once there's actually something to stop.
-            val robotsForEstop = robotViewModel.robots.value
-            // Only a roster that came from the server counts: the first non-empty
-            // list on a cold start is the cached one, which can be days old and
-            // miss robots that exist now.
-            val stateIsLive = robotViewModel.stateIsLive.value
-            LaunchedEffect(pendingGlobalEstop, robotsForEstop, stateIsLive) {
-                if (pendingGlobalEstop && robotsForEstop.isNotEmpty() && stateIsLive) {
-                    robotViewModel.stopAllRobots()
-                    pendingGlobalEstop = false
-                }
-            }
-
-            // Companion timeout for the LaunchedEffect above - if
-            // robotsForEstop is STILL empty this long after the widget tap
-            // (no cache, server unreachable, robot on another network),
-            // stop waiting and tell the user instead of leaving
-            // pendingGlobalEstop set forever with no feedback at all. Not a
-            // full fix (a real fix needs a Service/WorkManager path that
-            // doesn't depend on the UI or a live robots.value at all), but
-            // an operator who taps the E-STOP
-            // widget and gets nothing at least now finds out their tap
-            // didn't reach any robot, rather than assuming it did.
+            // Deferred global STOP - see pendingGlobalEstop's own comment above.
             LaunchedEffect(pendingGlobalEstop) {
                 if (pendingGlobalEstop) {
-                    delay(GLOBAL_ESTOP_TIMEOUT_MS)
-                    if (pendingGlobalEstop) {
-                        pendingGlobalEstop = false
-                        if (robotViewModel.robots.value.isEmpty()) {
-                            robotViewModel.lastError.value = getString(R.string.error_global_estop_no_robots)
-                        } else {
-                            // No live answer in time: still try the last known roster
-                            // (the failure, if any, is shown), rather than doing nothing.
-                            robotViewModel.stopAllRobots()
-                        }
+                    var waited = 0L
+                    while (robotViewModel.apiClient == null && waited < GLOBAL_ESTOP_TIMEOUT_MS) {
+                        delay(100)
+                        waited += 100
                     }
+                    pendingGlobalEstop = false
+                    // With no connection this still records "STOP not confirmed".
+                    robotViewModel.globalStop()
                 }
             }
 
@@ -300,9 +268,9 @@ class MainActivity : FragmentActivity() {
 
     private fun handleIntent(intent: Intent?) {
         if (intent?.action == "ACTION_GLOBAL_ESTOP") {
-            // Just flag it - the actual stop loop runs from the LaunchedEffect in
-            // setContent{} above once robots.value is real, not empty. See
-            // pendingGlobalEstop's own comment for why that matters on a cold start.
+            // Just flag it - the LaunchedEffect in setContent{} above sends the
+            // global STOP once the connection exists. See pendingGlobalEstop's
+            // own comment for why that matters on a cold start.
             pendingGlobalEstop = true
         }
     }

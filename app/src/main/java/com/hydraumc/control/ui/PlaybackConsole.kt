@@ -21,6 +21,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
@@ -35,6 +36,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -57,12 +61,11 @@ import com.hydraumc.control.viewmodel.RobotViewModel
  * of that protection logic - the ecosystem's own "reuse, don't invent" rule
  * applies doubly hard to an E-STOP button.
  *
- * Real long-press protection, unchanged from the original: a quick tap does
- * nothing but a short buzz + hint toast, so an accidental brush of this
- * button can't stop the robot; only a genuine hold (Compose's own
- * long-press timing, ~500ms) actually sends the command.
+ * The big red button is the global STOP: one tap, no confirmation, every
+ * robot. PLAY/PAUSE/STOP below act on the selected robot only; that per-robot
+ * STOP keeps its long-press protection.
  *
- * The E-STOP itself now pulses (alpha-animated red glow, continuous,
+ * The global STOP pulses (alpha-animated red glow, continuous,
  * independent of whether a robot is selected/online) - a real request from
  * live device testing: a static E-STOP icon read as just another button
  * among the rest, not the one control that must be found instantly under
@@ -71,7 +74,7 @@ import com.hydraumc.control.viewmodel.RobotViewModel
  * before.
  */
 @SuppressLint("MissingPermission")
-private fun vibrateOn(vibrator: Vibrator?, pattern: LongArray? = null, duration: Long = 50) {
+internal fun vibrateOn(vibrator: Vibrator?, pattern: LongArray? = null, duration: Long = 50) {
     try {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             if (pattern != null) vibrator?.vibrate(VibrationEffect.createWaveform(pattern, -1))
@@ -85,12 +88,11 @@ private fun vibrateOn(vibrator: Vibrator?, pattern: LongArray? = null, duration:
 }
 
 /**
- * The pulsing E-STOP button on its own - what every screen that moves a robot
- * shows (the Control screen through [PlaybackConsole], the 3D viewport in both
- * orientations). Same long-press protection as before: a quick tap only buzzes
- * and hints, a ~500 ms hold sends the stop.
+ * The pulsing STOP button on its own - the global STOP, one tap, no
+ * confirmation: it stops every robot, not just the selected one (see
+ * [RobotViewModel.globalStop]). What the Control screen (through
+ * [PlaybackConsole]) and the 3D viewport show next to the one in the app bar.
  */
-@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 fun EStopButton(viewModel: RobotViewModel, modifier: Modifier = Modifier) {
     val context = LocalContext.current
@@ -112,28 +114,26 @@ fun EStopButton(viewModel: RobotViewModel, modifier: Modifier = Modifier) {
         targetValue = Color.Red.copy(alpha = 0.6f + pulseAlpha * 0.4f),
         label = "estop-pulse-border",
     )
-    val holdHint = stringResource(R.string.estop_hold_to_confirm)
-    val estopLabel = stringResource(R.string.estop_label)
+    val stopDescription = stringResource(R.string.stop_all_description)
     Box(
         modifier = modifier
             .size(64.dp)
             .background(Color.Red.copy(alpha = pulseAlpha), CircleShape)
             .border(2.dp, pulseBorder, CircleShape)
-            .combinedClickable(
+            .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
                 onClick = {
-                    vibrateOn(vibrator, duration = 30)
-                    Toast.makeText(context, holdHint, Toast.LENGTH_SHORT).show()
-                },
-                onLongClick = {
-                    vibrateOn(vibrator, longArrayOf(0, 150, 50, 150, 50, 150))
-                    viewModel.sendCommand("stop")
+                    vibrateOn(vibrator, longArrayOf(0, 80, 40, 80))
+                    viewModel.globalStop()
                 },
             ),
         contentAlignment = Alignment.Center,
     ) {
-        Icon(Icons.Default.Dangerous, contentDescription = estopLabel, tint = Color.White, modifier = Modifier.size(36.dp))
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Icon(Icons.Default.Dangerous, contentDescription = stopDescription, tint = Color.White, modifier = Modifier.size(28.dp))
+            Text(stringResource(R.string.stop_all_label), color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Black)
+        }
     }
 }
 

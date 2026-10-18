@@ -18,14 +18,14 @@
             android:layout_width="64dp"
             android:layout_height="64dp"
             android:background="@drawable/emergency_stop_button"
-            android:contentDescription="Emergency Stop"
+            android:contentDescription="@string/stop_all_description"
             android:scaleType="fitCenter" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            android:text="GLOBAL STOP"
+            android:text="@string/stop_all_action"
             android:textColor="#FF4444"
             android:textStyle="bold"
             android:textSize="10sp" />

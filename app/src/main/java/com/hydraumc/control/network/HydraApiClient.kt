@@ -70,6 +70,9 @@ class HydraApiException(
     /** The robot is reserved by another account (the server's 409). */
     val isReservedByAnother: Boolean get() = httpCode == 409
 
+    /** The server is rate limiting this client (429). */
+    val isRateLimited: Boolean get() = httpCode == 429
+
     /** The server refused the command itself (an unknown command, a value it cannot take). */
     val isRejectedCommand: Boolean get() = httpCode == 400
 }
@@ -231,6 +234,19 @@ class HydraApiClient(host: String, port: Int, private val client: OkHttpClient =
                 .build()
             executeExpectingJson(request, if (urgent) urgentClient() else client)
         }
+
+    /**
+     * The global STOP: one call that stops every robot, whoever reserved it.
+     * Short timeouts like any stop; the caller decides what to do when it fails.
+     */
+    suspend fun postStopAll(): StopAllResult = withContext(Dispatchers.IO) {
+        val request = Request.Builder()
+            .url("$baseUrl/api/stop-all")
+            .header("Authorization", "Bearer ${authToken ?: ""}")
+            .post("".toRequestBody(JSON_MEDIA_TYPE))
+            .build()
+        StopAllResult.fromJson(executeExpectingJson(request, urgentClient()))
+    }
 
     private fun urgentClient(): OkHttpClient = client.newBuilder()
         .connectTimeout(2, TimeUnit.SECONDS)

@@ -51,15 +51,20 @@ actually talk to a robot today regardless of how solid the Android-side client c
 ## 4. Other industrial features
 
 - **Biometric login**: `BiometricHelper.kt` + `androidx.biometric`, fingerprint/face unlock gating `LoginScreen.kt`.
-- **Home-screen Global E-STOP widget** (`widget/GlobalStopWidget.kt`, a classic `AppWidgetProvider` with `RemoteViews`): a single tap
-  fires an `ACTION_GLOBAL_ESTOP` intent that launches `MainActivity`. `MainActivity` doesn't stop anything itself -
-  it sets a `pendingGlobalEstop` flag, and a `LaunchedEffect` keyed on `(pendingGlobalEstop, robots.value)` sends
-  `stop` to every known robot once the roster is actually populated (handles the cold-start case where
-  `robots.value` is still empty at tap time). A companion `LaunchedEffect` bounds that wait to
-  `GLOBAL_ESTOP_TIMEOUT_MS` (15s): if the roster is still empty after that, it gives up and surfaces
-  `error_global_estop_no_robots` via `robotViewModel.lastError` instead of leaving the tap silently pending forever.
-  This still opens the Activity and depends on a loaded roster rather than sending the stop directly from a
-  Service/WorkManager path, which remains a future implementation.
+- **Global STOP** (`ui/GlobalStop.kt`, `RobotViewModel.globalStop()`, `HydraApiClient.postStopAll()`): the red STOP button in
+  the top bar of `MainScreen`, the round `EStopButton` of the control console and of the 3D view, the home-screen widget and the
+  notification action all end in `globalStop()`. One tap, no long press, no confirmation. It POSTs `/api/stop-all` at once
+  (2 s timeouts, bearer token, no body; the server ignores reservations), retries once when nobody answers, renews an expired
+  session and repeats, and on a 429 stops every known robot with the per-robot `stop`. The answer (`network/StopAllResult.kt`)
+  is kept in `stopAllStatus` and drawn by `StopAllBanner`: a clean result hides itself, a failed robot, an unsaved stopped state
+  or a robot reserved by someone else stays visible, and `StopAllStatus.NotConfirmed` ("STOP NOT CONFIRMED") stays and cannot be
+  dismissed until a later STOP succeeds.
+- **Home-screen widget and notification action** (`widget/GlobalStopWidget.kt`, a classic `AppWidgetProvider` with
+  `RemoteViews`; `util/NotificationHelper.kt`): a tap fires an `ACTION_GLOBAL_ESTOP` intent that reaches `MainActivity`
+  (`singleTop`). `MainActivity` sets `pendingGlobalEstop`; a `LaunchedEffect` waits for the server connection (`apiClient`
+  non-null, at most `GLOBAL_ESTOP_TIMEOUT_MS`, 15 s) and then calls `globalStop()`, which needs no robot list. With no connection
+  it records STOP NOT CONFIRMED instead of leaving the tap silently pending. This still opens the Activity rather than sending
+  the stop from a Service/WorkManager path, which remains a future implementation.
 - **Mission notifications**: `util/NotificationHelper.kt`, high-priority channels for job completion / hardware
   fault alerts.
 - **Real-time MJPEG streaming**: `ui/MjpegPlayer.kt` decodes frames from `/api/camera/:id/stream` onto a Compose
@@ -72,7 +77,7 @@ actually talk to a robot today regardless of how solid the Android-side client c
 
 ```text
 app/src/main/java/com/hydraumc/control/
-├── MainActivity.kt             # Entry point - splash, login flow, deferred Global E-STOP handling
+├── MainActivity.kt             # Entry point - splash, login flow, deferred global STOP handling
 ├── MainScreen.kt                # Navigation scaffold wiring the screens below
 ├── ui/
 │   ├── SplashScreen.kt          # Animated splash screen
@@ -87,7 +92,8 @@ app/src/main/java/com/hydraumc/control/
 │   ├── UserProfileDialog.kt     # Account management + biometric toggle
 │   ├── AboutDialog.kt           # Credits/version dialog
 │   ├── Joystick3D.kt            # Reusable 2-axis joystick control component
-│   ├── PlaybackConsole.kt       # Shared floating E-STOP/play/pause/stop console
+│   ├── PlaybackConsole.kt       # Shared floating STOP/play/pause/stop console
+│   ├── GlobalStop.kt            # Global STOP button (top bar) + result banner
 │   ├── VoiceAssistantDialog.kt  # In-app mic/text button to HYDRA-UMC-VOICE-UI
 │   └── theme/
 │       ├── Color.kt
@@ -106,6 +112,7 @@ app/src/main/java/com/hydraumc/control/
 │   ├── HydraBleClient.kt        # GATT client mirroring the REST/WS client shape - UUIDs still placeholders
 │   ├── Discovery.kt             # Subnet scan + NSD listener for server discovery
 │   ├── StateCache.kt            # Persistent DataStore state storage (offline/cold-start view)
+│   ├── StopAllResult.kt         # Global STOP answer (per-robot result) and the status the banner shows
 │   ├── AuthPrefs.kt             # Encrypted (security-crypto) credential + biometric settings persistence
 │   └── ConnectionPrefs.kt       # DataStore persistence for manually entered IP/port
 ├── update/
@@ -122,7 +129,7 @@ app/src/main/java/com/hydraumc/control/
 │   ├── WatchVoiceRelayContract.kt  # Authenticated Watch voice relay wire contract
 │   └── WatchVoiceRelayService.kt   # Wear OS voice relay service - see docs/WATCH_VOICE_RELAY.md
 ├── widget/
-│   └── GlobalStopWidget.kt      # Home-screen widget (RemoteViews), launches ACTION_GLOBAL_ESTOP
+│   └── GlobalStopWidget.kt      # Home-screen widget (RemoteViews), launches ACTION_GLOBAL_ESTOP -> globalStop()
 └── viewmodel/
     ├── AppUpdateViewModel.kt    # Lifecycle-aware application update state
     └── RobotViewModel.kt        # Central orchestration: connectJob-guarded connect/reconnect, metrics polling

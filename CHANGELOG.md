@@ -9,6 +9,16 @@ in [README.md](README.md#-versioning). Entries recorded before that policy
 existed are grouped under the pre-policy version `0.0.0` the repo carried
 at the time.
 
+## [0.6.6] - Global STOP
+
+- **One-tap global STOP:** a red **STOP** button (caption "Stop all", translated in the 8 languages) sits in the top bar of every screen, so it is reachable from the dashboard, the control screen, the camera, the 3D view and the settings. The pulsing round STOP of the control console and of the 3D view (portrait and fullscreen, now shown even with no robot selected) is the same control. No long press and no confirmation: a tap sends `POST /api/stop-all` at once, without waiting for the robot list or a refresh, and stops every robot, including those reserved by another account.
+- **The result is shown:** a banner lists how many robots stopped, which did not (with the reason), which are reserved by someone else, and warns when the server could not save the stopped state. A clean result hides itself after a few seconds; anything else stays until dismissed.
+- **STOP NOT CONFIRMED:** a tap that nobody answers is sent again once (2 s timeouts); when it still fails, the red banner stays on screen, and cannot be dismissed, until a later STOP succeeds. An expired session is renewed and the stop repeated; a 429 from the server falls back to the per-robot `stop` of every known robot.
+- **Widget and notification:** the home-screen widget and the notification action call the same global STOP as soon as the server connection exists (no wait for the robot list), and a stop that cannot reach the server shows STOP NOT CONFIRMED. Their labels are now translated.
+- **Per-robot Stop:** the Stop button of the selected robot keeps its long-press protection; the old long-press E-STOP is replaced by the global one.
+- **Texts:** 12 new strings in the 8 languages; the hold-to-confirm hint of the old E-STOP and the "no known robot" message are gone.
+- **Tests:** `RobotViewModelGlobalStopTest` covers the call (path, method, bearer header, no body), a clean result, a partial one, the retry, the persistent not-confirmed state and its clearing, the 429 fallback and the no-connection case, against a local test server.
+
 ## [0.6.5] - Safer jogging and stopping, session renewal, clear server refusals
 
 - **Jog follows the screen:** a held jog button kept calling the lambda of the moment it was pressed, so changing the step or switching to the XY table while holding left the robot moving by the old step or on the old target. The repeat now always calls the current one (`JoystickHoldTest`).
