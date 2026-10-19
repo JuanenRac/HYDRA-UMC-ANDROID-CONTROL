@@ -33,7 +33,7 @@
 
 | | |
 |---|---|
-| 版本 | `0.7.0` |
+| 版本 | `0.7.1` |
 | 成熟度 | 可用 |
 | 测试 | 98 (`./gradlew testDebugUnitTest`) |
 | 技术栈 | Kotlin / Jetpack / biometric auth / WebSocket client |

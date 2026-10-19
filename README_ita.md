@@ -33,7 +33,7 @@ Un'app Android nativa (Kotlin + Jetpack Compose) che controlla un robot sulla pi
 
 | | |
 |---|---|
-| Versione | `0.7.0` |
+| Versione | `0.7.1` |
 | Maturità | Funzionale |
 | Test | 98 (`./gradlew testDebugUnitTest`) |
 | Tecnologia | Kotlin / Jetpack / biometric auth / WebSocket client |
