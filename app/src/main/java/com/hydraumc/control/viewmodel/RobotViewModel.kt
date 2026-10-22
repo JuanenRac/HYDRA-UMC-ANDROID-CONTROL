@@ -17,7 +17,7 @@ import com.hydraumc.control.model.JOINT_NAMES
 import com.hydraumc.control.model.RobotView
 import com.hydraumc.control.model.ServerInfo
 import com.hydraumc.control.kinematics.PAROL6_JOINT_LIMITS_DEG
-import com.hydraumc.control.kinematics.parol6CartesianToJoints
+import com.hydraumc.control.kinematics.parol6CartesianToJointsOrNull
 import com.hydraumc.control.R
 import com.hydraumc.control.network.AuthPrefs
 import com.hydraumc.control.network.ConnectionPrefs
@@ -35,6 +35,8 @@ import com.hydraumc.control.wear.WatchAssistantReply
 import com.hydraumc.control.wear.WatchSystemStatus
 import com.hydraumc.control.wear.WatchVoiceTurn
 import com.hydraumc.control.util.NotificationHelper
+import com.hydraumc.control.util.OptimisticRollback
+import com.hydraumc.control.util.StaleData
 import kotlinx.coroutines.launch
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
@@ -249,6 +251,15 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
     var state = HydraState.empty()
     /** True once a state from the server (not the offline cache) has been applied in this process. */
     val stateIsLive = mutableStateOf(false)
+    /** When the robot data on screen was last refreshed (epoch ms): the cache's save time until a live state arrives. */
+    val stateAtMs = mutableStateOf<Long?>(null)
+
+    /** True while the robots shown come from the offline copy or the link to the server is down. */
+    val isShowingStaleData: Boolean
+        get() = StaleData.isStale(
+            connected = connectionStatus.value == getApplication<Application>().getString(R.string.status_connected),
+            hasRobots = robots.value.isNotEmpty(),
+        )
     var apiClient: HydraApiClient? = null
     // Real, Compose-observable mirror of apiClient?.authToken - apiClient
     // itself is a plain var and HydraApiClient.authToken is a plain var on
@@ -454,6 +465,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
             authCheckComplete.value = true
 
             stateCache.loadState()?.let { cached ->
+                stateAtMs.value = stateCache.loadSavedAtMs()
                 applyState(HydraState(cached), isFromCache = true)
             }
         }
@@ -1045,7 +1057,10 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
     private fun applyState(newState: HydraState, isFromCache: Boolean = false) {
         val oldState = state
         state = newState
-        if (!isFromCache) stateIsLive.value = true
+        if (!isFromCache) {
+            stateIsLive.value = true
+            stateAtMs.value = System.currentTimeMillis()
+        }
         robots.value = newState.allRobots.map { it.toDisplay() }
         jobs.value = newState.allJobs.map { JobState(it.name) }
         
@@ -1200,9 +1215,9 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
     // POST /api/robot/:id/command (server.ts:210-298) instead of pushing the
     // full settings tree for a single jog tick: the server computes
     // affectedIds itself (self + combinedWith), persists to disk, AND
-    // broadcasts a "delta" to every OTHER connected client on its own, so
-    // this app doesn't also need to push the full tree over its own
-    // WebSocket. Every command shares the same affectedIds computation below
+    // broadcasts a "delta" to every connected client (this one included) on
+    // its own, so this app doesn't also need to push the full tree over its
+    // own WebSocket. Every command shares the same affectedIds computation below
     // (propagateToCombined), so enable/disable, play/pause/stop, and any
     // future command all propagate to a robot's own combinedWith siblings
     // the same way instead of each reimplementing that fan-out separately.
@@ -1271,21 +1286,22 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         // that isn't the one already-handled 401 case) left the UI showing
         // the command as applied forever, with no way back to the real
         // last-known-good state short of a full reconnect.
-        val snapshots = affectedIds.mapNotNull { id -> state.robotById(id)?.let { id to it.raw.toString() } }
+        val snapshots = affectedIds.mapNotNull { id -> state.robotById(id)?.let { id to JSONObject(it.raw.toString()) } }
         affectedIds.forEach { id -> state.robotById(id)?.let(localMutate) }
+        // Only the fields this command changed are undone on failure (and only
+        // while they still hold the value it wrote), so deltas that arrived in
+        // the meantime and jogs that succeeded keep their newer values.
+        val edits = snapshots.map { (id, before) ->
+            id to OptimisticRollback.diff(before, JSONObject(state.robotById(id)?.raw?.toString() ?: "{}"))
+        }
         applyState(state)
 
         val payload = JSONObject().put("command", command).apply { if (params != null) put("params", params) }
 
         fun rollback() {
-            for ((id, json) in snapshots) {
+            for ((id, changes) in edits) {
                 val raw = state.robotById(id)?.raw ?: continue
-                val restored = org.json.JSONObject(json)
-                val keys = restored.keys()
-                while (keys.hasNext()) {
-                    val key = keys.next()
-                    raw.put(key, restored.get(key))
-                }
+                OptimisticRollback.restore(raw, changes)
             }
             applyState(state)
         }
@@ -1577,7 +1593,13 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
             val a = robot.posAxis("a")
             val b = robot.posAxis("b")
             val c = robot.posAxis("c")
-            val newJoints = parol6CartesianToJoints(x, y, z, a, b, c)
+            val newJoints = parol6CartesianToJointsOrNull(x, y, z, a, b, c)
+            if (newJoints == null) {
+                // Out of reach: sending clamped joints next to a position that does not match them
+                // would store an incoherent pose on the server, so the jog is refused instead.
+                lastError.value = getApplication<Application>().getString(R.string.error_jog_out_of_reach)
+                return
+            }
             val axes = listOf(
                 Triple("x", dx * jogStep, x),
                 Triple("y", dy * jogStep, y),

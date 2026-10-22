@@ -13,6 +13,7 @@
 package com.hydraumc.control.kinematics
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Test
 
 class Parol6KinematicsTest {
@@ -50,5 +51,21 @@ class Parol6KinematicsTest {
     fun `matches the real three-js oracle for a full 6-axis target`() {
         val result = parol6CartesianToJoints(180.0, -80.0, -30.0, 5.0, 5.0, 5.0)
         assertJoints(doubleArrayOf(-23.962489, -2.408749, 11.952691, 5.0, 5.0, 5.0), result)
+    }
+
+    @Test
+    fun `a reachable target is returned unchanged`() {
+        val result = parol6CartesianToJointsOrNull(200.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+        assertJoints(doubleArrayOf(0.0, 0.072990, -0.072819, 0.0, 0.0, 0.0), result!!)
+    }
+
+    @Test
+    fun `a target far beyond the arm reach is refused`() {
+        assertNull(parol6CartesianToJointsOrNull(5000.0, 0.0, 0.0, 0.0, 0.0, 0.0))
+    }
+
+    @Test
+    fun `a target that needs a clamped base angle is refused`() {
+        assertNull(parol6CartesianToJointsOrNull(-150.0, 50.0, 100.0, 0.0, 0.0, 0.0))
     }
 }

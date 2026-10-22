@@ -82,6 +82,9 @@
     <string name="error_stop_not_confirmed">STOP vom Server nicht bestätigt: erneut drücken oder den Hardware-Not-Aus benutzen</string>
     <string name="error_session_expired">Sitzung abgelaufen: Anmeldung wird erneuert</string>
     <string name="error_robot_reserved">Der Roboter ist von einem anderen Konto reserviert: %1$s</string>
+    <string name="error_jog_out_of_reach">Diese Bewegung liegt außerhalb der Reichweite des Roboters: Es wurde nichts gesendet.</string>
+    <string name="stale_data_banner">Keine Verbindung - Daten von %1$s. Die Roboterzustände können veraltet sein.</string>
+    <string name="stale_data_banner_unknown">Keine Verbindung - gespeicherte Daten. Die Roboterzustände können veraltet sein.</string>
     <string name="error_permission_denied">Zugriff verweigert: dieses Konto darf das nicht</string>
     <string name="error_command_rejected">Der Server hat %1$s abgelehnt: %2$s (Änderung rückgängig gemacht)</string>
     <string name="error_no_tool_in_slot">In Steckplatz %d befindet sich kein Werkzeug.</string>

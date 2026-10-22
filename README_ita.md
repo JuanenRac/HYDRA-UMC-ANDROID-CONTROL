@@ -35,7 +35,7 @@ Un'app Android nativa (Kotlin + Jetpack Compose) che controlla un robot sulla pi
 |---|---|
 | Versione | `0.7.1` |
 | Maturità | Funzionale |
-| Test | 98 (`./gradlew testDebugUnitTest`) |
+| Test | 148 (`./gradlew testDebugUnitTest`) |
 | Tecnologia | Kotlin / Jetpack / biometric auth / WebSocket client |
 | Destinazione | Uno smartphone o tablet Android |
 | Su hardware reale | Non ancora: per questa versione non risulta alcuna esecuzione su hardware reale |
@@ -93,7 +93,7 @@ Passaggi equivalenti senza gli script, per CI o un terminale semplice:
 gradlew.bat assembleDebug      # Windows
 ```
 
-L'APK finisce in `app/build/outputs/apk/debug/app-debug.apk`. Installalo con `adb install -r -d app/build/outputs/apk/debug/app-debug.apk`, oppure trasferiscilo manualmente sul dispositivo. Sostituisci `assembleDebug` con `assembleRelease` per una build di release - attualmente firma con la chiave di debug (il blocco `release` proprio di `app/build.gradle.kts`, mantenuto così per facilitare i test), quindi si installa correttamente ma non è pronta per la distribuzione così com'è.
+L'APK finisce in `app/build/outputs/apk/debug/app-debug.apk`. Installalo con `adb install -r -d app/build/outputs/apk/debug/app-debug.apk`, oppure trasferiscilo manualmente sul dispositivo. Sostituisci `assembleDebug` con `assembleRelease` per una build di release - firma con la chiave di release privata quando `keystore.properties` (o le variabili d'ambiente di firma della release) è presente, altrimenti ripiega sulla chiave di debug, che si installa senza problemi per i test ma non va mai distribuita.
 
 ## 🔢 Versionamento
 
@@ -129,7 +129,7 @@ HYDRA-UMC-ANDROID-CONTROL/
 │   ├── version.properties        # Versione app stile contachilometri + versionCode Android, sincronizzati da bump_manifest_version.py/bump_version_code.py
 │   ├── proguard-rules.pro        # Regole di riduzione/offuscamento del codice per il build di release
 │   └── src/main/
-│       ├── AndroidManifest.xml   # Permessi, dichiarazioni activity/receiver, usesCleartextTraffic (server LAN HTTP semplice, senza TLS)
+│       ├── AndroidManifest.xml   # Permessi, dichiarazioni activity/receiver, usesCleartextTraffic (il server LAN parla HTTP semplice salvo che vi sia attivato TLS; ogni chiamata richiede un token di accesso)
 │       ├── java/com/hydraumc/control/
 │       │   ├── MainActivity.kt          # Punto di ingresso - splash, gating login/schermata principale, gestione dell'E-STOP globale sicura in avvio a freddo
 │       │   ├── MainScreen.kt            # Struttura di navigazione inferiore, top bar (selettore server, profilo, telemetria, impostazioni)
@@ -207,7 +207,6 @@ HYDRA-UMC-ANDROID-CONTROL/
 ├── local.properties              # Percorso locale dell'Android SDK (specifico della macchina, non committato)
 ├── keystore.properties.example   # Template di configurazione privata per la firma di release
 ├── .env.example                  # Esempio di variabili d'ambiente
-├── metadata.json                 # Metadati della scheda store (nome/descrizione)
 ├── README.md                     # Questo file
 ├── README_spa.md / README_ita.md / README_fra.md / README_deu.md / README_zho.md / README_jpn.md / README_por.md   # Traduzioni
 └── LICENSE                       # GPL-3.0-or-later

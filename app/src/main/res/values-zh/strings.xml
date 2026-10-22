@@ -82,6 +82,9 @@
     <string name="error_stop_not_confirmed">服务器未确认停止：请再按一次，或使用物理急停</string>
     <string name="error_session_expired">会话已过期：正在重新登录</string>
     <string name="error_robot_reserved">该机器人已被其他账户预留：%1$s</string>
+    <string name="error_jog_out_of_reach">该动作超出机器人的工作范围：未发送任何指令。</string>
+    <string name="stale_data_banner">无连接 - 显示 %1$s 的数据。机器人状态可能已过时。</string>
+    <string name="stale_data_banner_unknown">无连接 - 显示已保存的数据。机器人状态可能已过时。</string>
     <string name="error_permission_denied">权限被拒绝：此账户无法执行该操作</string>
     <string name="error_command_rejected">服务器拒绝了 %1$s：%2$s（已撤销更改）</string>
     <string name="error_no_tool_in_slot">插槽 %d 中不存在任何工具。</string>

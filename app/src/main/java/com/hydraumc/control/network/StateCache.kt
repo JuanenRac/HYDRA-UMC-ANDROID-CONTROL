@@ -7,6 +7,7 @@ package com.hydraumc.control.network
 
 import android.content.Context
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.first
@@ -14,6 +15,7 @@ import org.json.JSONObject
 
 private val Context.cacheDataStore by preferencesDataStore(name = "state_cache")
 private val KEY_LAST_STATE = stringPreferencesKey("last_known_state")
+private val KEY_SAVED_AT = longPreferencesKey("last_known_state_saved_at")
 
 /**
  * Manages persistence of the last known HydraState for offline viewing.
@@ -32,6 +34,7 @@ class StateCache(private val context: Context) {
         val sanitized = redactSecrets(serializedState)
         context.cacheDataStore.edit { prefs ->
             prefs[KEY_LAST_STATE] = sanitized
+            prefs[KEY_SAVED_AT] = System.currentTimeMillis()
         }
     }
 
@@ -72,4 +75,7 @@ class StateCache(private val context: Context) {
             null
         }
     }
+
+    /** When the cached state was written (epoch milliseconds), or null if unknown. */
+    suspend fun loadSavedAtMs(): Long? = context.cacheDataStore.data.first()[KEY_SAVED_AT]
 }

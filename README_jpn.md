@@ -35,7 +35,7 @@ Wi-Fi または Bluetooth 経由で [HYDRA-UMC](https://github.com/JuanenRac/HYD
 |---|---|
 | バージョン | `0.7.1` |
 | 成熟度 | 機能する |
-| テスト | 98 (`./gradlew testDebugUnitTest`) |
+| テスト | 148 (`./gradlew testDebugUnitTest`) |
 | 技術 | Kotlin / Jetpack / biometric auth / WebSocket client |
 | 対象 | Android のスマートフォンまたはタブレット |
 | 実機での確認 | まだです：このバージョンについて実機での動作記録はありません |
@@ -93,7 +93,7 @@ build-android.bat      # Windows
 gradlew.bat assembleDebug      # Windows
 ```
 
-APK は `app/build/outputs/apk/debug/app-debug.apk` に生成されます。`adb install -r -d app/build/outputs/apk/debug/app-debug.apk` でインストールするか、手動でデバイスに転送してください。リリースビルドには `assembleDebug` の代わりに `assembleRelease` を使用してください——現在はデバッグキーで署名しています（`app/build.gradle.kts` 自身の `release` ブロック、テストを容易にするためにそのままにしてあります）。そのため問題なくインストールできますが、そのままでは配布の準備はできていません。
+APK は `app/build/outputs/apk/debug/app-debug.apk` に生成されます。`adb install -r -d app/build/outputs/apk/debug/app-debug.apk` でインストールするか、手動でデバイスに転送してください。リリースビルドには `assembleDebug` の代わりに `assembleRelease` を使用してください——`keystore.properties`（またはリリース署名用の環境変数）がある場合は非公開のリリースキーで署名し、ない場合はデバッグキーにフォールバックします。デバッグキーはテスト用には問題なくインストールできますが、配布してはいけません。
 
 ## 🔢 バージョン管理
 
@@ -129,7 +129,7 @@ HYDRA-UMC-ANDROID-CONTROL/
 │   ├── version.properties        # オドメーター式アプリバージョン + Android の versionCode。bump_manifest_version.py/bump_version_code.py が同期
 │   ├── proguard-rules.pro        # release ビルド用のコード縮小/難読化ルール
 │   └── src/main/
-│       ├── AndroidManifest.xml   # 権限、activity/receiver 宣言、usesCleartextTraffic（プレーン HTTP LAN サーバー、TLS なし）
+│       ├── AndroidManifest.xml   # 権限、activity/receiver 宣言、usesCleartextTraffic（LAN サーバーは TLS を有効にしない限りプレーン HTTP で、すべての呼び出しにサインイン済みトークンが必要）
 │       ├── java/com/hydraumc/control/
 │       │   ├── MainActivity.kt          # エントリポイント——スプラッシュ、ログイン/メイン画面ゲーティング、コールドスタートセーフなグローバル緊急停止処理
 │       │   ├── MainScreen.kt            # ボトムナビゲーションのスキャフォールド、トップバー（サーバーセレクター、プロフィール、テレメトリ、設定）
@@ -207,7 +207,6 @@ HYDRA-UMC-ANDROID-CONTROL/
 ├── local.properties              # ローカルの Android SDK パス（マシン固有、コミットされない）
 ├── keystore.properties.example   # プライベートリリース署名設定のテンプレート
 ├── .env.example                  # 環境変数の例
-├── metadata.json                 # アプリストア掲載メタデータ（名前/説明）
 ├── README.md                     # 本ファイル
 ├── README_spa.md / README_ita.md / README_fra.md / README_deu.md / README_zho.md / README_jpn.md / README_por.md   # 翻訳
 └── LICENSE                       # GPL-3.0-or-later

@@ -35,7 +35,7 @@
 |---|---|
 | 版本 | `0.7.1` |
 | 成熟度 | 可用 |
-| 测试 | 98 (`./gradlew testDebugUnitTest`) |
+| 测试 | 148 (`./gradlew testDebugUnitTest`) |
 | 技术栈 | Kotlin / Jetpack / biometric auth / WebSocket client |
 | 目标 | Android 手机或平板 |
 | 真实硬件 | 尚未：此版本没有在真实硬件上运行的记录 |
@@ -93,7 +93,7 @@ build-android.bat      # Windows
 gradlew.bat assembleDebug      # Windows
 ```
 
-APK 会生成在 `app/build/outputs/apk/debug/app-debug.apk`。使用 `adb install -r -d app/build/outputs/apk/debug/app-debug.apk` 安装,或手动传输到设备上。将 `assembleDebug` 替换为 `assembleRelease` 即可构建发布版本——目前它使用调试密钥签名（`app/build.gradle.kts` 自身的 `release` 代码块,这样设置是为了方便测试）,因此可以正常安装,但按原样还不适合分发。
+APK 会生成在 `app/build/outputs/apk/debug/app-debug.apk`。使用 `adb install -r -d app/build/outputs/apk/debug/app-debug.apk` 安装,或手动传输到设备上。将 `assembleDebug` 替换为 `assembleRelease` 即可构建发布版本——存在 `keystore.properties`（或发布签名环境变量）时使用私有发布密钥签名，否则回退到调试密钥；调试密钥可正常安装用于测试，但绝不能用于分发。
 
 ## 🔢 版本管理
 
@@ -129,7 +129,7 @@ HYDRA-UMC-ANDROID-CONTROL/
 │   ├── version.properties        # 里程表式应用版本 + Android versionCode，由 bump_manifest_version.py/bump_version_code.py 同步
 │   ├── proguard-rules.pro        # release 构建的代码压缩/混淆规则
 │   └── src/main/
-│       ├── AndroidManifest.xml   # 权限、activity/receiver 声明、usesCleartextTraffic（纯 HTTP 局域网服务器，无 TLS）
+│       ├── AndroidManifest.xml   # 权限、activity/receiver 声明、usesCleartextTraffic（局域网服务器使用纯 HTTP，除非在服务器上启用 TLS；每次调用都需要登录令牌）
 │       ├── java/com/hydraumc/control/
 │       │   ├── MainActivity.kt          # 入口点——启动画面、登录/主界面门禁、冷启动安全的全局紧急停止处理
 │       │   ├── MainScreen.kt            # 底部导航脚手架、顶部栏（服务器选择器、资料、遥测、设置）
@@ -207,7 +207,6 @@ HYDRA-UMC-ANDROID-CONTROL/
 ├── local.properties              # 本地 Android SDK 路径（机器特定，不提交）
 ├── keystore.properties.example   # 私密发布签名配置模板
 ├── .env.example                  # 环境变量示例
-├── metadata.json                 # 应用商店信息元数据（名称/描述）
 ├── README.md                     # 本文件
 ├── README_spa.md / README_ita.md / README_fra.md / README_deu.md / README_zho.md / README_jpn.md / README_por.md   # 翻译
 └── LICENSE                       # GPL-3.0-or-later

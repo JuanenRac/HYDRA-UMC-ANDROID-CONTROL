@@ -82,6 +82,9 @@
     <string name="error_stop_not_confirmed">STOP not confirmed by the server: press it again or use the physical E-stop</string>
     <string name="error_session_expired">Session expired: signing in again</string>
     <string name="error_robot_reserved">The robot is reserved by another account: %1$s</string>
+    <string name="error_jog_out_of_reach">That move is outside the robot\'s reach: nothing was sent.</string>
+    <string name="stale_data_banner">No connection - showing data from %1$s. Robot states may be out of date.</string>
+    <string name="stale_data_banner_unknown">No connection - showing saved data. Robot states may be out of date.</string>
     <string name="error_permission_denied">Permission denied: this account cannot do that</string>
     <string name="error_command_rejected">The server rejected %1$s: %2$s (change reverted)</string>
     <string name="error_no_tool_in_slot">No tool exists in slot %d.</string>

@@ -82,6 +82,9 @@
     <string name="error_stop_not_confirmed">STOP non confirmé par le serveur : appuyez à nouveau ou utilisez l\'arrêt d\'urgence physique</string>
     <string name="error_session_expired">Session expirée : nouvelle connexion en cours</string>
     <string name="error_robot_reserved">Le robot est réservé par un autre compte : %1$s</string>
+    <string name="error_jog_out_of_reach">Ce mouvement est hors de portée du robot : rien n\'a été envoyé.</string>
+    <string name="stale_data_banner">Pas de connexion - données de %1$s. L\'état des robots peut être obsolète.</string>
+    <string name="stale_data_banner_unknown">Pas de connexion - données enregistrées. L\'état des robots peut être obsolète.</string>
     <string name="error_permission_denied">Permission refusée : ce compte ne peut pas faire cela</string>
     <string name="error_command_rejected">Le serveur a refusé %1$s : %2$s (modification annulée)</string>
     <string name="error_no_tool_in_slot">Aucun outil n\'existe dans l\'emplacement %d.</string>

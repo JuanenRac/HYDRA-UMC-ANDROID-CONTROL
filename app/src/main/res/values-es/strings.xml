@@ -82,6 +82,9 @@
     <string name="error_stop_not_confirmed">El servidor no confirmó el STOP: púlsalo de nuevo o usa la seta física</string>
     <string name="error_session_expired">Sesión caducada: iniciando sesión de nuevo</string>
     <string name="error_robot_reserved">El robot está reservado por otra cuenta: %1$s</string>
+    <string name="error_jog_out_of_reach">Ese movimiento queda fuera del alcance del robot: no se ha enviado nada.</string>
+    <string name="stale_data_banner">Sin conexión - datos de las %1$s. Los estados de los robots pueden estar desactualizados.</string>
+    <string name="stale_data_banner_unknown">Sin conexión - datos guardados. Los estados de los robots pueden estar desactualizados.</string>
     <string name="error_permission_denied">Permiso denegado: esta cuenta no puede hacer eso</string>
     <string name="error_command_rejected">El servidor rechazó %1$s: %2$s (cambio revertido)</string>
     <string name="error_no_tool_in_slot">No existe ninguna herramienta en el slot %d.</string>

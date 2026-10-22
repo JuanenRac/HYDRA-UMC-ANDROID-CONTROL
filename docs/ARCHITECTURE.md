@@ -21,11 +21,10 @@ no code shared between the three clients.
   via a cancellable `reconnectJob` (`Job?`) that waits `RECONNECT_DELAY_MS` and retries unless the disconnect was
   user-initiated (`closingByUser`). `RobotViewModel.connect()` mirrors the same pattern with its own `connectJob`,
   so a second `connect()` call cancels and replaces any in-flight connection attempt instead of racing it.
-- **Delta merge semantics** (`HydraState.kt`, `mergeArrays`): incoming WebSocket payloads are deltas, not full
-  snapshots. Object fields overwrite by key; JSON *arrays* are merged by appending rather than replacing, and an
-  **empty** array in a delta is treated as "no change to this list" rather than "clear the list" - that's how
-  `RobotState` fields like `valves`/`pumps`/`combinedWith` accumulate correctly across successive partial updates
-  instead of a later empty delta wiping them out.
+- **Incoming state** (`RobotViewModel.kt`): a `settings` WebSocket message carries the full state tree and replaces
+  the local one. A schema-2 `delta` message carries `{controllerId, robotId, patch}` and only the keys of the patch
+  are written into that robot. Neither path merges arrays: an array in a patch replaces the stored one. (`HydraState.merge()` and
+  its `mergeArrays` helper are kept for a future partial-message type; nothing calls them today.)
 - **Discovery** (`Discovery.kt`): two mechanisms run side by side. (1) A deterministic subnet scanner that probes
   `GET /api/hydra-info` concurrently across the phone's own `/24`, including its own LAN IP and `127.0.0.1` - a
   direct Kotlin port of HYDRA-UMC-SUITE's `discovery.py`. (2) An NSD/mDNS listener as a secondary path, useful when
@@ -157,6 +156,6 @@ per its own comment ("for stable runtime behavior"); confirm with the owner if t
 
 ## 7. Relationship to the rest of the ecosystem
 
-The app is synchronized with **HYDRA-UMC-SERVER** (backend) and **URTC** (tooling). It enforces the 26-tool URTC
-standard and relies on the server's own kinematics (IK) support for autonomous robot movement independent of any
+The app is synchronized with **HYDRA-UMC-SERVER** (backend) and **URTC** (tooling). It does not implement the URTC
+tool standard itself and relies on the server's own kinematics (IK) support for autonomous robot movement independent of any
 active browser session.

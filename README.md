@@ -26,7 +26,7 @@
 
 A native Android app (Kotlin + Jetpack Compose) that controls a robot on the [HYDRA-UMC](https://github.com/JuanenRac/HYDRA-UMC) platform over Wi-Fi or Bluetooth, speaking the exact same [`REMOTE_API.md`](https://github.com/JuanenRac/HYDRA-UMC-SERVER/blob/main/docs/REMOTE_API.md) contract [HYDRA-UMC SUITE](https://github.com/JuanenRac/HYDRA-UMC-SUITE) uses - discovery, full-state read/write, and live WebSocket sync against a running [HYDRA-UMC-SERVER](https://github.com/JuanenRac/HYDRA-UMC-SERVER) backend (the same one [HYDRA-UMC STUDIO](https://github.com/JuanenRac/HYDRA-UMC-STUDIO)'s own web dashboard talks to). Direct Android counterpart to [HYDRA-UMC-IOS-CONTROL](https://github.com/JuanenRac/HYDRA-UMC-IOS-CONTROL). See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the full design.
 
-> **Honesty check - what actually runs today:** the core business logic - Parol6 kinematics (`kinematics/Parol6Kinematics.kt`), the settings-tree state contract (`model/HydraState.kt`), atomic command dispatch and the voice-turn relay (`viewmodel/RobotViewModel.kt`), WebSocket reconnect handling (`network/HydraWebSocket.kt`), MJPEG frame parsing (`ui/MjpegPlayer.kt`), the in-app update channel (`update/GitHubReleaseUpdater.kt`, `ReleaseMetadataParser.kt`, `SemanticVersion.kt`), and the Wear voice-relay request bookkeeping (`wear/BoundedRequestScope.kt`, `WatchCompanionProtocol.kt`) are real and covered by 98 passing JVM/Robolectric unit tests (`./gradlew testDebugUnitTest`). What those tests structurally can't reach - and what this Windows-only dev environment has no physical Android device to verify - is `network/AuthPrefs.kt`'s real Keystore-backed `EncryptedSharedPreferences`, the `androidx.biometric` fingerprint/face prompt, `network/HydraBleClient.kt`'s Bluetooth GATT transport, and the API 28+ hardware `ImageDecoder` path in `MjpegStreamParser`: real, compiled code that hasn't been re-verified on hardware since it was written. Basic launch/login *was* confirmed live on a real device for earlier releases (see `CHANGELOG.md`'s `v0.3.2`/`v0.3.3` entries), but that predates Bluetooth, biometrics, and the hardware-decode path. See `CHANGELOG.md` for exactly what has shipped, including its own per-entry notes on what remains hardware-unverified.
+> **Honesty check - what actually runs today:** the core business logic - Parol6 kinematics (`kinematics/Parol6Kinematics.kt`), the settings-tree state contract (`model/HydraState.kt`), atomic command dispatch and the voice-turn relay (`viewmodel/RobotViewModel.kt`), WebSocket reconnect handling (`network/HydraWebSocket.kt`), MJPEG frame parsing (`ui/MjpegPlayer.kt`), the in-app update channel (`update/GitHubReleaseUpdater.kt`, `ReleaseMetadataParser.kt`, `SemanticVersion.kt`), and the Wear voice-relay request bookkeeping (`wear/BoundedRequestScope.kt`, `WatchCompanionProtocol.kt`) are real and covered by 148 passing JVM/Robolectric unit tests (`./gradlew testDebugUnitTest`). What those tests structurally can't reach - and what this Windows-only dev environment has no physical Android device to verify - is `network/AuthPrefs.kt`'s real Keystore-backed `EncryptedSharedPreferences`, the `androidx.biometric` fingerprint/face prompt, `network/HydraBleClient.kt`'s Bluetooth GATT transport, and the API 28+ hardware `ImageDecoder` path in `MjpegStreamParser`: real, compiled code that hasn't been re-verified on hardware since it was written. Basic launch/login *was* confirmed live on a real device for earlier releases (see `CHANGELOG.md`'s `v0.3.2`/`v0.3.3` entries), but that predates Bluetooth, biometrics, and the hardware-decode path. See `CHANGELOG.md` for exactly what has shipped, including its own per-entry notes on what remains hardware-unverified.
 
 > **Safety and security status:** this ecosystem is not a certified safety system. There is no hardware E-STOP path, no firmware-enforced limits or interlocks and no verified motion command yet; firmware images are checked with CRC32 and a shared-key HMAC-SHA256, not with an asymmetric signature; TLS and mutual TLS are optional and off by default; no custom board has been populated or tested yet. Read the [security baseline](https://github.com/JuanenRac/HYDRA-UMC-DOCS/blob/main/docs/SECURITY_BASELINE.md) and the [threat model](https://github.com/JuanenRac/HYDRA-UMC-DOCS/blob/main/docs/THREAT_MODEL.md) before relying on any statement here for the safety of a person.
 
@@ -36,7 +36,7 @@ A native Android app (Kotlin + Jetpack Compose) that controls a robot on the [HY
 |---|---|
 | Version | `0.7.1` |
 | Maturity | Functional |
-| Tests | 98 (`./gradlew testDebugUnitTest`) |
+| Tests | 148 (`./gradlew testDebugUnitTest`) |
 | Stack | Kotlin / Jetpack / biometric auth / WebSocket client |
 | Target | An Android phone or tablet |
 | On real hardware | Not yet: no run on real hardware is recorded for this version |
@@ -94,7 +94,7 @@ Equivalent steps without the scripts, for CI or a plain terminal:
 gradlew.bat assembleDebug      # Windows
 ```
 
-The APK lands at `app/build/outputs/apk/debug/app-debug.apk`. Install it with `adb install -r -d app/build/outputs/apk/debug/app-debug.apk`, or transfer it to the device manually. Swap `assembleDebug` for `assembleRelease` for a release build - it currently signs with the debug key (`app/build.gradle.kts`'s own `release` block, kept that way for easy testing), so it installs fine but isn't ready for distribution as-is.
+The APK lands at `app/build/outputs/apk/debug/app-debug.apk`. Install it with `adb install -r -d app/build/outputs/apk/debug/app-debug.apk`, or transfer it to the device manually. Swap `assembleDebug` for `assembleRelease` for a release build - it signs with the private release key when `keystore.properties` (or the release signing environment variables) is present, and otherwise falls back to the debug key, which installs fine for testing but must never be distributed.
 
 ## 🔢 Versioning
 
@@ -130,7 +130,7 @@ HYDRA-UMC-ANDROID-CONTROL/
 │   ├── version.properties        # Odometer-versioned app version + Android versionCode, kept in sync by bump_manifest_version.py/bump_version_code.py
 │   ├── proguard-rules.pro        # Release-build code shrinking/obfuscation rules
 │   └── src/main/
-│       ├── AndroidManifest.xml   # Permissions, activity/receiver declarations, usesCleartextTraffic (plain-HTTP LAN server, no TLS)
+│       ├── AndroidManifest.xml   # Permissions, activity/receiver declarations, usesCleartextTraffic (the LAN server speaks plain HTTP unless TLS is enabled on it; every call needs a signed-in token)
 │       ├── java/com/hydraumc/control/
 │       │   ├── MainActivity.kt          # Entry point - splash, login/main screen gating, cold-start-safe global E-STOP handling
 │       │   ├── MainScreen.kt            # Bottom-nav scaffold, top bar (server selector, profile, telemetry, settings)
@@ -208,7 +208,6 @@ HYDRA-UMC-ANDROID-CONTROL/
 ├── local.properties              # Local Android SDK path (machine-specific, not committed)
 ├── keystore.properties.example   # Private release signing configuration template
 ├── .env.example                  # Example environment variables
-├── metadata.json                 # App Store listing metadata (name/description)
 ├── README.md                     # This file
 ├── README_spa.md / README_ita.md / README_fra.md / README_deu.md / README_zho.md / README_jpn.md / README_por.md   # Translations
 └── LICENSE                       # GPL-3.0-or-later

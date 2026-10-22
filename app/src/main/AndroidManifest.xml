@@ -26,10 +26,9 @@
          package installer. The app never installs packages silently. -->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
-    <!-- HYDRA-UMC-SERVER's server.ts (the backend this app talks to - a
-         separate repo from HYDRA-UMC STUDIO's own web frontend since the two
-         were split apart) is plain http/ws, no TLS, by design -
-         REMOTE_API.md's own "trusted LAN, no auth" model. The
+    <!-- HYDRA-UMC-SERVER (the backend this app talks to - a separate repo
+         from HYDRA-UMC STUDIO's web frontend) serves plain http/ws unless TLS
+         is enabled on it, and every request carries a signed-in token. The
          target host is a dynamic user-entered IP (network/Discovery.kt),
          not a fixed domain, so a network-security-config domain allowlist
          isn't an option; usesCleartextTraffic is the only way this app can

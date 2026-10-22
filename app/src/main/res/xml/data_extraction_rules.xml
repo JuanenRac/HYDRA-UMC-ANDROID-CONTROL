@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?><!--
    Real bug this exists to prevent, not template boilerplate: with
    android:allowBackup="true" and no rules here, Android's cloud backup was
-   including AuthPrefs.kt's EncryptedSharedPreferences file (and Tink's own
-   companion keyset files, which share its name prefix) - live-reproduced
+   including AuthPrefs.kt's EncryptedSharedPreferences file (the Tink keysets
+   live inside that same file; the two keyset exclusions below only cover
+   sibling files older library versions wrote) - live-reproduced
    crash: after a reinstall, Android restored that ciphertext but the
    Keystore-backed AES key it was encrypted with is hardware-tied and never
    survives a restore, so every decrypt attempt threw AEADBadTagException,

@@ -82,6 +82,9 @@
     <string name="error_stop_not_confirmed">サーバーが停止を確認していません：もう一度押すか、物理の非常停止を使ってください</string>
     <string name="error_session_expired">セッションの期限が切れました：再ログインします</string>
     <string name="error_robot_reserved">このロボットは別のアカウントが予約しています：%1$s</string>
+    <string name="error_jog_out_of_reach">この動きはロボットの可動範囲外です。何も送信されていません。</string>
+    <string name="stale_data_banner">接続なし - %1$s 時点のデータを表示中。ロボットの状態は古い可能性があります。</string>
+    <string name="stale_data_banner_unknown">接続なし - 保存済みのデータを表示中。ロボットの状態は古い可能性があります。</string>
     <string name="error_permission_denied">権限がありません：このアカウントでは実行できません</string>
     <string name="error_command_rejected">サーバーが %1$s を拒否しました：%2$s（変更は元に戻されました）</string>
     <string name="error_no_tool_in_slot">スロット %d にツールが存在しません。</string>

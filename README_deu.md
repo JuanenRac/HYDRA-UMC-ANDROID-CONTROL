@@ -35,7 +35,7 @@ Eine native Android-App (Kotlin + Jetpack Compose), die einen Roboter auf der [H
 |---|---|
 | Version | `0.7.1` |
 | Reifegrad | Funktionsfähig |
-| Tests | 98 (`./gradlew testDebugUnitTest`) |
+| Tests | 148 (`./gradlew testDebugUnitTest`) |
 | Technik | Kotlin / Jetpack / biometric auth / WebSocket client |
 | Ziel | Ein Android-Telefon oder -Tablet |
 | Auf echter Hardware | Noch nicht: für diese Version ist kein Lauf auf echter Hardware vermerkt |
@@ -93,7 +93,7 @@ Wenn `adb` nicht im `PATH` ist, schließt das Skript den Build trotzdem ab und g
 gradlew.bat assembleDebug      # Windows
 ```
 
-Die APK landet unter `app/build/outputs/apk/debug/app-debug.apk`. Installieren Sie sie mit `adb install -r -d app/build/outputs/apk/debug/app-debug.apk`, oder übertragen Sie sie manuell auf das Gerät. Tauschen Sie `assembleDebug` gegen `assembleRelease` für einen Release-Build - dieser signiert derzeit mit dem Debug-Schlüssel (der eigene `release`-Block von `app/build.gradle.kts`, absichtlich so belassen, um Tests zu erleichtern), sodass er problemlos installiert wird, aber so noch nicht vertriebsbereit ist.
+Die APK landet unter `app/build/outputs/apk/debug/app-debug.apk`. Installieren Sie sie mit `adb install -r -d app/build/outputs/apk/debug/app-debug.apk`, oder übertragen Sie sie manuell auf das Gerät. Tauschen Sie `assembleDebug` gegen `assembleRelease` für einen Release-Build - dieser signiert mit dem privaten Release-Schlüssel, wenn `keystore.properties` (oder die Umgebungsvariablen für die Release-Signatur) vorhanden ist, und fällt sonst auf den Debug-Schlüssel zurück, der sich zum Testen problemlos installieren lässt, aber nie verteilt werden darf.
 
 ## 🔢 Versionierung
 
@@ -129,7 +129,7 @@ HYDRA-UMC-ANDROID-CONTROL/
 │   ├── version.properties        # App-Version im Kilometerzähler-Stil + Android versionCode, von bump_manifest_version.py/bump_version_code.py synchron gehalten
 │   ├── proguard-rules.pro        # Regeln zur Codeverkleinerung/Verschleierung für den Release-Build
 │   └── src/main/
-│       ├── AndroidManifest.xml   # Berechtigungen, Activity-/Receiver-Deklarationen, usesCleartextTraffic (reiner HTTP-LAN-Server, kein TLS)
+│       ├── AndroidManifest.xml   # Berechtigungen, Activity-/Receiver-Deklarationen, usesCleartextTraffic (der LAN-Server spricht reines HTTP, sofern TLS dort nicht aktiviert ist; jeder Aufruf braucht ein Anmelde-Token)
 │       ├── java/com/hydraumc/control/
 │       │   ├── MainActivity.kt          # Einstiegspunkt - Splash, Login-/Hauptbildschirm-Zugriffssteuerung, kaltstartsichere globale E-STOP-Behandlung
 │       │   ├── MainScreen.kt            # Unteres Navigations-Grundgerüst, obere Leiste (Serverauswahl, Profil, Telemetrie, Einstellungen)
@@ -207,7 +207,6 @@ HYDRA-UMC-ANDROID-CONTROL/
 ├── local.properties              # Lokaler Pfad des Android SDK (maschinenspezifisch, nicht eingecheckt)
 ├── keystore.properties.example   # Vorlage für die private Release-Signierkonfiguration
 ├── .env.example                  # Beispiel für Umgebungsvariablen
-├── metadata.json                 # App-Store-Eintragsmetadaten (Name/Beschreibung)
 ├── README.md                     # Diese Datei
 ├── README_spa.md / README_ita.md / README_fra.md / README_deu.md / README_zho.md / README_jpn.md / README_por.md   # Übersetzungen
 └── LICENSE                       # GPL-3.0-or-later

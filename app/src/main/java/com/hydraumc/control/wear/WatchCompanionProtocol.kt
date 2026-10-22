@@ -24,7 +24,7 @@ data class WatchCompanionVersionStatus(
             "Unsupported companion protocol version: $protocolVersion"
         }
         require(STABLE_VERSION.matches(appVersion)) {
-            "appVersion must be a stable MAJOR.MINOR.PATCH value"
+            "appVersion must be a stable MAJOR.MINOR.PATCH or MAJOR.MINOR.PATCH.BUILD value"
         }
     }
 
@@ -38,6 +38,6 @@ data class WatchCompanionVersionStatus(
     companion object {
         const val CURRENT_PROTOCOL_VERSION = 1
         const val MESSAGE_TYPE = "companion_version_status"
-        private val STABLE_VERSION = Regex("^\\d+\\.\\d+\\.\\d+$")
+        private val STABLE_VERSION = Regex("^\\d+\\.\\d+\\.\\d+(?:\\.\\d+)?$")
     }
 }

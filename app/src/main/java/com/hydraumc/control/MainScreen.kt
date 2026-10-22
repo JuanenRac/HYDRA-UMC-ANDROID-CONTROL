@@ -7,6 +7,7 @@ package com.hydraumc.control
 
 import android.content.res.Configuration
 import androidx.annotation.StringRes
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -28,6 +29,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
+import com.hydraumc.control.R
 import com.hydraumc.control.ui.*
 import com.hydraumc.control.ui.theme.metallicIndustrial
 import com.hydraumc.control.viewmodel.RobotViewModel
@@ -377,13 +379,28 @@ fun MainScreen(
         // cause of the 3D viewport's "367x0"/blank-black-screen bug: the
         // WebView's page (STUDIO's own React app) was correctly measuring
         // a genuinely zero-height Android View, not failing to render.
-        NavHost(navController, startDestination = Screen.Dashboard.route, Modifier.padding(innerPadding).fillMaxSize()) {
+        Column(Modifier.padding(innerPadding).fillMaxSize()) {
+        if (viewModel.isShowingStaleData) {
+            val savedAt = viewModel.stateAtMs.value
+            val time = savedAt?.let { java.text.DateFormat.getTimeInstance(java.text.DateFormat.SHORT).format(java.util.Date(it)) }
+            Text(
+                text = if (time != null) stringResource(R.string.stale_data_banner, time) else stringResource(R.string.stale_data_banner_unknown),
+                color = MaterialTheme.colorScheme.onErrorContainer,
+                style = MaterialTheme.typography.labelMedium,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.errorContainer)
+                    .padding(horizontal = 16.dp, vertical = 6.dp),
+            )
+        }
+        NavHost(navController, startDestination = Screen.Dashboard.route, Modifier.weight(1f).fillMaxWidth()) {
             composable(Screen.Dashboard.route) { DashboardScreen(viewModel) }
             composable(Screen.Control.route) { ControlScreen(viewModel) }
             composable(Screen.Camera.route) { CameraScreen(viewModel) }
             composable(Screen.ThreeD.route) { ThreeDScreen(viewModel) }
             composable(Screen.Telemetry.route) { TelemetryScreen(viewModel) }
             composable(Screen.Settings.route) { SettingsScreen(viewModel, updateViewModel, onEnableBluetooth) }
+        }
         }
     }
 }

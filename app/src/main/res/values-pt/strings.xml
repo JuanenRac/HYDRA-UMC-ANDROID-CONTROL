@@ -82,6 +82,9 @@
     <string name="error_stop_not_confirmed">STOP não confirmado pelo servidor: prima de novo ou use a paragem de emergência física</string>
     <string name="error_session_expired">Sessão expirada: a iniciar sessão de novo</string>
     <string name="error_robot_reserved">O robô está reservado por outra conta: %1$s</string>
+    <string name="error_jog_out_of_reach">Este movimento está fora do alcance do robô: não foi enviado nada.</string>
+    <string name="stale_data_banner">Sem ligação - dados das %1$s. Os estados dos robôs podem estar desatualizados.</string>
+    <string name="stale_data_banner_unknown">Sem ligação - dados guardados. Os estados dos robôs podem estar desatualizados.</string>
     <string name="error_permission_denied">Permissão negada: esta conta não pode fazer isso</string>
     <string name="error_command_rejected">O servidor rejeitou %1$s: %2$s (alteração revertida)</string>
     <string name="error_no_tool_in_slot">Não existe nenhuma ferramenta na posição %d.</string>

@@ -14,6 +14,12 @@ at the time.
 - The banner follows the animated style of the ecosystem banners, with the name, the kind and the technologies of the project.
 - Added `tools/hydra_project_tool.py`: the same `validate`, `test`, `version`, `status` and `bump` commands in every repository. The checks run with `HYDRA_UMC_CI=1` and fail if the version changes; only `bump` changes it.
 - Comments no longer point at a private design note.
+- A failed command now undoes only the fields it changed, and only while they still hold the value it wrote: a server update or a later jog that succeeded is no longer overwritten by an old copy of the robot.
+- A Cartesian jog whose target is out of the arm's reach, or needs a joint outside its limits, is refused with a message instead of sending clamped joints next to a position that does not match them.
+- A banner above every screen warns when the robots shown come from the saved copy or the link to the server is down, with the time of that data; the time of the last save is now stored with the copy.
+- The companion version status accepts the four component version numbers.
+- The README states how the release build is signed (private key when configured, debug key otherwise), the manifest and README describe the network setup as it is, and the architecture notes describe how incoming state is applied; the leftover store listing file and the unused project template tests are gone.
+- Texts for the new messages in the eight languages.
 
 ## [0.7.1]
 

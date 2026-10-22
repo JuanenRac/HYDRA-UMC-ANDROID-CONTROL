@@ -144,10 +144,12 @@ class AuthPrefs(private val context: Context) {
     }
 
     /**
-     * Deletes this prefs file and Tink's own companion keyset file(s) it
-     * stores alongside it (named `"$PREFS_FILE_NAME..."` - both start with
-     * the same prefix) so the next [createEncryptedPrefs] call generates a
-     * brand new keyset instead of tripping over the same undecryptable one.
+     * Deletes this prefs file so the next [createEncryptedPrefs] call
+     * generates a brand new keyset instead of tripping over the same
+     * undecryptable one. Tink keeps its keysets inside this same file (as
+     * `__androidx_security_crypto_encrypted_prefs_*_keyset__` entries), so
+     * removing it removes them; the prefix match also clears any sibling
+     * file an older library version may have left behind.
      */
     private fun deleteCorruptedPrefs() {
         runCatching {

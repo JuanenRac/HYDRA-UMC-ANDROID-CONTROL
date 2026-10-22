@@ -200,3 +200,25 @@ fun parol6CartesianToJoints(x: Double, y: Double, z: Double, a: Double, b: Doubl
         clampD(c, j6Limits.first, j6Limits.second),
     )
 }
+
+/** How far (metres) the arm may land from the requested point before the target counts as out of reach. */
+private const val REACH_TOLERANCE_M = 0.002
+
+/**
+ * Like [parol6CartesianToJoints], but returns null when the target cannot be
+ * reached: the base angle or the wrist angles fall outside their limits, or
+ * the clamped shoulder/elbow pair ends more than a couple of millimetres away
+ * from the requested point. The caller refuses the jog instead of sending
+ * joints that do not match the position it shows.
+ */
+fun parol6CartesianToJointsOrNull(x: Double, y: Double, z: Double, a: Double, b: Double, c: Double): DoubleArray? {
+    val j1 = atan2(y, x) * (180.0 / Math.PI)
+    for ((name, value) in listOf("j1" to j1, "j4" to a, "j5" to b, "j6" to c)) {
+        val (lo, hi) = PAROL6_JOINT_LIMITS_DEG.getValue(name)
+        if (value < lo || value > hi) return null
+    }
+    val joints = parol6CartesianToJoints(x, y, z, a, b, c)
+    val (r, h) = radiusHeight(joints[1], joints[2])
+    val err = hypot(r - sqrt(x * x + y * y) / 1000.0, h - (z + Z_OFFSET_MM) / 1000.0)
+    return if (err > REACH_TOLERANCE_M) null else joints
+}

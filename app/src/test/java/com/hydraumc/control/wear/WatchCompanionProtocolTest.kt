@@ -30,6 +30,12 @@ class WatchCompanionProtocolTest {
     }
 
     @Test
+    fun `version status accepts the four component version`() {
+        val status = WatchCompanionVersionStatus(appVersion = "0.8.1.2", updateAvailable = false)
+        assertEquals("0.8.1.2", status.appVersion)
+    }
+
+    @Test
     fun `voice turn uses the bounded Watch to Server contract`() {
         val payload = WatchVoiceTurn(
             requestId = "watch-voice-001",

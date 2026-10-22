@@ -25,7 +25,7 @@
 
 Una app Android nativa (Kotlin + Jetpack Compose) que controla un robot en la plataforma [HYDRA-UMC](https://github.com/JuanenRac/HYDRA-UMC) por Wi-Fi o Bluetooth, hablando exactamente el mismo contrato [`REMOTE_API.md`](https://github.com/JuanenRac/HYDRA-UMC-SERVER/blob/main/docs/REMOTE_API.md) que usa [HYDRA-UMC SUITE](https://github.com/JuanenRac/HYDRA-UMC-SUITE) - descubrimiento, lectura/escritura de estado completo, y sincronización en vivo por WebSocket contra un backend [HYDRA-UMC-SERVER](https://github.com/JuanenRac/HYDRA-UMC-SERVER) en ejecución (el mismo con el que habla el propio panel web de [HYDRA-UMC STUDIO](https://github.com/JuanenRac/HYDRA-UMC-STUDIO)). Contraparte directa en Android de [HYDRA-UMC-IOS-CONTROL](https://github.com/JuanenRac/HYDRA-UMC-IOS-CONTROL). Ver [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) para el diseño completo.
 
-> **Comprobación de honestidad - qué funciona realmente hoy:** la lógica de negocio central - la cinemática Parol6 (`kinematics/Parol6Kinematics.kt`), el contrato de estado del árbol de settings (`model/HydraState.kt`), el envío de comandos atómicos y el relay de voz (`viewmodel/RobotViewModel.kt`), la reconexión de WebSocket (`network/HydraWebSocket.kt`), el parseo de frames MJPEG (`ui/MjpegPlayer.kt`), el canal de actualización interna (`update/GitHubReleaseUpdater.kt`, `ReleaseMetadataParser.kt`, `SemanticVersion.kt`), y la gestión de peticiones del relay de voz del Wear (`wear/BoundedRequestScope.kt`, `WatchCompanionProtocol.kt`) son reales y están cubiertos por 98 tests unitarios JVM/Robolectric que pasan (`./gradlew testDebugUnitTest`). Lo que esos tests estructuralmente no pueden alcanzar - y lo que este entorno de desarrollo solo-Windows no tiene un dispositivo Android físico para verificar - es el `EncryptedSharedPreferences` real respaldado por Keystore de `network/AuthPrefs.kt`, el prompt de huella/rostro de `androidx.biometric`, el transporte Bluetooth GATT de `network/HydraBleClient.kt`, y la ruta de `ImageDecoder` por hardware en API 28+ dentro de `MjpegStreamParser`: código real y compilado que no se ha vuelto a verificar en hardware desde que se escribió. El arranque/login básico *sí* se confirmó en vivo en un dispositivo real para versiones anteriores (ver las entradas `v0.3.2`/`v0.3.3` de `CHANGELOG.md`), pero eso es anterior al Bluetooth, la biometría y la ruta de decodificación por hardware. Ver `CHANGELOG.md` para lo que se ha entregado exactamente, incluyendo sus propias notas por entrada sobre lo que sigue sin verificar en hardware.
+> **Comprobación de honestidad - qué funciona realmente hoy:** la lógica de negocio central - la cinemática Parol6 (`kinematics/Parol6Kinematics.kt`), el contrato de estado del árbol de settings (`model/HydraState.kt`), el envío de comandos atómicos y el relay de voz (`viewmodel/RobotViewModel.kt`), la reconexión de WebSocket (`network/HydraWebSocket.kt`), el parseo de frames MJPEG (`ui/MjpegPlayer.kt`), el canal de actualización interna (`update/GitHubReleaseUpdater.kt`, `ReleaseMetadataParser.kt`, `SemanticVersion.kt`), y la gestión de peticiones del relay de voz del Wear (`wear/BoundedRequestScope.kt`, `WatchCompanionProtocol.kt`) son reales y están cubiertos por 148 tests unitarios JVM/Robolectric que pasan (`./gradlew testDebugUnitTest`). Lo que esos tests estructuralmente no pueden alcanzar - y lo que este entorno de desarrollo solo-Windows no tiene un dispositivo Android físico para verificar - es el `EncryptedSharedPreferences` real respaldado por Keystore de `network/AuthPrefs.kt`, el prompt de huella/rostro de `androidx.biometric`, el transporte Bluetooth GATT de `network/HydraBleClient.kt`, y la ruta de `ImageDecoder` por hardware en API 28+ dentro de `MjpegStreamParser`: código real y compilado que no se ha vuelto a verificar en hardware desde que se escribió. El arranque/login básico *sí* se confirmó en vivo en un dispositivo real para versiones anteriores (ver las entradas `v0.3.2`/`v0.3.3` de `CHANGELOG.md`), pero eso es anterior al Bluetooth, la biometría y la ruta de decodificación por hardware. Ver `CHANGELOG.md` para lo que se ha entregado exactamente, incluyendo sus propias notas por entrada sobre lo que sigue sin verificar en hardware.
 
 > **Estado de seguridad física y de ciberseguridad:** este ecosistema no es un sistema de seguridad certificado. Todavía no existe una ruta de E-STOP por hardware, ni límites ni enclavamientos aplicados por el firmware, ni un comando de movimiento verificado; las imágenes de firmware se comprueban con CRC32 y un HMAC-SHA256 de clave compartida, no con una firma asimétrica; TLS y TLS mutuo son opcionales y están desactivados por defecto; aún no se ha poblado ni probado ninguna placa propia. Lee la [línea base de seguridad](https://github.com/JuanenRac/HYDRA-UMC-DOCS/blob/main/docs/SECURITY_BASELINE.md) y el [modelo de amenazas](https://github.com/JuanenRac/HYDRA-UMC-DOCS/blob/main/docs/THREAT_MODEL.md) antes de fiarte de cualquier afirmación de aquí para la seguridad de una persona.
 
@@ -35,7 +35,7 @@ Una app Android nativa (Kotlin + Jetpack Compose) que controla un robot en la pl
 |---|---|
 | Versión | `0.7.1` |
 | Madurez | Funcional |
-| Tests | 98 (`./gradlew testDebugUnitTest`) |
+| Tests | 148 (`./gradlew testDebugUnitTest`) |
 | Tecnología | Kotlin / Jetpack / biometric auth / WebSocket client |
 | Destino | Un teléfono o tableta Android |
 | En hardware real | Todavía no: no consta ninguna ejecución en hardware real para esta versión |
@@ -93,7 +93,7 @@ Pasos equivalentes sin los scripts, para CI o una terminal normal:
 gradlew.bat assembleDebug      # Windows
 ```
 
-El APK queda en `app/build/outputs/apk/debug/app-debug.apk`. Instálalo con `adb install -r -d app/build/outputs/apk/debug/app-debug.apk`, o transfiérelo al dispositivo manualmente. Cambia `assembleDebug` por `assembleRelease` para una compilación de release - actualmente firma con la clave de debug (el propio bloque `release` de `app/build.gradle.kts`, mantenido así para facilitar las pruebas), así que se instala sin problemas pero no está lista para distribución tal cual.
+El APK queda en `app/build/outputs/apk/debug/app-debug.apk`. Instálalo con `adb install -r -d app/build/outputs/apk/debug/app-debug.apk`, o transfiérelo al dispositivo manualmente. Cambia `assembleDebug` por `assembleRelease` para una compilación de release - firma con la clave de release privada cuando existe `keystore.properties` (o las variables de entorno de firma de release) y, si no, recurre a la clave de debug, que se instala sin problemas para pruebas pero nunca debe distribuirse.
 
 ## 🔢 Versionado
 
@@ -129,7 +129,7 @@ HYDRA-UMC-ANDROID-CONTROL/
 │   ├── version.properties        # Versión de la app tipo cuentakilómetros + versionCode de Android, sincronizados por bump_manifest_version.py/bump_version_code.py
 │   ├── proguard-rules.pro        # Reglas de reducción/ofuscación de código para el build de release
 │   └── src/main/
-│       ├── AndroidManifest.xml   # Permisos, declaraciones de activity/receiver, usesCleartextTraffic (servidor LAN HTTP plano, sin TLS)
+│       ├── AndroidManifest.xml   # Permisos, declaraciones de activity/receiver, usesCleartextTraffic (el servidor LAN habla HTTP plano salvo que tenga TLS activado; cada llamada exige un token de sesión)
 │       ├── java/com/hydraumc/control/
 │       │   ├── MainActivity.kt          # Punto de entrada - splash, control de acceso a login/pantalla principal, manejo de E-STOP global seguro en arranque frío
 │       │   ├── MainScreen.kt            # Estructura de navegación inferior, barra superior (selector de servidor, perfil, telemetría, ajustes)
@@ -207,7 +207,6 @@ HYDRA-UMC-ANDROID-CONTROL/
 ├── local.properties              # Ruta local del Android SDK (específica de la máquina, no comiteada)
 ├── keystore.properties.example   # Plantilla de configuración privada de firma de release
 ├── .env.example                  # Ejemplo de variables de entorno
-├── metadata.json                 # Metadatos de ficha de tienda de apps (nombre/descripción)
 ├── README.md                     # Este archivo
 ├── README_spa.md / README_ita.md / README_fra.md / README_deu.md / README_zho.md / README_jpn.md / README_por.md   # Traducciones
 └── LICENSE                       # GPL-3.0-or-later
