@@ -1,13 +1,6 @@
 # Changelog
 
-All notable changes to HYDRA-UMC CONTROL (Android) are summarized here.
-This public changelog records release-relevant work rather than a
-session-by-session diary.
-
-Version numbers below follow the ecosystem-wide auto-bump policy described
-in [README.md](README.md#-versioning). Entries recorded before that policy
-existed are grouped under the pre-policy version `0.0.0` the repo carried
-at the time.
+All notable changes to this project are documented here.
 
 ## [Unreleased]
 
