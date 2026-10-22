@@ -9,6 +9,11 @@ in [README.md](README.md#-versioning). Entries recorded before that policy
 existed are grouped under the pre-policy version `0.0.0` the repo carried
 at the time.
 
+## [Unreleased]
+
+- Added `tools/hydra_project_tool.py`: the same `validate`, `test`, `version`, `status` and `bump` commands in every repository. The checks run with `HYDRA_UMC_CI=1` and fail if the version changes; only `bump` changes it.
+- Comments no longer point at a private design note.
+
 ## [0.7.1]
 
 - Fixed the sign-in loop against a server that predates the `hydra.bearer` subprotocol: such a server accepts the live connection, finds no token in the address and closes it with 1008 "No token provided"; the app took that for an expired session, renewed it, reconnected the same way and ended back at the sign-in. That close now makes the app send the token in the address once, right away, with no renewal; a server that rejects the token both ways is reported as a rejected session once.

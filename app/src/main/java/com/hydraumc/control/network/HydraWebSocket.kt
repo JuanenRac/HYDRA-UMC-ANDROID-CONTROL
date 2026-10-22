@@ -90,7 +90,7 @@ class HydraWebSocket(
     /**
      * A real targeted delta (server.ts's own broadcastRobotDelta(), sent
      * only once this connection declares schema 2 via ?remoteApiVersion=2
-     * below - see DISEÑO_SYNC_DELTAS.txt section 2/3). Optional: a caller
+     * below - see the delta-sync design). Optional: a caller
      * that doesn't pass this still gets every delta folded into onSettings
      * as a full-tree replace, same as before this existed. Placed BEFORE
      * onError (not after) so onError - not this - stays the parameter the
@@ -174,7 +174,7 @@ class HydraWebSocket(
         // Pass the token in the query string so the server can authenticate the upgrade.
         // remoteApiVersion=2 declares this connection understands a real targeted
         // delta - reused from GET /api/hydra-info's own field name (see
-        // DISEÑO_SYNC_DELTAS.txt section 3/8q3). A server that doesn't recognize it
+        // the delta-sync design). A server that doesn't recognize it
         // just keeps sending the full tree under "delta" like before.
         val scheme = if (useTls) "wss" else "ws"
         val request = if (token == null) {

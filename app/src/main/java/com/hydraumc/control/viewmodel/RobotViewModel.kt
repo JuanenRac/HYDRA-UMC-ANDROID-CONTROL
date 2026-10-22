@@ -1123,7 +1123,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
      * doesn't (this mirror is stale, or missed the robot's own initial
      * full-tree load), the delta is discarded and a full GET /api/settings
      * reload is forced instead of ever creating a "ghost" robot from a
-     * partial patch - DISEÑO_SYNC_DELTAS.txt section 5b mitigation (b),
+     * partial patch - the delta-sync design mitigation (b),
      * non-optional. This app has no CameraView (cameras aren't modeled as
      * their own class here, only cameraPatch's raw JSON is merged) - a
      * cameraPatch is still applied to the underlying tree for correctness
