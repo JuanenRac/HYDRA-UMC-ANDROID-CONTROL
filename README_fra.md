@@ -186,7 +186,7 @@ HYDRA-UMC-ANDROID-CONTROL/
 │       │       └── GlobalStopWidget.kt # Widget d'écran d'accueil pour un E-STOP global
 │       └── res/
 │           ├── drawable/, layout/, mipmap*/, xml/   # Icônes, disposition du widget, icônes de lanceur, règles de sauvegarde/extraction de données
-│           └── values/, values-es/, values-de/, values-fr/, values-it/, values-ja/, values-zh/, values-pt/   # Chaînes en 7 langues, couleurs, thème
+│           └── values/, values-es/, values-de/, values-fr/, values-it/, values-ja/, values-zh/, values-pt/   # Chaînes en 8 langues, couleurs, thème
 ├── docs/
 │   ├── ARCHITECTURE.md              # Notes de conception/architecture
 │   ├── GITHUB_RELEASE_UPDATES.md    # Flux in-app de vérification/téléchargement/installation des mises à jour
