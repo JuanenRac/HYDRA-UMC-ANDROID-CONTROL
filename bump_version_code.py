@@ -12,10 +12,10 @@ the MAJOR.MINOR.PATCH odometer scheme bump_manifest_version.py tracks (and
 that script is intentionally generic/shared across the whole ecosystem, so
 this Android-specific counter is not its job - see its own docstring).
 
-Run from build-android.sh/build-android.bat, alongside
-bump_manifest_version.py, before Gradle runs - Gradle itself only reads
-version.properties for a real build (it runs with -PhydraUmcReadOnly=true,
-see app/build.gradle.kts), it never writes to it.
+Run by the explicit bump command (python tools/hydra_project_tool.py bump),
+alongside bump_manifest_version.py; building never runs it. Gradle itself only
+reads version.properties (it runs with -PhydraUmcReadOnly=true, see
+app/build.gradle.kts), it never writes to it.
 """
 from __future__ import annotations
 

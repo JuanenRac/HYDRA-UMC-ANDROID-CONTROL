@@ -98,10 +98,10 @@ The APK lands at `app/build/outputs/apk/debug/app-debug.apk`. Install it with `a
 
 ## 🔢 Versioning
 
-This repo follows an ecosystem-wide policy: the version bumps automatically on **every real build**, no manual editing of `app/build.gradle.kts`'s `versionName`/`versionCode`. `app/version.properties` holds the current `versionMajor`/`versionMinor`/`versionPatch`/`versionCode`; `build-android.bat`/`.sh` run `bump_manifest_version.py` (native version + `hydra-umc.project.json` manifest + `CHANGELOG.md`, kept in sync) and `bump_version_code.py` (the separate, always-monotonic Android `versionCode`) *before* invoking Gradle. `app/build.gradle.kts` itself only ever *reads* `version.properties` at configuration time now - it used to write it there too on any real Gradle task, but a plain verification `compileDebugKotlin` run that way silently advanced `versionPatch`/`versionCode` with the manifest never moving (a real drift bug, found live and fixed - see `CHANGELOG.md`), so the two bump scripts are the only real source of a bump today. Going through `build-android.bat`/`.sh` (or the equivalent release scripts) always produces a version strictly newer than the last one:
+This repo follows an ecosystem-wide policy: building never changes the version. `app/version.properties` holds the current `versionMajor`/`versionMinor`/`versionPatch`/`versionCode`; only the explicit bump command raises them (`python tools/hydra_project_tool.py bump`: `bump_manifest_version.py` for the native version, the `hydra-umc.project.json` manifest and `CHANGELOG.md`, and `bump_version_code.py` for the separate, always-monotonic Android `versionCode`). `app/build.gradle.kts` only ever *reads* `version.properties` and never writes it.
 
-- **Patch, odometer-style (base 10):** +1 on every build; once it would exceed 9 it resets to 0 and minor gets +1 instead - e.g. `0.0.9` -> `0.1.0`. Major is never touched automatically.
-- **`versionCode`:** a plain monotonic counter, +1 on every build, no carry - Android requires it to strictly increase across every build that ever ships.
+- **Patch, odometer-style (base 10):** +1 on every bump; once it would exceed 9 it resets to 0 and minor gets +1 instead - e.g. `0.0.9` -> `0.1.0`. Major is never touched automatically.
+- **`versionCode`:** a plain monotonic counter, +1 on every bump, no carry - Android requires it to strictly increase across every build that ever ships.
 
 A plain `./gradlew assembleDebug` (the "Manual Build" path above, with neither bump script run first) reuses whatever `version.properties` last had - it does not bump anything on its own. The running version is visible live in the **About** dialog (`BuildConfig.VERSION_NAME`, reading whichever `versionName` `version.properties` last held). See [CHANGELOG.md](CHANGELOG.md) for the version history.
 
@@ -127,7 +127,7 @@ A plain `./gradlew assembleDebug` (the "Manual Build" path above, with neither b
 HYDRA-UMC-ANDROID-CONTROL/
 ├── app/
 │   ├── build.gradle.kts          # App module Gradle config - AGP/Kotlin/Compose versions, dependencies, debug-signed release build type
-│   ├── version.properties        # Odometer-versioned app version + Android versionCode, kept in sync by bump_manifest_version.py/bump_version_code.py
+│   ├── version.properties        # versionMajor/Minor/Patch/Code (bumped only by the explicit `bump` command)
 │   ├── proguard-rules.pro        # Release-build code shrinking/obfuscation rules
 │   └── src/main/
 │       ├── AndroidManifest.xml   # Permissions, activity/receiver declarations, usesCleartextTraffic (the LAN server speaks plain HTTP unless TLS is enabled on it; every call needs a signed-in token)
@@ -202,7 +202,7 @@ HYDRA-UMC-ANDROID-CONTROL/
 ├── prepare-github-release.bat / .sh  # Builds a privately signed, stable release APK without bumping version
 ├── publish-github-release.ps1 / .sh  # Local-only: publishes dist/'s APK as a GitHub Release
 ├── bump_manifest_version.py      # Syncs hydra-umc.project.json's version to the native one (--sync)
-├── bump_version_code.py          # Increments Android's own versionCode counter in app/version.properties
+├── bump_version_code.py          # Android versionCode counter bump (run only by the explicit `bump` command)
 ├── gradlew, gradlew.bat          # Gradle wrapper
 ├── build.gradle.kts, settings.gradle.kts, gradle.properties   # Root Gradle project config
 ├── local.properties              # Local Android SDK path (machine-specific, not committed)

@@ -97,10 +97,10 @@ APK は `app/build/outputs/apk/debug/app-debug.apk` に生成されます。`adb
 
 ## 🔢 バージョン管理
 
-本リポジトリは、エコシステム全体で統一されたポリシーに従います：バージョンは**実際のビルドのたび**に自動的に加算され、`app/build.gradle.kts` の `versionName`/`versionCode` を手動で編集する必要はありません。`app/version.properties` は現在の `versionMajor`/`versionMinor`/`versionPatch`/`versionCode` を保持します。`build-android.bat`/`.sh` は Gradle を呼び出す*前に* `bump_manifest_version.py`（ネイティブバージョン + `hydra-umc.project.json` マニフェスト + `CHANGELOG.md` を同期）と `bump_version_code.py`（別管理で常に単調増加する Android の `versionCode`）を実行します。`app/build.gradle.kts` 自体は、現在は構成時に `version.properties` を*読み取るだけ*です——以前は実際の Gradle タスクであれば何であっても書き戻していましたが、検証目的の単なる `compileDebugKotlin` 実行でもマニフェストが一切動かないまま `versionPatch`/`versionCode` が静かに進んでしまう(実際に見つかり修正された本物のドリフトバグ——詳細は `CHANGELOG.md` を参照)ため、現在はこの2つの加算スクリプトだけが本当のバージョン加算元です。`build-android.bat`/`.sh`(または同等のリリーススクリプト)を経由すれば、生成される APK は常に最後のものより厳密に新しい番号を持ちます：
+このリポジトリはエコシステム全体の方針に従います：ビルドはバージョンを一切変更しません。`app/version.properties` には現在の `versionMajor`/`versionMinor`/`versionPatch`/`versionCode` が入っており、明示的な `bump` コマンドだけがそれらを上げます（`python tools/hydra_project_tool.py bump`：ネイティブバージョン、`hydra-umc.project.json` マニフェスト、`CHANGELOG.md` は `bump_manifest_version.py`、独立した常に単調増加の Android `versionCode` は `bump_version_code.py`）。`app/build.gradle.kts` は `version.properties` を*読む*だけで、書き込むことはありません。
 
-- **Patch、オドメーター方式（10 進法）：** 毎回のビルドで +1；9 を超えるとリセットされて 0 になり、代わりに minor が +1 されます——例：`0.0.9` -> `0.1.0`。Major は自動的には決して変更されません。
-- **`versionCode`：** 単純な単調カウンター、毎回のビルドで +1、繰り上がりなし——Android は、これまでに出荷されたすべてのビルドにわたって厳密に増加することを要求します。
+- **Patch、オドメーター方式（10 進法）：** bump のたびに +1；9 を超えるとリセットされて 0 になり、代わりに minor が +1 されます——例：`0.0.9` -> `0.1.0`。Major は自動的には決して変更されません。
+- **`versionCode`：** 単純な単調カウンター、bump のたびに +1、繰り上がりなし——Android は、これまでに出荷されたすべてのビルドにわたって厳密に増加することを要求します。
 
 単純に `./gradlew assembleDebug`(上記の「手動ビルド」の方法で、加算スクリプトを先に実行しない場合)を実行しても、`version.properties` に最後にあった値をそのまま使うだけで、それ自体は何も加算しません。現在実行中のバージョンは **About** ダイアログでリアルタイムに確認できます（`BuildConfig.VERSION_NAME`、`version.properties` に最後に保持されていた `versionName` を読み取ります）。バージョン履歴は [CHANGELOG.md](CHANGELOG.md) を参照してください。
 
@@ -126,7 +126,7 @@ APK は `app/build/outputs/apk/debug/app-debug.apk` に生成されます。`adb
 HYDRA-UMC-ANDROID-CONTROL/
 ├── app/
 │   ├── build.gradle.kts          # アプリモジュールの Gradle 設定——AGP/Kotlin/Compose バージョン、依存関係、デバッグ署名の release ビルドタイプ
-│   ├── version.properties        # オドメーター式アプリバージョン + Android の versionCode。bump_manifest_version.py/bump_version_code.py が同期
+│   ├── version.properties        # versionMajor/Minor/Patch/Code (明示的な `bump` コマンドのみが加算)
 │   ├── proguard-rules.pro        # release ビルド用のコード縮小/難読化ルール
 │   └── src/main/
 │       ├── AndroidManifest.xml   # 権限、activity/receiver 宣言、usesCleartextTraffic（LAN サーバーは TLS を有効にしない限りプレーン HTTP で、すべての呼び出しにサインイン済みトークンが必要）

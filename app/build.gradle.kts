@@ -53,11 +53,11 @@ val hasPrivateReleaseSigning = listOf(
 // Version source of truth
 // =============================================================================
 // Gradle always reads version.properties and never writes it.
-// build-android.bat/.sh are the sole release flow: they run
-// bump_manifest_version.py (native version + manifest + CHANGELOG) and
-// bump_version_code.py (the separate, always-monotonic Android versionCode)
-// first, then invoke Gradle - see bump_version_code.py's own docstring,
-// which already documented this exact contract.
+// build-android.bat/.sh never change it either: the explicit bump command
+// (python tools/hydra_project_tool.py bump) runs bump_manifest_version.py
+// (native version + manifest + CHANGELOG) and bump_version_code.py (the
+// separate, always-monotonic Android versionCode) - see bump_version_code.py's
+// own docstring.
 //
 // This used to write version.properties itself at Gradle CONFIGURATION
 // time on ANY real task (assembleDebug, installDebug, compileDebugKotlin,

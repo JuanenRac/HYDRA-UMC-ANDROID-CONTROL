@@ -19,24 +19,17 @@ printf '%s\n' "* Email     : electrohobby3d@gmail.com"
 printf '%s\n' "* Copyright : (C) 2026 JuanenRac"
 printf '%s\n' "* License   : GPL-3.0-or-later - see LICENSE"
 printf '%s\n' "* ------------------------------------------------------------------------- *"
-printf '%s\n' "* 1. Increment the project version and synchronise its manifest."
+printf '%s\n' "* 1. Read the project version (building never changes it; use the explicit bump command)."
 printf '%s\n' "* 2. Run this project's declared build, verification and packaging commands."
 printf '%s\n' "* 3. Report the result and keep an interactive terminal open."
 printf '%s\n' "*******************************************************************************"
 printf '\n'
 # HYDRA_UMC_SCRIPT_STANDARD_BANNER_END
-# HYDRA_UMC_SCRIPT_STANDARD_VERSION_CAPTURE_BEFORE
-HYDRA_UMC_VERSION_BEFORE="$(python3 -c 'import json, pathlib, sys; print(json.loads(pathlib.Path(sys.argv[1]).read_text(encoding="utf-8"))["version"])' "$(dirname "$0")/hydra-umc.project.json")"
-python3 "$(dirname "$0")/bump_manifest_version.py" || exit 1
-# HYDRA_UMC_SCRIPT_STANDARD_VERSION_CAPTURE_AFTER
-HYDRA_UMC_VERSION_AFTER="$(python3 -c 'import json, pathlib, sys; print(json.loads(pathlib.Path(sys.argv[1]).read_text(encoding="utf-8"))["version"])' "$(dirname "$0")/hydra-umc.project.json")"
-printf '\n*******************************************************************************\n'
-printf '%s\n' '* VERSION INCREMENT COMPLETED'
-printf '%s\n' "* v${HYDRA_UMC_VERSION_BEFORE:-unknown} -> v${HYDRA_UMC_VERSION_AFTER:-unknown}"
-printf '%s\n' '* Project manifest has been synchronised by the project build flow.'
-printf '%s\n' '*******************************************************************************'
-printf '\n'
-python3 "$(dirname "$0")/bump_version_code.py" || exit 1
+# HYDRA_UMC_SCRIPT_STANDARD_VERSION_STEP
+printf '%s\n' "Reading the project version (building never changes it)..."
+HYDRA_UMC_VERSION_BUILT="$(python3 -c 'import json, pathlib, sys; print(json.loads(pathlib.Path(sys.argv[1]).read_text(encoding="utf-8"))["version"])' "$(dirname "$0")/hydra-umc.project.json")"
+printf '%s\n' "      Building v${HYDRA_UMC_VERSION_BUILT:-unknown} (building never changes the version)"
+echo
 
 # Pauses for a keypress before the script's window closes - fires on every
 # exit path (success or error) so a double-clicked terminal doesn't vanish
@@ -76,11 +69,9 @@ fi
 
 echo "[1/3] ðŸ› ï¸  Building application (APK Debug)..."
 chmod +x gradlew
-# -PhydraUmcReadOnly=true / HYDRA_UMC_CI=1 tell app/build.gradle.kts not to
-# bump version.properties itself - the two scripts above already did the
-# one real bump for this build; without this flag Gradle's own
-# configuration-time bump would double it (the same flag build-test.sh
-# uses for its compile-only, non-mutating CI check).
+# -PhydraUmcReadOnly=true / HYDRA_UMC_CI=1: Gradle only reads
+# version.properties and never writes it (the same flag build-test.sh uses
+# for its compile-only, non-mutating CI check).
 HYDRA_UMC_CI=1 ./gradlew assembleDebug -PhydraUmcReadOnly=true
 
 if [ $? -ne 0 ]; then
@@ -118,5 +109,7 @@ else
     echo " 2. Developer options are enabled."
     echo " 3. USB debugging is enabled and authorized."
 fi
+
+printf '%s\n' "Built v${HYDRA_UMC_VERSION_BUILT:-unknown}. Building never changes the version; to raise it run: python tools/hydra_project_tool.py bump"
 
 pause_before_exit

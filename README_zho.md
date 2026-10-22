@@ -97,10 +97,10 @@ APK 会生成在 `app/build/outputs/apk/debug/app-debug.apk`。使用 `adb insta
 
 ## 🔢 版本管理
 
-本仓库遵循一项全生态系统统一的策略：版本号在**每次真正的构建**时自动递增,无需手动编辑 `app/build.gradle.kts` 的 `versionName`/`versionCode`。`app/version.properties` 保存当前的 `versionMajor`/`versionMinor`/`versionPatch`/`versionCode`;`build-android.bat`/`.sh` 会在调用 Gradle *之前*先运行 `bump_manifest_version.py`（同步原生版本号 + `hydra-umc.project.json` 清单 + `CHANGELOG.md`）和 `bump_version_code.py`（独立的、始终单调递增的 Android `versionCode`）。`app/build.gradle.kts` 本身现在只会在配置阶段*读取* `version.properties`——它以前也会在任何真正的 Gradle 任务上写入该文件,但这样一来,一次单纯用于验证的 `compileDebugKotlin` 编译就会在清单从未同步移动的情况下悄悄推进 `versionPatch`/`versionCode`（一个真实存在的版本错位缺陷,已被实际发现并修复——见 `CHANGELOG.md`）,因此如今这两个递增脚本才是版本提升的唯一真实来源。通过 `build-android.bat`/`.sh`（或对应的发布脚本）构建,产出的版本号总会严格新于上一次:
+本仓库遵循生态系统统一的策略：构建绝不会更改版本号。`app/version.properties` 保存当前的 `versionMajor`/`versionMinor`/`versionPatch`/`versionCode`；只有显式的 `bump` 命令才会提升它们（`python tools/hydra_project_tool.py bump`：`bump_manifest_version.py` 处理原生版本、`hydra-umc.project.json` 清单和 `CHANGELOG.md`，`bump_version_code.py` 处理独立且始终单调递增的 Android `versionCode`）。`app/build.gradle.kts` 只*读取* `version.properties`，从不写入。
 
-- **Patch,里程表方式（十进制）：** 每次构建 +1;一旦超过 9 就重置为 0,并将 minor 加 1——例如 `0.0.9` -> `0.1.0`。Major 从不被自动修改。
-- **`versionCode`：** 一个纯粹的单调计数器,每次构建 +1,不进位——Android 要求它在每一个曾经发布过的构建中都严格递增。
+- **Patch,里程表方式（十进制）：** 每次 bump +1;一旦超过 9 就重置为 0,并将 minor 加 1——例如 `0.0.9` -> `0.1.0`。Major 从不被自动修改。
+- **`versionCode`：** 一个纯粹的单调计数器,每次 bump +1,不进位——Android 要求它在每一个曾经发布过的构建中都严格递增。
 
 单纯执行 `./gradlew assembleDebug`（上面的"手动构建"方式,事先不运行任何递增脚本）只会沿用 `version.properties` 中已有的值——它本身不会递增任何东西。当前运行的版本可在 **About** 对话框中实时查看（`BuildConfig.VERSION_NAME`,读取的是 `version.properties` 中最后保存的 `versionName`）。完整版本历史见 [CHANGELOG.md](CHANGELOG.md)。
 
@@ -126,7 +126,7 @@ APK 会生成在 `app/build/outputs/apk/debug/app-debug.apk`。使用 `adb insta
 HYDRA-UMC-ANDROID-CONTROL/
 ├── app/
 │   ├── build.gradle.kts          # 应用模块 Gradle 配置——AGP/Kotlin/Compose 版本、依赖、debug 签名的 release 构建类型
-│   ├── version.properties        # 里程表式应用版本 + Android versionCode，由 bump_manifest_version.py/bump_version_code.py 同步
+│   ├── version.properties        # versionMajor/Minor/Patch/Code (仅由显式 `bump` 命令递增)
 │   ├── proguard-rules.pro        # release 构建的代码压缩/混淆规则
 │   └── src/main/
 │       ├── AndroidManifest.xml   # 权限、activity/receiver 声明、usesCleartextTraffic（局域网服务器使用纯 HTTP，除非在服务器上启用 TLS；每次调用都需要登录令牌）
@@ -201,7 +201,7 @@ HYDRA-UMC-ANDROID-CONTROL/
 ├── prepare-github-release.bat / .sh  # 构建一个私密签名、稳定的发布 APK，不递增版本号
 ├── publish-github-release.ps1 / .sh  # 仅限本地：将 dist/ 中的 APK 发布为 GitHub Release
 ├── bump_manifest_version.py      # 将 hydra-umc.project.json 的版本与原生版本同步（--sync）
-├── bump_version_code.py          # 递增 app/version.properties 中 Android 自身的 versionCode 计数器
+├── bump_version_code.py          # Android versionCode 计数器递增（仅由显式 `bump` 命令运行）
 ├── gradlew, gradlew.bat          # Gradle 包装器
 ├── build.gradle.kts, settings.gradle.kts, gradle.properties   # 根 Gradle 项目配置
 ├── local.properties              # 本地 Android SDK 路径（机器特定，不提交）

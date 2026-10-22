@@ -2,7 +2,7 @@
 # =============================================================================
 # HYDRA-UMC-ANDROID-CONTROL - prepare-github-release.sh
 # Produces a privately signed, stable GitHub Release APK without changing the
-# manifest version or CHANGELOG. The normal build script owns version bumps.
+# manifest version or CHANGELOG. The explicit bump command owns version changes.
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
 # GPL-3.0-or-later - see LICENSE
 # =============================================================================

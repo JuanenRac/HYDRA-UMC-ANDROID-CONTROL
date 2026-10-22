@@ -43,7 +43,7 @@ and retain an encrypted backup of that key. Losing the key prevents in-place
 updates to existing installations.
 
 To prepare the exact artifact without incrementing a version again, run one of
-these after the normal version-bumping build:
+these after the explicit bump (`python tools/hydra_project_tool.py bump`):
 
 ```text
 prepare-github-release.bat

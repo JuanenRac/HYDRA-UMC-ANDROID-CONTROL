@@ -97,10 +97,10 @@ L'APK finisce in `app/build/outputs/apk/debug/app-debug.apk`. Installalo con `ad
 
 ## 🔢 Versionamento
 
-Questo repository segue una politica a livello di ecosistema: la versione aumenta automaticamente ad **ogni build reale**, senza modifiche manuali a `versionName`/`versionCode` in `app/build.gradle.kts`. `app/version.properties` conserva i valori attuali di `versionMajor`/`versionMinor`/`versionPatch`/`versionCode`; `build-android.bat`/`.sh` eseguono `bump_manifest_version.py` (versione nativa + manifest `hydra-umc.project.json` + `CHANGELOG.md`, tenuti sincronizzati) e `bump_version_code.py` (il `versionCode` Android, separato e sempre monotono) *prima* di invocare Gradle. `app/build.gradle.kts` di per sé ora si limita a *leggere* `version.properties` in fase di configurazione - in passato lo scriveva anche lui su qualsiasi task Gradle reale, ma una semplice compilazione di verifica `compileDebugKotlin` eseguita così faceva avanzare silenziosamente `versionPatch`/`versionCode` senza che il manifest si muovesse mai (un vero bug di disallineamento, trovato dal vivo e corretto - vedi `CHANGELOG.md`), quindi oggi i due script di incremento sono l'unica vera fonte di un bump. Passare per `build-android.bat`/`.sh` (o gli script di release equivalenti) produce sempre una versione strettamente superiore all'ultima:
+Questo repository segue una politica a livello di ecosistema: compilare non cambia mai la versione. `app/version.properties` contiene i valori correnti di `versionMajor`/`versionMinor`/`versionPatch`/`versionCode`; solo il comando `bump` esplicito li alza (`python tools/hydra_project_tool.py bump`: `bump_manifest_version.py` per la versione nativa, il manifesto `hydra-umc.project.json` e `CHANGELOG.md`, e `bump_version_code.py` per il `versionCode` di Android, separato e sempre monotono). `app/build.gradle.kts` *legge* soltanto `version.properties` e non lo scrive mai.
 
-- **Patch, stile contachilometri (base 10):** +1 ad ogni build; se supererebbe 9, si azzera e la minor sale di +1 - esempio: `0.0.9` -> `0.1.0`. La major non viene mai toccata automaticamente.
-- **`versionCode`:** un contatore monotono semplice, +1 ad ogni build, senza riporto - Android richiede che aumenti sempre ad ogni build che viene effettivamente distribuita.
+- **Patch, stile contachilometri (base 10):** +1 a ogni bump; se supererebbe 9, si azzera e la minor sale di +1 - esempio: `0.0.9` -> `0.1.0`. La major non viene mai toccata automaticamente.
+- **`versionCode`:** un contatore monotono semplice, +1 a ogni bump, senza riporto - Android richiede che aumenti sempre ad ogni build che viene effettivamente distribuita.
 
 Un semplice `./gradlew assembleDebug` (il percorso "Compilazione Manuale" sopra, senza eseguire prima alcuno script di incremento) riutilizza quanto già presente in `version.properties` - non incrementa nulla da solo. La versione in esecuzione è visibile in tempo reale nella finestra **Informazioni** (`BuildConfig.VERSION_NAME`, che legge l'ultimo `versionName` presente in `version.properties`). Vedi [CHANGELOG.md](CHANGELOG.md) per la cronologia delle versioni.
 
@@ -126,7 +126,7 @@ Un semplice `./gradlew assembleDebug` (il percorso "Compilazione Manuale" sopra,
 HYDRA-UMC-ANDROID-CONTROL/
 ├── app/
 │   ├── build.gradle.kts          # Configurazione Gradle del modulo app - versioni AGP/Kotlin/Compose, dipendenze, tipo di build release firmato con la chiave di debug
-│   ├── version.properties        # Versione app stile contachilometri + versionCode Android, sincronizzati da bump_manifest_version.py/bump_version_code.py
+│   ├── version.properties        # versionMajor/Minor/Patch/Code (incrementato solo dal comando `bump` esplicito)
 │   ├── proguard-rules.pro        # Regole di riduzione/offuscamento del codice per il build di release
 │   └── src/main/
 │       ├── AndroidManifest.xml   # Permessi, dichiarazioni activity/receiver, usesCleartextTraffic (il server LAN parla HTTP semplice salvo che vi sia attivato TLS; ogni chiamata richiede un token di accesso)
@@ -201,7 +201,7 @@ HYDRA-UMC-ANDROID-CONTROL/
 ├── prepare-github-release.bat / .sh  # Compila un APK di release firmato privatamente e stabile, senza incrementare la versione
 ├── publish-github-release.ps1 / .sh  # Solo locale: pubblica l'APK di dist/ come GitHub Release
 ├── bump_manifest_version.py      # Sincronizza la versione di hydra-umc.project.json con quella nativa (--sync)
-├── bump_version_code.py          # Incrementa il contatore versionCode proprio di Android in app/version.properties
+├── bump_version_code.py          # Incremento del contatore versionCode di Android (eseguito solo dal comando `bump` esplicito)
 ├── gradlew, gradlew.bat          # Wrapper di Gradle
 ├── build.gradle.kts, settings.gradle.kts, gradle.properties   # Configurazione root del progetto Gradle
 ├── local.properties              # Percorso locale dell'Android SDK (specifico della macchina, non committato)

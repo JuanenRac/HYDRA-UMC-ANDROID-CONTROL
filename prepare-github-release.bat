@@ -8,7 +8,7 @@ if "%HYDRA_UMC_CI%"=="1" set "KEEP_OPEN=ver >nul"
 rem =============================================================================
 rem HYDRA-UMC-ANDROID-CONTROL - prepare-github-release.bat
 rem Produces a privately signed, stable GitHub Release APK without changing
-rem the manifest version or CHANGELOG. The normal build script owns bumps.
+rem the manifest version or CHANGELOG. The explicit bump command owns version changes.
 rem Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
 rem GPL-3.0-or-later - see LICENSE
 rem =============================================================================
