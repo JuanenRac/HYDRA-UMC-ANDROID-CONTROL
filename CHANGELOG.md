@@ -1076,33 +1076,9 @@ own bump code stays inert during a real build.
   HYDRA-UMC-SERVER project) across the README (+4 translations),
   `docs/ARCHITECTURE.md`, `AndroidManifest.xml`, and 3 `.kt` file headers.
 
-## [Unreleased policy]
+## Earlier history
 
-- **Automatic version bump on every real build.** `app/build.gradle.kts`
-  now reads `app/version.properties` at Gradle **configuration** time -
-  which runs on every real build (`assembleDebug`, `compileDebugKotlin`,
-  etc. all evaluate the script) - bumps it, and rewrites the file before
-  using the new numbers for `versionCode`/`versionName`: patch +1,
-  odometer-style carry into minor once patch would exceed 9 (`0.0.9` ->
-  `0.1.0`), and `versionCode` a plain monotonic counter (+1, no carry -
-  Android requires it to strictly increase across every build that ever
-  ships). No manual version editing from here on. `versionName` normalized
-  from the old 2-part `"0.0"` to the ecosystem's standard 3-part `"0.0.0"`
-  as the starting point.
-- `AboutDialog.kt` now reads the live `BuildConfig.VERSION_NAME` (new
-  `buildFeatures.buildConfig = true`) via a `%1$s`-formatted
-  `app_version` string instead of a hardcoded version baked into
-  `strings.xml` per language - previously `app_version` was a literal
-  `"Version 0.0.0"` that would have gone stale the moment the first
-  auto-bumped build shipped.
-- `build-android.sh`/`build-android.bat` now print a real startup banner
-  (project name, what the script does, author, license) matching the
-  copyright header already used across this repo's `.kt` files, and pause
-  for a keypress before closing on both success and failure so a
-  double-clicked window doesn't vanish before the result is readable.
-- This file added, seeded from the real project history below.
-
-## 0.0.0 and prior (pre-versioning-policy history)
+### 0.0.0 and prior (pre-versioning-policy history)
 
 - **Initial scaffolding** - Repo created as a placeholder, then scoped:
   native Android (Kotlin + Jetpack Compose) console for a HYDRA-UMC robot
