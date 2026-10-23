@@ -22,6 +22,16 @@ import com.hydraumc.control.R
 import com.hydraumc.control.network.AuthPrefs
 import com.hydraumc.control.network.ClaimInfo
 import com.hydraumc.control.network.ClaimStanding
+import com.hydraumc.control.network.AuditRead
+import com.hydraumc.control.network.AuditRecord
+import com.hydraumc.control.network.ChainCheck
+import com.hydraumc.control.network.ConditionalMode
+import com.hydraumc.control.network.RevisionTracker
+import com.hydraumc.control.network.isUnknownCommand
+import com.hydraumc.control.network.revisionOf
+import com.hydraumc.control.network.tableAsJogs
+import com.hydraumc.control.network.tableLimitExceeded
+import com.hydraumc.control.network.tableParams
 import com.hydraumc.control.network.RobotSafety
 import com.hydraumc.control.network.SessionController
 import com.hydraumc.control.network.claimStanding
@@ -240,6 +250,9 @@ private fun RobotView.toDisplay(): RobotState = RobotState(
     jogStep = raw.optDouble("jogStep", 1.0)
 )
 
+/** Why the audit record could not be read, for the sentence the screen shows. */
+enum class AuditFailure { FORBIDDEN, UNAVAILABLE, SESSION, NETWORK, OTHER }
+
 /**
  * Shared ViewModel responsible for robot orchestration, networking, and UI state management.
  */
@@ -263,6 +276,26 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
     val jogArmedUntilMs = mutableStateOf<Map<Int, Long>>(emptyMap())
     /** True while a reservation or arming request is on the wire. */
     val accessBusy = mutableStateOf(false)
+
+    // Conditional writes (contract v2, block 2): every write carries the revision of the robot this app last saw
+    // (If-Match), and the server refuses it with 412 when the robot changed in between.
+    /** Which writes are checked (chosen in the list of reservations); the standard mode by default. */
+    val conditionalMode = mutableStateOf(ConditionalMode.STANDARD)
+    @Volatile private var conditionalModeTouched = false
+    /** The last revision seen of each robot. */
+    val revisions = RevisionTracker { conditionalMode.value }
+    /** Whether the server was last seen to understand the `table` command (true until it says otherwise). */
+    @Volatile private var tableCommandSupported = true
+    /** When the server last pushed the reservations (this phone clock, epoch ms); 0 before the first push. */
+    @Volatile var claimsPushedAtMs: Long = 0L
+        private set
+
+    // The audit record (contract v2, block 4), for administrators.
+    val auditRead = mutableStateOf<AuditRead?>(null)
+    /** The chain check of the lines in [auditRead] (only after the operator asked to verify); null before. */
+    val auditChain = mutableStateOf<ChainCheck?>(null)
+    val auditBusy = mutableStateOf(false)
+    val auditFailure = mutableStateOf<AuditFailure?>(null)
     val controllerId: String get() = SessionController.id
 
     val ipAddress = mutableStateOf("192.168.1.100")
@@ -442,6 +475,9 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
             val storedControllerId = prefs.loadControllerId()
             if (SessionController.isValid(storedControllerId)) SessionController.adopt(storedControllerId)
             else prefs.saveControllerId(SessionController.id)
+            // Unless the person already chose one while this was reading.
+            val saved = prefs.loadConditionalMode()
+            if (!conditionalModeTouched) conditionalMode.value = saved
         }
 
         viewModelScope.launch {
@@ -1101,6 +1137,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                     applyState(HydraState(payload))
                 },
                 onDelta = { msg -> applyRobotDelta(msg) },
+                onClaims = { msg -> applyClaimsPush(msg) },
                 onUnauthorized = {
                     // The server closed the socket with 1008 (expired or invalid
                     // token). One renewal, however many signals arrive; only a
@@ -1335,16 +1372,22 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
 
         // A jog above the limit the server holds for this robot model is not sent at all (the
         // server checks it again). Checked before the optimistic change, like the client above.
-        if (command == "jog") {
+        if (command == "jog" || command == "table") {
             if (jogNeedsArming(robotId)) {
                 lastError.value = getApplication<Application>().getString(R.string.error_jog_not_armed)
                 return
             }
-            val exceeded = jogLimitExceeded(
-                amount = params?.optDouble("amount", 0.0) ?: 0.0,
-                limits = safetyByRobot.value[robotId]?.jog,
-                absolute = params?.optBoolean("absolute", false) ?: false,
-            )
+            val limits = safetyByRobot.value[robotId]?.jog
+            // A table move is checked as a whole, and a relative one also by where it ends.
+            val exceeded = if (command == "table") {
+                params?.let { tableLimitExceeded(it, limits, targetRobot.xyTablePos.optDouble("x", 0.0), targetRobot.xyTablePos.optDouble("y", 0.0)) }
+            } else {
+                jogLimitExceeded(
+                    amount = params?.optDouble("amount", 0.0) ?: 0.0,
+                    limits = limits,
+                    absolute = params?.optBoolean("absolute", false) ?: false,
+                )
+            }
             if (exceeded != null) {
                 lastError.value = getApplication<Application>().getString(R.string.error_jog_over_limit, formatLimit(exceeded))
                 return
@@ -1385,12 +1428,12 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
             applyState(state)
         }
 
-        val isJog = command == "jog"
+        val isJog = command == "jog" || command == "table"
         val send: () -> Unit = {
             if (isJog) jogsInFlight[robotId] = (jogsInFlight[robotId] ?: 0) + 1
             viewModelScope.launch {
                 try {
-                    val answer = postCommandWithRetry(client, robotId, payload, urgent = command == "stop")
+                    val answer = postCommandConditionally(client, robotId, command, payload)
                     val warnings = commandWarnings(answer)
                     if (warnings != null) {
                         // The server answered 200 but applied nothing (a speed
@@ -1418,6 +1461,8 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                 } catch (e: HydraApiException) {
                     logTelemetry("TX Error [$command]: ${e.message}")
                     lastError.value = describeCommandError(command, e)
+                    // The robot changed since this app read it: read it again so the screen shows what it is now.
+                    if (e.isRevisionMismatch) refreshRobot(robotId)
                     // The arming ended (it times out, or a stop cleared it): the screen offers to arm again.
                     if (e.isJogNotArmed) jogArmedUntilMs.value = jogArmedUntilMs.value - robotId
                     // An expired session is renewed (once, whoever notices first);
@@ -1462,11 +1507,12 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         robotId: Int,
         payload: JSONObject,
         urgent: Boolean,
+        ifMatch: String? = null,
     ): JSONObject {
         var attempt = 0
         while (true) {
             try {
-                return client.postRobotCommand(robotId, payload, urgent)
+                return client.postRobotCommand(robotId, payload, urgent, ifMatch)
             } catch (e: HydraApiException) {
                 if (!urgent || e.httpCode != null || attempt >= 2) throw e
             } catch (e: java.io.IOException) {
@@ -1477,6 +1523,113 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
             // time even where the main dispatcher is a virtual-time test one.
             kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) { kotlinx.coroutines.delay(250) }
         }
+    }
+
+    /**
+     * Runs one write with the revision this app last saw of the robot as If-Match (never for STOP, and only when the mode
+     * and the tracker allow it), keeps the revision of the answer for the next write, and on a 412 keeps the one the
+     * server says the robot is at now. The failure is rethrown for the caller to report.
+     */
+    private suspend fun withRevision(robotId: Int, command: String, call: suspend (String?) -> JSONObject): JSONObject {
+        val ticket = revisions.begin(robotId, command)
+        try {
+            val answer = call(ticket.ifMatch)
+            revisions.finish(robotId, ticket.seq, revisionOf(answer))
+            return answer
+        } catch (e: HydraApiException) {
+            revisions.finish(robotId, ticket.seq, null)
+            if (e.isRevisionMismatch) revisions.learn(robotId, e.revision)
+            throw e
+        } catch (e: Exception) {
+            revisions.finish(robotId, ticket.seq, null)
+            throw e
+        }
+    }
+
+    /** Posts a command conditionally; a `table` move goes out as the jogs that did the same on a server that has no such command. */
+    private suspend fun postCommandConditionally(client: HydraApiClient, robotId: Int, command: String, payload: JSONObject): JSONObject {
+        val params = payload.optJSONObject("params")
+        if (command == "table" && !tableCommandSupported && params != null) return postTableAsJogs(client, robotId, params)
+        return try {
+            withRevision(robotId, command) { ifMatch -> postCommandWithRetry(client, robotId, payload, urgent = command == "stop", ifMatch = ifMatch) }
+        } catch (e: HydraApiException) {
+            if (command == "table" && params != null && isUnknownCommand(e)) {
+                tableCommandSupported = false
+                postTableAsJogs(client, robotId, params)
+            } else {
+                throw e
+            }
+        }
+    }
+
+    private suspend fun postTableAsJogs(client: HydraApiClient, robotId: Int, params: JSONObject): JSONObject {
+        var last = JSONObject().put("success", true)
+        for (jog in tableAsJogs(params)) {
+            last = postCommandWithRetry(client, robotId, JSONObject().put("command", "jog").put("params", jog), urgent = false)
+        }
+        return last
+    }
+
+    /** The id of the controller that holds [robotId] in the settings tree, or null. */
+    private fun controllerIdOf(robotId: Int): String? {
+        val controllers = state.raw.optJSONArray("controllers") ?: return null
+        for (i in 0 until controllers.length()) {
+            val controller = controllers.optJSONObject(i) ?: continue
+            val robotsArray = controller.optJSONArray("robots") ?: continue
+            for (j in 0 until robotsArray.length()) {
+                if (robotsArray.optJSONObject(j)?.optInt("id", Int.MIN_VALUE) == robotId) return controller.optStr("id")
+            }
+        }
+        return null
+    }
+
+    /**
+     * Reads one robot again (GET /api/robot/:id, which also gives the revision to use next) and puts it on screen.
+     * Called after a 412: the robot changed under this app, and what is shown may be behind. Never raises an error.
+     */
+    private fun refreshRobot(robotId: Int) {
+        val client = apiClient ?: return
+        viewModelScope.launch {
+            try {
+                val read = client.getRobot(robotId) ?: return@launch
+                revisions.learn(robotId, read.revision)
+                val controllerId = controllerIdOf(robotId) ?: return@launch
+                applyRobotDelta(JSONObject().put("controllerId", controllerId).put("robotId", robotId).put("patch", read.robot))
+            } catch (e: HydraApiException) {
+                if (e.isSessionProblem) renewSessionOrLogout()
+            } catch (_: Exception) {
+            }
+        }
+    }
+
+    /** The reservations the server pushed (WebSocket message `claims`): replaces the list and the arming of this app's own reservations. */
+    private fun applyClaimsPush(msg: JSONObject) {
+        val list = ClaimInfo.listFromJson(msg)
+        claims.value = list
+        val now = System.currentTimeMillis()
+        claimsPushedAtMs = now
+        for (claim in list) {
+            if (claim.controllerId != SessionController.id) continue
+            val until = claim.jogArmedUntil
+            val ttl = safetyByRobot.value[claim.robotId]?.armTtlMs ?: 60_000L
+            // The server clock and this phone clock may differ: the arming is shown as ending no later than its length allows.
+            jogArmedUntilMs.value = if (until != null && until > now) {
+                jogArmedUntilMs.value + (claim.robotId to minOf(until, now + ttl))
+            } else {
+                jogArmedUntilMs.value - claim.robotId
+            }
+        }
+    }
+
+    /** Whether the server pushed the reservations recently, so the poll of GET /api/claims can rest. */
+    fun claimsArePushed(nowMs: Long = System.currentTimeMillis(), withinMs: Long = 30_000L): Boolean =
+        claimsPushedAtMs > 0 && nowMs - claimsPushedAtMs < withinMs
+
+    /** Chooses which writes are checked, and keeps the choice. */
+    fun setConditionalMode(mode: ConditionalMode) {
+        conditionalModeTouched = true
+        conditionalMode.value = mode
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) { prefs.saveConditionalMode(mode) }
     }
 
     /** The server's `warnings` of a 200 answer (it applied nothing), joined; null when there are none. */
@@ -1494,6 +1647,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         val app = getApplication<Application>()
         return when {
             e.isSessionProblem -> app.getString(R.string.error_session_expired)
+            e.isRevisionMismatch -> app.getString(R.string.error_revision_changed, command)
             e.isJogNotArmed -> app.getString(R.string.error_jog_not_armed)
             e.isOtherController -> app.getString(R.string.error_claim_other_controller, e.serverMessage ?: "")
             e.isControllerIdRequired -> app.getString(R.string.error_claim_controller_required, e.serverMessage ?: "")
@@ -1528,15 +1682,18 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
      * Called when the control screen opens, when the robot changes and now and then while it is
      * open; it never raises an error on the screen (the server may simply be an older one).
      */
-    fun refreshAccess() {
+    fun refreshAccess(fromPoll: Boolean = false) {
         val client = apiClient ?: return
         val robotId = selectedRobotId.value
         viewModelScope.launch {
-            try {
-                claims.value = client.getClaims()
-            } catch (e: HydraApiException) {
-                if (e.isSessionProblem) renewSessionOrLogout()
-            } catch (_: Exception) {
+            // The server pushes the reservations when they change: while a push is fresh the poll does not ask for them.
+            if (!(fromPoll && claimsArePushed())) {
+                try {
+                    claims.value = client.getClaims()
+                } catch (e: HydraApiException) {
+                    if (e.isSessionProblem) renewSessionOrLogout()
+                } catch (_: Exception) {
+                }
             }
             if (robotId == null) return@launch
             try {
@@ -1558,7 +1715,9 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     /** Reserves the selected robot for this account on this installation. */
-    fun claimSelectedRobot() = runAccessRequest("claim") { client, robotId -> client.postClaim(robotId) }
+    fun claimSelectedRobot() = runAccessRequest("claim") { client, robotId ->
+        withRevision(robotId, "claim") { ifMatch -> client.postClaim(robotId, ifMatch = ifMatch) }
+    }
 
     /** Whether this session is an administrator's (the role in its token; the server checks it again). */
     fun isAdmin(): Boolean = jwtRole(authTokenState.value) == "admin"
@@ -1577,7 +1736,8 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
 
     /** Releases the selected robot reservation. Also ends the arming of its jog, as the server does. */
     fun releaseSelectedRobot() = runAccessRequest("release") { client, robotId ->
-        client.postRelease(robotId).also { jogArmedUntilMs.value = jogArmedUntilMs.value - robotId }
+        withRevision(robotId, "release") { ifMatch -> client.postRelease(robotId, ifMatch = ifMatch) }
+            .also { jogArmedUntilMs.value = jogArmedUntilMs.value - robotId }
     }
 
     /** Arms or disarms the jog of the selected robot (only needed when the server requires it). */
@@ -1608,6 +1768,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
             } catch (e: HydraApiException) {
                 logTelemetry("TX Error [$what]: ${e.message}")
                 lastError.value = describeCommandError(what, e)
+                if (e.isRevisionMismatch) refreshRobot(robotId)
                 if (e.isSessionProblem) renewSessionOrLogout()
             } catch (e: Exception) {
                 logTelemetry("TX Error [$what]: ${e.message}")
@@ -1616,6 +1777,60 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                 accessBusy.value = false
             }
             refreshAccess()
+        }
+    }
+
+    /**
+     * Reads the audit record (administrators only): the newest lines for a filter, and with [verify] the server checks the
+     * whole record while this app checks the chain of the lines it was given. Never raises an error on the screen:
+     * the reason is left in [auditFailure].
+     */
+    fun refreshAudit(verify: Boolean, type: String?, robotId: Int?, limit: Int) {
+        val client = apiClient ?: run {
+            auditFailure.value = AuditFailure.NETWORK
+            return
+        }
+        auditBusy.value = true
+        viewModelScope.launch {
+            try {
+                val read = AuditRecord.parse(client.getAuditBody(AuditRecord.query(limit, type, robotId, verify)))
+                auditRead.value = read
+                auditChain.value = if (verify) AuditRecord.checkChain(read.lines) else null
+                auditFailure.value = null
+            } catch (e: HydraApiException) {
+                auditRead.value = null
+                auditChain.value = null
+                auditFailure.value = when {
+                    e.isSessionProblem -> AuditFailure.SESSION
+                    e.httpCode == 403 -> AuditFailure.FORBIDDEN
+                    e.isNotFound -> AuditFailure.UNAVAILABLE
+                    e.httpCode == null -> AuditFailure.NETWORK
+                    else -> AuditFailure.OTHER
+                }
+                if (e.isSessionProblem) renewSessionOrLogout()
+            } catch (_: Exception) {
+                auditRead.value = null
+                auditChain.value = null
+                auditFailure.value = AuditFailure.NETWORK
+            } finally {
+                auditBusy.value = false
+            }
+        }
+    }
+
+    /** The lines of the audit record as the server stores them (`.jsonl`), for sharing; [onReady] gets null when they could not be read. */
+    fun exportAudit(type: String?, robotId: Int?, limit: Int, onReady: (String?) -> Unit) {
+        val client = apiClient ?: run {
+            onReady(null)
+            return
+        }
+        viewModelScope.launch {
+            val text = try {
+                client.getAuditBody(AuditRecord.query(limit, type, robotId, format = "jsonl"))
+            } catch (_: Exception) {
+                null
+            }
+            onReady(text)
         }
     }
 
@@ -1755,6 +1970,13 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private fun jogAxis(target: String, axis: String, amount: Double) {
+        if (target == "xytable" && (axis == "x" || axis == "y")) {
+            // One atomic "table" move relative to where the table is now: the server checks the whole move against
+            // the limits of the model and applies all of it or none of it.
+            val move = tableParams(if (axis == "x") amount else 0.0, if (axis == "y") amount else 0.0, "relative") ?: return
+            sendAtomicCommand("table", move) { r -> r.setXyTableAxis(axis, r.xyTablePos.optDouble(axis, 0.0) + amount) }
+            return
+        }
         val params = JSONObject().put("axis", axis).put("amount", amount).put("target", target)
         sendAtomicCommand("jog", params) { r ->
             if (target == "robot") {

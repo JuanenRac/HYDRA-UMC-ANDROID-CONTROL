@@ -133,8 +133,11 @@ fun ControlScreen(viewModel: RobotViewModel) {
     // Reservations and the safety limits of the selected robot model are read from the server
     // when this screen opens, when the robot changes and every 15 s while it stays open.
     LaunchedEffect(selectedId, connectionStatus) {
+        // The server pushes the reservations when they change: after the first read, the poll rests while a push is recent.
+        var first = true
         while (true) {
-            viewModel.refreshAccess()
+            viewModel.refreshAccess(fromPoll = !first)
+            first = false
             delay(15_000)
         }
     }

@@ -38,6 +38,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.hydraumc.control.R
 import com.hydraumc.control.network.ClaimStanding
+import com.hydraumc.control.network.ConditionalMode
 import com.hydraumc.control.viewmodel.RobotViewModel
 
 @Composable
@@ -48,6 +49,7 @@ fun AccessPanel(viewModel: RobotViewModel, robotId: Int, nowMs: Long) {
     val safety = viewModel.safetyByRobot.value[robotId]
     var showList by remember { mutableStateOf(false) }
     var confirmTakeOver by remember { mutableStateOf(false) }
+    var showAudit by remember { mutableStateOf(false) }
     val canTakeOver = viewModel.canTakeOver(robotId)
 
     Card(
@@ -99,6 +101,12 @@ fun AccessPanel(viewModel: RobotViewModel, robotId: Int, nowMs: Long) {
                 }
             }
 
+            // The audit record is for administrators only (the server refuses it to anyone else).
+            if (viewModel.isAdmin()) {
+                Spacer(modifier = Modifier.height(4.dp))
+                OutlinedButton(onClick = { showAudit = true }) { Text(stringResource(R.string.audit_open)) }
+            }
+
             if (showList) {
                 val all = viewModel.claims.value
                 if (all.isEmpty()) {
@@ -112,6 +120,26 @@ fun AccessPanel(viewModel: RobotViewModel, robotId: Int, nowMs: Long) {
                         )
                     }
                 }
+            }
+
+            if (showList) {
+                // Whether a write checks that the robot has not changed since this app read it (If-Match).
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(stringResource(R.string.access_conditional_label), color = Color.Gray, style = MaterialTheme.typography.labelSmall)
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    listOf(
+                        ConditionalMode.STANDARD to R.string.access_conditional_standard,
+                        ConditionalMode.STRICT to R.string.access_conditional_strict,
+                        ConditionalMode.OFF to R.string.access_conditional_off,
+                    ).forEach { (mode, label) ->
+                        if (viewModel.conditionalMode.value == mode) {
+                            Button(onClick = { viewModel.setConditionalMode(mode) }) { Text(stringResource(label)) }
+                        } else {
+                            OutlinedButton(onClick = { viewModel.setConditionalMode(mode) }) { Text(stringResource(label)) }
+                        }
+                    }
+                }
+                Text(stringResource(R.string.access_conditional_hint), color = Color.Gray, style = MaterialTheme.typography.bodySmall)
             }
 
             // The jog arming exists only when the administrator turned it on in the server.
@@ -132,6 +160,10 @@ fun AccessPanel(viewModel: RobotViewModel, robotId: Int, nowMs: Long) {
                 }
             }
         }
+    }
+
+    if (showAudit) {
+        AuditDialog(viewModel = viewModel, onDismiss = { showAudit = false })
     }
 
     if (confirmTakeOver && canTakeOver) {

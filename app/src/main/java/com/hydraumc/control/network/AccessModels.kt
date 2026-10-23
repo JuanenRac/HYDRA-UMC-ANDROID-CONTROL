@@ -48,6 +48,8 @@ data class ClaimInfo(
     val controllerId: String?,
     /** Epoch milliseconds, the server's clock. */
     val expiresAt: Long,
+    /** Until when (the server's clock) the jog of this robot is armed for this reservation; null when it is not, or the server predates the field. */
+    val jogArmedUntil: Long? = null,
 ) {
     companion object {
         fun listFromJson(json: JSONObject): List<ClaimInfo> {
@@ -62,6 +64,7 @@ data class ClaimInfo(
                     ownerUsername = item.optStr("ownerUsername"),
                     controllerId = item.optStr("controllerId").ifEmpty { null },
                     expiresAt = item.optLong("expiresAt"),
+                    jogArmedUntil = if (item.isNull("jogArmedUntil")) null else item.optLong("jogArmedUntil").takeIf { it > 0 },
                 )
             }
             return out

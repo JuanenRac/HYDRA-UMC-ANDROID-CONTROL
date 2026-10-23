@@ -25,7 +25,7 @@
 
 一款原生 Android 应用（Kotlin + Jetpack Compose），通过 Wi-Fi 或蓝牙控制 [HYDRA-UMC](https://github.com/JuanenRac/HYDRA-UMC) 平台上的机器人，使用与 [HYDRA-UMC SUITE](https://github.com/JuanenRac/HYDRA-UMC-SUITE) 完全相同的 [`REMOTE_API.md`](https://github.com/JuanenRac/HYDRA-UMC-SERVER/blob/main/docs/REMOTE_API.md) 契约——针对运行中的 [HYDRA-UMC-SERVER](https://github.com/JuanenRac/HYDRA-UMC-SERVER) 后端（与 [HYDRA-UMC STUDIO](https://github.com/JuanenRac/HYDRA-UMC-STUDIO) 自身网页仪表盘所通信的同一个后端）进行发现、完整状态读写以及实时 WebSocket 同步。是 [HYDRA-UMC-IOS-CONTROL](https://github.com/JuanenRac/HYDRA-UMC-IOS-CONTROL) 的直接 Android 版本对应物。完整设计参见 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)。
 
-> **诚实检查——今天真正可运行的部分：** 核心业务逻辑——Parol6 运动学（`kinematics/Parol6Kinematics.kt`）、settings 树状态契约（`model/HydraState.kt`）、原子命令下发与语音中继（`viewmodel/RobotViewModel.kt`）、WebSocket 重连处理（`network/HydraWebSocket.kt`）、MJPEG 帧解析（`ui/MjpegPlayer.kt`）、应用内更新通道（`update/GitHubReleaseUpdater.kt`、`ReleaseMetadataParser.kt`、`SemanticVersion.kt`），以及 Wear 语音中继请求管理（`wear/BoundedRequestScope.kt`、`WatchCompanionProtocol.kt`）都是真实的，并由 226 个通过的 JVM/Robolectric 单元测试覆盖（`./gradlew testDebugUnitTest`）。这些测试在结构上无法触及——而这个仅有 Windows 的开发环境也没有实体 Android 设备可以验证——的是 `network/AuthPrefs.kt` 中真正基于 Keystore 的 `EncryptedSharedPreferences`、`androidx.biometric` 的指纹/面部提示、`network/HydraBleClient.kt` 的蓝牙 GATT 传输，以及 `MjpegStreamParser` 中 API 28+ 的硬件 `ImageDecoder` 路径：这些都是真实、已编译的代码，但自编写以来尚未在真实硬件上重新验证过。早期版本的基本启动/登录*确实*在真实设备上得到过现场确认（见 `CHANGELOG.md` 的 `v0.3.2`/`v0.3.3` 条目），但那早于蓝牙、生物识别和硬件解码路径。具体已交付的内容见 `CHANGELOG.md`，其中每条记录也附有关于哪些部分仍未经硬件验证的说明。
+> **诚实检查——今天真正可运行的部分：** 核心业务逻辑——Parol6 运动学（`kinematics/Parol6Kinematics.kt`）、settings 树状态契约（`model/HydraState.kt`）、原子命令下发与语音中继（`viewmodel/RobotViewModel.kt`）、WebSocket 重连处理（`network/HydraWebSocket.kt`）、MJPEG 帧解析（`ui/MjpegPlayer.kt`）、应用内更新通道（`update/GitHubReleaseUpdater.kt`、`ReleaseMetadataParser.kt`、`SemanticVersion.kt`），以及 Wear 语音中继请求管理（`wear/BoundedRequestScope.kt`、`WatchCompanionProtocol.kt`）都是真实的，并由 280 个通过的 JVM/Robolectric 单元测试覆盖（`./gradlew testDebugUnitTest`）。这些测试在结构上无法触及——而这个仅有 Windows 的开发环境也没有实体 Android 设备可以验证——的是 `network/AuthPrefs.kt` 中真正基于 Keystore 的 `EncryptedSharedPreferences`、`androidx.biometric` 的指纹/面部提示、`network/HydraBleClient.kt` 的蓝牙 GATT 传输，以及 `MjpegStreamParser` 中 API 28+ 的硬件 `ImageDecoder` 路径：这些都是真实、已编译的代码，但自编写以来尚未在真实硬件上重新验证过。早期版本的基本启动/登录*确实*在真实设备上得到过现场确认（见 `CHANGELOG.md` 的 `v0.3.2`/`v0.3.3` 条目），但那早于蓝牙、生物识别和硬件解码路径。具体已交付的内容见 `CHANGELOG.md`，其中每条记录也附有关于哪些部分仍未经硬件验证的说明。
 
 > **安全与安防现状:**本生态系统不是经认证的安全系统。目前尚无硬件 E-STOP 通路,没有由固件强制执行的限位或联锁,也没有经过验证的运动指令;固件映像使用 CRC32 和共享密钥的 HMAC-SHA256 校验,而非非对称签名;TLS 与双向 TLS 均为可选项,默认关闭;自制电路板尚未组装或测试。在依赖此处任何说法来保障人身安全之前,请先阅读[安全基线](https://github.com/JuanenRac/HYDRA-UMC-DOCS/blob/main/docs/SECURITY_BASELINE.md)和[威胁模型](https://github.com/JuanenRac/HYDRA-UMC-DOCS/blob/main/docs/THREAT_MODEL.md)。
 
@@ -35,7 +35,7 @@
 |---|---|
 | 版本 | `0.7.1` |
 | 成熟度 | 可用 |
-| 测试 | 226 (`./gradlew testDebugUnitTest`) |
+| 测试 | 280 (`./gradlew testDebugUnitTest`) |
 | 技术栈 | Kotlin / Jetpack / biometric auth / WebSocket client |
 | 目标 | Android 手机或平板 |
 | 真实硬件 | 尚未：此版本没有在真实硬件上运行的记录 |
@@ -51,7 +51,7 @@
 - **增强型手动控制**（`ui/ControlScreen.kt`）—— 具有专业的纵向布局,配备**放大 50% 的摇杆按钮**以实现最大精度。
 - **回放面板**（`ui/ControlScreen.kt`、`ui/PlaybackConsole.kt`）—— 固定的底部控制栏,容纳红色 **STOP** 按钮（下文的全局 STOP）以及**启动**、**暂停**、**停止**（仅所选机器人）按钮。这些控件始终可见,并提供**触觉反馈**作为物理感官确认。
 - **全局 STOP**（`ui/GlobalStop.kt`、`network/HydraApiClient.kt`、`viewmodel/RobotViewModel.kt`）—— 每个界面的顶部栏、控制界面的控制台以及 3D 视图（竖屏和全屏）中都有一个红色 **STOP** 按钮（说明文字“全部停止”,已翻译为 8 种语言）。轻点一下,无需长按,无需确认：立即发送 `POST /api/stop-all` 并停止所有机器人,即使被其他账户预约。它会显示结果（哪些机器人已停止、哪些没有、哪些被他人预约,以及服务器无法保存停止状态时的警告）,无人应答时重试一次,服务器限制调用（429）时逐台停止机器人,并保持常驻的 **STOP 未确认** 横幅,直到之后的 STOP 成功。这是服务器的软件停止，不是硬件 E-STOP，也不会切断任何设备的电源。
-- **预留与安全限值**（`ui/AccessPanel.kt`、`network/AccessModels.kt`、`network/HydraApiClient.kt`、`viewmodel/RobotViewModel.kt`）- Control 屏幕显示谁持有所选机器人（无人、本手机、同一账户的另一台设备，或其他账户），提供**预留**和**释放**，并列出服务器上的所有预留（`GET /api/claims`）。手机为每次安装保存一个控制器 ID，并在每次预留、释放、点动解锁和指令中发送（请求体和 `X-Controller-Id` 头），因此预留属于账户和这台手机，而不是整个账户。服务器的拒绝会被区分：被其他账户预留、被你的账户在另一台设备或窗口预留、需要控制器 ID、点动未解锁。机器人型号的限值从 `GET /api/safety-limits` 读取：超过限值的点动步长不会发送，并显示服务器的警告。当管理员要求时，必须先按**解锁点动**（带倒计时），摇杆才会移动机器人；解锁会自动结束，也会在按下 STOP 或释放时结束。预留是可选的：没人预留的机器人照常控制。 仅**管理员**会在他人持有的机器人上看到 **接管控制** 按钮；点击后先要求确认，然后以 `force: true` 预约该机器人（服务器只接受管理员的此请求，并会再次检查角色）。
+- **预留与安全限值**（`ui/AccessPanel.kt`、`network/AccessModels.kt`、`network/HydraApiClient.kt`、`viewmodel/RobotViewModel.kt`）- Control 屏幕显示谁持有所选机器人（无人、本手机、同一账户的另一台设备，或其他账户），提供**预留**和**释放**，并列出服务器上的所有预留（`GET /api/claims`）。手机为每次安装保存一个控制器 ID，并在每次预留、释放、点动解锁和指令中发送（请求体和 `X-Controller-Id` 头），因此预留属于账户和这台手机，而不是整个账户。服务器的拒绝会被区分：被其他账户预留、被你的账户在另一台设备或窗口预留、需要控制器 ID、点动未解锁。机器人型号的限值从 `GET /api/safety-limits` 读取：超过限值的点动步长不会发送，并显示服务器的警告。当管理员要求时，必须先按**解锁点动**（带倒计时），摇杆才会移动机器人；解锁会自动结束，也会在按下 STOP 或释放时结束。预留是可选的：没人预留的机器人照常控制。 仅**管理员**会在他人持有的机器人上看到 **接管控制** 按钮；点击后先要求确认，然后以 `force: true` 预约该机器人（服务器只接受管理员的此请求，并会再次检查角色）。 写入是有条件的:每次写入都带有此应用最后看到的机器人修订号(`If-Match`,`network/ContractV2.kt`),如果期间有其他人修改了机器人,服务器返回 412,不会应用任何内容,机器人会被重新读取并给出提示(标准模式检查预约、工作台和一次性命令;严格模式检查除 STOP 外的全部命令;关闭则不检查;该选项位于预约列表中;STOP 永远不检查)。XY 工作台的点动是一条原子的 `table` 命令(较旧的服务器会收到它能理解的点动),服务器通过 WebSocket 推送预约,因此在推送到达期间 Control 屏幕不再轮询,管理员可以读取审计记录(`ui/AuditDialog.kt`),其 SHA-256 链由服务器和手机各校验一次,并可将各行以 `.jsonl` 分享。
 - **3D 视图**（`ui/ThreeDScreen.kt`）—— 通过 WebView 嵌入 HYDRA-UMC STUDIO 自身的实时 3D 视口（`?hideUI=true&robotId=#token=`）,而非原生渲染器。这种 WebView 方式免费获得了真实的、当前正在使用的 STUDIO 3D 场景（每一个真实的机器人网格/运动学）,而无需原生重新实现——代价是 WebView 渲染开销,并非电池最优,但今天功能上是完整的。
 - **实时八路视觉**（`ui/CameraScreen.kt`、`ui/MjpegPlayer.kt`）—— **原生 MJPEG 流播放器**。具备后台解析器和基于 Canvas 的渲染器,实现低延迟视频,当机器人的视觉系统关闭时会显示一个明确的“摄像头已禁用”状态（而非静默显示空白画面）,并配有一个可直接从服务器打开/关闭机器人摄像头的开关。在手动控制界面中支持自动**画中画（PIP）**叠加,通过服务器的摄像头配置映射到特定的机器人。在 API 28+ 上,每一帧都通过平台自身硬件加速的 `ImageDecoder` 路径解码（一个驻留在 GPU 中的位图,省去了 CPU 端的解码/上传）,并具备自动、自愈式回退到原有 CPU 解码的能力。
 - **智能发现与连接**（`network/Discovery.kt`、`network/HydraApiClient.kt`、`network/HydraWebSocket.kt`）—— 针对手机自身 /24 网段上的每一个候选主机（包括手机自身的局域网 IP 和 localhost,而不仅仅是其他主机）进行并发子网扫描,探测 `GET /api/hydra-info`,并仅通过 `remoteApiVersion` 字段的存在来识别真实服务器——与手动输入 IP 路径所使用的检测方式相同,因此即使服务器所有者将其重命名为默认产品字符串以外的名称,也依然能被找到。一个 **NsdManager**（mDNS/Bonjour）监听器与其并行运行——服务器确实会以 `_hydra._tcp`（`bonjour-service`）的形式广播自身,`MainActivity` 会预先请求此功能所需的运行时位置/附近设备权限（仅在清单中声明,在 API 23+ 上从不会自动授予）——但由于 Wi-Fi 上的组播可达性本身不如纯粹的 HTTP 探测可靠,子网扫描仍然是主要路径。本应用会在启动时自动激活 Wi-Fi,扫描本地工厂网络,并对第一个可用的 HYDRA-UMC 服务器执行**零点击自动连接**。
@@ -157,6 +157,7 @@ HYDRA-UMC-ANDROID-CONTROL/
 │       │   ├── ui/
 │       │   │   ├── AboutDialog.kt          # 应用/版本信息对话框
 │       │   │   ├── AccessPanel.kt          # Control 屏幕的预留与点动解锁面板
+│       │   │   ├── AuditDialog.kt           # 服务器的审计记录(管理员)及链校验
 │       │   │   ├── CameraScreen.kt         # 每机器人 MJPEG 摄像头画面 + 视觉开关
 │       │   │   ├── ControlScreen.kt        # 手动点动控制、带长按保护的紧急停止/播放/暂停/停止
 │       │   │   ├── DashboardScreen.kt      # 3D 轮播机器人选择器 + 系统健康状态 + 模块矩阵

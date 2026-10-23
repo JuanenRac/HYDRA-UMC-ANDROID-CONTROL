@@ -60,7 +60,12 @@ class HydraApiException(
     val serverCode: String? = null,
     /** The server's own `error` text, when it sent one. */
     val serverMessage: String? = null,
+    /** The revision the server put in a 412 answer: the one the robot is at now. */
+    val revision: String? = null,
 ) : IOException(message, cause) {
+    /** 412 `revision-mismatch`: the robot changed since this phone read it, so a conditional write was refused and nothing was applied. */
+    val isRevisionMismatch: Boolean get() = httpCode == 412 || serverCode == "revision-mismatch"
+
     /** True when a new login or a refresh would cure this answer: a 401, or a 403 that says the token expired or is invalid. */
     val isSessionProblem: Boolean
         get() = httpCode == 401 || (httpCode == 403 && (serverCode == "TOKEN_EXPIRED" || serverCode == "TOKEN_INVALID"))
@@ -247,12 +252,13 @@ class HydraApiClient(
      * stuck connection is given up and retried quickly instead of holding the
      * stop for the 15 s an ordinary command may wait.
      */
-    suspend fun postRobotCommand(robotId: Int, payload: JSONObject, urgent: Boolean = false): JSONObject =
+    suspend fun postRobotCommand(robotId: Int, payload: JSONObject, urgent: Boolean = false, ifMatch: String? = null): JSONObject =
         withContext(Dispatchers.IO) {
             val request = Request.Builder()
                 .url("$baseUrl/api/robot/$robotId/command")
                 .header("Authorization", "Bearer ${authToken ?: ""}")
                 .header("X-Controller-Id", SessionController.id)
+                .apply { if (ifMatch != null) header("If-Match", ifMatch) }
                 .post(payload.put("controllerId", SessionController.id).toString().toRequestBody(JSON_MEDIA_TYPE))
                 .build()
             executeExpectingJson(request, if (urgent) urgentClient() else client)
@@ -272,17 +278,17 @@ class HydraApiClient(
      * Reserves a robot for this account on this controller. [ttlMs] null lets the server pick its
      * default; [force] (administrators only) takes over a reservation held by someone else.
      */
-    suspend fun postClaim(robotId: Int, ttlMs: Long? = null, force: Boolean = false): JSONObject = withContext(Dispatchers.IO) {
+    suspend fun postClaim(robotId: Int, ttlMs: Long? = null, force: Boolean = false, ifMatch: String? = null): JSONObject = withContext(Dispatchers.IO) {
         val body = JSONObject().put("controllerId", SessionController.id)
         if (ttlMs != null) body.put("ttlMs", ttlMs)
         if (force) body.put("force", true)
-        executeExpectingJson(controlRequest("/api/robot/$robotId/claim", body))
+        executeExpectingJson(controlRequest("/api/robot/$robotId/claim", body, ifMatch))
     }
 
     /** Releases the reservation of a robot held by this account on this controller (idempotent on the server). */
-    suspend fun postRelease(robotId: Int): JSONObject = withContext(Dispatchers.IO) {
+    suspend fun postRelease(robotId: Int, ifMatch: String? = null): JSONObject = withContext(Dispatchers.IO) {
         val body = JSONObject().put("controllerId", SessionController.id)
-        executeExpectingJson(controlRequest("/api/robot/$robotId/release", body))
+        executeExpectingJson(controlRequest("/api/robot/$robotId/release", body, ifMatch))
     }
 
     /** Arms (true) or disarms (false) the jog of one robot; only demanded by the server when the administrator turned it on. */
@@ -305,12 +311,42 @@ class HydraApiClient(
         }
     }
 
-    private fun controlRequest(path: String, body: JSONObject): Request = Request.Builder()
+    private fun controlRequest(path: String, body: JSONObject, ifMatch: String? = null): Request = Request.Builder()
         .url("$baseUrl$path")
         .header("Authorization", "Bearer ${authToken ?: ""}")
         .header("X-Controller-Id", SessionController.id)
+        .apply { if (ifMatch != null) header("If-Match", ifMatch) }
         .post(body.toString().toRequestBody(JSON_MEDIA_TYPE))
         .build()
+
+    /** One robot with its revision (GET /api/robot/:id); null from an older server without the route. */
+    suspend fun getRobot(robotId: Int): RobotRead? = withContext(Dispatchers.IO) {
+        val request = Request.Builder()
+            .url("$baseUrl/api/robot/$robotId")
+            .header("Authorization", "Bearer ${authToken ?: ""}")
+            .get()
+            .build()
+        try {
+            val answer = executeExpectingJson(request)
+            val robot = answer.optJSONObject("robot") ?: return@withContext null
+            RobotRead(robot, revisionOf(answer))
+        } catch (e: HydraApiException) {
+            if (e.isNotFound) null else throw e
+        }
+    }
+
+    /**
+     * The audit record as the server sent it (GET /api/audit, administrators only), as text: the hash of each line is
+     * the SHA-256 of its exact text, so the answer is not parsed here. [query] comes from [AuditRecord.query].
+     */
+    suspend fun getAuditBody(query: String): String = withContext(Dispatchers.IO) {
+        val request = Request.Builder()
+            .url("$baseUrl/api/audit$query")
+            .header("Authorization", "Bearer ${authToken ?: ""}")
+            .get()
+            .build()
+        executeExpectingText(request, client)
+    }
 
     /**
      * The global STOP: one call that stops every robot, whoever reserved it.
@@ -420,6 +456,16 @@ class HydraApiClient(
      * @return The response body parsed as a JSONObject.
      */
     private fun executeExpectingJson(request: Request, callClient: OkHttpClient = client): JSONObject {
+        val text = executeExpectingText(request, callClient)
+        return try {
+            JSONObject(text)
+        } catch (e: Exception) {
+            throw HydraApiException("The answer is not valid JSON: ${e.message}", e)
+        }
+    }
+
+    /** Executes a network request and gives the body of a successful answer as text; any other answer is a [HydraApiException]. */
+    private fun executeExpectingText(request: Request, callClient: OkHttpClient = client): String {
         val response = try {
             callClient.newCall(request).execute()
         } catch (e: IOException) {
@@ -447,16 +493,13 @@ class HydraApiClient(
                     httpCode = it.code,
                     serverCode = errorBody?.optStr("code")?.ifEmpty { null },
                     serverMessage = errorBody?.optStr("error")?.ifEmpty { null },
+                    revision = revisionOf(errorBody),
                 )
             }
             if (bodyString == null) {
                 throw HydraApiException("Empty answer from $baseUrl${request.url.encodedPath}")
             }
-            return try {
-                JSONObject(bodyString)
-            } catch (e: Exception) {
-                throw HydraApiException("The answer is not valid JSON: ${e.message}", e)
-            }
+            return bodyString
         }
     }
 

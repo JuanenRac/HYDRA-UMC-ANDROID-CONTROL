@@ -19,6 +19,8 @@ private val KEY_IP = stringPreferencesKey("ip_address")
 private val KEY_PORT = stringPreferencesKey("port")
 /** Preference key for the controller id of this installation (see SessionController). */
 private val KEY_CONTROLLER_ID = stringPreferencesKey("controller_id")
+/** Preference key for the conditional-writes mode (off, standard, strict). */
+private val KEY_CONDITIONAL_MODE = stringPreferencesKey("conditional_mode")
 
 /**
  * Helper class to manage loading and saving network connection settings.
@@ -46,6 +48,14 @@ class ConnectionPrefs(private val context: Context) {
             prefs[KEY_IP] = ip
             prefs[KEY_PORT] = port
         }
+    }
+
+    /** The conditional-writes mode chosen in this app (see [ConditionalMode]); the standard one before any choice. */
+    suspend fun loadConditionalMode(): ConditionalMode =
+        ConditionalMode.fromKey(context.connectionDataStore.data.first()[KEY_CONDITIONAL_MODE])
+
+    suspend fun saveConditionalMode(mode: ConditionalMode) {
+        context.connectionDataStore.edit { prefs -> prefs[KEY_CONDITIONAL_MODE] = mode.key }
     }
 
     /** The controller id kept for this installation, or null before the first one was saved. */

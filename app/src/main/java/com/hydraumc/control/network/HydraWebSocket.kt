@@ -105,6 +105,11 @@ class HydraWebSocket(
      * onError stays the parameter a trailing lambda binds to.
      */
     private val onUnauthorized: (() -> Unit)? = null,
+    /**
+     * The `claims` message (who reserves which robot, pushed when a reservation, an arming or a stop changes, only to a
+     * connection that asked for remoteApiVersion=2): the same list as GET /api/claims, so the app need not poll it.
+     */
+    private val onClaims: ((JSONObject) -> Unit)? = null,
     private val onError: (String) -> Unit,
 ) {
     /** The underlying OkHttp WebSocket instance. */
@@ -301,6 +306,11 @@ class HydraWebSocket(
         }
 
         val type = json.optStr("type")
+        if (type == "claims") {
+            val handler = onClaims
+            if (handler != null) mainScope.launch { handler(json) }
+            return
+        }
         if (type == "delta" && json.optInt("schema") == 2 && json.has("robotId")) {
             val handler = onDelta
             if (handler != null) {
