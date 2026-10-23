@@ -223,4 +223,23 @@
     <string name="voice_prompt">说出你的请求</string>
     <string name="voice_unavailable">此设备不支持语音识别。</string>
     <string name="voice_permission_denied">语音输入需要麦克风权限。</string>
+    <string name="access_title">预留</string>
+    <string name="access_free">未预留</string>
+    <string name="access_mine_here">你已在此设备上预留</string>
+    <string name="access_mine_elsewhere">你已在另一台设备上预留</string>
+    <string name="access_other">已被 %1$s 预留</string>
+    <string name="access_reserve">预留</string>
+    <string name="access_release">释放</string>
+    <string name="access_list_show">预留列表</string>
+    <string name="access_list_empty">没有机器人被预留。</string>
+    <string name="access_list_item">%1$s：%2$s</string>
+    <string name="jog_arm">解锁点动</string>
+    <string name="jog_disarm">锁定点动</string>
+    <string name="jog_armed">点动已解锁：剩余 %1$d 秒</string>
+    <string name="jog_not_armed">点动未解锁</string>
+    <string name="jog_arm_hint">管理员要求在点动移动机器人之前先解锁。解锁会自动结束，也会在按下 STOP 或释放机器人时结束。</string>
+    <string name="error_jog_not_armed">该机器人的点动未解锁：请先解锁。</string>
+    <string name="error_claim_other_controller">该机器人已被你的账户在另一台设备或窗口上预留。请使用那一个，或在那里释放预留。%1$s</string>
+    <string name="error_claim_controller_required">预留指定了控制器，而此请求没有指定。%1$s</string>
+    <string name="error_jog_over_limit">点动被拒绝：步长超过服务器为该型号设定的上限 %1$s。未发送任何内容。</string>
 </resources>

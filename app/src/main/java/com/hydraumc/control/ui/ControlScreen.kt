@@ -30,6 +30,7 @@ import androidx.compose.animation.core.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 
+import kotlinx.coroutines.delay
 import android.os.Vibrator
 import android.os.VibrationEffect
 import android.content.Context
@@ -129,6 +130,23 @@ fun ControlScreen(viewModel: RobotViewModel) {
     val connectionStatus = viewModel.connectionStatus.value
     val selectedRobot = robots.find { it.id == selectedId }
 
+    // Reservations and the safety limits of the selected robot model are read from the server
+    // when this screen opens, when the robot changes and every 15 s while it stays open.
+    LaunchedEffect(selectedId, connectionStatus) {
+        while (true) {
+            viewModel.refreshAccess()
+            delay(15_000)
+        }
+    }
+    // A clock for the countdown of the jog arming, which ends by itself.
+    var nowMs by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(1_000)
+            nowMs = System.currentTimeMillis()
+        }
+    }
+
     var expandedRobot by remember { mutableStateOf(false) }
     // Real, server-synced jog step (was a local `var stepSize by
     // remember {...}` defaulting to 10.0 here, independently of
@@ -221,6 +239,10 @@ fun ControlScreen(viewModel: RobotViewModel) {
             }
 
             if (selectedRobot != null) {
+                Spacer(modifier = Modifier.height(12.dp))
+
+                AccessPanel(viewModel, selectedRobot.id, nowMs)
+
                 Spacer(modifier = Modifier.height(12.dp))
 
                 // TELEMETRY DRO SECTION
@@ -319,7 +341,9 @@ fun ControlScreen(viewModel: RobotViewModel) {
                         // just disabled via zEnabled instead.
                         // While a trajectory runs (playing and not paused) the server's
                         // playback and a jog would both write the same setpoint.
-                        val jogAllowed = selectedRobot.online && !(selectedRobot.isPlaying && !selectedRobot.isPaused)
+                        // When the administrator requires it, the jog also waits for the explicit arming (AccessPanel).
+                        val jogAllowed = selectedRobot.online && !(selectedRobot.isPlaying && !selectedRobot.isPaused) &&
+                            !viewModel.jogNeedsArming(selectedRobot.id, nowMs)
                         Joystick3D(
                             enabled = jogAllowed,
                             zEnabled = jogAllowed && activeTarget == "robot",

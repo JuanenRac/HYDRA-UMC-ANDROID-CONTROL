@@ -20,6 +20,12 @@ import com.hydraumc.control.kinematics.PAROL6_JOINT_LIMITS_DEG
 import com.hydraumc.control.kinematics.parol6CartesianToJointsOrNull
 import com.hydraumc.control.R
 import com.hydraumc.control.network.AuthPrefs
+import com.hydraumc.control.network.ClaimInfo
+import com.hydraumc.control.network.ClaimStanding
+import com.hydraumc.control.network.RobotSafety
+import com.hydraumc.control.network.SessionController
+import com.hydraumc.control.network.claimStanding
+import com.hydraumc.control.network.jogLimitExceeded
 import com.hydraumc.control.network.ConnectionPrefs
 import com.hydraumc.control.network.HydraApiClient
 import com.hydraumc.control.network.HydraApiException
@@ -229,6 +235,19 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
     val isLoadingEcosystemStatus = mutableStateOf(value = false)
     val selectedRobotId = mutableStateOf<Int?>(null)
 
+    // Reservations and safety limits of the server (contract v2, block 1). The controller id is
+    // sent with every claim, release, jog-arm and command, so a reservation belongs to this
+    // installation and not to the whole account.
+    /** Every active reservation, as of the last refresh (GET /api/claims). */
+    val claims = mutableStateOf<List<ClaimInfo>>(emptyList())
+    /** The limits of each robot model the server told this app about, by robot id. */
+    val safetyByRobot = mutableStateOf<Map<Int, RobotSafety>>(emptyMap())
+    /** Until when (this phone clock, epoch ms) the jog of each robot is armed from this app. */
+    val jogArmedUntilMs = mutableStateOf<Map<Int, Long>>(emptyMap())
+    /** True while a reservation or arming request is on the wire. */
+    val accessBusy = mutableStateOf(false)
+    val controllerId: String get() = SessionController.id
+
     val ipAddress = mutableStateOf("192.168.1.100")
     val port = mutableStateOf("3000")
     val connectionStatus = mutableStateOf(application.getString(R.string.status_disconnected))
@@ -389,6 +408,15 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
             application.registerReceiver(btStateReceiver, btFilter, Context.RECEIVER_NOT_EXPORTED)
         } else {
             application.registerReceiver(btStateReceiver, btFilter)
+        }
+
+        // On the IO dispatcher: nothing here needs the main thread, and a test (or an app) that ends
+        // first must not find this coroutine resuming on a main dispatcher that is already gone.
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            // The controller id of this installation: made once, kept, and adopted here.
+            val storedControllerId = prefs.loadControllerId()
+            if (SessionController.isValid(storedControllerId)) SessionController.adopt(storedControllerId)
+            else prefs.saveControllerId(SessionController.id)
         }
 
         viewModelScope.launch {
@@ -1272,6 +1300,24 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
             return
         }
 
+        // A jog above the limit the server holds for this robot model is not sent at all (the
+        // server checks it again). Checked before the optimistic change, like the client above.
+        if (command == "jog") {
+            if (jogNeedsArming(robotId)) {
+                lastError.value = getApplication<Application>().getString(R.string.error_jog_not_armed)
+                return
+            }
+            val exceeded = jogLimitExceeded(
+                amount = params?.optDouble("amount", 0.0) ?: 0.0,
+                limits = safetyByRobot.value[robotId]?.jog,
+                absolute = params?.optBoolean("absolute", false) ?: false,
+            )
+            if (exceeded != null) {
+                lastError.value = getApplication<Application>().getString(R.string.error_jog_over_limit, formatLimit(exceeded))
+                return
+            }
+        }
+
         val affectedIds = mutableListOf(robotId)
         if (propagateToCombined) {
             targetRobot.raw.optJSONArray("combinedWith")?.let { arr ->
@@ -1333,10 +1379,14 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                     // didn't react" just from this screen's own log, no
                     // logcat needed for that first split.
                     logTelemetry("TX OK [$command] -> robot $robotId")
+                    // The server disarms the jog on a stop.
+                    if (command == "stop") jogArmedUntilMs.value = jogArmedUntilMs.value - robotId
                     lastError.value = null
                 } catch (e: HydraApiException) {
                     logTelemetry("TX Error [$command]: ${e.message}")
                     lastError.value = describeCommandError(command, e)
+                    // The arming ended (it times out, or a stop cleared it): the screen offers to arm again.
+                    if (e.isJogNotArmed) jogArmedUntilMs.value = jogArmedUntilMs.value - robotId
                     // An expired session is renewed (once, whoever notices first);
                     // only a failed renewal returns to the login screen.
                     if (e.isSessionProblem) renewSessionOrLogout()
@@ -1411,11 +1461,113 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         val app = getApplication<Application>()
         return when {
             e.isSessionProblem -> app.getString(R.string.error_session_expired)
+            e.isJogNotArmed -> app.getString(R.string.error_jog_not_armed)
+            e.isOtherController -> app.getString(R.string.error_claim_other_controller, e.serverMessage ?: "")
+            e.isControllerIdRequired -> app.getString(R.string.error_claim_controller_required, e.serverMessage ?: "")
             e.isReservedByAnother -> app.getString(R.string.error_robot_reserved, e.serverMessage ?: "")
             e.isPermissionDenied -> app.getString(R.string.error_permission_denied)
             e.isRejectedCommand -> app.getString(R.string.error_command_rejected, command, e.serverMessage ?: "")
             command == "stop" -> app.getString(R.string.error_stop_not_confirmed, command)
             else -> app.getString(R.string.error_command_failed, command)
+        }
+    }
+
+    /** `1000.0` is shown as `1000`, `12.5` as `12.5`. */
+    private fun formatLimit(limit: Double): String = limit.toString().removeSuffix(".0")
+
+    /** Where [robotId] stands for this installation, from the last list of reservations. */
+    fun claimStandingOf(robotId: Int?): ClaimStanding =
+        claimStanding(claims.value.firstOrNull { it.robotId == robotId }, loginUsername.value, SessionController.id)
+
+    /** The reservation of [robotId], if any. */
+    fun claimOf(robotId: Int?): ClaimInfo? = claims.value.firstOrNull { it.robotId == robotId }
+
+    /** True when the server requires the jog of [robotId] to be armed and it is not (this app's view of it). */
+    fun jogNeedsArming(robotId: Int?, nowMs: Long = System.currentTimeMillis()): Boolean {
+        if (robotId == null) return false
+        val safety = safetyByRobot.value[robotId] ?: return false
+        if (!safety.armRequired) return false
+        return (jogArmedUntilMs.value[robotId] ?: 0L) <= nowMs
+    }
+
+    /**
+     * Reads the reservations and the limits of the selected robot's model from the server.
+     * Called when the control screen opens, when the robot changes and now and then while it is
+     * open; it never raises an error on the screen (the server may simply be an older one).
+     */
+    fun refreshAccess() {
+        val client = apiClient ?: return
+        val robotId = selectedRobotId.value
+        viewModelScope.launch {
+            try {
+                claims.value = client.getClaims()
+            } catch (e: HydraApiException) {
+                if (e.isSessionProblem) renewSessionOrLogout()
+            } catch (_: Exception) {
+            }
+            if (robotId == null) return@launch
+            try {
+                val safety = client.getRobotSafety(robotId) ?: return@launch
+                safetyByRobot.value = safetyByRobot.value + (robotId to safety)
+                val until = safety.jogArmedUntil
+                val now = System.currentTimeMillis()
+                // The server clock and this phone clock may differ: the arming is shown as ending no later than its length allows.
+                jogArmedUntilMs.value = if (until != null && until > now) {
+                    jogArmedUntilMs.value + (robotId to minOf(until, now + safety.armTtlMs))
+                } else {
+                    jogArmedUntilMs.value - robotId
+                }
+            } catch (e: HydraApiException) {
+                if (e.isSessionProblem) renewSessionOrLogout()
+            } catch (_: Exception) {
+            }
+        }
+    }
+
+    /** Reserves the selected robot for this account on this installation. */
+    fun claimSelectedRobot() = runAccessRequest("claim") { client, robotId -> client.postClaim(robotId) }
+
+    /** Releases the selected robot reservation. Also ends the arming of its jog, as the server does. */
+    fun releaseSelectedRobot() = runAccessRequest("release") { client, robotId ->
+        client.postRelease(robotId).also { jogArmedUntilMs.value = jogArmedUntilMs.value - robotId }
+    }
+
+    /** Arms or disarms the jog of the selected robot (only needed when the server requires it). */
+    fun setJogArmed(armed: Boolean) = runAccessRequest("jog-arm") { client, robotId ->
+        val answer = client.postJogArm(robotId, armed)
+        if (armed) {
+            val ttl = answer.optLong("ttlMs", safetyByRobot.value[robotId]?.armTtlMs ?: 60_000L)
+            jogArmedUntilMs.value = jogArmedUntilMs.value + (robotId to System.currentTimeMillis() + ttl)
+        } else {
+            jogArmedUntilMs.value = jogArmedUntilMs.value - robotId
+        }
+        answer
+    }
+
+    private fun runAccessRequest(what: String, call: suspend (HydraApiClient, Int) -> JSONObject) {
+        val app = getApplication<Application>()
+        val robotId = selectedRobotId.value ?: return
+        val client = apiClient ?: run {
+            lastError.value = app.getString(R.string.error_not_connected)
+            return
+        }
+        accessBusy.value = true
+        viewModelScope.launch {
+            try {
+                call(client, robotId)
+                logTelemetry("TX OK [$what] -> robot $robotId")
+                lastError.value = null
+            } catch (e: HydraApiException) {
+                logTelemetry("TX Error [$what]: ${e.message}")
+                lastError.value = describeCommandError(what, e)
+                if (e.isSessionProblem) renewSessionOrLogout()
+            } catch (e: Exception) {
+                logTelemetry("TX Error [$what]: ${e.message}")
+                lastError.value = app.getString(R.string.error_command_failed, what)
+            } finally {
+                accessBusy.value = false
+            }
+            refreshAccess()
         }
     }
 
@@ -1452,6 +1604,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
             if (outcome is StopAllStatus.Done) {
                 // Show the stop at once; the next state broadcast confirms or corrects it.
                 outcome.result.robots.filter { it.stopped }.forEach { r -> state.robotById(r.robotId)?.stop() }
+                jogArmedUntilMs.value = emptyMap() // the server disarms every jog on a global stop
                 applyState(state)
                 logTelemetry("TX OK [stop-all] -> ${outcome.result.stoppedCount} stopped, ${outcome.result.failedCount} failed")
                 lastError.value = null

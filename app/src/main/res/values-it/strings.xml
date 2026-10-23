@@ -223,4 +223,23 @@
     <string name="voice_prompt">Pronuncia la tua richiesta</string>
     <string name="voice_unavailable">Il riconoscimento vocale non è disponibile su questo dispositivo.</string>
     <string name="voice_permission_denied">È richiesto il permesso del microfono per l\'input vocale.</string>
+    <string name="access_title">Prenotazione</string>
+    <string name="access_free">Non prenotato</string>
+    <string name="access_mine_here">Prenotato da te su questo dispositivo</string>
+    <string name="access_mine_elsewhere">Prenotato da te su un altro dispositivo</string>
+    <string name="access_other">Prenotato da %1$s</string>
+    <string name="access_reserve">Prenota</string>
+    <string name="access_release">Rilascia</string>
+    <string name="access_list_show">Prenotazioni</string>
+    <string name="access_list_empty">Nessun robot è prenotato.</string>
+    <string name="access_list_item">%1$s: %2$s</string>
+    <string name="jog_arm">Arma il jog</string>
+    <string name="jog_disarm">Disarma il jog</string>
+    <string name="jog_armed">Jog armato: restano %1$d s</string>
+    <string name="jog_not_armed">Jog non armato</string>
+    <string name="jog_arm_hint">L\'amministratore richiede di armare il jog prima che muova il robot. L\'armamento termina da solo, con STOP o quando rilasci il robot.</string>
+    <string name="error_jog_not_armed">Il jog non è armato per questo robot: armalo prima.</string>
+    <string name="error_claim_other_controller">Il robot è prenotato dal tuo account su un altro dispositivo o finestra. Usa quello, o rilascia lì la prenotazione. %1$s</string>
+    <string name="error_claim_controller_required">La prenotazione indica un controller e questa richiesta non ne indicava nessuno. %1$s</string>
+    <string name="error_jog_over_limit">Jog rifiutato: il passo supera il limite di %1$s impostato dal server per questo modello. Non è stato inviato nulla.</string>
 </resources>

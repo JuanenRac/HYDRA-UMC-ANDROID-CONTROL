@@ -223,4 +223,23 @@
     <string name="voice_prompt">Énoncez votre demande</string>
     <string name="voice_unavailable">La reconnaissance vocale n\'est pas disponible sur cet appareil.</string>
     <string name="voice_permission_denied">L\'autorisation du microphone est requise pour la saisie vocale.</string>
+    <string name="access_title">Réservation</string>
+    <string name="access_free">Non réservé</string>
+    <string name="access_mine_here">Réservé par vous sur cet appareil</string>
+    <string name="access_mine_elsewhere">Réservé par vous sur un autre appareil</string>
+    <string name="access_other">Réservé par %1$s</string>
+    <string name="access_reserve">Réserver</string>
+    <string name="access_release">Libérer</string>
+    <string name="access_list_show">Réservations</string>
+    <string name="access_list_empty">Aucun robot n\'est réservé.</string>
+    <string name="access_list_item">%1$s : %2$s</string>
+    <string name="jog_arm">Armer le jog</string>
+    <string name="jog_disarm">Désarmer le jog</string>
+    <string name="jog_armed">Jog armé : %1$d s restantes</string>
+    <string name="jog_not_armed">Jog non armé</string>
+    <string name="jog_arm_hint">L\'administrateur exige que le jog soit armé avant de déplacer le robot. L\'armement se termine tout seul, avec STOP ou quand vous libérez le robot.</string>
+    <string name="error_jog_not_armed">Le jog n\'est pas armé pour ce robot : armez-le d\'abord.</string>
+    <string name="error_claim_other_controller">Le robot est réservé par votre compte sur un autre appareil ou une autre fenêtre. Utilisez celui-là, ou libérez-y la réservation. %1$s</string>
+    <string name="error_claim_controller_required">La réservation nomme un contrôleur et cette requête n\'en a nommé aucun. %1$s</string>
+    <string name="error_jog_over_limit">Jog refusé : le pas dépasse la limite de %1$s fixée par le serveur pour ce modèle. Rien n\'a été envoyé.</string>
 </resources>

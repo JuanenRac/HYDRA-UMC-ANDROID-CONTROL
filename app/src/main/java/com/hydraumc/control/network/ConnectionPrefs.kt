@@ -17,6 +17,8 @@ private val Context.connectionDataStore by preferencesDataStore(name = "connecti
 private val KEY_IP = stringPreferencesKey("ip_address")
 /** Preference key for the saved port number. */
 private val KEY_PORT = stringPreferencesKey("port")
+/** Preference key for the controller id of this installation (see SessionController). */
+private val KEY_CONTROLLER_ID = stringPreferencesKey("controller_id")
 
 /**
  * Helper class to manage loading and saving network connection settings.
@@ -44,5 +46,13 @@ class ConnectionPrefs(private val context: Context) {
             prefs[KEY_IP] = ip
             prefs[KEY_PORT] = port
         }
+    }
+
+    /** The controller id kept for this installation, or null before the first one was saved. */
+    suspend fun loadControllerId(): String? = context.connectionDataStore.data.first()[KEY_CONTROLLER_ID]
+
+    /** Keeps the controller id, so a reservation made from this phone can still be released after the app restarts. */
+    suspend fun saveControllerId(id: String) {
+        context.connectionDataStore.edit { prefs -> prefs[KEY_CONTROLLER_ID] = id }
     }
 }

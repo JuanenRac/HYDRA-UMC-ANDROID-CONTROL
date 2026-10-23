@@ -223,4 +223,23 @@
     <string name="voice_prompt">Sprich deine Anfrage</string>
     <string name="voice_unavailable">Spracherkennung ist auf diesem Gerät nicht verfügbar.</string>
     <string name="voice_permission_denied">Für die Spracheingabe ist die Mikrofonberechtigung erforderlich.</string>
+    <string name="access_title">Reservierung</string>
+    <string name="access_free">Nicht reserviert</string>
+    <string name="access_mine_here">Von dir auf diesem Gerät reserviert</string>
+    <string name="access_mine_elsewhere">Von dir auf einem anderen Gerät reserviert</string>
+    <string name="access_other">Reserviert von %1$s</string>
+    <string name="access_reserve">Reservieren</string>
+    <string name="access_release">Freigeben</string>
+    <string name="access_list_show">Reservierungen</string>
+    <string name="access_list_empty">Kein Roboter ist reserviert.</string>
+    <string name="access_list_item">%1$s: %2$s</string>
+    <string name="jog_arm">Jog scharfschalten</string>
+    <string name="jog_disarm">Jog entschärfen</string>
+    <string name="jog_armed">Jog scharf: noch %1$d s</string>
+    <string name="jog_not_armed">Jog nicht scharf</string>
+    <string name="jog_arm_hint">Der Administrator verlangt, dass der Jog scharfgeschaltet wird, bevor er den Roboter bewegt. Die Schaltung endet von selbst, mit STOPP oder wenn du den Roboter freigibst.</string>
+    <string name="error_jog_not_armed">Der Jog ist für diesen Roboter nicht scharf: Schalte ihn zuerst scharf.</string>
+    <string name="error_claim_other_controller">Der Roboter ist von deinem Konto auf einem anderen Gerät oder Fenster reserviert. Nutze dieses oder gib die Reservierung dort frei. %1$s</string>
+    <string name="error_claim_controller_required">Die Reservierung nennt einen Controller, diese Anfrage nannte keinen. %1$s</string>
+    <string name="error_jog_over_limit">Jog abgelehnt: Der Schritt liegt über dem vom Server für dieses Modell gesetzten Limit von %1$s. Es wurde nichts gesendet.</string>
 </resources>

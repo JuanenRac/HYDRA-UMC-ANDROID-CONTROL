@@ -66,10 +66,22 @@ class HydraApiException(
         get() = httpCode == 401 || (httpCode == 403 && (serverCode == "TOKEN_EXPIRED" || serverCode == "TOKEN_INVALID"))
 
     /** A 403 that is about the account's role, not about the session. */
-    val isPermissionDenied: Boolean get() = httpCode == 403 && !isSessionProblem
+    val isPermissionDenied: Boolean get() = httpCode == 403 && !isSessionProblem && !isJogNotArmed
 
-    /** The robot is reserved by another account (the server's 409). */
+    /** The robot is reserved and the server refused this client (409): another account, another controller, or no controller id. */
     val isReservedByAnother: Boolean get() = httpCode == 409
+
+    /** 409 `other-account`: another account holds the reservation. */
+    val isOtherAccount: Boolean get() = httpCode == 409 && serverCode == "other-account"
+
+    /** 409 `other-controller`: this account holds it from another controller (another phone, window or tab). */
+    val isOtherController: Boolean get() = httpCode == 409 && serverCode == "other-controller"
+
+    /** `controller-id-required`: the reservation names a controller and the request named none (409), or the server requires one to reserve (400). */
+    val isControllerIdRequired: Boolean get() = serverCode == "controller-id-required"
+
+    /** 403 `jog-not-armed`: the administrator requires the jog to be armed first and it is not. */
+    val isJogNotArmed: Boolean get() = httpCode == 403 && serverCode == "jog-not-armed"
 
     /** The server is rate limiting this client (429). */
     val isRateLimited: Boolean get() = httpCode == 429
@@ -234,10 +246,65 @@ class HydraApiClient(host: String, port: Int, private val client: OkHttpClient =
             val request = Request.Builder()
                 .url("$baseUrl/api/robot/$robotId/command")
                 .header("Authorization", "Bearer ${authToken ?: ""}")
-                .post(payload.toString().toRequestBody(JSON_MEDIA_TYPE))
+                .header("X-Controller-Id", SessionController.id)
+                .post(payload.put("controllerId", SessionController.id).toString().toRequestBody(JSON_MEDIA_TYPE))
                 .build()
             executeExpectingJson(request, if (urgent) urgentClient() else client)
         }
+
+    /** Every active reservation (GET /api/claims): who controls which robot. */
+    suspend fun getClaims(): List<ClaimInfo> = withContext(Dispatchers.IO) {
+        val request = Request.Builder()
+            .url("$baseUrl/api/claims")
+            .header("Authorization", "Bearer ${authToken ?: ""}")
+            .get()
+            .build()
+        ClaimInfo.listFromJson(executeExpectingJson(request))
+    }
+
+    /**
+     * Reserves a robot for this account on this controller. [ttlMs] null lets the server pick its
+     * default; [force] (administrators only) takes over a reservation held by someone else.
+     */
+    suspend fun postClaim(robotId: Int, ttlMs: Long? = null, force: Boolean = false): JSONObject = withContext(Dispatchers.IO) {
+        val body = JSONObject().put("controllerId", SessionController.id)
+        if (ttlMs != null) body.put("ttlMs", ttlMs)
+        if (force) body.put("force", true)
+        executeExpectingJson(controlRequest("/api/robot/$robotId/claim", body))
+    }
+
+    /** Releases the reservation of a robot held by this account on this controller (idempotent on the server). */
+    suspend fun postRelease(robotId: Int): JSONObject = withContext(Dispatchers.IO) {
+        val body = JSONObject().put("controllerId", SessionController.id)
+        executeExpectingJson(controlRequest("/api/robot/$robotId/release", body))
+    }
+
+    /** Arms (true) or disarms (false) the jog of one robot; only demanded by the server when the administrator turned it on. */
+    suspend fun postJogArm(robotId: Int, armed: Boolean): JSONObject = withContext(Dispatchers.IO) {
+        val body = JSONObject().put("armed", armed).put("controllerId", SessionController.id)
+        executeExpectingJson(controlRequest("/api/robot/$robotId/jog-arm", body))
+    }
+
+    /** The safety limits the server holds for one robot's model (GET /api/safety-limits?robotId=); null from an older server without the route. */
+    suspend fun getRobotSafety(robotId: Int): RobotSafety? = withContext(Dispatchers.IO) {
+        val request = Request.Builder()
+            .url("$baseUrl/api/safety-limits?robotId=$robotId")
+            .header("Authorization", "Bearer ${authToken ?: ""}")
+            .get()
+            .build()
+        try {
+            RobotSafety.fromJson(executeExpectingJson(request))
+        } catch (e: HydraApiException) {
+            if (e.isNotFound) null else throw e
+        }
+    }
+
+    private fun controlRequest(path: String, body: JSONObject): Request = Request.Builder()
+        .url("$baseUrl$path")
+        .header("Authorization", "Bearer ${authToken ?: ""}")
+        .header("X-Controller-Id", SessionController.id)
+        .post(body.toString().toRequestBody(JSON_MEDIA_TYPE))
+        .build()
 
     /**
      * The global STOP: one call that stops every robot, whoever reserved it.

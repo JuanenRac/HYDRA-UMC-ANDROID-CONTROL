@@ -223,4 +223,23 @@
     <string name="voice_prompt">Speak your request</string>
     <string name="voice_unavailable">Speech recognition is not available on this device.</string>
     <string name="voice_permission_denied">Microphone permission is required for voice input.</string>
+    <string name="access_title">Reservation</string>
+    <string name="access_free">Not reserved</string>
+    <string name="access_mine_here">Reserved by you on this device</string>
+    <string name="access_mine_elsewhere">Reserved by you on another device</string>
+    <string name="access_other">Reserved by %1$s</string>
+    <string name="access_reserve">Reserve</string>
+    <string name="access_release">Release</string>
+    <string name="access_list_show">Reservations</string>
+    <string name="access_list_empty">No robot is reserved.</string>
+    <string name="access_list_item">%1$s: %2$s</string>
+    <string name="jog_arm">Arm jog</string>
+    <string name="jog_disarm">Disarm jog</string>
+    <string name="jog_armed">Jog armed: %1$d s left</string>
+    <string name="jog_not_armed">Jog not armed</string>
+    <string name="jog_arm_hint">The administrator requires the jog to be armed before it moves the robot. The arming ends by itself, with STOP, or when you release the robot.</string>
+    <string name="error_jog_not_armed">The jog is not armed for this robot: arm it first.</string>
+    <string name="error_claim_other_controller">The robot is reserved by your account on another device or window. Use that one, or release the reservation there. %1$s</string>
+    <string name="error_claim_controller_required">The reservation names a controller and this request named none. %1$s</string>
+    <string name="error_jog_over_limit">Jog refused: the step is above the limit of %1$s set by the server for this model. Nothing was sent.</string>
 </resources>
