@@ -489,6 +489,7 @@ class HydraApiClient(
             .connectTimeout(5, TimeUnit.SECONDS)
             .readTimeout(10, TimeUnit.SECONDS)
             .writeTimeout(10, TimeUnit.SECONDS)
+            .addInterceptor(PlainRemoteGuard())
             .addInterceptor { chain ->
                 val original = chain.request()
                 val clientType = original.header("X-Hydra-Client") ?: "android"

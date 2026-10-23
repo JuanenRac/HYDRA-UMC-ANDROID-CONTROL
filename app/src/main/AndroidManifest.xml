@@ -33,11 +33,14 @@
          is enabled on it, and every request carries a signed-in token. The
          target host is a dynamic user-entered IP (network/Discovery.kt),
          not a fixed domain, so a network-security-config domain allowlist
-         isn't an option; usesCleartextTraffic is the only way this app can
+         isn't an option (a network security config cannot name address ranges);
+         the app itself refuses plain traffic to hosts outside the local network
+         (PlainRemoteGuard) unless the user allows it in Settings > Security.
+         usesCleartextTraffic is the only way this app can
          reach a real server at all on API 28+, which blocks cleartext by
          default. -->
     <application
-        android:allowBackup="true"
+        android:allowBackup="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"

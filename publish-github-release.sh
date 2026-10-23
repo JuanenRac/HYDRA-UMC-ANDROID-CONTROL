@@ -18,7 +18,7 @@ if [[ ! -f .env ]]; then
   echo "publish-github-release.sh: no .env file - skipping publish (local build only)."
   exit 0
 fi
-token="$(grep -E '^GITHUB_TOKEN=' .env | head -1 | sed 's/^GITHUB_TOKEN=//')"
+token="$(grep -E '^GITHUB_TOKEN=' .env | head -1 | sed 's/^GITHUB_TOKEN=//' | tr -d '\r')"
 if [[ -z "$token" ]]; then
   echo "publish-github-release.sh: .env has no GITHUB_TOKEN - skipping publish (local build only)."
   exit 0
@@ -36,17 +36,28 @@ patch="$(grep '^versionPatch=' app/version.properties | cut -d= -f2)"
 tag="v${major}.${minor}.${patch}"
 
 repo_api="https://api.github.com/repos/JuanenRac/HYDRA-UMC-ANDROID-CONTROL"
-auth_header="Authorization: Bearer ${token}"
 
-http_status="$(curl -s -o /tmp/hydra_release_existing.json -w '%{http_code}' \
-  -H "$auth_header" -H "Accept: application/vnd.github+json" \
+# The token never appears on a command line (visible to other users in `ps`): curl reads
+# it from a private config file. Scratch files live in a private mktemp directory, never in a
+# fixed /tmp path.
+umask 077
+work_dir="$(mktemp -d)"
+trap 'rm -rf "$work_dir"' EXIT
+curl_auth="$work_dir/curl_auth.conf"
+printf 'header = "Authorization: Bearer %s"\n' "$token" > "$curl_auth"
+chmod 600 "$curl_auth"
+existing_json="$work_dir/release_existing.json"
+new_json="$work_dir/release_new.json"
+
+http_status="$(curl -s -K "$curl_auth" -o "$existing_json" -w '%{http_code}' \
+  -H "Accept: application/vnd.github+json" \
   "${repo_api}/releases/tags/${tag}")"
 
 if [[ "$http_status" == "200" ]]; then
   echo "publish-github-release.sh: release ${tag} already exists - replacing its APK asset."
-  release_id="$(grep -o '"id": *[0-9]*' /tmp/hydra_release_existing.json | head -1 | grep -o '[0-9]*')"
+  release_id="$(grep -o '"id": *[0-9]*' "$existing_json" | head -1 | grep -o '[0-9]*')"
   # Real bug found and fixed: python3 was handed the bare path
-  # '/tmp/hydra_release_existing.json' to open() itself - on a Windows
+  # the temporary file to open() itself - on a Windows
   # dev machine using Git Bash, that path is a real, bash-resolvable MSYS
   # mount, but the plain Windows python3.exe this line actually invokes
   # has no idea what to do with it and threw FileNotFoundError, silently
@@ -64,9 +75,9 @@ for a in d.get('assets', []):
     if a['name'] == 'HYDRA-UMC-ANDROID-CONTROL-release.apk':
         print(a['id'])
         break
-" < /tmp/hydra_release_existing.json)"
+" < "$existing_json")"
   if [[ -n "${stale_asset_id:-}" ]]; then
-    curl -s -X DELETE -H "$auth_header" -H "Accept: application/vnd.github+json" \
+    curl -s -K "$curl_auth" -X DELETE -H "Accept: application/vnd.github+json" \
       "${repo_api}/releases/assets/${stale_asset_id}" > /dev/null
   fi
 else
@@ -83,10 +94,10 @@ print(json.dumps({
     'prerelease': False,
 }))
 " "$tag" "$changelog_top")"
-  curl -s -X POST -H "$auth_header" -H "Accept: application/vnd.github+json" \
+  curl -s -K "$curl_auth" -X POST -H "Accept: application/vnd.github+json" \
     -H "Content-Type: application/json" -d "$body_json" \
-    "${repo_api}/releases" -o /tmp/hydra_release_new.json
-  release_id="$(grep -o '"id": *[0-9]*' /tmp/hydra_release_new.json | head -1 | grep -o '[0-9]*')"
+    "${repo_api}/releases" -o "$new_json"
+  release_id="$(grep -o '"id": *[0-9]*' "$new_json" | head -1 | grep -o '[0-9]*')"
 fi
 
 if [[ -z "${release_id:-}" ]]; then
@@ -95,7 +106,7 @@ if [[ -z "${release_id:-}" ]]; then
 fi
 
 upload_url="https://uploads.github.com/repos/JuanenRac/HYDRA-UMC-ANDROID-CONTROL/releases/${release_id}/assets?name=HYDRA-UMC-ANDROID-CONTROL-release.apk"
-asset_json="$(curl -s -X POST -H "$auth_header" -H "Content-Type: application/vnd.android.package-archive" \
+asset_json="$(curl -s -K "$curl_auth" -X POST -H "Content-Type: application/vnd.android.package-archive" \
   --data-binary @"$apk" "$upload_url")"
 
 echo "Published: https://github.com/JuanenRac/HYDRA-UMC-ANDROID-CONTROL/releases/tag/${tag}"

@@ -42,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.zIndex
 import com.hydraumc.control.R
+import com.hydraumc.control.util.ViewerUrl
 import com.hydraumc.control.viewmodel.RobotViewModel
 
 /**
@@ -162,7 +163,9 @@ fun ThreeDScreen(viewModel: RobotViewModel) {
     // confirmed this server answers on - see that class's own comment,
     // and CameraScreen.kt's matching fix.
     val scheme = if (viewModel.apiClient?.usesTls == true) "https" else "http"
-    val url = "$scheme://$ip:$port/?hideUI=true&robotId=$selectedId&token=$token"
+    // The token travels in the fragment, never in the query: a fragment is not sent to the
+    // server, so it stays out of the server, proxy and WebView history logs (ViewerUrl).
+    val url = ViewerUrl.build(scheme, ip, port.toString(), selectedId.toString(), token)
 
     // Tracks what was last actually pushed into the WebView via loadUrl() -
     // compared against `url` in `update` below (not against webView.url,

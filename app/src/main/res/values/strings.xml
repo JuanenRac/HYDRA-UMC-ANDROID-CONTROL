@@ -265,6 +265,8 @@
     <string name="tls_error_fingerprint">The fingerprint must be 64 hexadecimal characters (SHA-256).</string>
     <string name="tls_error_ca">The text is not a valid PEM certificate.</string>
     <string name="tls_warning_plain_remote">Unencrypted connection to %1$s, which is not on your local network. Anyone on the path can read the session and its token. Use TLS or a VPN.</string>
+    <string name="tls_plain_remote_title">Allow plain traffic outside the local network</string>
+    <string name="tls_plain_remote_hint">Off by default. The app refuses unencrypted HTTP/WS to servers that are not on your local network, so the session token never crosses the Internet in the clear. Turn on only for a tunnel you trust.</string>
     <string name="ble_error_unavailable">This device has no Bluetooth.</string>
     <string name="ble_error_off">Bluetooth is off. Turn it on and try again.</string>
     <string name="ble_error_permission">Bluetooth permission denied. Allow Nearby devices for this app in the Android settings.</string>

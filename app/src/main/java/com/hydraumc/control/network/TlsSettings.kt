@@ -34,6 +34,11 @@ data class TlsSettings(
     val mode: TlsMode = TlsMode.AUTO,
     val pinnedFingerprint: String = "",
     val customCaPem: String = "",
+    /**
+     * Allows plain HTTP/WS to a server outside the local network. Off by default: the session token
+     * would travel readable across the Internet. Turn it on only for a trusted tunnel the app cannot see.
+     */
+    val allowPlainRemote: Boolean = false,
 ) {
     /** The first problem found, or null when the settings can be saved. Blank fields are fine. */
     fun validate(): TlsProblem? {
@@ -109,4 +114,22 @@ object TlsPolicy {
 
     /** True when a session is plain (no TLS) and the server is outside the local network: the app warns. */
     fun isPlainRemote(host: String, usesTls: Boolean): Boolean = !usesTls && !isLocalHost(host)
+}
+
+/** Raised by [PlainRemoteGuard] when a plain request to a non-local host is refused. */
+class PlainRemoteBlockedException(val host: String) : java.io.IOException("plain (unencrypted) traffic to $host is blocked: it is not on the local network")
+
+/**
+ * OkHttp interceptor that refuses plain `http`/`ws` requests to hosts outside the local network unless the
+ * user allowed it ([TlsSettings.allowPlainRemote]). Android's network security configuration cannot name
+ * address ranges, so the rule for "cleartext only on private addresses" lives here and covers REST and WebSocket.
+ */
+class PlainRemoteGuard(private val settings: () -> TlsSettings = { TlsSettingsStore.current }) : okhttp3.Interceptor {
+    override fun intercept(chain: okhttp3.Interceptor.Chain): okhttp3.Response {
+        val url = chain.request().url
+        if (!url.isHttps && !settings().allowPlainRemote && !TlsPolicy.isLocalHost(url.host)) {
+            throw PlainRemoteBlockedException(url.host)
+        }
+        return chain.proceed(chain.request())
+    }
 }

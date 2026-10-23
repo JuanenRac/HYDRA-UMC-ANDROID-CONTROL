@@ -76,6 +76,12 @@ Settings > Security (`ui/SecuritySettings.kt`, `network/TlsSettings.kt`, `networ
 - **Warning**: a session that is not encrypted to a host outside the local network (not private, loopback,
   link-local, `.local`/`.lan`/single-label name) shows a red banner above every screen
   (`TlsPolicy.isPlainRemote`).
+- **Plain traffic outside the local network is refused** by `PlainRemoteGuard`, an OkHttp interceptor on the
+  shared client (REST, WebSocket, camera). A network security configuration cannot name address ranges, so
+  the manifest keeps cleartext permitted and the rule lives in code. `TlsSettings.allowPlainRemote` (off by
+  default, Settings > Security) lifts it for a tunnel the app cannot see. Automatic backup is off.
+- The embedded 3D view gets the session token in the address fragment (`ViewerUrl`), which is never sent to a
+  server, instead of the query string.
 - Not covered: the embedded 3D view (a WebView) does not use these rules, so against a self-signed server it
   needs the certificate installed on the phone; network discovery stays plain HTTP on the local /24 by design.
 

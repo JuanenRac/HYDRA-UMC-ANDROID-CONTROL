@@ -265,6 +265,8 @@
     <string name="tls_error_fingerprint">Der Fingerabdruck muss aus 64 Hexadezimalzeichen bestehen (SHA-256).</string>
     <string name="tls_error_ca">Der Text ist kein gültiges PEM-Zertifikat.</string>
     <string name="tls_warning_plain_remote">Unverschlüsselte Verbindung zu %1$s, das nicht in deinem lokalen Netzwerk liegt. Jeder auf dem Weg kann die Sitzung und ihr Token lesen. Verwende TLS oder ein VPN.</string>
+    <string name="tls_plain_remote_title">Unverschlüsselten Verkehr außerhalb des lokalen Netzes erlauben</string>
+    <string name="tls_plain_remote_hint">Standardmäßig aus. Die App lehnt unverschlüsseltes HTTP/WS zu Servern außerhalb deines lokalen Netzes ab, damit das Sitzungstoken nie im Klartext durchs Internet geht. Nur für einen vertrauenswürdigen Tunnel einschalten.</string>
     <string name="ble_error_unavailable">Dieses Gerät hat kein Bluetooth.</string>
     <string name="ble_error_off">Bluetooth ist aus. Schalte es ein und versuche es erneut.</string>
     <string name="ble_error_permission">Bluetooth-Berechtigung verweigert. Erlaube für diese App \"Geräte in der Nähe\" in den Android-Einstellungen.</string>

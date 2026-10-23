@@ -265,6 +265,8 @@
     <string name="tls_error_fingerprint">指纹必须是64个十六进制字符 (SHA-256)。</string>
     <string name="tls_error_ca">该文本不是有效的PEM证书。</string>
     <string name="tls_warning_plain_remote">与不在本地网络内的 %1$s 的连接未加密。路径上的任何人都可以读取会话及其令牌。请使用TLS或VPN。</string>
+    <string name="tls_plain_remote_title">允许在本地网络之外使用未加密通信</string>
+    <string name="tls_plain_remote_hint">默认关闭。应用会拒绝向本地网络之外的服务器发送未加密的 HTTP/WS，使会话令牌不会以明文经过互联网。仅在使用可信隧道时开启。</string>
     <string name="ble_error_unavailable">此设备没有蓝牙。</string>
     <string name="ble_error_off">蓝牙已关闭。请打开后重试。</string>
     <string name="ble_error_permission">蓝牙权限被拒绝。请在Android设置中为此应用允许“附近的设备”。</string>

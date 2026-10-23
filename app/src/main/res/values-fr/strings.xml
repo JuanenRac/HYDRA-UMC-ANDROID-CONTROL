@@ -265,6 +265,8 @@
     <string name="tls_error_fingerprint">L\'empreinte doit comporter 64 caractères hexadécimaux (SHA-256).</string>
     <string name="tls_error_ca">Le texte n\'est pas un certificat PEM valide.</string>
     <string name="tls_warning_plain_remote">Connexion non chiffrée vers %1$s, qui n\'est pas sur votre réseau local. Toute personne sur le trajet peut lire la session et son jeton. Utilisez TLS ou un VPN.</string>
+    <string name="tls_plain_remote_title">Autoriser le trafic non chiffré hors du réseau local</string>
+    <string name="tls_plain_remote_hint">Désactivé par défaut. L\'application refuse le HTTP/WS non chiffré vers les serveurs hors de votre réseau local, afin que le jeton de session ne traverse jamais Internet en clair. À activer uniquement pour un tunnel de confiance.</string>
     <string name="ble_error_unavailable">Cet appareil n\'a pas de Bluetooth.</string>
     <string name="ble_error_off">Le Bluetooth est désactivé. Activez-le et réessayez.</string>
     <string name="ble_error_permission">Autorisation Bluetooth refusée. Autorisez « Appareils à proximité » pour cette appli dans les réglages Android.</string>

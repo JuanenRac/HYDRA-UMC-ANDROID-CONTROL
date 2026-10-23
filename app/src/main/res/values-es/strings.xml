@@ -265,6 +265,8 @@
     <string name="tls_error_fingerprint">La huella debe tener 64 caracteres hexadecimales (SHA-256).</string>
     <string name="tls_error_ca">El texto no es un certificado PEM válido.</string>
     <string name="tls_warning_plain_remote">Conexión sin cifrar con %1$s, que no está en tu red local. Cualquiera en el camino puede leer la sesión y su token. Usa TLS o una VPN.</string>
+    <string name="tls_plain_remote_title">Permitir tráfico sin cifrar fuera de la red local</string>
+    <string name="tls_plain_remote_hint">Desactivado por defecto. La aplicación rechaza HTTP/WS sin cifrar hacia servidores que no están en tu red local, así el token de sesión nunca cruza Internet en claro. Actívalo solo para un túnel de confianza.</string>
     <string name="ble_error_unavailable">Este dispositivo no tiene Bluetooth.</string>
     <string name="ble_error_off">El Bluetooth está apagado. Enciéndelo e inténtalo de nuevo.</string>
     <string name="ble_error_permission">Permiso de Bluetooth denegado. Permite Dispositivos cercanos para esta app en los ajustes de Android.</string>

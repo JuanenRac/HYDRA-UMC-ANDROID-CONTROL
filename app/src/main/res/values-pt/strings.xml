@@ -265,6 +265,8 @@
     <string name="tls_error_fingerprint">A impressão digital deve ter 64 carateres hexadecimais (SHA-256).</string>
     <string name="tls_error_ca">O texto não é um certificado PEM válido.</string>
     <string name="tls_warning_plain_remote">Ligação sem cifra a %1$s, que não está na sua rede local. Qualquer pessoa no percurso pode ler a sessão e o respetivo token. Utilize TLS ou uma VPN.</string>
+    <string name="tls_plain_remote_title">Permitir tráfego não cifrado fora da rede local</string>
+    <string name="tls_plain_remote_hint">Desativado por predefinição. A aplicação recusa HTTP/WS não cifrado para servidores que não estão na sua rede local, para que o token de sessão nunca atravesse a Internet em claro. Ative apenas para um túnel de confiança.</string>
     <string name="ble_error_unavailable">Este dispositivo não tem Bluetooth.</string>
     <string name="ble_error_off">O Bluetooth está desligado. Ligue-o e tente novamente.</string>
     <string name="ble_error_permission">Permissão de Bluetooth recusada. Permita \"Dispositivos próximos\" para esta aplicação nas definições do Android.</string>

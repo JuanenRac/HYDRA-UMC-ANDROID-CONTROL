@@ -16,6 +16,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -43,6 +44,7 @@ fun SecuritySettings(viewModel: RobotViewModel) {
     var mode by remember(saved) { mutableStateOf(saved.mode) }
     var pin by remember(saved) { mutableStateOf(saved.pinnedFingerprint) }
     var ca by remember(saved) { mutableStateOf(saved.customCaPem) }
+    var plainRemote by remember(saved) { mutableStateOf(saved.allowPlainRemote) }
     val message = viewModel.tlsSettingsMessage.value
 
     Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
@@ -75,10 +77,23 @@ fun SecuritySettings(viewModel: RobotViewModel) {
         )
         Text(stringResource(R.string.tls_ca_hint), style = MaterialTheme.typography.bodySmall, color = Color.Gray)
 
+        Spacer(modifier = Modifier.height(12.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Switch(checked = plainRemote, onCheckedChange = { plainRemote = it })
+            Column {
+                Text(stringResource(R.string.tls_plain_remote_title), style = MaterialTheme.typography.titleMedium)
+                Text(stringResource(R.string.tls_plain_remote_hint), style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+            }
+        }
+
         Spacer(modifier = Modifier.height(16.dp))
         HydraButton(
             text = stringResource(R.string.tls_save),
-            onClick = { viewModel.saveTlsSettings(TlsSettings(mode, pin, ca)) },
+            onClick = { viewModel.saveTlsSettings(TlsSettings(mode, pin, ca, plainRemote)) },
             modifier = Modifier.fillMaxWidth(),
         )
         if (message != null) {

@@ -54,7 +54,7 @@ class HydraApiClientTlsModeTest {
         for (mode in listOf(TlsMode.AUTO, TlsMode.OFF)) {
             val server = MockWebServer().also { it.enqueue(MockResponse().setBody(info)); it.start() }
             try {
-                val api = HydraApiClient(server.hostName, server.port, quick, mode)
+                val api = HydraApiClient("127.0.0.1", server.port, quick, mode)
                 assertNotNull(api.getHydraInfo())
                 assertFalse(api.usesTls)
             } finally {

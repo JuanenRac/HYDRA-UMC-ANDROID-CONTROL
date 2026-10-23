@@ -265,6 +265,8 @@
     <string name="tls_error_fingerprint">フィンガープリントは16進数64文字(SHA-256)である必要があります。</string>
     <string name="tls_error_ca">このテキストは有効なPEM証明書ではありません。</string>
     <string name="tls_warning_plain_remote">ローカルネットワーク外の %1$s への暗号化されていない接続です。経路上の誰でもセッションとそのトークンを読み取れます。TLSまたはVPNを使用してください。</string>
+    <string name="tls_plain_remote_title">ローカルネットワーク外の非暗号化通信を許可</string>
+    <string name="tls_plain_remote_hint">既定ではオフです。ローカルネットワーク外のサーバーへの暗号化されていない HTTP/WS を拒否し、セッショントークンが平文でインターネットを通らないようにします。信頼できるトンネルの場合のみオンにしてください。</string>
     <string name="ble_error_unavailable">この端末にはBluetoothがありません。</string>
     <string name="ble_error_off">Bluetoothがオフです。オンにしてもう一度お試しください。</string>
     <string name="ble_error_permission">Bluetoothの権限が拒否されました。Androidの設定でこのアプリに「付近のデバイス」を許可してください。</string>

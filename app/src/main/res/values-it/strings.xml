@@ -265,6 +265,8 @@
     <string name="tls_error_fingerprint">L\'impronta deve avere 64 caratteri esadecimali (SHA-256).</string>
     <string name="tls_error_ca">Il testo non è un certificato PEM valido.</string>
     <string name="tls_warning_plain_remote">Connessione non cifrata a %1$s, che non è nella tua rete locale. Chiunque sul percorso può leggere la sessione e il suo token. Usa TLS o una VPN.</string>
+    <string name="tls_plain_remote_title">Consenti traffico non cifrato fuori dalla rete locale</string>
+    <string name="tls_plain_remote_hint">Disattivato per impostazione predefinita. L\'app rifiuta HTTP/WS non cifrato verso server che non sono nella tua rete locale, così il token di sessione non attraversa mai Internet in chiaro. Attivalo solo per un tunnel fidato.</string>
     <string name="ble_error_unavailable">Questo dispositivo non ha il Bluetooth.</string>
     <string name="ble_error_off">Il Bluetooth è spento. Accendilo e riprova.</string>
     <string name="ble_error_permission">Permesso Bluetooth negato. Consenti \"Dispositivi nelle vicinanze\" per questa app nelle impostazioni di Android.</string>

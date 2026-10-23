@@ -38,6 +38,9 @@ jobs:
               py_compile.compile(str(path), doraise=True)
           print(f"PYTHON_SYNTAX=PASS files={len(files)}")
           PY
+      - name: Test the release publish script keeps the token off the command line
+        if: ${{ hashFiles('tools/test_publish_script.py') != '' }}
+        run: python tools/test_publish_script.py
       - name: Validate v1 SDK contract fixtures
         if: ${{ hashFiles('clients/python/tests/test_validation.py') != '' }}
         env:
