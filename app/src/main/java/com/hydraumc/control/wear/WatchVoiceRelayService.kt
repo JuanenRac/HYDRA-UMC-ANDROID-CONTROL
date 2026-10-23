@@ -24,6 +24,8 @@ import com.google.android.gms.wearable.WearableListenerService
 import com.hydraumc.control.network.AuthPrefs
 import com.hydraumc.control.network.ConnectionPrefs
 import com.hydraumc.control.network.HydraApiClient
+import com.hydraumc.control.network.TlsPrefs
+import com.hydraumc.control.network.TlsSettingsStore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -128,6 +130,8 @@ class WatchVoiceRelayService : WearableListenerService() {
         val token = AuthPrefs(applicationContext).loadAuth().token
             .takeIf { it.isNotBlank() }
             ?: throw IllegalStateException("paired phone has no Server session")
+        // The phone app may not be running: read the TLS choices of the user from storage.
+        TlsSettingsStore.current = TlsPrefs(applicationContext).load()
         return HydraApiClient(connection.first, port).also { it.authToken = token }
     }
 

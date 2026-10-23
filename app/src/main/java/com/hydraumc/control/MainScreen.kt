@@ -393,6 +393,17 @@ fun MainScreen(
                     .padding(horizontal = 16.dp, vertical = 6.dp),
             )
         }
+        viewModel.plainRemoteHost.value?.let { host ->
+            Text(
+                text = stringResource(R.string.tls_warning_plain_remote, host),
+                color = MaterialTheme.colorScheme.onErrorContainer,
+                style = MaterialTheme.typography.labelMedium,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.errorContainer)
+                    .padding(horizontal = 16.dp, vertical = 6.dp),
+            )
+        }
         NavHost(navController, startDestination = Screen.Dashboard.route, Modifier.weight(1f).fillMaxWidth()) {
             composable(Screen.Dashboard.route) { DashboardScreen(viewModel) }
             composable(Screen.Control.route) { ControlScreen(viewModel) }

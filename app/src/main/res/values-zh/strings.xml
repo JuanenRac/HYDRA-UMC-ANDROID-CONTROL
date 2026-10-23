@@ -242,4 +242,43 @@
     <string name="error_claim_other_controller">该机器人已被你的账户在另一台设备或窗口上预留。请使用那一个，或在那里释放预留。%1$s</string>
     <string name="error_claim_controller_required">预留指定了控制器，而此请求没有指定。%1$s</string>
     <string name="error_jog_over_limit">点动被拒绝：步长超过服务器为该型号设定的上限 %1$s。未发送任何内容。</string>
+
+    <!-- Bluetooth GATT and connection security -->
+    <string name="tab_security">安全</string>
+    <string name="tls_title">连接安全 (TLS)</string>
+    <string name="tls_mode_auto">自动</string>
+    <string name="tls_mode_required">强制使用TLS</string>
+    <string name="tls_mode_off">仅明文</string>
+    <string name="tls_mode_auto_hint">先尝试明文HTTP,当服务器只通过TLS响应时切换到HTTPS(默认)。</string>
+    <string name="tls_mode_required_hint">仅HTTPS和WSS。不使用没有TLS的服务器。</string>
+    <string name="tls_mode_off_hint">仅明文HTTP和WS,从不尝试HTTPS。网络上的任何人都可以读取流量。</string>
+    <string name="tls_pin_label">服务器证书指纹 (SHA-256)</string>
+    <string name="tls_pin_hint">64个十六进制字符,可带或不带冒号。设置后,只接受证书与此完全一致的服务器,即使它是自签名的。</string>
+    <string name="tls_ca_label">受信任的CA证书 (PEM)</string>
+    <string name="tls_ca_hint">未设置指纹时,使用它代替系统证书。</string>
+    <string name="tls_save">保存安全设置</string>
+    <string name="tls_saved">安全设置已保存,将在下次连接时生效。</string>
+    <string name="tls_error_fingerprint">指纹必须是64个十六进制字符 (SHA-256)。</string>
+    <string name="tls_error_ca">该文本不是有效的PEM证书。</string>
+    <string name="tls_warning_plain_remote">与不在本地网络内的 %1$s 的连接未加密。路径上的任何人都可以读取会话及其令牌。请使用TLS或VPN。</string>
+    <string name="ble_error_unavailable">此设备没有蓝牙。</string>
+    <string name="ble_error_off">蓝牙已关闭。请打开后重试。</string>
+    <string name="ble_error_permission">蓝牙权限被拒绝。请在Android设置中为此应用允许“附近的设备”。</string>
+    <string name="ble_error_location_off">请打开定位服务:此Android版本需要它来搜索蓝牙设备。</string>
+    <string name="ble_error_invalid_address">设备的蓝牙地址无效。</string>
+    <string name="ble_error_scanner">蓝牙扫描器不可用。</string>
+    <string name="ble_error_scan_failed">蓝牙搜索失败。</string>
+    <string name="ble_error_connect_failed">无法连接到设备。</string>
+    <string name="ble_error_discovery_failed">无法读取设备的服务。</string>
+    <string name="ble_error_not_hydra">这不是HYDRA-UMC设备(缺少HYDRA服务)。</string>
+    <string name="ble_error_characteristic">设备没有提供HYDRA-UMC所需的状态和命令特征。</string>
+    <string name="ble_error_notifications">无法开启设备的状态更新。</string>
+    <string name="ble_error_write_failed">设备未接受该命令。</string>
+    <string name="ble_error_not_connected">未通过蓝牙连接。</string>
+    <string name="ble_error_too_large">消息对蓝牙来说太大。</string>
+    <string name="ble_error_malformed">设备发送了损坏的消息。</string>
+    <string name="ble_error_gave_up">蓝牙连接已丢失,无法恢复。</string>
+    <string name="ble_error_with_status">%1$s (代码 %2$d)</string>
+    <string name="bt_show_all_devices">显示所有蓝牙设备</string>
+    <string name="bt_show_all_hint">关闭:只列出广播HYDRA-UMC服务的设备。</string>
 </resources>

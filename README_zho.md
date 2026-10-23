@@ -25,7 +25,7 @@
 
 一款原生 Android 应用（Kotlin + Jetpack Compose），通过 Wi-Fi 或蓝牙控制 [HYDRA-UMC](https://github.com/JuanenRac/HYDRA-UMC) 平台上的机器人，使用与 [HYDRA-UMC SUITE](https://github.com/JuanenRac/HYDRA-UMC-SUITE) 完全相同的 [`REMOTE_API.md`](https://github.com/JuanenRac/HYDRA-UMC-SERVER/blob/main/docs/REMOTE_API.md) 契约——针对运行中的 [HYDRA-UMC-SERVER](https://github.com/JuanenRac/HYDRA-UMC-SERVER) 后端（与 [HYDRA-UMC STUDIO](https://github.com/JuanenRac/HYDRA-UMC-STUDIO) 自身网页仪表盘所通信的同一个后端）进行发现、完整状态读写以及实时 WebSocket 同步。是 [HYDRA-UMC-IOS-CONTROL](https://github.com/JuanenRac/HYDRA-UMC-IOS-CONTROL) 的直接 Android 版本对应物。完整设计参见 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)。
 
-> **诚实检查——今天真正可运行的部分：** 核心业务逻辑——Parol6 运动学（`kinematics/Parol6Kinematics.kt`）、settings 树状态契约（`model/HydraState.kt`）、原子命令下发与语音中继（`viewmodel/RobotViewModel.kt`）、WebSocket 重连处理（`network/HydraWebSocket.kt`）、MJPEG 帧解析（`ui/MjpegPlayer.kt`）、应用内更新通道（`update/GitHubReleaseUpdater.kt`、`ReleaseMetadataParser.kt`、`SemanticVersion.kt`），以及 Wear 语音中继请求管理（`wear/BoundedRequestScope.kt`、`WatchCompanionProtocol.kt`）都是真实的，并由 90 个通过的 JVM/Robolectric 单元测试覆盖（`./gradlew testDebugUnitTest`）。这些测试在结构上无法触及——而这个仅有 Windows 的开发环境也没有实体 Android 设备可以验证——的是 `network/AuthPrefs.kt` 中真正基于 Keystore 的 `EncryptedSharedPreferences`、`androidx.biometric` 的指纹/面部提示、`network/HydraBleClient.kt` 的蓝牙 GATT 传输，以及 `MjpegStreamParser` 中 API 28+ 的硬件 `ImageDecoder` 路径：这些都是真实、已编译的代码，但自编写以来尚未在真实硬件上重新验证过。早期版本的基本启动/登录*确实*在真实设备上得到过现场确认（见 `CHANGELOG.md` 的 `v0.3.2`/`v0.3.3` 条目），但那早于蓝牙、生物识别和硬件解码路径。具体已交付的内容见 `CHANGELOG.md`，其中每条记录也附有关于哪些部分仍未经硬件验证的说明。
+> **诚实检查——今天真正可运行的部分：** 核心业务逻辑——Parol6 运动学（`kinematics/Parol6Kinematics.kt`）、settings 树状态契约（`model/HydraState.kt`）、原子命令下发与语音中继（`viewmodel/RobotViewModel.kt`）、WebSocket 重连处理（`network/HydraWebSocket.kt`）、MJPEG 帧解析（`ui/MjpegPlayer.kt`）、应用内更新通道（`update/GitHubReleaseUpdater.kt`、`ReleaseMetadataParser.kt`、`SemanticVersion.kt`），以及 Wear 语音中继请求管理（`wear/BoundedRequestScope.kt`、`WatchCompanionProtocol.kt`）都是真实的，并由 226 个通过的 JVM/Robolectric 单元测试覆盖（`./gradlew testDebugUnitTest`）。这些测试在结构上无法触及——而这个仅有 Windows 的开发环境也没有实体 Android 设备可以验证——的是 `network/AuthPrefs.kt` 中真正基于 Keystore 的 `EncryptedSharedPreferences`、`androidx.biometric` 的指纹/面部提示、`network/HydraBleClient.kt` 的蓝牙 GATT 传输，以及 `MjpegStreamParser` 中 API 28+ 的硬件 `ImageDecoder` 路径：这些都是真实、已编译的代码，但自编写以来尚未在真实硬件上重新验证过。早期版本的基本启动/登录*确实*在真实设备上得到过现场确认（见 `CHANGELOG.md` 的 `v0.3.2`/`v0.3.3` 条目），但那早于蓝牙、生物识别和硬件解码路径。具体已交付的内容见 `CHANGELOG.md`，其中每条记录也附有关于哪些部分仍未经硬件验证的说明。
 
 > **安全与安防现状:**本生态系统不是经认证的安全系统。目前尚无硬件 E-STOP 通路,没有由固件强制执行的限位或联锁,也没有经过验证的运动指令;固件映像使用 CRC32 和共享密钥的 HMAC-SHA256 校验,而非非对称签名;TLS 与双向 TLS 均为可选项,默认关闭;自制电路板尚未组装或测试。在依赖此处任何说法来保障人身安全之前,请先阅读[安全基线](https://github.com/JuanenRac/HYDRA-UMC-DOCS/blob/main/docs/SECURITY_BASELINE.md)和[威胁模型](https://github.com/JuanenRac/HYDRA-UMC-DOCS/blob/main/docs/THREAT_MODEL.md)。
 
@@ -35,7 +35,7 @@
 |---|---|
 | 版本 | `0.7.1` |
 | 成熟度 | 可用 |
-| 测试 | 165 (`./gradlew testDebugUnitTest`) |
+| 测试 | 226 (`./gradlew testDebugUnitTest`) |
 | 技术栈 | Kotlin / Jetpack / biometric auth / WebSocket client |
 | 目标 | Android 手机或平板 |
 | 真实硬件 | 尚未：此版本没有在真实硬件上运行的记录 |
@@ -60,6 +60,8 @@
 - **全局 STOP 小组件**（`widget/GlobalStopWidget.kt`）—— 专用的**主屏幕小组件**,用于快速访问。提供一个高可见度、可立即访问的**全局 STOP** 按钮——与上面相同的调用：轻点后应用回到前台,服务器连接一建立就发送停止,即使是完全冷启动（进程尚未运行）也是如此；如果无法连接服务器,则显示 STOP 未确认。通知中的操作作用相同。这是服务器的软件停止，不是硬件 E-STOP，也不会切断任何设备的电源。
 - **触觉反馈**（`ui/ControlScreen.kt`）—— 高级感官反馈系统。全局 STOP 在轻点时立即以两次短振动回应；每个机器人自己的停止按钮保留**长按保护**（快速轻点只有一次短振动和提示；只有真正长按才会发送命令）。差异化的触觉特征（成功、错误和紧急脉冲）在嘈杂环境中为操作员提供物理确认。
 - **应用内更新渠道**（`update/GitHubReleaseUpdater.kt`、`update/ReleaseMetadataParser.kt`、`update/SemanticVersion.kt`）—— 启动时以及从「设置 → 更新」检查最新的稳定版 GitHub Release;仅下载来自非草稿、非预发布标签的确切 `HYDRA-UMC-ANDROID-CONTROL-release.apk` 资源,从不自动安装 —— 最终同意由 Android 自身的软件包安装程序请求。完整发布契约:[`docs/GITHUB_RELEASE_UPDATES.md`](docs/GITHUB_RELEASE_UPDATES.md)。
+- **蓝牙 LE（GATT）**（`network/HydraBleClient.kt`、`network/BleContract.kt`、`network/AndroidBleGatt.kt`）- 遵循有文档约定（[`docs/BLE_CONTRACT.md`](docs/BLE_CONTRACT.md)）的真实 GATT 客户端：按 HYDRA 服务过滤的扫描、协商 MTU 的连接、服务检查、通知、双向分帧消息、一次只写一条、等待时间递增的自动重连、Android 12+ 权限（`BLUETOOTH_SCAN`/`BLUETOOTH_CONNECT`），以及每种失败都用用户语言给出的清晰提示。**目前还没有任何 HYDRA-UMC 设备实现外设一侧：** 客户端只针对模拟的 GATT 做过测试，Android 部分从未在手机上运行过，机器人命令也不通过蓝牙发送。
+- **可选 TLS**（`network/TlsSettings.kt`、`network/HydraHttp.kt`、`ui/SecuritySettings.kt`）- **设置 → 安全** 可选择自动（默认，即一直以来的行为）、强制使用 TLS 或仅明文，并可固定服务器证书指纹（SHA-256）或信任自定义 CA。对本地网络之外主机的未加密会话，会在所有屏幕上方显示红色警告。内嵌的 3D 视图暂不遵循这些规则。已用真实握手对本地服务器测试；从未对启用 TLS 的真实 HYDRA-UMC 服务器测试。
 - **配对的 Wear OS 伴侣应用与语音中继**（`wear/WatchVoiceRelayService.kt`、`wear/WatchCompanionProtocol.kt`）—— 将来自配对的 [HYDRA-UMC-WATCH](https://github.com/JuanenRac/HYDRA-UMC-WATCH) 应用、已识别且由用户发起的语音回合,通过本应用自身经过认证的 Server 会话中继到 `HYDRA-UMC-VOICE-UI`,并向手表返回类型化的回复;无论是此中继还是手表的系统状态卡片,都从不发出机器人指令或直接操作 `HydraState` —— 与运动相关的回复会被明确标记为 `requiresConfirmation`,必须通过主控制 UI 进行确认。完整契约:[`docs/WATCH_VOICE_RELAY.md`](docs/WATCH_VOICE_RELAY.md)。
 - **应用内语音助手**(`ui/VoiceAssistantDialog.kt`)—— 顶部栏中的麦克风图标会打开一个对话框,可输入问题/指令,或使用本手机自带的语音识别(`RecognizerIntent`,与手表语音按钮已使用的真实模式相同)。识别出的文字会通过与手表中继相同的 `POST /api/voice/turn` 路由发送,但作为本手机自身的普通流量(`HydraApiClient.postVoiceTurn()`)而非中继 —— 因此“配置 > 远程访问”可以独立于配对的手表来允许/阻止此按钮。绝不上传音频,回复也绝不会直接发出机器人指令。
 - **工具链与项目质量** —— AGP 9.3.1、Kotlin 2.2.10、Gradle 9.7.0、compileSdk 36、**JDK 21**（`compileOptions`、`gradle-daemon-jvm.properties`,以及 `.idea/`/`.vscode/` 项目文件都实际以此为目标,而不仅仅是这行文档）。构建输出干净,零警告,经过优化的 R8 生产变体,以及高级的 **Roborazzi** 截图测试。
@@ -146,6 +148,8 @@ HYDRA-UMC-ANDROID-CONTROL/
 │       │   │   ├── AccessModels.kt         # 控制器 ID、预留、安全限值与点动检查（纯规则）
 │       │   │   ├── HydraApiClient.kt      # REST 客户端——登录、设置读写、原子化机器人指令、系统指标
 │       │   │   ├── HydraBleClient.kt      # 蓝牙 GATT 客户端，Wi-Fi 之外的替代传输方式
+│       │   │   ├── BleContract.kt / BleGatt.kt / AndroidBleGatt.kt   # BLE 约定、GATT 抽象及其 Android 实现
+│       │   │   ├── TlsSettings.kt / HydraHttp.kt / TlsPrefs.kt      # 可选 TLS：模式、固定指纹、自定义 CA、存储
 │       │   │   ├── HydraWebSocket.kt      # 通过 WS 进行实时状态增量推送、重连处理
 │       │   │   ├── StateCache.kt          # 最后已知状态缓存（DataStore），用于离线仪表盘查看
 │       │   │   └── StopAllResult.kt       # 全局 STOP 的结果（每台机器人的应答、状态）

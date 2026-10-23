@@ -30,7 +30,18 @@ import com.hydraumc.control.network.ConnectionPrefs
 import com.hydraumc.control.network.HydraApiClient
 import com.hydraumc.control.network.HydraApiException
 import com.hydraumc.control.network.HydraWebSocket
+import com.hydraumc.control.network.BleContract
+import com.hydraumc.control.network.BleDeviceList
+import com.hydraumc.control.network.BleError
+import com.hydraumc.control.network.BleErrorKind
+import com.hydraumc.control.network.BlePermissions
 import com.hydraumc.control.network.HydraBleClient
+import com.hydraumc.control.network.TlsPolicy
+import com.hydraumc.control.network.TlsPrefs
+import com.hydraumc.control.network.TlsProblem
+import com.hydraumc.control.network.TlsSettings
+import com.hydraumc.control.network.TlsSettingsStore
+import com.hydraumc.control.util.bleErrorMessage
 import com.hydraumc.control.network.StateCache
 import com.hydraumc.control.network.StopAllResult
 import com.hydraumc.control.network.StopAllRobot
@@ -47,6 +58,11 @@ import kotlinx.coroutines.launch
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
 import android.bluetooth.le.ScanCallback
+import android.bluetooth.le.ScanFilter
+import android.bluetooth.le.ScanSettings
+import android.content.pm.PackageManager
+import android.os.ParcelUuid
+import androidx.core.content.ContextCompat
 import android.bluetooth.le.ScanResult
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -296,6 +312,14 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
     private var ws: HydraWebSocket? = null
     private var bleClient: HydraBleClient? = null
     private val prefs = ConnectionPrefs(application)
+    private val tlsPrefs = TlsPrefs(application)
+
+    /** The TLS choices of the user (Settings > Security); the clients read them when they are created. */
+    val tlsSettings = mutableStateOf(TlsSettings())
+    /** Result of the last save of the TLS settings (saved, or what is wrong), in the language of the phone. */
+    val tlsSettingsMessage = mutableStateOf<String?>(null)
+    /** The host of the current session when it is not encrypted and not on the local network; null otherwise. The app shows a warning. */
+    val plainRemoteHost = mutableStateOf<String?>(null)
     private val authPrefs = AuthPrefs(application)
     private val notificationPrefs = com.hydraumc.control.util.NotificationPrefs(application)
     private val stateCache = StateCache(application)
@@ -420,6 +444,11 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         }
 
         viewModelScope.launch {
+            // Before anything connects: the clients read these choices when they are created.
+            tlsPrefs.load().also {
+                TlsSettingsStore.current = it
+                tlsSettings.value = it
+            }
             prefs.load()?.let { (savedIp, savedPort) ->
                 ipAddress.value = savedIp
                 port.value = savedPort
@@ -901,6 +930,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
 
         connectionStatus.value = getApplication<Application>().getString(R.string.status_connecting)
         lastError.value = null
+        plainRemoteHost.value = null
         isSwitchingServer = true
 
         ws?.disconnect()
@@ -933,6 +963,8 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                     }
                 }
                 
+                plainRemoteHost.value = host.takeIf { TlsPolicy.isPlainRemote(it, client.usesTls) }
+                if (plainRemoteHost.value != null) logTelemetry("Warning: unencrypted connection to a host outside the local network")
                 val settings = try {
                     client.getSettings()
                 } catch (e: HydraApiException) {
@@ -1908,57 +1940,104 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    /** True when the Bluetooth tab also lists devices that do not advertise the HYDRA service. */
+    val bleShowAllDevices = mutableStateOf(false)
+
+    /** Shows a Bluetooth error in the language of the phone, in the Bluetooth tab and as the last error. */
+    private fun reportBleError(error: BleError) {
+        val text = bleErrorMessage(getApplication(), error)
+        lastBtError.value = text
+        lastError.value = text
+        logTelemetry("BLE error: ${error.kind}${error.status?.let { " ($it)" } ?: ""}")
+    }
+
+    private fun missingBlePermissions(needed: List<String>): List<String> {
+        val app = getApplication<Application>()
+        return BlePermissions.missing(needed) { ContextCompat.checkSelfPermission(app, it) == PackageManager.PERMISSION_GRANTED }
+    }
+
     @SuppressLint("MissingPermission")
     fun scanBluetooth() {
         if (isBtScanning.value) return
-        
-        val bluetoothManager = getApplication<Application>().getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
-        val adapter = bluetoothManager.adapter
-        if ((adapter == null) || (!adapter.isEnabled)) {
+
+        val app = getApplication<Application>()
+        val adapter = (app.getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager)?.adapter
+        if (adapter == null) {
+            isBtEnabled.value = false
+            reportBleError(BleError(BleErrorKind.BLUETOOTH_UNAVAILABLE))
+            return
+        }
+        if (!adapter.isEnabled) {
             isBtEnabled.value = false
             return
         }
         isBtEnabled.value = true
+
+        if (missingBlePermissions(BlePermissions.scanPermissions(Build.VERSION.SDK_INT)).isNotEmpty()) {
+            reportBleError(BleError(BleErrorKind.PERMISSION_DENIED))
+            return
+        }
 
         // On API 24-30, BLE scan results are silently withheld system-wide
         // if Location Services (GPS) is off at the OS level, even with the
         // runtime permission already granted - startScan() itself reports
         // no error, it just never calls onScanResult(). API 31+ (S) dropped
         // this requirement once BLUETOOTH_SCAN(neverForLocation) replaced
-        // the old location-permission-based BLE scan model, so this only
-        // needs checking below that version.
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
-            val locationManager = getApplication<Application>().getSystemService(Context.LOCATION_SERVICE) as? LocationManager
-            val locationEnabled = locationManager?.isLocationEnabled ?: false
-            if (!locationEnabled) {
-                lastBtError.value = "Location Services must be enabled for Bluetooth scanning on this Android version"
+        // the old location-permission-based BLE scan model.
+        if (BlePermissions.needsLocationServices(Build.VERSION.SDK_INT)) {
+            val locationManager = app.getSystemService(Context.LOCATION_SERVICE) as? LocationManager
+            if (locationManager?.isLocationEnabled != true) {
+                reportBleError(BleError(BleErrorKind.LOCATION_OFF))
                 return
             }
         }
 
-        isBtScanning.value = true
-        discoveredBtDevices.value = emptyList()
-        
         val scanner = adapter.bluetoothLeScanner
         if (scanner == null) {
-            lastBtError.value = "Bluetooth LE Scanner not available"
-            isBtScanning.value = false
+            reportBleError(BleError(BleErrorKind.SCANNER_UNAVAILABLE))
             return
         }
-        
+
+        lastBtError.value = null
+        isBtScanning.value = true
+        discoveredBtDevices.value = emptyList()
+
         val callback = object : ScanCallback() {
             override fun onScanResult(callbackType: Int, result: ScanResult) {
-                val device = BleDevice(result.device.name, result.device.address, result.rssi)
-                if (discoveredBtDevices.value.none { it.address == device.address }) {
-                    discoveredBtDevices.value += device
-                }
+                // The advertised name needs no permission; the cached device name needs
+                // BLUETOOTH_CONNECT on Android 12+ and may have been revoked meanwhile.
+                val name = result.scanRecord?.deviceName ?: try { result.device.name } catch (_: SecurityException) { null }
+                discoveredBtDevices.value = BleDeviceList.upsert(
+                    discoveredBtDevices.value,
+                    BleDevice(name, result.device.address, result.rssi),
+                )
+            }
+
+            override fun onScanFailed(errorCode: Int) {
+                bleScanCallback = null
+                isBtScanning.value = false
+                reportBleError(BleError(BleErrorKind.SCAN_FAILED, errorCode))
             }
         }
         bleScanCallback = callback
 
+        // Only devices advertising the HYDRA service, unless the user asked for everything.
+        val filters = if (bleShowAllDevices.value) emptyList() else listOf(
+            ScanFilter.Builder().setServiceUuid(ParcelUuid(BleContract.SERVICE_UUID)).build(),
+        )
+        val settings = ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY).build()
+
         viewModelScope.launch {
-            scanner.startScan(callback)
-            kotlinx.coroutines.delay(kotlin.time.Duration.parse("5s"))
+            try {
+                scanner.startScan(filters, settings, callback)
+            } catch (e: SecurityException) {
+                // BLUETOOTH_SCAN was revoked from Settings after the screen checked it.
+                bleScanCallback = null
+                isBtScanning.value = false
+                reportBleError(BleError(BleErrorKind.PERMISSION_DENIED))
+                return@launch
+            }
+            kotlinx.coroutines.delay(5_000L)
             stopBtScan()
         }
     }
@@ -1966,25 +2045,33 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
     @SuppressLint("MissingPermission")
     private fun stopBtScan() {
         if (!isBtScanning.value) return
-        val bluetoothManager = getApplication<Application>().getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
-        val scanner = bluetoothManager.adapter?.bluetoothLeScanner
-        bleScanCallback?.let { 
-            scanner?.stopScan(it)
+        val bluetoothManager = getApplication<Application>().getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager
+        val scanner = bluetoothManager?.adapter?.bluetoothLeScanner
+        try {
+            bleScanCallback?.let { scanner?.stopScan(it) }
+        } catch (_: SecurityException) {
+            // Permission revoked while scanning: the scan stops with the app anyway.
         }
         bleScanCallback = null
         isBtScanning.value = false
     }
 
     fun connectBle(device: BleDevice) {
+        if (missingBlePermissions(BlePermissions.connectPermissions(Build.VERSION.SDK_INT)).isNotEmpty()) {
+            reportBleError(BleError(BleErrorKind.PERMISSION_DENIED))
+            return
+        }
+        stopBtScan()
         ws?.disconnect()
         bleClient?.disconnect()
         apiClient = null
         authTokenState.value = null
 
         lastError.value = null
+        lastBtError.value = null
         connectionStatus.value = getApplication<Application>().getString(R.string.status_connecting)
-        
-        bleClient = HydraBleClient(
+
+        bleClient = HydraBleClient.forAndroid(
             context = getApplication(),
             deviceAddress = device.address,
             onStatus = { status ->
@@ -1994,14 +2081,31 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                     WsStatus.DISCONNECTED -> getApplication<Application>().getString(R.string.status_disconnected)
                 }
             },
-            onSettings = { payload -> 
+            onSettings = { payload ->
                 try {
                     applyState(HydraState(org.json.JSONObject(payload)))
                 } catch (e: Exception) {
                     lastError.value = e.message
                 }
             },
-        ) { message -> lastError.value = message }.also { it.connect() }
+            onError = { error -> reportBleError(error) },
+        ).also { it.connect() }
+    }
+
+    /** Saves the TLS choices if they are valid; otherwise says what is wrong. They apply to the next connection. */
+    fun saveTlsSettings(input: TlsSettings) {
+        val app = getApplication<Application>()
+        when (input.validate()) {
+            TlsProblem.FINGERPRINT_INVALID -> tlsSettingsMessage.value = app.getString(R.string.tls_error_fingerprint)
+            TlsProblem.CA_INVALID -> tlsSettingsMessage.value = app.getString(R.string.tls_error_ca)
+            null -> {
+                val clean = input.normalized()
+                TlsSettingsStore.current = clean
+                tlsSettings.value = clean
+                tlsSettingsMessage.value = app.getString(R.string.tls_saved)
+                viewModelScope.launch { tlsPrefs.save(clean) }
+            }
+        }
     }
 
     fun disconnectBle() {

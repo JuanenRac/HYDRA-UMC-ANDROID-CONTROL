@@ -242,4 +242,43 @@
     <string name="error_claim_other_controller">The robot is reserved by your account on another device or window. Use that one, or release the reservation there. %1$s</string>
     <string name="error_claim_controller_required">The reservation names a controller and this request named none. %1$s</string>
     <string name="error_jog_over_limit">Jog refused: the step is above the limit of %1$s set by the server for this model. Nothing was sent.</string>
+
+    <!-- Bluetooth GATT and connection security -->
+    <string name="tab_security">Security</string>
+    <string name="tls_title">Connection security (TLS)</string>
+    <string name="tls_mode_auto">Automatic</string>
+    <string name="tls_mode_required">Require TLS</string>
+    <string name="tls_mode_off">Plain only</string>
+    <string name="tls_mode_auto_hint">Tries plain HTTP first and switches to HTTPS when the server only answers over TLS (default).</string>
+    <string name="tls_mode_required_hint">Only HTTPS and WSS. A server without TLS is not used.</string>
+    <string name="tls_mode_off_hint">Only plain HTTP and WS; HTTPS is never tried. Anyone on the network can read the traffic.</string>
+    <string name="tls_pin_label">Server certificate fingerprint (SHA-256)</string>
+    <string name="tls_pin_hint">64 hexadecimal characters, with or without colons. When set, only a server with exactly this certificate is accepted, even if it is self-signed.</string>
+    <string name="tls_ca_label">Trusted CA certificate (PEM)</string>
+    <string name="tls_ca_hint">Used instead of the system certificates when no fingerprint is set.</string>
+    <string name="tls_save">Save security settings</string>
+    <string name="tls_saved">Security settings saved. They apply to the next connection.</string>
+    <string name="tls_error_fingerprint">The fingerprint must be 64 hexadecimal characters (SHA-256).</string>
+    <string name="tls_error_ca">The text is not a valid PEM certificate.</string>
+    <string name="tls_warning_plain_remote">Unencrypted connection to %1$s, which is not on your local network. Anyone on the path can read the session and its token. Use TLS or a VPN.</string>
+    <string name="ble_error_unavailable">This device has no Bluetooth.</string>
+    <string name="ble_error_off">Bluetooth is off. Turn it on and try again.</string>
+    <string name="ble_error_permission">Bluetooth permission denied. Allow Nearby devices for this app in the Android settings.</string>
+    <string name="ble_error_location_off">Turn on Location Services: this Android version needs them to scan for Bluetooth devices.</string>
+    <string name="ble_error_invalid_address">The Bluetooth address of the device is not valid.</string>
+    <string name="ble_error_scanner">The Bluetooth scanner is not available.</string>
+    <string name="ble_error_scan_failed">The Bluetooth scan failed.</string>
+    <string name="ble_error_connect_failed">Could not connect to the device.</string>
+    <string name="ble_error_discovery_failed">Could not read the services of the device.</string>
+    <string name="ble_error_not_hydra">This is not a HYDRA-UMC device (the HYDRA service is missing).</string>
+    <string name="ble_error_characteristic">The device does not offer the state and command characteristics HYDRA-UMC needs.</string>
+    <string name="ble_error_notifications">Could not turn on state updates from the device.</string>
+    <string name="ble_error_write_failed">The device did not accept the command.</string>
+    <string name="ble_error_not_connected">Not connected over Bluetooth.</string>
+    <string name="ble_error_too_large">The message is too large for Bluetooth.</string>
+    <string name="ble_error_malformed">The device sent a damaged message.</string>
+    <string name="ble_error_gave_up">The Bluetooth link was lost and could not be restored.</string>
+    <string name="ble_error_with_status">%1$s (code %2$d)</string>
+    <string name="bt_show_all_devices">Show all Bluetooth devices</string>
+    <string name="bt_show_all_hint">Off: only devices that advertise the HYDRA-UMC service are listed.</string>
 </resources>

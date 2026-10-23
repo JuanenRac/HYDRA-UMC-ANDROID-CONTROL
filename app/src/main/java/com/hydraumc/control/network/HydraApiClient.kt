@@ -99,12 +99,18 @@ class HydraApiException(
  * @property port The target port number.
  * @property client The OkHttpClient instance to use.
  */
-class HydraApiClient(host: String, port: Int, private val client: OkHttpClient = sharedHttpClient) {
+class HydraApiClient(
+    host: String,
+    port: Int,
+    private val client: OkHttpClient = HydraHttp.client(),
+    /** How to reach the server (see [TlsMode]); the user's setting at the time the client is made. */
+    private val tlsMode: TlsMode = TlsSettingsStore.current.mode,
+) {
 
     /** Base URL of the target HYDRA-UMC server - starts as plain HTTP, and
      * getHydraInfo() below switches it to HTTPS the first time a plain-HTTP
      * probe gets no answer at all and an HTTPS one does. */
-    var baseUrl: String = "http://$host:$port"
+    var baseUrl: String = (if (startsWithTls(tlsMode)) "https" else "http") + "://$host:$port"
         private set
 
     /** True once getHydraInfo() has confirmed this server only answers over
@@ -178,7 +184,7 @@ class HydraApiClient(host: String, port: Int, private val client: OkHttpClient =
         // call through this same client. Never the other way around: a
         // plain-HTTP server that fails is just offline, not a reason to
         // guess at HTTPS.
-        if (baseUrl.startsWith("http://")) {
+        if (mayFallBackToHttps(tlsMode) && baseUrl.startsWith("http://")) {
             val httpsUrl = baseUrl.replaceFirst("http://", "https://")
             val viaHttps = probeHydraInfo(httpsUrl)
             if (viaHttps != null) {
@@ -455,6 +461,12 @@ class HydraApiClient(host: String, port: Int, private val client: OkHttpClient =
     }
 
     companion object {
+        /** Required TLS means the very first request already goes to https. */
+        internal fun startsWithTls(mode: TlsMode): Boolean = mode == TlsMode.REQUIRED
+
+        /** Only the automatic mode tries https after a plain probe found nothing. */
+        internal fun mayFallBackToHttps(mode: TlsMode): Boolean = mode == TlsMode.AUTO
+
         /**
          * Shared OkHttpClient instance with optimized timeouts.
          *

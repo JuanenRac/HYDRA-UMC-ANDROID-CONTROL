@@ -242,4 +242,43 @@
     <string name="error_claim_other_controller">Il robot è prenotato dal tuo account su un altro dispositivo o finestra. Usa quello, o rilascia lì la prenotazione. %1$s</string>
     <string name="error_claim_controller_required">La prenotazione indica un controller e questa richiesta non ne indicava nessuno. %1$s</string>
     <string name="error_jog_over_limit">Jog rifiutato: il passo supera il limite di %1$s impostato dal server per questo modello. Non è stato inviato nulla.</string>
+
+    <!-- Bluetooth GATT and connection security -->
+    <string name="tab_security">Sicurezza</string>
+    <string name="tls_title">Sicurezza della connessione (TLS)</string>
+    <string name="tls_mode_auto">Automatico</string>
+    <string name="tls_mode_required">Richiedi TLS</string>
+    <string name="tls_mode_off">Solo non cifrato</string>
+    <string name="tls_mode_auto_hint">Prova prima HTTP non cifrato e passa a HTTPS quando il server risponde solo via TLS (predefinito).</string>
+    <string name="tls_mode_required_hint">Solo HTTPS e WSS. Un server senza TLS non viene usato.</string>
+    <string name="tls_mode_off_hint">Solo HTTP e WS non cifrati; HTTPS non viene mai provato. Chiunque sulla rete può leggere il traffico.</string>
+    <string name="tls_pin_label">Impronta del certificato del server (SHA-256)</string>
+    <string name="tls_pin_hint">64 caratteri esadecimali, con o senza due punti. Se impostata, viene accettato solo un server con esattamente questo certificato, anche se autofirmato.</string>
+    <string name="tls_ca_label">Certificato della CA attendibile (PEM)</string>
+    <string name="tls_ca_hint">Usato al posto dei certificati di sistema quando non c\'è un\'impronta.</string>
+    <string name="tls_save">Salva le impostazioni di sicurezza</string>
+    <string name="tls_saved">Impostazioni di sicurezza salvate. Valgono dalla prossima connessione.</string>
+    <string name="tls_error_fingerprint">L\'impronta deve avere 64 caratteri esadecimali (SHA-256).</string>
+    <string name="tls_error_ca">Il testo non è un certificato PEM valido.</string>
+    <string name="tls_warning_plain_remote">Connessione non cifrata a %1$s, che non è nella tua rete locale. Chiunque sul percorso può leggere la sessione e il suo token. Usa TLS o una VPN.</string>
+    <string name="ble_error_unavailable">Questo dispositivo non ha il Bluetooth.</string>
+    <string name="ble_error_off">Il Bluetooth è spento. Accendilo e riprova.</string>
+    <string name="ble_error_permission">Permesso Bluetooth negato. Consenti \"Dispositivi nelle vicinanze\" per questa app nelle impostazioni di Android.</string>
+    <string name="ble_error_location_off">Attiva i servizi di localizzazione: questa versione di Android ne ha bisogno per cercare dispositivi Bluetooth.</string>
+    <string name="ble_error_invalid_address">L\'indirizzo Bluetooth del dispositivo non è valido.</string>
+    <string name="ble_error_scanner">Lo scanner Bluetooth non è disponibile.</string>
+    <string name="ble_error_scan_failed">La ricerca Bluetooth non è riuscita.</string>
+    <string name="ble_error_connect_failed">Impossibile connettersi al dispositivo.</string>
+    <string name="ble_error_discovery_failed">Impossibile leggere i servizi del dispositivo.</string>
+    <string name="ble_error_not_hydra">Non è un dispositivo HYDRA-UMC (manca il servizio HYDRA).</string>
+    <string name="ble_error_characteristic">Il dispositivo non offre le caratteristiche di stato e di comando che servono a HYDRA-UMC.</string>
+    <string name="ble_error_notifications">Impossibile attivare gli aggiornamenti di stato del dispositivo.</string>
+    <string name="ble_error_write_failed">Il dispositivo non ha accettato il comando.</string>
+    <string name="ble_error_not_connected">Nessuna connessione Bluetooth.</string>
+    <string name="ble_error_too_large">Il messaggio è troppo grande per il Bluetooth.</string>
+    <string name="ble_error_malformed">Il dispositivo ha inviato un messaggio danneggiato.</string>
+    <string name="ble_error_gave_up">Il collegamento Bluetooth è andato perso e non è stato possibile ripristinarlo.</string>
+    <string name="ble_error_with_status">%1$s (codice %2$d)</string>
+    <string name="bt_show_all_devices">Mostra tutti i dispositivi Bluetooth</string>
+    <string name="bt_show_all_hint">Disattivato: vengono elencati solo i dispositivi che annunciano il servizio HYDRA-UMC.</string>
 </resources>

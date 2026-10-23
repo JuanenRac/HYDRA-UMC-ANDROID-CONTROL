@@ -14,6 +14,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bluetooth
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Update
 import androidx.compose.material.icons.filled.Wifi
@@ -78,6 +79,7 @@ fun SettingsScreen(
         TabItem(stringResource(R.string.tab_bluetooth), Icons.Default.Bluetooth),
         TabItem(stringResource(R.string.tab_notifications), Icons.Default.Notifications),
         TabItem(stringResource(R.string.tab_updates), Icons.Default.Update),
+        TabItem(stringResource(R.string.tab_security), Icons.Default.Lock),
     )
 
     Column(modifier = Modifier.fillMaxSize()) {
@@ -103,6 +105,7 @@ fun SettingsScreen(
                 1 -> BluetoothSettings(viewModel, onEnableBluetooth)
                 2 -> NotificationSettings(viewModel)
                 3 -> UpdateSettings(updateState, updateViewModel)
+                4 -> SecuritySettings(viewModel)
             }
         }
     }
@@ -565,6 +568,20 @@ private fun BluetoothScanSection(
             stringResource(R.string.bt_enable_description),
             style = MaterialTheme.typography.bodySmall
         )
+
+        Spacer(modifier = Modifier.height(8.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(stringResource(R.string.bt_show_all_devices), style = MaterialTheme.typography.titleSmall)
+            Switch(
+                checked = viewModel.bleShowAllDevices.value,
+                onCheckedChange = { viewModel.bleShowAllDevices.value = it },
+            )
+        }
+        Text(stringResource(R.string.bt_show_all_hint), style = MaterialTheme.typography.bodySmall, color = Color.Gray)
         
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -602,7 +619,7 @@ private fun DeviceCard(device: BleDevice, onConnect: () -> Unit) {
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column {
-                Text(device.displayName, style = MaterialTheme.typography.titleSmall)
+                Text(device.name ?: stringResource(R.string.bt_unnamed_device), style = MaterialTheme.typography.titleSmall)
                 Text(
                     stringResource(R.string.bt_device_info, device.address, "${device.rssi} dBm"),
                     style = MaterialTheme.typography.bodySmall

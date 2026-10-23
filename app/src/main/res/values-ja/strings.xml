@@ -242,4 +242,43 @@
     <string name="error_claim_other_controller">このロボットはあなたのアカウントが別の端末またはウィンドウで予約しています。そちらを使うか、そこで予約を解放してください。%1$s</string>
     <string name="error_claim_controller_required">予約はコントローラーを指定していますが、このリクエストは指定していません。%1$s</string>
     <string name="error_jog_over_limit">ジョグを拒否しました：ステップがこのモデルにサーバーが設定した上限 %1$s を超えています。何も送信されていません。</string>
+
+    <!-- Bluetooth GATT and connection security -->
+    <string name="tab_security">セキュリティ</string>
+    <string name="tls_title">接続のセキュリティ (TLS)</string>
+    <string name="tls_mode_auto">自動</string>
+    <string name="tls_mode_required">TLSを必須にする</string>
+    <string name="tls_mode_off">暗号化なしのみ</string>
+    <string name="tls_mode_auto_hint">まず暗号化なしのHTTPを試し、サーバーがTLSでしか応答しない場合はHTTPSに切り替えます(既定)。</string>
+    <string name="tls_mode_required_hint">HTTPSとWSSのみ。TLSのないサーバーは使用しません。</string>
+    <string name="tls_mode_off_hint">暗号化なしのHTTPとWSのみ。HTTPSは試しません。ネットワーク上の誰でも通信内容を読めます。</string>
+    <string name="tls_pin_label">サーバー証明書のフィンガープリント (SHA-256)</string>
+    <string name="tls_pin_hint">16進数64文字(コロンの有無は問いません)。設定すると、自己署名であっても、この証明書を持つサーバーだけが受け入れられます。</string>
+    <string name="tls_ca_label">信頼するCA証明書 (PEM)</string>
+    <string name="tls_ca_hint">フィンガープリントが未設定の場合、システムの証明書の代わりに使用されます。</string>
+    <string name="tls_save">セキュリティ設定を保存</string>
+    <string name="tls_saved">セキュリティ設定を保存しました。次回の接続から適用されます。</string>
+    <string name="tls_error_fingerprint">フィンガープリントは16進数64文字(SHA-256)である必要があります。</string>
+    <string name="tls_error_ca">このテキストは有効なPEM証明書ではありません。</string>
+    <string name="tls_warning_plain_remote">ローカルネットワーク外の %1$s への暗号化されていない接続です。経路上の誰でもセッションとそのトークンを読み取れます。TLSまたはVPNを使用してください。</string>
+    <string name="ble_error_unavailable">この端末にはBluetoothがありません。</string>
+    <string name="ble_error_off">Bluetoothがオフです。オンにしてもう一度お試しください。</string>
+    <string name="ble_error_permission">Bluetoothの権限が拒否されました。Androidの設定でこのアプリに「付近のデバイス」を許可してください。</string>
+    <string name="ble_error_location_off">位置情報サービスをオンにしてください。このバージョンのAndroidではBluetoothデバイスの検索に必要です。</string>
+    <string name="ble_error_invalid_address">デバイスのBluetoothアドレスが無効です。</string>
+    <string name="ble_error_scanner">Bluetoothスキャナーを利用できません。</string>
+    <string name="ble_error_scan_failed">Bluetoothの検索に失敗しました。</string>
+    <string name="ble_error_connect_failed">デバイスに接続できませんでした。</string>
+    <string name="ble_error_discovery_failed">デバイスのサービスを読み取れませんでした。</string>
+    <string name="ble_error_not_hydra">HYDRA-UMCデバイスではありません(HYDRAサービスがありません)。</string>
+    <string name="ble_error_characteristic">デバイスにHYDRA-UMCが必要な状態と命令の特性がありません。</string>
+    <string name="ble_error_notifications">デバイスの状態更新を有効にできませんでした。</string>
+    <string name="ble_error_write_failed">デバイスがコマンドを受け付けませんでした。</string>
+    <string name="ble_error_not_connected">Bluetoothで接続されていません。</string>
+    <string name="ble_error_too_large">メッセージがBluetoothには大きすぎます。</string>
+    <string name="ble_error_malformed">デバイスが破損したメッセージを送信しました。</string>
+    <string name="ble_error_gave_up">Bluetooth接続が切れ、復旧できませんでした。</string>
+    <string name="ble_error_with_status">%1$s (コード %2$d)</string>
+    <string name="bt_show_all_devices">すべてのBluetoothデバイスを表示</string>
+    <string name="bt_show_all_hint">オフ:HYDRA-UMCサービスを通知するデバイスのみ表示します。</string>
 </resources>

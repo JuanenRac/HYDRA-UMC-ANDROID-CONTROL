@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
 import kotlinx.coroutines.Dispatchers
 import com.hydraumc.control.network.HydraApiClient
+import com.hydraumc.control.network.HydraHttp
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -41,7 +42,7 @@ fun MjpegPlayer(url: String, modifier: Modifier = Modifier, authToken: String? =
     // The shared client identifies this app to the server (X-Hydra-Client) and,
     // unlike a bare OkHttpClient, gets a read timeout that is long enough for a
     // live stream but finite, so a stalled connection is noticed and retried.
-    val client = remember { HydraApiClient.sharedHttpClient.newBuilder().readTimeout(30, TimeUnit.SECONDS).build() }
+    val client = remember { HydraHttp.client().newBuilder().readTimeout(30, TimeUnit.SECONDS).build() }
 
     // On (API 28+), each frame is decoded straight into a GPU-resident
     // Bitmap.Config.HARDWARE buffer instead of a CPU ARGB_8888 one - the

@@ -1,6 +1,6 @@
 # HYDRA-UMC Android Control - Architecture
 
-**Status: Industrial console implementation, Wi-Fi transport fully working, Bluetooth transport still a stub.**
+**Status: Industrial console implementation, Wi-Fi transport fully working, Bluetooth LE (GATT) implemented against a simulated device only.**
 `app/src/` contains a Kotlin + Jetpack Compose console with biometric login, persistent state caching, atomic-command networking, a home-screen emergency-stop widget, and an embedded 3D viewer.
 
 ## 1. What this app is
@@ -39,13 +39,45 @@ no code shared between the three clients.
 - **Connection settings** (`ConnectionPrefs.kt`): DataStore-backed persistence of the manually entered IP/port, used
   by `SettingsScreen.kt` as a fallback when discovery doesn't find a server.
 
-## 3. Bluetooth transport (present in code, not usable end-to-end)
+## 3. Bluetooth transport (implemented, tested against a simulated GATT, not usable end-to-end yet)
 
-`HydraBleClient.kt` mirrors `HydraApiClient`/`HydraWebSocket`'s shape (connect/observe/send) but over Android's GATT
-APIs, backed by `BleDevice.kt` as the scan-result model. The Android-side transport includes robustness fixes,
-but `HYDRA_SERVICE_UUID`/`HYDRA_STATE_CHAR_UUID` are still
-placeholder values - there is no GATT server/protocol implemented on the CM5 side of HYDRA-UMC yet, so BLE cannot
-actually talk to a robot today regardless of how solid the Android-side client code is.
+The contract (service and characteristic UUIDs, message framing, connection sequence, permissions) is in
+[`BLE_CONTRACT.md`](BLE_CONTRACT.md). No HYDRA-UMC device implements the peripheral side yet, so this
+transport cannot talk to a robot today.
+
+- `BleContract.kt`: UUIDs, `BleFraming` (messages cut into frames that fit the MTU) and `BleReassembler`,
+  the error kinds (`BleErrorKind`, turned into text in the phone's language by `util/BleErrorText.kt`) and
+  the reconnect timing (`BleReconnectPolicy`).
+- `BleGatt.kt`: the three small interfaces (`BleGattConnector`, `BleGattLink`, `BleGattEvents`) between the
+  logic and the platform. `HydraBleClient.kt` is the logic: MTU, discovery, contract check, notifications,
+  reassembly, one framed write at a time, retry with growing delays, generation counter so events of a
+  closed link are ignored. `AndroidBleGatt.kt` is the only code that touches `BluetoothGatt`.
+- `BlePermissions.kt`: which permissions each Android version needs; the scan, the permission checks and
+  the scan filter (HYDRA service UUID, or everything with the "show all" switch) live in
+  `RobotViewModel.scanBluetooth()` / `connectBle()`.
+- The unit tests run the whole client against a fake link; `AndroidBleGatt.kt`, the scan and the
+  permission prompts have never run on a phone. Robot commands are not routed over BLE (see the contract).
+
+## 3b. TLS toward the server (optional, configurable)
+
+Settings > Security (`ui/SecuritySettings.kt`, `network/TlsSettings.kt`, `network/HydraHttp.kt`,
+`network/TlsPrefs.kt`):
+
+- **Mode**: *Automatic* (the default and the behaviour the app always had: plain HTTP first, HTTPS when only
+  HTTPS answers), *Require TLS* (HTTPS and WSS only, never a plain fallback) and *Plain only* (HTTPS is
+  never tried).
+- **Pinned fingerprint** (SHA-256 of the server certificate): only a server with exactly that certificate is
+  accepted, self-signed or not; the fingerprint is the identity, so the host name is not checked. An
+  expired pinned certificate is refused.
+- **Custom CA** (PEM): replaces the system certificates; host name checking stays. Used only without a pin.
+- Invalid input is never saved or applied. The settings are read when a client is created, so a change
+  applies to the next connection. `HydraHttp.client()` builds the OkHttp client for them and the REST client,
+  the WebSocket and the MJPEG player share it.
+- **Warning**: a session that is not encrypted to a host outside the local network (not private, loopback,
+  link-local, `.local`/`.lan`/single-label name) shows a red banner above every screen
+  (`TlsPolicy.isPlainRemote`).
+- Not covered: the embedded 3D view (a WebView) does not use these rules, so against a self-signed server it
+  needs the certificate installed on the phone; network discovery stays plain HTTP on the local /24 by design.
 
 ## 4. Other industrial features
 
@@ -108,7 +140,14 @@ app/src/main/java/com/hydraumc/control/
 ├── network/
 │   ├── HydraApiClient.kt        # REST client, atomic command support
 │   ├── HydraWebSocket.kt        # Live sync, echo-guard, reconnectJob-based auto-reconnect
-│   ├── HydraBleClient.kt        # GATT client mirroring the REST/WS client shape - UUIDs still placeholders
+│   ├── HydraBleClient.kt        # BLE logic: MTU, discovery, notifications, framed writes, retry (runs against a fake GATT in tests)
+│   ├── BleContract.kt           # UUIDs, framing/reassembly, error kinds, reconnect timing
+│   ├── BleGatt.kt               # GATT abstraction (connector, link, events)
+│   ├── AndroidBleGatt.kt        # BluetoothGatt implementation (never run on a phone)
+│   ├── BlePermissions.kt        # Permissions per Android version, scan result list
+│   ├── TlsSettings.kt           # TLS modes, fingerprint/CA validation, plain-remote warning rule
+│   ├── HydraHttp.kt             # OkHttp client with the pinned fingerprint or custom CA
+│   ├── TlsPrefs.kt              # DataStore persistence of the TLS settings
 │   ├── Discovery.kt             # Subnet scan + NSD listener for server discovery
 │   ├── StateCache.kt            # Persistent DataStore state storage (offline/cold-start view)
 │   ├── StopAllResult.kt         # Global STOP answer (per-robot result) and the status the banner shows

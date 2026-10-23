@@ -84,7 +84,7 @@ class HydraWebSocket(
      * WebSocket has no HTTP response of its own to detect TLS-only from. */
     private val useTls: Boolean = false,
     private val token: String? = null,
-    private val client: OkHttpClient = HydraApiClient.sharedHttpClient,
+    private val client: OkHttpClient = HydraHttp.client(),
     private val onStatus: (WsStatus) -> Unit,
     private val onSettings: (JSONObject) -> Unit,
     /**
