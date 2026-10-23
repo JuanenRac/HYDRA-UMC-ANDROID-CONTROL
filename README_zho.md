@@ -35,7 +35,7 @@
 |---|---|
 | 版本 | `0.7.1` |
 | 成熟度 | 可用 |
-| 测试 | 280 (`./gradlew testDebugUnitTest`) |
+| 测试 | 226 (`./gradlew testDebugUnitTest`) |
 | 技术栈 | Kotlin / Jetpack / biometric auth / WebSocket client |
 | 目标 | Android 手机或平板 |
 | 真实硬件 | 尚未：此版本没有在真实硬件上运行的记录 |

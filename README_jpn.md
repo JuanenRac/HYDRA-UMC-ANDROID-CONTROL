@@ -35,7 +35,7 @@ Wi-Fi または Bluetooth 経由で [HYDRA-UMC](https://github.com/JuanenRac/HYD
 |---|---|
 | バージョン | `0.7.1` |
 | 成熟度 | 機能する |
-| テスト | 280 (`./gradlew testDebugUnitTest`) |
+| テスト | 226 (`./gradlew testDebugUnitTest`) |
 | 技術 | Kotlin / Jetpack / biometric auth / WebSocket client |
 | 対象 | Android のスマートフォンまたはタブレット |
 | 実機での確認 | まだです：このバージョンについて実機での動作記録はありません |
