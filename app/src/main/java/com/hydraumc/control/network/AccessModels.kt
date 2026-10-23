@@ -13,6 +13,7 @@ package com.hydraumc.control.network
 
 import com.hydraumc.control.util.optStr
 import org.json.JSONObject
+import android.util.Base64
 import java.util.UUID
 
 /**
@@ -85,6 +86,25 @@ fun claimStanding(claim: ClaimInfo?, myUsername: String, myControllerId: String)
     claim.controllerId == null -> ClaimStanding.MINE_HERE
     else -> ClaimStanding.MINE_ELSEWHERE
 }
+
+/**
+ * The role the session token carries (`admin` or `operator`), or null when it cannot be read. The server
+ * checks the role again on every request; this only decides whether the take-over button is shown.
+ */
+fun jwtRole(token: String?): String? {
+    val parts = token?.split('.') ?: return null
+    if (parts.size < 2) return null
+    return try {
+        val payload = String(Base64.decode(parts[1], Base64.URL_SAFE or Base64.NO_PADDING or Base64.NO_WRAP), Charsets.UTF_8)
+        JSONObject(payload).optString("role").ifBlank { null }
+    } catch (_: Exception) {
+        null
+    }
+}
+
+/** Whether the take-over button applies: the session is an administrator's and someone else holds the robot. */
+fun canTakeOver(role: String?, standing: ClaimStanding): Boolean =
+    role == "admin" && (standing == ClaimStanding.OTHER || standing == ClaimStanding.MINE_ELSEWHERE)
 
 /** The size of a jog and the range of an absolute jog the server allows for one model. */
 data class JogLimits(val maxAmount: Double, val maxAbsolute: Double)

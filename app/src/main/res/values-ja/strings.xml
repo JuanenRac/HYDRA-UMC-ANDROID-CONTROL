@@ -233,6 +233,10 @@
     <string name="access_list_show">予約一覧</string>
     <string name="access_list_empty">予約されているロボットはありません。</string>
     <string name="access_list_item">%1$s：%2$s</string>
+    <string name="access_take_over">制御を引き継ぐ</string>
+    <string name="access_take_over_title">このロボットの制御を引き継ぎますか?</string>
+    <string name="access_take_over_message">このロボットは %1$s が予約しています。制御を引き継ぐとその予約は終了し、ロボットはあなたのために予約されます。</string>
+    <string name="access_take_over_confirm">制御を引き継ぐ</string>
     <string name="jog_arm">ジョグをアームする</string>
     <string name="jog_disarm">ジョグのアームを解除</string>
     <string name="jog_armed">ジョグ アーム中：残り %1$d 秒</string>

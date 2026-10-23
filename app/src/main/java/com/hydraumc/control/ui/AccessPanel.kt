@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -46,6 +47,8 @@ fun AccessPanel(viewModel: RobotViewModel, robotId: Int, nowMs: Long) {
     val busy = viewModel.accessBusy.value
     val safety = viewModel.safetyByRobot.value[robotId]
     var showList by remember { mutableStateOf(false) }
+    var confirmTakeOver by remember { mutableStateOf(false) }
+    val canTakeOver = viewModel.canTakeOver(robotId)
 
     Card(
         colors = CardDefaults.cardColors(containerColor = Color(0xFF0F172A)),
@@ -88,6 +91,13 @@ fun AccessPanel(viewModel: RobotViewModel, robotId: Int, nowMs: Long) {
                 ) { Text(stringResource(R.string.access_release)) }
                 TextButton(onClick = { showList = !showList }) { Text(stringResource(R.string.access_list_show)) }
             }
+            // Only for an administrator, only on a robot someone else holds, and never without asking first.
+            if (canTakeOver) {
+                Spacer(modifier = Modifier.height(4.dp))
+                OutlinedButton(onClick = { confirmTakeOver = true }, enabled = !busy) {
+                    Text(stringResource(R.string.access_take_over))
+                }
+            }
 
             if (showList) {
                 val all = viewModel.claims.value
@@ -122,5 +132,22 @@ fun AccessPanel(viewModel: RobotViewModel, robotId: Int, nowMs: Long) {
                 }
             }
         }
+    }
+
+    if (confirmTakeOver && canTakeOver) {
+        AlertDialog(
+            onDismissRequest = { confirmTakeOver = false },
+            title = { Text(stringResource(R.string.access_take_over_title)) },
+            text = { Text(stringResource(R.string.access_take_over_message, claim?.ownerUsername ?: "")) },
+            confirmButton = {
+                Button(onClick = {
+                    confirmTakeOver = false
+                    viewModel.takeOverSelectedRobot()
+                }) { Text(stringResource(R.string.access_take_over_confirm)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmTakeOver = false }) { Text(stringResource(R.string.cancel_button)) }
+            },
+        )
     }
 }

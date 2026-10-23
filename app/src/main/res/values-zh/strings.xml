@@ -233,6 +233,10 @@
     <string name="access_list_show">预留列表</string>
     <string name="access_list_empty">没有机器人被预留。</string>
     <string name="access_list_item">%1$s：%2$s</string>
+    <string name="access_take_over">接管控制</string>
+    <string name="access_take_over_title">接管该机器人的控制？</string>
+    <string name="access_take_over_message">%1$s 持有该机器人。接管控制将结束其预约，并为您预约该机器人。</string>
+    <string name="access_take_over_confirm">接管控制</string>
     <string name="jog_arm">解锁点动</string>
     <string name="jog_disarm">锁定点动</string>
     <string name="jog_armed">点动已解锁：剩余 %1$d 秒</string>

@@ -233,6 +233,10 @@
     <string name="access_list_show">Reservierungen</string>
     <string name="access_list_empty">Kein Roboter ist reserviert.</string>
     <string name="access_list_item">%1$s: %2$s</string>
+    <string name="access_take_over">Steuerung übernehmen</string>
+    <string name="access_take_over_title">Steuerung des Roboters übernehmen?</string>
+    <string name="access_take_over_message">%1$s hat diesen Roboter reserviert. Wenn Sie die Steuerung übernehmen, endet seine Reservierung und der Roboter wird für Sie reserviert.</string>
+    <string name="access_take_over_confirm">Steuerung übernehmen</string>
     <string name="jog_arm">Jog scharfschalten</string>
     <string name="jog_disarm">Jog entschärfen</string>
     <string name="jog_armed">Jog scharf: noch %1$d s</string>

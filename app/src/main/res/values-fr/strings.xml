@@ -233,6 +233,10 @@
     <string name="access_list_show">Réservations</string>
     <string name="access_list_empty">Aucun robot n\'est réservé.</string>
     <string name="access_list_item">%1$s : %2$s</string>
+    <string name="access_take_over">Prendre le contrôle</string>
+    <string name="access_take_over_title">Prendre le contrôle du robot ?</string>
+    <string name="access_take_over_message">%1$s détient ce robot. Prendre le contrôle met fin à sa réservation et réserve le robot pour vous.</string>
+    <string name="access_take_over_confirm">Prendre le contrôle</string>
     <string name="jog_arm">Armer le jog</string>
     <string name="jog_disarm">Désarmer le jog</string>
     <string name="jog_armed">Jog armé : %1$d s restantes</string>

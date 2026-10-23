@@ -25,6 +25,7 @@ import com.hydraumc.control.network.ClaimStanding
 import com.hydraumc.control.network.RobotSafety
 import com.hydraumc.control.network.SessionController
 import com.hydraumc.control.network.claimStanding
+import com.hydraumc.control.network.jwtRole
 import com.hydraumc.control.network.jogLimitExceeded
 import com.hydraumc.control.network.ConnectionPrefs
 import com.hydraumc.control.network.HydraApiClient
@@ -1558,6 +1559,21 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
 
     /** Reserves the selected robot for this account on this installation. */
     fun claimSelectedRobot() = runAccessRequest("claim") { client, robotId -> client.postClaim(robotId) }
+
+    /** Whether this session is an administrator's (the role in its token; the server checks it again). */
+    fun isAdmin(): Boolean = jwtRole(authTokenState.value) == "admin"
+
+    /** Whether the take-over button applies to [robotId]: an administrator, and someone else holds it. */
+    fun canTakeOver(robotId: Int?): Boolean = com.hydraumc.control.network.canTakeOver(jwtRole(authTokenState.value), claimStandingOf(robotId))
+
+    /**
+     * Takes the selected robot over from whoever holds it (`force: true`; the server accepts it from administrators
+     * only). The screen asks the operator to confirm first.
+     */
+    fun takeOverSelectedRobot() = runAccessRequest("claim") { client, robotId ->
+        if (!canTakeOver(robotId)) throw IllegalStateException("take-over is for administrators, on a robot someone else holds")
+        client.postClaim(robotId, force = true)
+    }
 
     /** Releases the selected robot reservation. Also ends the arming of its jog, as the server does. */
     fun releaseSelectedRobot() = runAccessRequest("release") { client, robotId ->

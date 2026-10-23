@@ -116,4 +116,30 @@ class AccessModelsTest {
     fun `without known limits the server decides`() {
         assertNull(jogLimitExceeded(10_000.0, null))
     }
+
+    private fun token(payload: String): String {
+        fun part(json: String) = android.util.Base64.encodeToString(json.toByteArray(), android.util.Base64.URL_SAFE or android.util.Base64.NO_PADDING or android.util.Base64.NO_WRAP)
+        return part("""{"alg":"HS256"}""") + "." + part(payload) + ".sig"
+    }
+
+    @Test
+    fun `the role is read from the token and a damaged token gives none`() {
+        assertEquals("admin", jwtRole(token("""{"role":"admin"}""")))
+        assertEquals("operator", jwtRole(token("""{"role":"operator"}""")))
+        assertNull(jwtRole(token("""{"username":"ana"}""")))
+        assertNull(jwtRole("not-a-token"))
+        assertNull(jwtRole("a.%%%.c"))
+        assertNull(jwtRole(null))
+        assertNull(jwtRole(""))
+    }
+
+    @Test
+    fun `the take-over applies to an administrator on a robot someone else holds`() {
+        assertTrue(canTakeOver("admin", ClaimStanding.OTHER))
+        assertTrue(canTakeOver("admin", ClaimStanding.MINE_ELSEWHERE))
+        assertFalse(canTakeOver("admin", ClaimStanding.FREE))
+        assertFalse(canTakeOver("admin", ClaimStanding.MINE_HERE))
+        assertFalse(canTakeOver("operator", ClaimStanding.OTHER))
+        assertFalse(canTakeOver(null, ClaimStanding.OTHER))
+    }
 }

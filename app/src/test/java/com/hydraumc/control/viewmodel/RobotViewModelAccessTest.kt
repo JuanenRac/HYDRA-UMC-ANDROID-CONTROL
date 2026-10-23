@@ -223,4 +223,52 @@ class RobotViewModelAccessTest {
         viewModel.claims.value = listOf(com.hydraumc.control.network.ClaimInfo(1, "A1", "bob", "x", 1))
         assertEquals(ClaimStanding.OTHER, viewModel.claimStandingOf(1))
     }
+
+    private fun tokenWithRole(role: String): String {
+        fun part(json: String) = android.util.Base64.encodeToString(json.toByteArray(), android.util.Base64.URL_SAFE or android.util.Base64.NO_PADDING or android.util.Base64.NO_WRAP)
+        return part("""{"alg":"HS256"}""") + "." + part("""{"username":"ana","role":"$role"}""") + ".sig"
+    }
+
+    @Test
+    fun `an administrator can take over a robot someone else holds, and the request carries force`() {
+        val viewModel = newViewModel()
+        viewModel.authTokenState.value = tokenWithRole("admin")
+        viewModel.loginUsername.value = "ana"
+        viewModel.claims.value = listOf(com.hydraumc.control.network.ClaimInfo(1, "A1", "bob", "x", 1))
+        assertTrue(viewModel.isAdmin())
+        assertTrue(viewModel.canTakeOver(1))
+
+        viewModel.takeOverSelectedRobot()
+        waitUntil { requestsTo("/claim").isNotEmpty() }
+
+        val sent = requestsTo("/claim").first()
+        val body = JSONObject(bodies[sent.index])
+        assertTrue(body.getBoolean("force"))
+        assertEquals(SessionController.id, body.getString("controllerId"))
+    }
+
+    @Test
+    fun `an operator never gets the take-over and nothing is sent if it is asked for anyway`() {
+        val viewModel = newViewModel()
+        viewModel.authTokenState.value = tokenWithRole("operator")
+        viewModel.loginUsername.value = "ana"
+        viewModel.claims.value = listOf(com.hydraumc.control.network.ClaimInfo(1, "A1", "bob", "x", 1))
+        assertFalse(viewModel.isAdmin())
+        assertFalse(viewModel.canTakeOver(1))
+
+        viewModel.takeOverSelectedRobot()
+        Thread.sleep(300)
+
+        assertTrue(requestsTo("/claim").isEmpty())
+    }
+
+    @Test
+    fun `an administrator has no take-over on a free robot or on one reserved here`() {
+        val viewModel = newViewModel()
+        viewModel.authTokenState.value = tokenWithRole("admin")
+        viewModel.loginUsername.value = "ana"
+        assertFalse(viewModel.canTakeOver(1))
+        viewModel.claims.value = listOf(com.hydraumc.control.network.ClaimInfo(1, "A1", "ana", SessionController.id, 1))
+        assertFalse(viewModel.canTakeOver(1))
+    }
 }
