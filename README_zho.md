@@ -144,79 +144,97 @@ HYDRA-UMC-ANDROID-CONTROL/
 ├── app/
 │   ├── build.gradle.kts          # 应用模块 Gradle 配置——AGP/Kotlin/Compose 版本、依赖、debug 签名的 release 构建类型
 │   ├── version.properties        # versionMajor/Minor/Patch/Code (仅由显式 `bump` 命令递增)
+│   ├── lint.xml                  # Android lint 设置
 │   ├── proguard-rules.pro        # release 构建的代码压缩/混淆规则
-│   └── src/main/
-│       ├── AndroidManifest.xml   # 权限、activity/receiver 声明、usesCleartextTraffic（局域网服务器使用纯 HTTP，除非在服务器上启用 TLS；每次调用都需要登录令牌）
-│       ├── java/com/hydraumc/control/
-│       │   ├── MainActivity.kt          # 入口点——启动画面、登录/主界面门禁、冷启动安全的全局紧急停止处理
-│       │   ├── MainScreen.kt            # 底部导航脚手架、顶部栏（服务器选择器、资料、遥测、设置）
-│       │   ├── kinematics/
-│       │   │   └── Parol6Kinematics.kt   # Parol6 专用的正/逆运动学
-│       │   ├── model/
-│       │   │   ├── BleDevice.kt          # 蓝牙 LE 扫描结果数据类
-│       │   │   └── HydraState.kt         # settings.json 逐字段镜像（RobotView/ControllerView/JobView）+ ServerInfo 发现模型
-│       │   ├── network/
-│       │   │   ├── AuthPrefs.kt           # 加密（AES256-GCM）凭证/会话存储
-│       │   │   ├── ConnectionPrefs.kt     # 持久化的服务器 IP/端口（DataStore Preferences）
-│       │   │   ├── Discovery.kt           # 并发 /24 子网扫描（主要）+ NSD/mDNS 监听器（次要），用于在局域网中查找服务器
-│       │   │   ├── AccessModels.kt         # 控制器 ID、预留、安全限值与点动检查（纯规则）
-│       │   │   ├── HydraApiClient.kt      # REST 客户端——登录、设置读写、原子化机器人指令、系统指标
-│       │   │   ├── HydraBleClient.kt      # 蓝牙 GATT 客户端，Wi-Fi 之外的替代传输方式
-│       │   │   ├── BleContract.kt / BleGatt.kt / AndroidBleGatt.kt   # BLE 约定、GATT 抽象及其 Android 实现
-│       │   │   ├── TlsSettings.kt / HydraHttp.kt / TlsPrefs.kt      # 可选 TLS：模式、固定指纹、自定义 CA、存储
-│       │   │   ├── HydraWebSocket.kt      # 通过 WS 进行实时状态增量推送、重连处理
-│       │   │   ├── StateCache.kt          # 最后已知状态缓存（DataStore），用于离线仪表盘查看
-│       │   │   └── StopAllResult.kt       # 全局 STOP 的结果（每台机器人的应答、状态）
-│       │   ├── ui/
-│       │   │   ├── AboutDialog.kt          # 应用/版本信息对话框
-│       │   │   ├── AccessPanel.kt          # Control 屏幕的预留与点动解锁面板
-│       │   │   ├── AuditDialog.kt           # 服务器的审计记录(管理员)及链校验
-│       │   │   ├── CameraScreen.kt         # 每机器人 MJPEG 摄像头画面 + 视觉开关
-│       │   │   ├── ControlScreen.kt        # 手动点动控制、带长按保护的紧急停止/播放/暂停/停止
-│       │   │   ├── DashboardScreen.kt      # 3D 轮播机器人选择器 + 系统健康状态 + 模块矩阵
-│       │   │   ├── GlobalStop.kt           # 全局 STOP 按钮和结果横幅（一次点击,所有机器人）
-│       │   │   ├── Joystick3D.kt           # 可复用的双轴摇杆控件
-│       │   │   ├── LoginScreen.kt          # 用户名/密码 + IP/端口输入，生物识别登录
-│       │   │   ├── MjpegPlayer.kt          # MJPEG 流解析器 + Canvas 渲染器
-│       │   │   ├── PlaybackConsole.kt      # 共享的悬浮式停止/播放/暂停/停止控制台
-│       │   │   ├── SettingsScreen.kt       # Wi-Fi/蓝牙扫描界面、连接设置
-│       │   │   ├── SplashScreen.kt         # 自定义 Compose 启动画面
-│       │   │   ├── TelemetryScreen.kt      # 终端风格的事件/同步日志查看器
-│       │   │   ├── ThreeDScreen.kt         # 真实 3D 视口——通过 WebView 嵌入 STUDIO 自身的无头式 3D 场景
-│       │   │   ├── UserProfileDialog.kt    # 资料编辑 + 生物识别开关对话框
-│       │   │   ├── VoiceAssistantDialog.kt # 应用内麦克风/文本按钮,连接 HYDRA-UMC-VOICE-UI
-│       │   │   └── theme/
-│       │   │       ├── Color.kt, Theme.kt, Typography.kt   # Material 3 配色方案、主题包装器、字体比例
-│       │   │       └── HydraButton.kt, IndustrialComponents.kt, IndustrialStyle.kt   # 共享的工业风 UI 构建组件
-│       │   ├── update/
-│       │   │   ├── GitHubReleaseUpdater.kt   # 安全的 GitHub Release 更新客户端
-│       │   │   ├── ReleaseMetadataParser.kt  # 安全的 GitHub Release 元数据解析器
-│       │   │   └── SemanticVersion.kt        # 用于更新的严格语义化版本解析器
-│       │   ├── util/
-│       │   │   ├── BiometricHelper.kt      # androidx.biometric 提示包装器
-│       │   │   ├── NotificationHelper.kt   # 作业完成/安全推送通知
-│       │   │   └── NotificationPrefs.kt    # 应用内通知开关的持久化存储
-│       │   ├── viewmodel/
-│       │   │   ├── AppUpdateViewModel.kt   # 感知生命周期的应用更新状态
-│       │   │   └── RobotViewModel.kt   # 共享 ViewModel——网络、认证、发现、原子指令分发、所有 UI 状态
-│       │   ├── wear/
-│       │   │   ├── BoundedRequestScope.kt     # 按 requestId 管理的进行中任务作用域；被取代的尝试会被取消，服务销毁时 cancelAll()
-│       │   │   ├── WatchCompanionProtocol.kt    # 手表伴生设备版本状态通信契约
-│       │   │   ├── WatchVoiceRelayContract.kt   # 已认证的手表语音中继通信契约
-│       │   │   └── WatchVoiceRelayService.kt    # Wear OS 语音中继服务
-│       │   └── widget/
-│       │       └── GlobalStopWidget.kt # 实现全局紧急停止的主屏幕小组件
-│       └── res/
-│           ├── drawable/, layout/, mipmap*/, xml/   # 图标、小组件布局、启动器图标、备份/数据提取规则
-│           └── values/, values-es/, values-de/, values-fr/, values-it/, values-zh/, values-ja/, values-pt/   # 8 种语言的字符串、颜色、主题
+│   ├── src/main/
+│   │   ├── AndroidManifest.xml   # 权限、activity/receiver 声明、usesCleartextTraffic（局域网服务器使用纯 HTTP，除非在服务器上启用 TLS；每次调用都需要登录令牌）
+│   │   ├── java/com/hydraumc/control/
+│   │   │   ├── MainActivity.kt          # 入口点——启动画面、登录/主界面门禁、冷启动安全的全局紧急停止处理
+│   │   │   ├── MainScreen.kt            # 底部导航脚手架、顶部栏（服务器选择器、资料、遥测、设置）
+│   │   │   ├── kinematics/
+│   │   │   │   └── Parol6Kinematics.kt   # Parol6 专用的正/逆运动学
+│   │   │   ├── model/
+│   │   │   │   ├── BleDevice.kt          # 蓝牙 LE 扫描结果数据类
+│   │   │   │   └── HydraState.kt         # settings.json 逐字段镜像（RobotView/ControllerView/JobView）+ ServerInfo 发现模型
+│   │   │   ├── network/
+│   │   │   │   ├── AuthPrefs.kt           # 加密（AES256-GCM）凭证/会话存储
+│   │   │   │   ├── ConnectionPrefs.kt     # 持久化的服务器 IP/端口（DataStore Preferences）
+│   │   │   │   ├── Discovery.kt           # 并发 /24 子网扫描（主要）+ NSD/mDNS 监听器（次要），用于在局域网中查找服务器
+│   │   │   │   ├── AccessModels.kt         # 控制器 ID、预留、安全限值与点动检查（纯规则）
+│   │   │   │   ├── HydraApiClient.kt      # REST 客户端——登录、设置读写、原子化机器人指令、系统指标
+│   │   │   │   ├── HydraBleClient.kt      # 蓝牙 GATT 客户端，Wi-Fi 之外的替代传输方式
+│   │   │   │   ├── BleContract.kt / BleGatt.kt / AndroidBleGatt.kt   # BLE 约定、GATT 抽象及其 Android 实现
+│   │   │   │   ├── TlsSettings.kt / HydraHttp.kt / TlsPrefs.kt      # 可选 TLS：模式、固定指纹、自定义 CA、存储
+│   │   │   │   ├── HydraWebSocket.kt      # 通过 WS 进行实时状态增量推送、重连处理
+│   │   │   │   ├── StateCache.kt          # 最后已知状态缓存（DataStore），用于离线仪表盘查看
+│   │   │   │   ├── StopAllResult.kt       # 全局 STOP 的结果（每台机器人的应答、状态）
+│   │   │   │   ├── ContractV2.kt          # 服务器的第二份契约,以纯规则表达: 按机器人修订号的条件写入、工作台的原子移动和审计记录
+│   │   │   │   ├── BleCommands.kt         # 经蓝牙 LE 发送的一条机器人命令及其确认 (见 docs/BLE_CONTRACT.md)
+│   │   │   │   └── BlePermissions.kt      # 各 Android 版本上蓝牙 LE 所需的运行时权限
+│   │   │   ├── ui/
+│   │   │   │   ├── AboutDialog.kt          # 应用/版本信息对话框
+│   │   │   │   ├── AccessPanel.kt          # Control 屏幕的预留与点动解锁面板
+│   │   │   │   ├── AuditDialog.kt           # 服务器的审计记录(管理员)及链校验
+│   │   │   │   ├── CameraScreen.kt         # 每机器人 MJPEG 摄像头画面 + 视觉开关
+│   │   │   │   ├── ControlScreen.kt        # 手动点动控制、带长按保护的紧急停止/播放/暂停/停止
+│   │   │   │   ├── DashboardScreen.kt      # 3D 轮播机器人选择器 + 系统健康状态 + 模块矩阵
+│   │   │   │   ├── GlobalStop.kt           # 全局 STOP 按钮和结果横幅（一次点击,所有机器人）
+│   │   │   │   ├── Joystick3D.kt           # 可复用的双轴摇杆控件
+│   │   │   │   ├── LoginScreen.kt          # 用户名/密码 + IP/端口输入，生物识别登录
+│   │   │   │   ├── MjpegPlayer.kt          # MJPEG 流解析器 + Canvas 渲染器
+│   │   │   │   ├── PlaybackConsole.kt      # 共享的悬浮式停止/播放/暂停/停止控制台
+│   │   │   │   ├── SettingsScreen.kt       # Wi-Fi/蓝牙扫描界面、连接设置
+│   │   │   │   ├── SplashScreen.kt         # 自定义 Compose 启动画面
+│   │   │   │   ├── TelemetryScreen.kt      # 终端风格的事件/同步日志查看器
+│   │   │   │   ├── ThreeDScreen.kt         # 真实 3D 视口——通过 WebView 嵌入 STUDIO 自身的无头式 3D 场景
+│   │   │   │   ├── UserProfileDialog.kt    # 资料编辑 + 生物识别开关对话框
+│   │   │   │   ├── VoiceAssistantDialog.kt # 应用内麦克风/文本按钮,连接 HYDRA-UMC-VOICE-UI
+│   │   │   │   ├── theme/
+│   │   │   │   │   ├── Color.kt, Theme.kt, Typography.kt   # Material 3 配色方案、主题包装器、字体比例
+│   │   │   │   │   └── HydraButton.kt, IndustrialComponents.kt, IndustrialStyle.kt   # 共享的工业风 UI 构建组件
+│   │   │   │   └── SecuritySettings.kt                                           # 设置 > 安全: 可选且可配置的 TLS (模式、固定指纹、CA)
+│   │   │   ├── update/
+│   │   │   │   ├── GitHubReleaseUpdater.kt   # 安全的 GitHub Release 更新客户端
+│   │   │   │   ├── ReleaseMetadataParser.kt  # 安全的 GitHub Release 元数据解析器
+│   │   │   │   └── SemanticVersion.kt        # 用于更新的严格语义化版本解析器
+│   │   │   ├── util/
+│   │   │   │   ├── BiometricHelper.kt      # androidx.biometric 提示包装器
+│   │   │   │   ├── NotificationHelper.kt   # 作业完成/安全推送通知
+│   │   │   │   ├── NotificationPrefs.kt    # 应用内通知开关的持久化存储
+│   │   │   │   ├── BleErrorText.kt         # 蓝牙错误的文字,使用手机的语言
+│   │   │   │   ├── JsonText.kt             # 按界面的本意读取文本字段 (JSON 的 null 不是文字 "null")
+│   │   │   │   ├── OptimisticRollback.kt   # 对乐观编辑按字段撤销
+│   │   │   │   ├── PlayConfirmation.kt     # PLAY 何时先询问: 轨迹开始前确认的规则
+│   │   │   │   ├── RenewalBudget.kt        # 应用可自行续期会话的频率 (最小间隔与每个窗口的上限)
+│   │   │   │   ├── StaleData.kt            # 屏幕上的机器人数据是缓存副本而非实时读数的情形
+│   │   │   │   └── ViewerUrl.kt            # 内嵌 3D 查看器的地址: 访问令牌放在从不发送给服务器的片段中
+│   │   │   ├── viewmodel/
+│   │   │   │   ├── AppUpdateViewModel.kt   # 感知生命周期的应用更新状态
+│   │   │   │   └── RobotViewModel.kt   # 共享 ViewModel——网络、认证、发现、原子指令分发、所有 UI 状态
+│   │   │   ├── wear/
+│   │   │   │   ├── BoundedRequestScope.kt     # 按 requestId 管理的进行中任务作用域；被取代的尝试会被取消，服务销毁时 cancelAll()
+│   │   │   │   ├── WatchCompanionProtocol.kt    # 手表伴生设备版本状态通信契约
+│   │   │   │   ├── WatchVoiceRelayContract.kt   # 已认证的手表语音中继通信契约
+│   │   │   │   └── WatchVoiceRelayService.kt    # Wear OS 语音中继服务
+│   │   │   └── widget/
+│   │   │       └── GlobalStopWidget.kt # 实现全局紧急停止的主屏幕小组件
+│   │   └── res/
+│   │       ├── drawable/, layout/, mipmap*/, xml/   # 图标、小组件布局、启动器图标、备份/数据提取规则
+│   │       └── values/, values-es/, values-de/, values-fr/, values-it/, values-ja/, values-zh/, values-pt/   # Strings in 8 languages, colors, theme
+│   └── src/test/             # 纯规则的 JVM 单元测试: 运动学、访问、契约 v2、BLE 分帧与命令、TLS、更新器和辅助模块
 ├── docs/
 │   ├── ARCHITECTURE.md              # 设计/架构说明
 │   ├── GITHUB_RELEASE_UPDATES.md    # 应用内更新检查/下载/安装流程
-│   └── WATCH_VOICE_RELAY.md         # 手表-手机-服务器语音中继契约
+│   ├── WATCH_VOICE_RELAY.md         # 手表-手机-服务器语音中继契约
+│   └── BLE_CONTRACT.md              # 应用如何通过蓝牙低功耗 (GATT) 与 HYDRA-UMC 设备通信: 服务、特征、分帧
 ├── images/                       # README 横幅 + 启动画面源资产
 ├── tools/
 │   ├── build_test.py             # 不递增版本号的构建/编译检查
-│   └── ci_validate.py            # CI 使用的 manifest/CHANGELOG/docs 校验
+│   ├── ci_validate.py            # CI 使用的 manifest/CHANGELOG/docs 校验
+│   ├── test_publish_script.py    # 检查 publish-github-release.sh 绝不把 GitHub 令牌放在命令行上
+│   ├── _doc_policy.py            # 家族共享的文档规则 (HYDRA-UMC-SDK 的副本,保持同步)
+│   ├── _readme_parity.py         # 检查八个 README 结构一致 (HYDRA-UMC-SDK 的副本,保持同步)
+│   └── hydra_project_tool.py     # 每个仓库相同的命令: validate、test、ci、version、status、bump
 ├── dist/                         # 已签名发布 APK 输出（已被 gitignore）
 ├── build-android.bat / .sh       # 一键构建 + adb 安装便捷脚本
 ├── build-test.bat / .sh          # 不递增版本号的构建/编译检查

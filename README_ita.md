@@ -144,79 +144,97 @@ HYDRA-UMC-ANDROID-CONTROL/
 ├── app/
 │   ├── build.gradle.kts          # Configurazione Gradle del modulo app - versioni AGP/Kotlin/Compose, dipendenze, tipo di build release firmato con la chiave di debug
 │   ├── version.properties        # versionMajor/Minor/Patch/Code (incrementato solo dal comando `bump` esplicito)
+│   ├── lint.xml                  # Impostazioni del lint Android
 │   ├── proguard-rules.pro        # Regole di riduzione/offuscamento del codice per il build di release
-│   └── src/main/
-│       ├── AndroidManifest.xml   # Permessi, dichiarazioni activity/receiver, usesCleartextTraffic (il server LAN parla HTTP semplice salvo che vi sia attivato TLS; ogni chiamata richiede un token di accesso)
-│       ├── java/com/hydraumc/control/
-│       │   ├── MainActivity.kt          # Punto di ingresso - splash, gating login/schermata principale, gestione dell'E-STOP globale sicura in avvio a freddo
-│       │   ├── MainScreen.kt            # Struttura di navigazione inferiore, top bar (selettore server, profilo, telemetria, impostazioni)
-│       │   ├── kinematics/
-│       │   │   └── Parol6Kinematics.kt   # Cinematica diretta/inversa specifica del Parol6
-│       │   ├── model/
-│       │   │   ├── BleDevice.kt          # Data class per il risultato della scansione Bluetooth LE
-│       │   │   └── HydraState.kt         # Specchio campo per campo di settings.json (RobotView/ControllerView/JobView) + modello di discovery ServerInfo
-│       │   ├── network/
-│       │   │   ├── AuthPrefs.kt           # Archiviazione cifrata (AES256-GCM) di credenziali/sessione
-│       │   │   ├── ConnectionPrefs.kt     # IP/porta del server persistiti (DataStore Preferences)
-│       │   │   ├── Discovery.kt           # Scansione concorrente della sottorete /24 (primaria) + listener NSD/mDNS (secondario) per trovare un server sulla LAN
-│       │   │   ├── AccessModels.kt         # Identificativo di controller, prenotazioni, limiti di sicurezza e controllo del jog (regole pure)
-│       │   │   ├── HydraApiClient.kt      # Client REST - login, lettura/scrittura impostazioni, comandi atomici robot, metriche di sistema
-│       │   │   ├── HydraBleClient.kt      # Client GATT Bluetooth, trasporto alternativo al Wi-Fi
-│       │   │   ├── BleContract.kt / BleGatt.kt / AndroidBleGatt.kt   # Contratto BLE, astrazione GATT e sua implementazione Android
-│       │   │   ├── TlsSettings.kt / HydraHttp.kt / TlsPrefs.kt      # TLS opzionale: modalità, impronta fissata, CA propria, archiviazione
-│       │   │   ├── HydraWebSocket.kt      # Invio live dei delta di stato via WS, gestione riconnessione
-│       │   │   ├── StateCache.kt          # Cache dell'ultimo stato noto (DataStore) per la visualizzazione della dashboard offline
-│       │   │   └── StopAllResult.kt       # Risultato dello STOP globale (risposta per robot, stato)
-│       │   ├── ui/
-│       │   │   ├── AboutDialog.kt          # Dialogo con info app/versione
-│       │   │   ├── AccessPanel.kt          # Pannello di prenotazione e armamento del jog della schermata Control
-│       │   │   ├── AuditDialog.kt           # Registro di audit del server (amministratori), con la verifica della catena
-│       │   │   ├── CameraScreen.kt         # Feed camera MJPEG per robot + interruttore visione on/off
-│       │   │   ├── ControlScreen.kt        # Controlli jog manuali, E-STOP/play/pause/stop con protezione da pressione prolungata
-│       │   │   ├── DashboardScreen.kt      # Selettore robot a carosello 3D + salute del sistema + matrice dei moduli
-│       │   │   ├── GlobalStop.kt           # Pulsante STOP globale + avviso del risultato (un tocco, tutti i robot)
-│       │   │   ├── Joystick3D.kt           # Componente joystick riutilizzabile a 2 assi
-│       │   │   ├── LoginScreen.kt          # Inserimento username/password + IP/porta, login biometrico
-│       │   │   ├── MjpegPlayer.kt          # Parser dello stream MJPEG + renderer Canvas
-│       │   │   ├── PlaybackConsole.kt      # Console flottante condivisa di STOP/play/pause/stop
-│       │   │   ├── SettingsScreen.kt       # UI di scansione Wi-Fi/Bluetooth, impostazioni di connessione
-│       │   │   ├── SplashScreen.kt         # Schermata di avvio Compose personalizzata
-│       │   │   ├── TelemetryScreen.kt      # Visualizzatore di log eventi/sincronizzazione in stile terminale
-│       │   │   ├── ThreeDScreen.kt         # Viewport 3D reale - WebView che incorpora la scena 3D headless propria di STUDIO
-│       │   │   ├── UserProfileDialog.kt    # Dialogo di modifica profilo + interruttore biometrico
-│       │   │   ├── VoiceAssistantDialog.kt # Pulsante microfono/testo in-app verso HYDRA-UMC-VOICE-UI
-│       │   │   └── theme/
-│       │   │       ├── Color.kt, Theme.kt, Typography.kt   # Schema colori Material 3, wrapper del tema, scala tipografica
-│       │   │       └── HydraButton.kt, IndustrialComponents.kt, IndustrialStyle.kt   # Blocchi UI condivisi con stile industriale
-│       │   ├── update/
-│       │   │   ├── GitHubReleaseUpdater.kt   # Client sicuro di aggiornamento tramite GitHub Release
-│       │   │   ├── ReleaseMetadataParser.kt  # Parser sicuro dei metadati di GitHub Release
-│       │   │   └── SemanticVersion.kt        # Parser rigoroso della versione semantica per gli aggiornamenti
-│       │   ├── util/
-│       │   │   ├── BiometricHelper.kt      # Wrapper del prompt di androidx.biometric
-│       │   │   ├── NotificationHelper.kt   # Notifiche push di lavoro completato/sicurezza
-│       │   │   └── NotificationPrefs.kt    # Archiviazione persistente dell'interruttore delle notifiche in-app
-│       │   ├── viewmodel/
-│       │   │   ├── AppUpdateViewModel.kt   # Stato di aggiornamento dell'app consapevole del ciclo di vita
-│       │   │   └── RobotViewModel.kt   # ViewModel condiviso - rete, autenticazione, discovery, dispatch dei comandi atomici, tutto lo stato UI
-│       │   ├── wear/
-│       │   │   ├── BoundedRequestScope.kt     # Ambito dei job in corso per requestId; un tentativo sostituito viene annullato, cancelAll() alla distruzione del servizio
-│       │   │   ├── WatchCompanionProtocol.kt    # Contratto wire dello stato versione del Watch companion
-│       │   │   ├── WatchVoiceRelayContract.kt   # Contratto wire autenticato del relay vocale del Watch
-│       │   │   └── WatchVoiceRelayService.kt    # Servizio relay vocale per Wear OS
-│       │   └── widget/
-│       │       └── GlobalStopWidget.kt # Widget della schermata home per un E-STOP globale
-│       └── res/
-│           ├── drawable/, layout/, mipmap*/, xml/   # Icone, layout del widget, icone del launcher, regole di backup/estrazione dati
-│           └── values/, values-es/, values-de/, values-fr/, values-it/, values-ja/, values-zh/, values-pt/   # Stringhe in 8 lingue, colori, tema
+│   ├── src/main/
+│   │   ├── AndroidManifest.xml   # Permessi, dichiarazioni activity/receiver, usesCleartextTraffic (il server LAN parla HTTP semplice salvo che vi sia attivato TLS; ogni chiamata richiede un token di accesso)
+│   │   ├── java/com/hydraumc/control/
+│   │   │   ├── MainActivity.kt          # Punto di ingresso - splash, gating login/schermata principale, gestione dell'E-STOP globale sicura in avvio a freddo
+│   │   │   ├── MainScreen.kt            # Struttura di navigazione inferiore, top bar (selettore server, profilo, telemetria, impostazioni)
+│   │   │   ├── kinematics/
+│   │   │   │   └── Parol6Kinematics.kt   # Cinematica diretta/inversa specifica del Parol6
+│   │   │   ├── model/
+│   │   │   │   ├── BleDevice.kt          # Data class per il risultato della scansione Bluetooth LE
+│   │   │   │   └── HydraState.kt         # Specchio campo per campo di settings.json (RobotView/ControllerView/JobView) + modello di discovery ServerInfo
+│   │   │   ├── network/
+│   │   │   │   ├── AuthPrefs.kt           # Archiviazione cifrata (AES256-GCM) di credenziali/sessione
+│   │   │   │   ├── ConnectionPrefs.kt     # IP/porta del server persistiti (DataStore Preferences)
+│   │   │   │   ├── Discovery.kt           # Scansione concorrente della sottorete /24 (primaria) + listener NSD/mDNS (secondario) per trovare un server sulla LAN
+│   │   │   │   ├── AccessModels.kt         # Identificativo di controller, prenotazioni, limiti di sicurezza e controllo del jog (regole pure)
+│   │   │   │   ├── HydraApiClient.kt      # Client REST - login, lettura/scrittura impostazioni, comandi atomici robot, metriche di sistema
+│   │   │   │   ├── HydraBleClient.kt      # Client GATT Bluetooth, trasporto alternativo al Wi-Fi
+│   │   │   │   ├── BleContract.kt / BleGatt.kt / AndroidBleGatt.kt   # Contratto BLE, astrazione GATT e sua implementazione Android
+│   │   │   │   ├── TlsSettings.kt / HydraHttp.kt / TlsPrefs.kt      # TLS opzionale: modalità, impronta fissata, CA propria, archiviazione
+│   │   │   │   ├── HydraWebSocket.kt      # Invio live dei delta di stato via WS, gestione riconnessione
+│   │   │   │   ├── StateCache.kt          # Cache dell'ultimo stato noto (DataStore) per la visualizzazione della dashboard offline
+│   │   │   │   ├── StopAllResult.kt       # Risultato dello STOP globale (risposta per robot, stato)
+│   │   │   │   ├── ContractV2.kt          # Il secondo contratto del server come regole pure: scritture condizionali per revisione del robot, spostamento atomico del tavolo e record di audit
+│   │   │   │   ├── BleCommands.kt         # Un comando per il robot da inviare via Bluetooth LE e la sua conferma (vedi docs/BLE_CONTRACT.md)
+│   │   │   │   └── BlePermissions.kt      # I permessi a runtime di cui Bluetooth LE ha bisogno in ogni versione di Android
+│   │   │   ├── ui/
+│   │   │   │   ├── AboutDialog.kt          # Dialogo con info app/versione
+│   │   │   │   ├── AccessPanel.kt          # Pannello di prenotazione e armamento del jog della schermata Control
+│   │   │   │   ├── AuditDialog.kt           # Registro di audit del server (amministratori), con la verifica della catena
+│   │   │   │   ├── CameraScreen.kt         # Feed camera MJPEG per robot + interruttore visione on/off
+│   │   │   │   ├── ControlScreen.kt        # Controlli jog manuali, E-STOP/play/pause/stop con protezione da pressione prolungata
+│   │   │   │   ├── DashboardScreen.kt      # Selettore robot a carosello 3D + salute del sistema + matrice dei moduli
+│   │   │   │   ├── GlobalStop.kt           # Pulsante STOP globale + avviso del risultato (un tocco, tutti i robot)
+│   │   │   │   ├── Joystick3D.kt           # Componente joystick riutilizzabile a 2 assi
+│   │   │   │   ├── LoginScreen.kt          # Inserimento username/password + IP/porta, login biometrico
+│   │   │   │   ├── MjpegPlayer.kt          # Parser dello stream MJPEG + renderer Canvas
+│   │   │   │   ├── PlaybackConsole.kt      # Console flottante condivisa di STOP/play/pause/stop
+│   │   │   │   ├── SettingsScreen.kt       # UI di scansione Wi-Fi/Bluetooth, impostazioni di connessione
+│   │   │   │   ├── SplashScreen.kt         # Schermata di avvio Compose personalizzata
+│   │   │   │   ├── TelemetryScreen.kt      # Visualizzatore di log eventi/sincronizzazione in stile terminale
+│   │   │   │   ├── ThreeDScreen.kt         # Viewport 3D reale - WebView che incorpora la scena 3D headless propria di STUDIO
+│   │   │   │   ├── UserProfileDialog.kt    # Dialogo di modifica profilo + interruttore biometrico
+│   │   │   │   ├── VoiceAssistantDialog.kt # Pulsante microfono/testo in-app verso HYDRA-UMC-VOICE-UI
+│   │   │   │   ├── theme/
+│   │   │   │   │   ├── Color.kt, Theme.kt, Typography.kt   # Schema colori Material 3, wrapper del tema, scala tipografica
+│   │   │   │   │   └── HydraButton.kt, IndustrialComponents.kt, IndustrialStyle.kt   # Blocchi UI condivisi con stile industriale
+│   │   │   │   └── SecuritySettings.kt                                           # Impostazioni > Sicurezza: TLS facoltativo e configurabile (modalità, impronta fissata, CA)
+│   │   │   ├── update/
+│   │   │   │   ├── GitHubReleaseUpdater.kt   # Client sicuro di aggiornamento tramite GitHub Release
+│   │   │   │   ├── ReleaseMetadataParser.kt  # Parser sicuro dei metadati di GitHub Release
+│   │   │   │   └── SemanticVersion.kt        # Parser rigoroso della versione semantica per gli aggiornamenti
+│   │   │   ├── util/
+│   │   │   │   ├── BiometricHelper.kt      # Wrapper del prompt di androidx.biometric
+│   │   │   │   ├── NotificationHelper.kt   # Notifiche push di lavoro completato/sicurezza
+│   │   │   │   ├── NotificationPrefs.kt    # Archiviazione persistente dell'interruttore delle notifiche in-app
+│   │   │   │   ├── BleErrorText.kt         # Il testo degli errori Bluetooth, nella lingua del telefono
+│   │   │   │   ├── JsonText.kt             # Legge un campo di testo come lo intende l'interfaccia (un null JSON non è la parola "null")
+│   │   │   │   ├── OptimisticRollback.kt   # Annullamento a livello di campo per una modifica ottimistica
+│   │   │   │   ├── PlayConfirmation.kt     # Quando PLAY chiede prima: le regole della conferma prima di avviare una traiettoria
+│   │   │   │   ├── RenewalBudget.kt        # Quanto spesso l'app può rinnovare la sessione da sola (un intervallo minimo e un massimo per finestra)
+│   │   │   │   ├── StaleData.kt            # Quando i dati del robot sullo schermo sono una copia ricordata e non una lettura dal vivo
+│   │   │   │   └── ViewerUrl.kt            # L'indirizzo del visualizzatore 3D incorporato: il token di accesso sta nel frammento, che non viene mai inviato al server
+│   │   │   ├── viewmodel/
+│   │   │   │   ├── AppUpdateViewModel.kt   # Stato di aggiornamento dell'app consapevole del ciclo di vita
+│   │   │   │   └── RobotViewModel.kt   # ViewModel condiviso - rete, autenticazione, discovery, dispatch dei comandi atomici, tutto lo stato UI
+│   │   │   ├── wear/
+│   │   │   │   ├── BoundedRequestScope.kt     # Ambito dei job in corso per requestId; un tentativo sostituito viene annullato, cancelAll() alla distruzione del servizio
+│   │   │   │   ├── WatchCompanionProtocol.kt    # Contratto wire dello stato versione del Watch companion
+│   │   │   │   ├── WatchVoiceRelayContract.kt   # Contratto wire autenticato del relay vocale del Watch
+│   │   │   │   └── WatchVoiceRelayService.kt    # Servizio relay vocale per Wear OS
+│   │   │   └── widget/
+│   │   │       └── GlobalStopWidget.kt # Widget della schermata home per un E-STOP globale
+│   │   └── res/
+│   │       ├── drawable/, layout/, mipmap*/, xml/   # Icone, layout del widget, icone del launcher, regole di backup/estrazione dati
+│   │       └── values/, values-es/, values-de/, values-fr/, values-it/, values-ja/, values-zh/, values-pt/   # Stringhe in 8 lingue, colori, tema
+│   └── src/test/             # Test unitari JVM delle regole pure: cinematica, accesso, contratto v2, frame e comandi BLE, TLS, l'aggiornatore e le utilità
 ├── docs/
 │   ├── ARCHITECTURE.md              # Note di design/architettura
 │   ├── GITHUB_RELEASE_UPDATES.md    # Flusso in-app di verifica/download/installazione aggiornamenti
-│   └── WATCH_VOICE_RELAY.md         # Contratto del relay vocale watch-telefono-server
+│   ├── WATCH_VOICE_RELAY.md         # Contratto del relay vocale watch-telefono-server
+│   └── BLE_CONTRACT.md              # Come l'app parla con un dispositivo HYDRA-UMC via Bluetooth Low Energy (GATT): servizio, caratteristiche, framing
 ├── images/                       # Asset sorgente del banner del README + schermata di avvio
 ├── tools/
 │   ├── build_test.py             # Controllo build/compilazione senza incremento di versione
-│   └── ci_validate.py            # Validazione manifest/CHANGELOG/docs usata dalla CI
+│   ├── ci_validate.py            # Validazione manifest/CHANGELOG/docs usata dalla CI
+│   ├── test_publish_script.py    # Verifica che publish-github-release.sh non metta mai il token GitHub su una riga di comando
+│   ├── _doc_policy.py            # Regole di documentazione condivise dalla famiglia (copia di quella di HYDRA-UMC-SDK, mantenuta sincronizzata)
+│   ├── _readme_parity.py         # Verifica che gli otto README abbiano la stessa struttura (copia di quella di HYDRA-UMC-SDK, mantenuta sincronizzata)
+│   └── hydra_project_tool.py     # Gli stessi comandi in ogni repository: validate, test, ci, version, status, bump
 ├── dist/                         # Output dell'APK di release firmato (ignorato da git)
 ├── build-android.bat / .sh       # Script di comodità build + installazione adb in un unico passaggio
 ├── build-test.bat / .sh          # Controllo build/compilazione senza incremento di versione

@@ -144,79 +144,97 @@ HYDRA-UMC-ANDROID-CONTROL/
 ├── app/
 │   ├── build.gradle.kts          # アプリモジュールの Gradle 設定——AGP/Kotlin/Compose バージョン、依存関係、デバッグ署名の release ビルドタイプ
 │   ├── version.properties        # versionMajor/Minor/Patch/Code (明示的な `bump` コマンドのみが加算)
+│   ├── lint.xml                  # Android lint の設定
 │   ├── proguard-rules.pro        # release ビルド用のコード縮小/難読化ルール
-│   └── src/main/
-│       ├── AndroidManifest.xml   # 権限、activity/receiver 宣言、usesCleartextTraffic（LAN サーバーは TLS を有効にしない限りプレーン HTTP で、すべての呼び出しにサインイン済みトークンが必要）
-│       ├── java/com/hydraumc/control/
-│       │   ├── MainActivity.kt          # エントリポイント——スプラッシュ、ログイン/メイン画面ゲーティング、コールドスタートセーフなグローバル緊急停止処理
-│       │   ├── MainScreen.kt            # ボトムナビゲーションのスキャフォールド、トップバー（サーバーセレクター、プロフィール、テレメトリ、設定）
-│       │   ├── kinematics/
-│       │   │   └── Parol6Kinematics.kt   # Parol6 固有の順運動学/逆運動学
-│       │   ├── model/
-│       │   │   ├── BleDevice.kt          # Bluetooth LE スキャン結果データクラス
-│       │   │   └── HydraState.kt         # settings.json のフィールド単位のミラー（RobotView/ControllerView/JobView）+ ServerInfo ディスカバリーモデル
-│       │   ├── network/
-│       │   │   ├── AuthPrefs.kt           # 暗号化（AES256-GCM）された資格情報/セッションストレージ
-│       │   │   ├── ConnectionPrefs.kt     # 永続化されたサーバー IP/ポート（DataStore Preferences）
-│       │   │   ├── Discovery.kt           # 並行 /24 サブネットスキャン（主）+ NSD/mDNS リスナー（副）、LAN 上のサーバーを見つけるため
-│       │   │   ├── AccessModels.kt         # コントローラーID・予約・安全上限・ジョグ確認（純粋なルール）
-│       │   │   ├── HydraApiClient.kt      # REST クライアント——ログイン、設定読み書き、原子的ロボット指令、システム指標
-│       │   │   ├── HydraBleClient.kt      # Bluetooth GATT クライアント、Wi-Fi の代替トランスポート
-│       │   │   ├── BleContract.kt / BleGatt.kt / AndroidBleGatt.kt   # BLE規約、GATT抽象化、そのAndroid実装
-│       │   │   ├── TlsSettings.kt / HydraHttp.kt / TlsPrefs.kt      # オプションのTLS:モード、固定フィンガープリント、独自CA、保存
-│       │   │   ├── HydraWebSocket.kt      # WS 経由のリアルタイム状態差分プッシュ、再接続処理
-│       │   │   ├── StateCache.kt          # オフラインダッシュボード表示用の最後の既知状態キャッシュ（DataStore）
-│       │   │   └── StopAllResult.kt       # グローバル STOP の結果（ロボットごとの応答、状態）
-│       │   ├── ui/
-│       │   │   ├── AboutDialog.kt          # アプリ/バージョン情報ダイアログ
-│       │   │   ├── AccessPanel.kt          # Control 画面の予約・ジョグアームのパネル
-│       │   │   ├── AuditDialog.kt           # サーバーの監査記録(管理者)とチェーン検証
-│       │   │   ├── CameraScreen.kt         # ロボットごとの MJPEG カメラフィード + ビジョンオン/オフスイッチ
-│       │   │   ├── ControlScreen.kt        # 手動ジョグ制御、長押し保護付き緊急停止/再生/一時停止/停止
-│       │   │   ├── DashboardScreen.kt      # 3D カルーセルロボットピッカー + システムヘルス + モジュールマトリクス
-│       │   │   ├── GlobalStop.kt           # グローバル STOP ボタンと結果バナー（1 タップで全ロボット）
-│       │   │   ├── Joystick3D.kt           # 再利用可能な 2 軸ジョイスティックコンポーネント
-│       │   │   ├── LoginScreen.kt          # ユーザー名/パスワード + IP/ポート入力、生体認証ログイン
-│       │   │   ├── MjpegPlayer.kt          # MJPEG ストリームパーサー + Canvas レンダラー
-│       │   │   ├── PlaybackConsole.kt      # 共有のフローティング停止/再生/一時停止/停止コンソール
-│       │   │   ├── SettingsScreen.kt       # Wi-Fi/Bluetooth スキャン UI、接続設定
-│       │   │   ├── SplashScreen.kt         # カスタム Compose スプラッシュスクリーン
-│       │   │   ├── TelemetryScreen.kt      # ターミナル風のイベント/同期ログビューアー
-│       │   │   ├── ThreeDScreen.kt         # 実際の 3D ビューポート——STUDIO 自身のヘッドレス 3D シーンを埋め込む WebView
-│       │   │   ├── UserProfileDialog.kt    # プロフィール編集 + 生体認証切り替えダイアログ
-│       │   │   ├── VoiceAssistantDialog.kt # HYDRA-UMC-VOICE-UI へのアプリ内マイク/テキストボタン
-│       │   │   └── theme/
-│       │   │       ├── Color.kt, Theme.kt, Typography.kt   # Material 3 配色スキーム、テーマラッパー、タイプスケール
-│       │   │       └── HydraButton.kt, IndustrialComponents.kt, IndustrialStyle.kt   # 共有の産業風 UI ビルディングブロック
-│       │   ├── update/
-│       │   │   ├── GitHubReleaseUpdater.kt   # 安全な GitHub Release アップデートクライアント
-│       │   │   ├── ReleaseMetadataParser.kt  # 安全な GitHub Release メタデータパーサー
-│       │   │   └── SemanticVersion.kt        # アップデート用の厳密なセマンティックバージョンパーサー
-│       │   ├── util/
-│       │   │   ├── BiometricHelper.kt      # androidx.biometric プロンプトラッパー
-│       │   │   ├── NotificationHelper.kt   # ジョブ完了/安全プッシュ通知
-│       │   │   └── NotificationPrefs.kt    # アプリ内通知トグルの永続ストレージ
-│       │   ├── viewmodel/
-│       │   │   ├── AppUpdateViewModel.kt   # ライフサイクルを意識したアプリ更新状態
-│       │   │   └── RobotViewModel.kt   # 共有 ViewModel——ネットワーキング、認証、ディスカバリー、原子的指令ディスパッチ、すべての UI 状態
-│       │   ├── wear/
-│       │   │   ├── BoundedRequestScope.kt     # requestId 単位の実行中ジョブスコープ。置き換えられた試行はキャンセルされ、サービス破棄時に cancelAll()
-│       │   │   ├── WatchCompanionProtocol.kt    # Watch コンパニオンのバージョン状態ワイヤ契約
-│       │   │   ├── WatchVoiceRelayContract.kt   # 認証付き Watch 音声リレーワイヤ契約
-│       │   │   └── WatchVoiceRelayService.kt    # Wear OS 音声リレーサービス
-│       │   └── widget/
-│       │       └── GlobalStopWidget.kt # グローバル緊急停止を行うためのホーム画面ウィジェット
-│       └── res/
-│           ├── drawable/, layout/, mipmap*/, xml/   # アイコン、ウィジェットレイアウト、ランチャーアイコン、バックアップ/データ抽出ルール
-│           └── values/, values-es/, values-de/, values-fr/, values-it/, values-zh/, values-ja/, values-pt/   # 8 言語の文字列、色、テーマ
+│   ├── src/main/
+│   │   ├── AndroidManifest.xml   # 権限、activity/receiver 宣言、usesCleartextTraffic（LAN サーバーは TLS を有効にしない限りプレーン HTTP で、すべての呼び出しにサインイン済みトークンが必要）
+│   │   ├── java/com/hydraumc/control/
+│   │   │   ├── MainActivity.kt          # エントリポイント——スプラッシュ、ログイン/メイン画面ゲーティング、コールドスタートセーフなグローバル緊急停止処理
+│   │   │   ├── MainScreen.kt            # ボトムナビゲーションのスキャフォールド、トップバー（サーバーセレクター、プロフィール、テレメトリ、設定）
+│   │   │   ├── kinematics/
+│   │   │   │   └── Parol6Kinematics.kt   # Parol6 固有の順運動学/逆運動学
+│   │   │   ├── model/
+│   │   │   │   ├── BleDevice.kt          # Bluetooth LE スキャン結果データクラス
+│   │   │   │   └── HydraState.kt         # settings.json のフィールド単位のミラー（RobotView/ControllerView/JobView）+ ServerInfo ディスカバリーモデル
+│   │   │   ├── network/
+│   │   │   │   ├── AuthPrefs.kt           # 暗号化（AES256-GCM）された資格情報/セッションストレージ
+│   │   │   │   ├── ConnectionPrefs.kt     # 永続化されたサーバー IP/ポート（DataStore Preferences）
+│   │   │   │   ├── Discovery.kt           # 並行 /24 サブネットスキャン（主）+ NSD/mDNS リスナー（副）、LAN 上のサーバーを見つけるため
+│   │   │   │   ├── AccessModels.kt         # コントローラーID・予約・安全上限・ジョグ確認（純粋なルール）
+│   │   │   │   ├── HydraApiClient.kt      # REST クライアント——ログイン、設定読み書き、原子的ロボット指令、システム指標
+│   │   │   │   ├── HydraBleClient.kt      # Bluetooth GATT クライアント、Wi-Fi の代替トランスポート
+│   │   │   │   ├── BleContract.kt / BleGatt.kt / AndroidBleGatt.kt   # BLE規約、GATT抽象化、そのAndroid実装
+│   │   │   │   ├── TlsSettings.kt / HydraHttp.kt / TlsPrefs.kt      # オプションのTLS:モード、固定フィンガープリント、独自CA、保存
+│   │   │   │   ├── HydraWebSocket.kt      # WS 経由のリアルタイム状態差分プッシュ、再接続処理
+│   │   │   │   ├── StateCache.kt          # オフラインダッシュボード表示用の最後の既知状態キャッシュ（DataStore）
+│   │   │   │   ├── StopAllResult.kt       # グローバル STOP の結果（ロボットごとの応答、状態）
+│   │   │   │   ├── ContractV2.kt          # サーバーの第2の契約を純粋な規則として: ロボットのリビジョンによる条件付き書き込み、テーブルのアトミックな移動、監査記録
+│   │   │   │   ├── BleCommands.kt         # Bluetooth LE で送るロボットコマンド1件とその応答 (docs/BLE_CONTRACT.md 参照)
+│   │   │   │   └── BlePermissions.kt      # Android のバージョンごとに Bluetooth LE が必要とする実行時権限
+│   │   │   ├── ui/
+│   │   │   │   ├── AboutDialog.kt          # アプリ/バージョン情報ダイアログ
+│   │   │   │   ├── AccessPanel.kt          # Control 画面の予約・ジョグアームのパネル
+│   │   │   │   ├── AuditDialog.kt           # サーバーの監査記録(管理者)とチェーン検証
+│   │   │   │   ├── CameraScreen.kt         # ロボットごとの MJPEG カメラフィード + ビジョンオン/オフスイッチ
+│   │   │   │   ├── ControlScreen.kt        # 手動ジョグ制御、長押し保護付き緊急停止/再生/一時停止/停止
+│   │   │   │   ├── DashboardScreen.kt      # 3D カルーセルロボットピッカー + システムヘルス + モジュールマトリクス
+│   │   │   │   ├── GlobalStop.kt           # グローバル STOP ボタンと結果バナー（1 タップで全ロボット）
+│   │   │   │   ├── Joystick3D.kt           # 再利用可能な 2 軸ジョイスティックコンポーネント
+│   │   │   │   ├── LoginScreen.kt          # ユーザー名/パスワード + IP/ポート入力、生体認証ログイン
+│   │   │   │   ├── MjpegPlayer.kt          # MJPEG ストリームパーサー + Canvas レンダラー
+│   │   │   │   ├── PlaybackConsole.kt      # 共有のフローティング停止/再生/一時停止/停止コンソール
+│   │   │   │   ├── SettingsScreen.kt       # Wi-Fi/Bluetooth スキャン UI、接続設定
+│   │   │   │   ├── SplashScreen.kt         # カスタム Compose スプラッシュスクリーン
+│   │   │   │   ├── TelemetryScreen.kt      # ターミナル風のイベント/同期ログビューアー
+│   │   │   │   ├── ThreeDScreen.kt         # 実際の 3D ビューポート——STUDIO 自身のヘッドレス 3D シーンを埋め込む WebView
+│   │   │   │   ├── UserProfileDialog.kt    # プロフィール編集 + 生体認証切り替えダイアログ
+│   │   │   │   ├── VoiceAssistantDialog.kt # HYDRA-UMC-VOICE-UI へのアプリ内マイク/テキストボタン
+│   │   │   │   ├── theme/
+│   │   │   │   │   ├── Color.kt, Theme.kt, Typography.kt   # Material 3 配色スキーム、テーマラッパー、タイプスケール
+│   │   │   │   │   └── HydraButton.kt, IndustrialComponents.kt, IndustrialStyle.kt   # 共有の産業風 UI ビルディングブロック
+│   │   │   │   └── SecuritySettings.kt                                           # 設定 > セキュリティ: 任意で設定できる TLS (モード、固定フィンガープリント、CA)
+│   │   │   ├── update/
+│   │   │   │   ├── GitHubReleaseUpdater.kt   # 安全な GitHub Release アップデートクライアント
+│   │   │   │   ├── ReleaseMetadataParser.kt  # 安全な GitHub Release メタデータパーサー
+│   │   │   │   └── SemanticVersion.kt        # アップデート用の厳密なセマンティックバージョンパーサー
+│   │   │   ├── util/
+│   │   │   │   ├── BiometricHelper.kt      # androidx.biometric プロンプトラッパー
+│   │   │   │   ├── NotificationHelper.kt   # ジョブ完了/安全プッシュ通知
+│   │   │   │   ├── NotificationPrefs.kt    # アプリ内通知トグルの永続ストレージ
+│   │   │   │   ├── BleErrorText.kt         # Bluetooth エラーの文言 (端末の言語で)
+│   │   │   │   ├── JsonText.kt             # UI が意図するとおりにテキストフィールドを読む (JSON の null は文字列 "null" ではない)
+│   │   │   │   ├── OptimisticRollback.kt   # 楽観的な編集をフィールド単位で元に戻す
+│   │   │   │   ├── PlayConfirmation.kt     # PLAY が先に確認する場合: 軌道を始める前の確認のルール
+│   │   │   │   ├── RenewalBudget.kt        # アプリが自力でセッションを更新してよい頻度 (最小間隔と、時間窓ごとの上限)
+│   │   │   │   ├── StaleData.kt            # 画面のロボットデータが、ライブの読み取りではなく記憶したコピーであるとき
+│   │   │   │   └── ViewerUrl.kt            # 埋め込み 3D ビューアーのアドレス: アクセストークンはサーバーに送られないフラグメントに入れる
+│   │   │   ├── viewmodel/
+│   │   │   │   ├── AppUpdateViewModel.kt   # ライフサイクルを意識したアプリ更新状態
+│   │   │   │   └── RobotViewModel.kt   # 共有 ViewModel——ネットワーキング、認証、ディスカバリー、原子的指令ディスパッチ、すべての UI 状態
+│   │   │   ├── wear/
+│   │   │   │   ├── BoundedRequestScope.kt     # requestId 単位の実行中ジョブスコープ。置き換えられた試行はキャンセルされ、サービス破棄時に cancelAll()
+│   │   │   │   ├── WatchCompanionProtocol.kt    # Watch コンパニオンのバージョン状態ワイヤ契約
+│   │   │   │   ├── WatchVoiceRelayContract.kt   # 認証付き Watch 音声リレーワイヤ契約
+│   │   │   │   └── WatchVoiceRelayService.kt    # Wear OS 音声リレーサービス
+│   │   │   └── widget/
+│   │   │       └── GlobalStopWidget.kt # グローバル緊急停止を行うためのホーム画面ウィジェット
+│   │   └── res/
+│   │       ├── drawable/, layout/, mipmap*/, xml/   # アイコン、ウィジェットレイアウト、ランチャーアイコン、バックアップ/データ抽出ルール
+│   │       └── values/, values-es/, values-de/, values-fr/, values-it/, values-ja/, values-zh/, values-pt/   # Strings in 8 languages, colors, theme
+│   └── src/test/             # 純粋な規則の JVM ユニットテスト: 運動学、アクセス、契約 v2、BLE のフレームとコマンド、TLS、アップデーター、補助機能
 ├── docs/
 │   ├── ARCHITECTURE.md              # 設計/アーキテクチャノート
 │   ├── GITHUB_RELEASE_UPDATES.md    # アプリ内アップデート確認/ダウンロード/インストールフロー
-│   └── WATCH_VOICE_RELAY.md         # Watch-電話-サーバー間の音声リレー契約
+│   ├── WATCH_VOICE_RELAY.md         # Watch-電話-サーバー間の音声リレー契約
+│   └── BLE_CONTRACT.md              # アプリが Bluetooth Low Energy (GATT) で HYDRA-UMC デバイスと通信する方法: サービス、キャラクタリスティック、フレーミング
 ├── images/                       # README バナー + スプラッシュスクリーンのソースアセット
 ├── tools/
 │   ├── build_test.py             # バージョンを更新しないビルド/コンパイル確認
-│   └── ci_validate.py            # CI が使用する manifest/CHANGELOG/docs の検証
+│   ├── ci_validate.py            # CI が使用する manifest/CHANGELOG/docs の検証
+│   ├── test_publish_script.py    # publish-github-release.sh が GitHub トークンをコマンドラインに載せないことの検査
+│   ├── _doc_policy.py            # ファミリー共通のドキュメント規則 (HYDRA-UMC-SDK のコピーで、同期を維持)
+│   ├── _readme_parity.py         # 8つの README が同じ構造であることの検査 (HYDRA-UMC-SDK のコピーで、同期を維持)
+│   └── hydra_project_tool.py     # すべてのリポジトリで共通のコマンド: validate、test、ci、version、status、bump
 ├── dist/                         # 署名済みリリース APK 出力（gitignore 対象）
 ├── build-android.bat / .sh       # ワンショットビルド + adb インストールの便利スクリプト
 ├── build-test.bat / .sh          # バージョンを更新しないビルド/コンパイル確認
