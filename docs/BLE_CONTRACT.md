@@ -71,10 +71,13 @@ The peripheral answers on ACK, after the route of the server answered and never 
 `code` a stable word (`other-account`, `claimed`, `forbidden`, `rate-limited`, `commands-disabled`, ...). The
 full list is in the server's `docs/BLE_GATT.md`.
 
-**The app does not send robot commands over BLE yet.** The client can write a message (`HydraBleClient.send`),
-but it does not read ACK, and the control screens still require the Wi-Fi session: a STOP that cannot be
-confirmed must not look confirmed, and the BLE write response only proves the radio delivered a frame. Wiring
-commands to BLE means reading ACK and treating a command without an acknowledgement as not delivered.
+**The client can send a command and wait for its acknowledgement; no screen uses it yet.** `HydraBleClient.sendCommand`
+turns on ACK after STATE (the link is reported connected only after both), writes the framed command and reports one of:
+`Acknowledged` (the peripheral answered; `ack.ok` says whether the server applied it), `NoAnswer` (nothing answered within
+4 seconds, or the link dropped: the command counts as **not delivered**), `NotAvailable` (the link is not ready, or the device
+has no ACK characteristic: nothing was sent) or `TooLarge`. The BLE write response only proves that the radio delivered a frame
+and is never taken as an acknowledgement, because a STOP that cannot be confirmed must not look confirmed. The control screens
+still require the Wi-Fi session; wiring them to this call is the remaining step.
 
 ## Connection sequence
 
@@ -103,7 +106,7 @@ message in the language of the phone.
 
 ## What was verified
 
-- Unit tests drive the whole client against a simulated GATT: the connection sequence, MTU fallback,
+- Unit tests drive the whole client against a simulated GATT: the connection sequence (with and without ACK), MTU fallback,
   framing and reassembly in both directions (every size and MTU), damaged and lost frames, one write in
   flight, refused writes, a device without the service, missing characteristics, notifications refused,
   retry delays and the give-up, the retry budget reset, no leak of a partial message between links, and

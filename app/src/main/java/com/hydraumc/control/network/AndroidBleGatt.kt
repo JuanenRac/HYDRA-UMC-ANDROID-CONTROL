@@ -50,6 +50,9 @@ private class AndroidBleGattLink(private val events: BleGattEvents) : BleGattLin
     private fun stateChar(): BluetoothGattCharacteristic? =
         gatt?.getService(BleContract.SERVICE_UUID)?.getCharacteristic(BleContract.STATE_CHAR_UUID)
 
+    private fun ackChar(): BluetoothGattCharacteristic? =
+        gatt?.getService(BleContract.SERVICE_UUID)?.getCharacteristic(BleContract.ACK_CHAR_UUID)
+
     private fun commandChar(): BluetoothGattCharacteristic? =
         gatt?.getService(BleContract.SERVICE_UUID)?.getCharacteristic(BleContract.COMMAND_CHAR_UUID)
 
@@ -66,19 +69,25 @@ private class AndroidBleGattLink(private val events: BleGattEvents) : BleGattLin
         override fun onServicesDiscovered(g: BluetoothGatt, status: Int) = events.onServicesDiscovered(status)
 
         override fun onDescriptorWrite(g: BluetoothGatt, descriptor: BluetoothGattDescriptor, status: Int) {
-            if (descriptor.uuid == BleContract.CCCD_UUID) events.onNotificationsEnabled(status)
+            if (descriptor.uuid != BleContract.CCCD_UUID) return
+            if (descriptor.characteristic?.uuid == BleContract.ACK_CHAR_UUID) events.onAckNotificationsEnabled(status)
+            else events.onNotificationsEnabled(status)
         }
 
         @Deprecated("Deprecated in Java")
         override fun onCharacteristicChanged(g: BluetoothGatt, characteristic: BluetoothGattCharacteristic) {
             @Suppress("DEPRECATION")
-            events.onStateFrame(characteristic.value ?: ByteArray(0))
+            deliver(characteristic, characteristic.value ?: ByteArray(0))
         }
 
         // Not calling super on purpose: its default would call the deprecated overload above and
         // deliver every frame twice.
         override fun onCharacteristicChanged(g: BluetoothGatt, characteristic: BluetoothGattCharacteristic, value: ByteArray) {
-            events.onStateFrame(value)
+            deliver(characteristic, value)
+        }
+
+        private fun deliver(characteristic: BluetoothGattCharacteristic, value: ByteArray) {
+            if (characteristic.uuid == BleContract.ACK_CHAR_UUID) events.onAckFrame(value) else events.onStateFrame(value)
         }
 
         override fun onCharacteristicWrite(g: BluetoothGatt, characteristic: BluetoothGattCharacteristic, status: Int) =
@@ -106,9 +115,17 @@ private class AndroidBleGattLink(private val events: BleGattEvents) : BleGattLin
         return if (canNotify && canWrite) BleContractLookup.FOUND else BleContractLookup.CHARACTERISTIC_MISSING
     }
 
-    override fun enableStateNotifications(): Boolean = try {
+    override fun hasAckCharacteristic(): Boolean {
+        val ack = ackChar() ?: return false
+        return ack.properties and BluetoothGattCharacteristic.PROPERTY_NOTIFY != 0
+    }
+
+    override fun enableStateNotifications(): Boolean = enableNotifications(stateChar())
+
+    override fun enableAckNotifications(): Boolean = enableNotifications(ackChar())
+
+    private fun enableNotifications(char: BluetoothGattCharacteristic?): Boolean = try {
         val g = gatt
-        val char = stateChar()
         val cccd = char?.getDescriptor(BleContract.CCCD_UUID)
         if (g == null || char == null || cccd == null || !g.setCharacteristicNotification(char, true)) {
             false

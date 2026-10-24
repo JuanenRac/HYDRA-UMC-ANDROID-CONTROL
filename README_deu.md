@@ -35,7 +35,7 @@ Eine native Android-App (Kotlin + Jetpack Compose), die einen Roboter auf der [H
 |---|---|
 | Version | `0.7.1` |
 | Reifegrad | Funktionsfähig |
-| Tests | 284 (`./gradlew testDebugUnitTest`) |
+| Tests | 300 (`./gradlew testDebugUnitTest`) |
 | Technik | Kotlin / Jetpack / biometric auth / WebSocket client |
 | Ziel | Ein Android-Telefon oder -Tablet |
 | Auf echter Hardware | Noch nicht: für diese Version ist kein Lauf auf echter Hardware vermerkt |

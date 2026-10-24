@@ -14,8 +14,12 @@ interface BleGattEvents {
     fun onMtu(mtu: Int, status: Int)
     fun onServicesDiscovered(status: Int)
     fun onNotificationsEnabled(status: Int)
+    /** Outcome of turning on the notifications of the ACK characteristic. */
+    fun onAckNotificationsEnabled(status: Int)
     /** One frame notified on the STATE characteristic. */
     fun onStateFrame(frame: ByteArray)
+    /** One frame notified on the ACK characteristic. */
+    fun onAckFrame(frame: ByteArray)
     /** Outcome of the last COMMAND write. */
     fun onWriteDone(status: Int)
 }
@@ -26,6 +30,9 @@ interface BleGattLink {
     fun discoverServices(): Boolean
     fun findContract(): BleContractLookup
     fun enableStateNotifications(): Boolean
+    /** Whether the device has the optional ACK characteristic (it can take commands). */
+    fun hasAckCharacteristic(): Boolean
+    fun enableAckNotifications(): Boolean
     fun writeCommand(frame: ByteArray): Boolean
     /** Disconnects and releases the GATT client. Safe to call twice. */
     fun close()

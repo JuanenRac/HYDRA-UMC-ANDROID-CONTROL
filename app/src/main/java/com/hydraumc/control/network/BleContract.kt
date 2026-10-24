@@ -14,6 +14,7 @@ import java.util.UUID
  * One GATT service with two characteristics:
  *  - STATE (read, notify): the robot state as UTF-8 JSON, the same tree the WebSocket carries.
  *  - COMMAND (write): one UTF-8 JSON command per message.
+ *  - ACK (notify, optional): one UTF-8 JSON acknowledgement per command ([BleCommands]).
  * A message is larger than one ATT payload, so both directions cut it into frames ([BleFraming]).
  */
 object BleContract {
@@ -23,6 +24,8 @@ object BleContract {
     val STATE_CHAR_UUID: UUID = UUID.fromString("48594452-0002-4000-8000-554d43000001")
     /** Commands written by the app. */
     val COMMAND_CHAR_UUID: UUID = UUID.fromString("48594452-0003-4000-8000-554d43000001")
+    /** Acknowledgements of the commands, notified by the device (absent on a device that takes no commands). */
+    val ACK_CHAR_UUID: UUID = UUID.fromString("48594452-0004-4000-8000-554d43000001")
     /** Client Characteristic Configuration descriptor (Bluetooth SIG). */
     val CCCD_UUID: UUID = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
 

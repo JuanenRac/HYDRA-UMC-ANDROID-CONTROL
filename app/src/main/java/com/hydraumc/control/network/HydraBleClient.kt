@@ -32,6 +32,7 @@ class HydraBleClient(
     private val onError: (BleError) -> Unit = {},
     private val reconnectPolicy: BleReconnectPolicy = BleReconnectPolicy.DEFAULT,
     private val preferredMtu: Int = BleContract.PREFERRED_MTU,
+    private val ackTimeoutMs: Long = BleCommands.DEFAULT_ACK_TIMEOUT_MS,
 ) {
     private var link: BleGattLink? = null
     /** Changes with every link: events of an older link are dropped. */
@@ -42,11 +43,20 @@ class HydraBleClient(
     private var attempts = 0
     private var reconnectJob: Job? = null
     private val reassembler = BleReassembler()
+    private val ackReassembler = BleReassembler()
+    /** True once the ACK characteristic is on: only then can a command be sent and acknowledged. */
+    private var ackReady = false
+    private var commandCounter = 0
+    private class PendingCommand(val onResult: (BleCommandOutcome) -> Unit, var timeout: Job?)
+    private val pendingCommands = HashMap<String, PendingCommand>()
     private val writeQueue = ArrayDeque<ByteArray>()
     private var writeInFlight = false
 
     /** True once the service is checked and state notifications are on. */
     val isReady: Boolean get() = ready
+
+    /** True when commands can be sent and acknowledged over this link. */
+    val canSendCommands: Boolean get() = ready && ackReady
 
     /** Starts the connection; a second call while one is running does nothing. */
     fun connect() {
@@ -87,6 +97,51 @@ class HydraBleClient(
         return true
     }
 
+    /**
+     * Sends one robot command and reports what became of it: [BleCommandOutcome.Acknowledged] only after the peripheral
+     * answered (and `ack.ok` says whether the server applied it), [BleCommandOutcome.NoAnswer] when nothing answered
+     * within the timeout or the link dropped (the command counts as NOT delivered: a STOP nobody confirmed must not look
+     * confirmed), [BleCommandOutcome.NotAvailable] or [BleCommandOutcome.TooLarge] when nothing was sent. The BLE write
+     * response only proves that the radio delivered a frame, so it is never taken as an acknowledgement.
+     */
+    fun sendCommand(request: BleCommandRequest, onResult: (BleCommandOutcome) -> Unit) {
+        if (!canSendCommands) {
+            onResult(BleCommandOutcome.NotAvailable)
+            return
+        }
+        val id = "a-${++commandCounter}-${System.nanoTime().toString(36)}".take(BleCommands.MAX_ID_CHARS)
+        val bytes = BleCommands.encode(id, request)
+        val frames = BleFraming.encode(bytes, mtu)
+        if (frames.isEmpty()) {
+            onResult(BleCommandOutcome.TooLarge)
+            return
+        }
+        val pending = PendingCommand(onResult, null)
+        pendingCommands[id] = pending
+        pending.timeout = scope.launch {
+            delay(ackTimeoutMs)
+            pendingCommands.remove(id)?.onResult?.invoke(BleCommandOutcome.NoAnswer)
+        }
+        writeQueue.addAll(frames)
+        pumpWrites()
+    }
+
+    private fun failPendingCommands() {
+        if (pendingCommands.isEmpty()) return
+        val all = pendingCommands.values.toList()
+        pendingCommands.clear()
+        for (pending in all) {
+            pending.timeout?.cancel()
+            pending.onResult(BleCommandOutcome.NoAnswer)
+        }
+    }
+
+    private fun markConnected() {
+        ready = true
+        attempts = 0
+        onStatus(WsStatus.CONNECTED)
+    }
+
     private fun openLink() {
         val gen = ++generation
         onStatus(WsStatus.CONNECTING)
@@ -102,10 +157,13 @@ class HydraBleClient(
         val old = link
         link = null
         ready = false
+        ackReady = false
         mtu = BleContract.DEFAULT_MTU
         writeQueue.clear()
         writeInFlight = false
         reassembler.reset()
+        ackReassembler.reset()
+        failPendingCommands()
         old?.close()
     }
 
@@ -182,10 +240,31 @@ class HydraBleClient(
         override fun onNotificationsEnabled(status: Int) = post {
             if (status != 0) {
                 failPermanently(BleError(BleErrorKind.NOTIFICATIONS_FAILED, status))
+            } else if (link?.hasAckCharacteristic() == true && link?.enableAckNotifications() == true) {
+                // The state is on. The device also takes commands: its acknowledgements are turned on before the link is
+                // reported connected (one descriptor write at a time).
             } else {
-                ready = true
-                attempts = 0
-                onStatus(WsStatus.CONNECTED)
+                markConnected()
+            }
+        }
+
+        override fun onAckNotificationsEnabled(status: Int) = post {
+            // A device whose acknowledgements cannot be turned on still shows its state; it just cannot take commands.
+            ackReady = status == 0
+            markConnected()
+        }
+
+        override fun onAckFrame(frame: ByteArray) = post {
+            when (val result = ackReassembler.push(frame)) {
+                is BleReassembler.Result.Message -> {
+                    val ack = BleCommands.parseAck(result.bytes) ?: return@post
+                    val id = ack.id ?: return@post
+                    val pending = pendingCommands.remove(id) ?: return@post
+                    pending.timeout?.cancel()
+                    pending.onResult(BleCommandOutcome.Acknowledged(ack))
+                }
+                BleReassembler.Result.Malformed -> onError(BleError(BleErrorKind.MALFORMED_FRAME))
+                BleReassembler.Result.Pending -> Unit
             }
         }
 
