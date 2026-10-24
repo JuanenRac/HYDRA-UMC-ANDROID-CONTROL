@@ -21,6 +21,7 @@ import android.util.Log
 import com.google.android.gms.wearable.MessageEvent
 import com.google.android.gms.wearable.Wearable
 import com.google.android.gms.wearable.WearableListenerService
+import com.hydraumc.control.R
 import com.hydraumc.control.network.AuthPrefs
 import com.hydraumc.control.network.ConnectionPrefs
 import com.hydraumc.control.network.HydraApiClient
@@ -79,14 +80,11 @@ class WatchVoiceRelayService : WearableListenerService() {
                 withTimeoutOrNull(REQUEST_TIMEOUT_MS) { authenticatedClient().postWatchVoiceTurn(turn) }
                     ?: error("voice turn request timed out after ${REQUEST_TIMEOUT_MS}ms")
             }.getOrElse {
-                // text stays here as a real, honest fallback for a
-                // watch build too old to recognize errorCode - but the
-                // watch itself now resolves errorCode to a real localized
-                // string instead of ever speaking this English text, since
-                // this phone has no access to the watch's own locale.
+                // The text is in the language of this phone, for a watch build too old to
+                // recognize errorCode; a current watch resolves errorCode in its own language.
                 WatchAssistantReply(
                     requestId = turn.requestId,
-                    text = "HYDRA-UMC connection unavailable. Check the paired phone session.",
+                    text = getString(R.string.watch_relay_connection_unavailable),
                     level = "ATTENTION",
                     speak = true,
                     requiresConfirmation = false,
@@ -111,8 +109,8 @@ class WatchVoiceRelayService : WearableListenerService() {
                 // an old watch build, errorCode is what a current one
                 // actually resolves and shows/speaks.
                 WatchSystemStatus(
-                    headline = "HYDRA-UMC offline",
-                    detail = "Check the paired phone connection and Server session.",
+                    headline = getString(R.string.watch_status_offline_headline),
+                    detail = getString(R.string.watch_status_offline_detail),
                     level = "OFFLINE",
                     speak = false,
                     errorCode = "offline",
