@@ -326,4 +326,26 @@
     <string name="audit_local_ok">この端末:%1$d 行を読み、すべてのハッシュが一致し、隣接行の連結 %2$d 件を確認、比較できない欠番 %3$d 件。</string>
     <string name="audit_local_broken_changed">この端末:%1$s 行目が自身のハッシュと一致しません。変更されています。</string>
     <string name="audit_local_broken_link">この端末:%1$s 行目が直前の行を指していません。行が欠けているか置き換えられています。</string>
+
+    <!-- Confirmation before PLAY and strings that were fixed text -->
+    <string name="play_confirm_title">再生を開始しますか?</string>
+    <string name="play_confirm_message">%1$s は保存されている軌道を実行します:記録済み %2$d 点、速度 %3$d%%。\n%4$s</string>
+    <string name="play_confirm_free">ロボットは予約されていません。</string>
+    <string name="play_confirm_mine">あなたが予約しています。</string>
+    <string name="play_confirm_other">%1$s が予約しています。自分のものでない場合、サーバーはコマンドを拒否します。</string>
+    <string name="play_confirm_button">開始</string>
+    <string name="access_confirm_play_label">PLAY の前に確認する</string>
+    <string name="access_confirm_play_hint">軌道を開始する前に、ロボット、記録済みの点、速度、予約している人を表示します。既定でオンです。</string>
+    <string name="valve_n">バルブ %1$d</string>
+    <string name="vacuum_n">真空 %1$d</string>
+    <string name="networked_robot">ネットワーク上のロボット</string>
+    <string name="select_active_node">アクティブなノードを選択</string>
+    <string name="viewport_title">3D ビュー:%1$s</string>
+    <string name="viewport_model">モデル:%1$s</string>
+    <string name="viewport_unknown">不明</string>
+    <string name="viewport_generic">汎用</string>
+    <string name="refresh_description">更新</string>
+    <string name="camera_robot_disabled">%1$s(無効)</string>
+    <string name="notification_safety_title">HYDRA-UMC 安全</string>
+    <string name="notification_safety_text">接続中です。緊急停止をすぐに使えます。</string>
 </resources>

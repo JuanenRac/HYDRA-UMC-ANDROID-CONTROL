@@ -80,7 +80,7 @@ fun CameraScreen(viewModel: RobotViewModel) {
             ) {
                 robots.forEach { robot ->
                     DropdownMenuItem(
-                        text = { Text("${robot.name}${if (!robot.hasCamera) " (disabled)" else ""}") },
+                        text = { Text(if (robot.hasCamera) robot.name else stringResource(R.string.camera_robot_disabled, robot.name)) },
                         onClick = {
                             viewModel.selectedCameraId.intValue = robot.id
                             expanded = false

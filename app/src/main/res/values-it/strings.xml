@@ -326,4 +326,26 @@
     <string name="audit_local_ok">Questo telefono: %1$d righe lette, tutti gli hash coincidono, %2$d collegamenti tra righe vicine verificati, %3$d vuoti non confrontabili.</string>
     <string name="audit_local_broken_changed">Questo telefono: la riga %1$s non corrisponde al proprio hash - è stata modificata.</string>
     <string name="audit_local_broken_link">Questo telefono: la riga %1$s non nomina la precedente - una riga manca o è stata sostituita.</string>
+
+    <!-- Confirmation before PLAY and strings that were fixed text -->
+    <string name="play_confirm_title">Avviare la riproduzione?</string>
+    <string name="play_confirm_message">%1$s eseguirà la traiettoria che ha: %2$d punti registrati a velocità %3$d%%.\n%4$s</string>
+    <string name="play_confirm_free">Il robot non è prenotato.</string>
+    <string name="play_confirm_mine">Prenotato da te.</string>
+    <string name="play_confirm_other">Prenotato da %1$s: il server rifiuta il comando se non è tuo.</string>
+    <string name="play_confirm_button">Avvia</string>
+    <string name="access_confirm_play_label">Chiedere prima di PLAY</string>
+    <string name="access_confirm_play_hint">Mostra il robot, i suoi punti registrati, la velocità e chi lo ha prenotato prima di avviare una traiettoria. Attivo per impostazione predefinita.</string>
+    <string name="valve_n">VALVOLA %1$d</string>
+    <string name="vacuum_n">VUOTO %1$d</string>
+    <string name="networked_robot">ROBOT IN RETE</string>
+    <string name="select_active_node">SCEGLI IL NODO ATTIVO</string>
+    <string name="viewport_title">VISTA 3D: %1$s</string>
+    <string name="viewport_model">MODELLO: %1$s</string>
+    <string name="viewport_unknown">SCONOSCIUTO</string>
+    <string name="viewport_generic">GENERICO</string>
+    <string name="refresh_description">Aggiorna</string>
+    <string name="camera_robot_disabled">%1$s (disattivata)</string>
+    <string name="notification_safety_title">SICUREZZA HYDRA-UMC</string>
+    <string name="notification_safety_text">Connessione attiva. Arresto di emergenza rapido disponibile.</string>
 </resources>

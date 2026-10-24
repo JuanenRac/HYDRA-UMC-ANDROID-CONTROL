@@ -326,4 +326,26 @@
     <string name="audit_local_ok">此手机:已读取 %1$d 行,所有哈希一致,已检查相邻行之间的 %2$d 个链接,%3$d 处间隔无法比较。</string>
     <string name="audit_local_broken_changed">此手机:第 %1$s 行与自身哈希不符-已被修改。</string>
     <string name="audit_local_broken_link">此手机:第 %1$s 行没有指向上一行-有行缺失或被替换。</string>
+
+    <!-- Confirmation before PLAY and strings that were fixed text -->
+    <string name="play_confirm_title">开始播放?</string>
+    <string name="play_confirm_message">%1$s 将执行其现有轨迹:已记录 %2$d 个点,速度 %3$d%%。\n%4$s</string>
+    <string name="play_confirm_free">机器人未被预留。</string>
+    <string name="play_confirm_mine">由你预留。</string>
+    <string name="play_confirm_other">由 %1$s 预留:如果不是你的,服务器将拒绝该命令。</string>
+    <string name="play_confirm_button">开始</string>
+    <string name="access_confirm_play_label">PLAY 之前先确认</string>
+    <string name="access_confirm_play_hint">在开始轨迹之前显示机器人、已记录的点、速度以及预留者。默认开启。</string>
+    <string name="valve_n">阀门 %1$d</string>
+    <string name="vacuum_n">真空 %1$d</string>
+    <string name="networked_robot">联网机器人</string>
+    <string name="select_active_node">选择活动节点</string>
+    <string name="viewport_title">3D 视图:%1$s</string>
+    <string name="viewport_model">型号:%1$s</string>
+    <string name="viewport_unknown">未知</string>
+    <string name="viewport_generic">通用</string>
+    <string name="refresh_description">刷新</string>
+    <string name="camera_robot_disabled">%1$s(已禁用)</string>
+    <string name="notification_safety_title">HYDRA-UMC 安全</string>
+    <string name="notification_safety_text">连接已建立。可快速紧急停止。</string>
 </resources>

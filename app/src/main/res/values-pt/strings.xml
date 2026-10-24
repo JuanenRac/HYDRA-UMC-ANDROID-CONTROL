@@ -326,4 +326,26 @@
     <string name="audit_local_ok">Este telemóvel: %1$d linhas lidas, todos os hashes coincidem, %2$d ligações entre vizinhas verificadas, %3$d lacunas não comparáveis.</string>
     <string name="audit_local_broken_changed">Este telemóvel: a linha %1$s não coincide com o seu próprio hash - foi alterada.</string>
     <string name="audit_local_broken_link">Este telemóvel: a linha %1$s não nomeia a anterior - falta uma linha ou foi substituída.</string>
+
+    <!-- Confirmation before PLAY and strings that were fixed text -->
+    <string name="play_confirm_title">Iniciar a reprodução?</string>
+    <string name="play_confirm_message">%1$s vai executar a trajetória que tem: %2$d pontos gravados a %3$d%% de velocidade.\n%4$s</string>
+    <string name="play_confirm_free">O robô não está reservado.</string>
+    <string name="play_confirm_mine">Reservado por si.</string>
+    <string name="play_confirm_other">Reservado por %1$s: o servidor recusa o comando se não for seu.</string>
+    <string name="play_confirm_button">Iniciar</string>
+    <string name="access_confirm_play_label">Perguntar antes de PLAY</string>
+    <string name="access_confirm_play_hint">Mostra o robô, os seus pontos gravados, a velocidade e quem o tem reservado antes de iniciar uma trajetória. Ativado por defeito.</string>
+    <string name="valve_n">VÁLVULA %1$d</string>
+    <string name="vacuum_n">VÁCUO %1$d</string>
+    <string name="networked_robot">ROBÔ EM REDE</string>
+    <string name="select_active_node">ESCOLHA O NÓ ATIVO</string>
+    <string name="viewport_title">VISTA 3D: %1$s</string>
+    <string name="viewport_model">MODELO: %1$s</string>
+    <string name="viewport_unknown">DESCONHECIDO</string>
+    <string name="viewport_generic">GENÉRICO</string>
+    <string name="refresh_description">Atualizar</string>
+    <string name="camera_robot_disabled">%1$s (desativada)</string>
+    <string name="notification_safety_title">SEGURANÇA HYDRA-UMC</string>
+    <string name="notification_safety_text">Ligação ativa. Paragem de emergência rápida disponível.</string>
 </resources>

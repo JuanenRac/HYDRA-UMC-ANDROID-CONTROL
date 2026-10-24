@@ -182,7 +182,7 @@ fun ControlScreen(viewModel: RobotViewModel) {
                     Text(stringResource(R.string.robot_control_title), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
                     Row {
                         Text(
-                            text = "STATUS: ",
+                            text = stringResource(R.string.status_label).uppercase(),
                             style = MaterialTheme.typography.labelSmall,
                             color = Color.LightGray,
                             fontWeight = FontWeight.Bold
@@ -221,10 +221,10 @@ fun ControlScreen(viewModel: RobotViewModel) {
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     OutlinedTextField(
-                        value = selectedRobot?.name ?: "SELECT ACTIVE NODE",
+                        value = selectedRobot?.name ?: stringResource(R.string.select_active_node),
                         onValueChange = {},
                         readOnly = true,
-                        label = { Text("NETWORKED ROBOT") },
+                        label = { Text(stringResource(R.string.networked_robot)) },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedRobot) },
                         modifier = Modifier.menuAnchor(type = MenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
                         colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
@@ -385,14 +385,14 @@ fun ControlScreen(viewModel: RobotViewModel) {
                 
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     HydraButton(
-                        text = "VALVE 1",
+                        text = stringResource(R.string.valve_n, 1),
                         icon = Icons.Default.WaterDrop,
                         onClick = { vibrate(); viewModel.toggleValve(0) },
                         modifier = Modifier.weight(1f),
                         backgroundColor = if (selectedRobot.valves.getOrElse(0){false}) Color(0xFF00ACC1) else Color(0xFF1E293B)
                     )
                     HydraButton(
-                        text = "VALVE 2",
+                        text = stringResource(R.string.valve_n, 2),
                         icon = Icons.Default.WaterDrop,
                         onClick = { vibrate(); viewModel.toggleValve(1) },
                         modifier = Modifier.weight(1f),
@@ -402,14 +402,14 @@ fun ControlScreen(viewModel: RobotViewModel) {
                 Spacer(modifier = Modifier.height(12.dp))
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     HydraButton(
-                        text = "VACUUM 1",
+                        text = stringResource(R.string.vacuum_n, 1),
                         icon = Icons.Default.PowerSettingsNew,
                         onClick = { vibrate(); viewModel.togglePump(0) },
                         modifier = Modifier.weight(1f),
                         backgroundColor = if (selectedRobot.pumps.getOrElse(0){false}) Color(0xFFFB8C00) else Color(0xFF1E293B)
                     )
                     HydraButton(
-                        text = "VACUUM 2",
+                        text = stringResource(R.string.vacuum_n, 2),
                         icon = Icons.Default.PowerSettingsNew,
                         onClick = { vibrate(); viewModel.togglePump(1) },
                         modifier = Modifier.weight(1f),

@@ -326,4 +326,26 @@
     <string name="audit_local_ok">Este teléfono: %1$d líneas leídas, todos los hashes coinciden, %2$d enlaces entre vecinas comprobados, %3$d huecos no comparables.</string>
     <string name="audit_local_broken_changed">Este teléfono: la línea %1$s no coincide con su propio hash: fue modificada.</string>
     <string name="audit_local_broken_link">Este teléfono: la línea %1$s no nombra a la anterior: falta una línea o fue sustituida.</string>
+
+    <!-- Confirmation before PLAY and strings that were fixed text -->
+    <string name="play_confirm_title">¿Iniciar la reproducción?</string>
+    <string name="play_confirm_message">%1$s ejecutará la trayectoria que tiene: %2$d puntos grabados a velocidad %3$d%%.\n%4$s</string>
+    <string name="play_confirm_free">El robot no está reservado.</string>
+    <string name="play_confirm_mine">Reservado por ti.</string>
+    <string name="play_confirm_other">Reservado por %1$s: el servidor rechaza la orden si no es tuya.</string>
+    <string name="play_confirm_button">Iniciar</string>
+    <string name="access_confirm_play_label">Preguntar antes de PLAY</string>
+    <string name="access_confirm_play_hint">Muestra el robot, sus puntos grabados, la velocidad y quién lo tiene reservado antes de empezar una trayectoria. Activado por defecto.</string>
+    <string name="valve_n">VÁLVULA %1$d</string>
+    <string name="vacuum_n">VACÍO %1$d</string>
+    <string name="networked_robot">ROBOT EN RED</string>
+    <string name="select_active_node">ELIGE EL NODO ACTIVO</string>
+    <string name="viewport_title">VISTA 3D: %1$s</string>
+    <string name="viewport_model">MODELO: %1$s</string>
+    <string name="viewport_unknown">DESCONOCIDO</string>
+    <string name="viewport_generic">GENÉRICO</string>
+    <string name="refresh_description">Actualizar</string>
+    <string name="camera_robot_disabled">%1$s (desactivada)</string>
+    <string name="notification_safety_title">SEGURIDAD HYDRA-UMC</string>
+    <string name="notification_safety_text">Conexión activa. Parada de emergencia rápida disponible.</string>
 </resources>

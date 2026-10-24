@@ -1,9 +1,11 @@
 # Bluetooth LE contract
 
 How this app talks to a HYDRA-UMC device over Bluetooth Low Energy (GATT). This is the contract the
-app implements (`network/BleContract.kt`, `network/HydraBleClient.kt`). **No HYDRA-UMC device implements
-the peripheral side yet**: the app is tested against a simulated GATT only (see "What was verified").
-Any firmware or gateway that wants to be reachable from this app implements the table below.
+app implements (`network/BleContract.kt`, `network/HydraBleClient.kt`). The peripheral side is implemented by
+HYDRA-UMC-SERVER on the CM5 (its `docs/BLE_GATT.md` is the reference for the peripheral: options, codes and
+limits); it is off by default and has not been tried against this app on a phone. The app itself is tested
+against a simulated GATT only (see "What was verified"). Any firmware or gateway that wants to be reachable from
+this app implements the table below.
 
 ## Service and characteristics
 
@@ -12,6 +14,7 @@ Any firmware or gateway that wants to be reachable from this app implements the 
 | HYDRA service | `48594452-0001-4000-8000-554d43000001` | primary, advertised | groups the two characteristics |
 | STATE | `48594452-0002-4000-8000-554d43000001` | read, **notify** (CCCD `2902`) | the robot state, UTF-8 JSON, the same settings tree the WebSocket sends |
 | COMMAND | `48594452-0003-4000-8000-554d43000001` | **write** (with response) | one command per message, UTF-8 JSON |
+| ACK | `48594452-0004-4000-8000-554d43000001` | **notify** (CCCD `2902`) | one acknowledgement per command, UTF-8 JSON (optional: a device that does not offer it cannot take commands) |
 
 The peripheral advertises the service UUID, so the app can scan with a service filter. The Bluetooth tab
 can also list every device (switch "Show all Bluetooth devices", off by default).
@@ -52,10 +55,26 @@ Frames are written one at a time, each waiting for the write response of the pre
 write drops the rest of that message and is reported to the user. The peripheral applies the same
 authorization, reservation and safety-limit rules as the server; BLE gives no extra privilege.
 
-**The app does not send robot commands over BLE yet.** The client can (`HydraBleClient.send`), but the
-control screens still require the Wi-Fi session: a STOP that cannot be confirmed must not look
-confirmed, and the BLE write response only proves the radio delivered a frame. Wiring commands to BLE
-needs the peripheral to define an acknowledgement.
+A command carries an `id` (1 to 64 characters, chosen by the app) and the access token of the account:
+
+```json
+{ "id": "c-17", "robotId": 1, "command": "pause", "params": { "paused": true }, "controllerId": "...", "token": "..." }
+```
+
+The peripheral answers on ACK, after the route of the server answered and never before:
+
+```json
+{ "id": "c-17", "ok": true, "status": 200, "code": "ok" }
+```
+
+`ok` is true only for a 2xx answer; `status` is the HTTP status of the route (0 when it was never reached) and
+`code` a stable word (`other-account`, `claimed`, `forbidden`, `rate-limited`, `commands-disabled`, ...). The
+full list is in the server's `docs/BLE_GATT.md`.
+
+**The app does not send robot commands over BLE yet.** The client can write a message (`HydraBleClient.send`),
+but it does not read ACK, and the control screens still require the Wi-Fi session: a STOP that cannot be
+confirmed must not look confirmed, and the BLE write response only proves the radio delivered a frame. Wiring
+commands to BLE means reading ACK and treating a command without an acknowledgement as not delivered.
 
 ## Connection sequence
 

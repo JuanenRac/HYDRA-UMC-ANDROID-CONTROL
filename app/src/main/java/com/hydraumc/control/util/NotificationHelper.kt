@@ -109,8 +109,8 @@ object NotificationHelper {
 
         val builder = NotificationCompat.Builder(context, ESTOP_CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_launcher_foreground)
-            .setContentTitle("HYDRA-UMC SAFETY")
-            .setContentText("Active connection. Quick E-STOP available.")
+            .setContentTitle(context.getString(R.string.notification_safety_title))
+            .setContentText(context.getString(R.string.notification_safety_text))
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setOngoing(true) // Persistent
             .setContentIntent(pendingIntent)

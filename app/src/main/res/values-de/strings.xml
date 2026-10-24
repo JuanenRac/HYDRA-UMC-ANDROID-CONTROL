@@ -326,4 +326,26 @@
     <string name="audit_local_ok">Dieses Telefon: %1$d Zeilen gelesen, alle Hashes stimmen, %2$d Verknüpfungen zwischen Nachbarn geprüft, %3$d Lücken nicht vergleichbar.</string>
     <string name="audit_local_broken_changed">Dieses Telefon: Zeile %1$s stimmt nicht mit ihrem eigenen Hash überein - sie wurde geändert.</string>
     <string name="audit_local_broken_link">Dieses Telefon: Zeile %1$s nennt die vorherige Zeile nicht - eine Zeile fehlt oder wurde ersetzt.</string>
+
+    <!-- Confirmation before PLAY and strings that were fixed text -->
+    <string name="play_confirm_title">Wiedergabe starten?</string>
+    <string name="play_confirm_message">%1$s fährt die vorhandene Bahn ab: %2$d aufgezeichnete Punkte bei %3$d%% Geschwindigkeit.\n%4$s</string>
+    <string name="play_confirm_free">Der Roboter ist nicht reserviert.</string>
+    <string name="play_confirm_mine">Von Ihnen reserviert.</string>
+    <string name="play_confirm_other">Reserviert von %1$s: Der Server lehnt den Befehl ab, wenn er nicht von Ihnen ist.</string>
+    <string name="play_confirm_button">Starten</string>
+    <string name="access_confirm_play_label">Vor PLAY nachfragen</string>
+    <string name="access_confirm_play_hint">Zeigt vor dem Start einer Bahn den Roboter, seine aufgezeichneten Punkte, die Geschwindigkeit und wer ihn reserviert hat. Standardmäßig an.</string>
+    <string name="valve_n">VENTIL %1$d</string>
+    <string name="vacuum_n">VAKUUM %1$d</string>
+    <string name="networked_robot">VERNETZTER ROBOTER</string>
+    <string name="select_active_node">AKTIVEN KNOTEN WÄHLEN</string>
+    <string name="viewport_title">3D-ANSICHT: %1$s</string>
+    <string name="viewport_model">MODELL: %1$s</string>
+    <string name="viewport_unknown">UNBEKANNT</string>
+    <string name="viewport_generic">ALLGEMEIN</string>
+    <string name="refresh_description">Aktualisieren</string>
+    <string name="camera_robot_disabled">%1$s (deaktiviert)</string>
+    <string name="notification_safety_title">HYDRA-UMC SICHERHEIT</string>
+    <string name="notification_safety_text">Aktive Verbindung. Schneller Not-Halt verfügbar.</string>
 </resources>

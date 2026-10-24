@@ -374,12 +374,12 @@ fun ThreeDScreen(viewModel: RobotViewModel) {
                 // below, which sits at a higher zIndex and silently ate every
                 // tap meant for Refresh. Real feedback from live testing.
                 Text(
-                    text = "3D VIEWPORT: ${selectedRobot?.name ?: "UNKNOWN"}",
+                    text = stringResource(R.string.viewport_title, selectedRobot?.name ?: stringResource(R.string.viewport_unknown)),
                     style = MaterialTheme.typography.labelMedium,
                     color = Color(0xFF00E5FF)
                 )
                 Text(
-                    text = "MODEL: ${selectedRobot?.model ?: "GENERIC"}",
+                    text = stringResource(R.string.viewport_model, selectedRobot?.model ?: stringResource(R.string.viewport_generic)),
                     style = MaterialTheme.typography.labelSmall,
                     color = Color.White.copy(alpha = 0.7f)
                 )
@@ -393,7 +393,7 @@ fun ThreeDScreen(viewModel: RobotViewModel) {
                 }
             }
             IconButton(onClick = { refreshKey++ }) {
-                Icon(Icons.Default.Refresh, contentDescription = "Refresh", tint = Color.White)
+                Icon(Icons.Default.Refresh, contentDescription = stringResource(R.string.refresh_description), tint = Color.White)
             }
         }
 

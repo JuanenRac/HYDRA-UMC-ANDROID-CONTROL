@@ -326,4 +326,26 @@
     <string name="audit_local_ok">This phone: %1$d lines read, every hash matches, %2$d links between neighbours checked, %3$d gaps not comparable.</string>
     <string name="audit_local_broken_changed">This phone: line %1$s does not match its own hash - it was changed.</string>
     <string name="audit_local_broken_link">This phone: line %1$s does not name the line before it - a line is missing or was replaced.</string>
+
+    <!-- Confirmation before PLAY and strings that were fixed text -->
+    <string name="play_confirm_title">Start playback?</string>
+    <string name="play_confirm_message">%1$s will run the trajectory it has: %2$d recorded points at %3$d%% speed.\n%4$s</string>
+    <string name="play_confirm_free">The robot is not reserved.</string>
+    <string name="play_confirm_mine">Reserved by you.</string>
+    <string name="play_confirm_other">Reserved by %1$s: the server refuses the command if it is not yours.</string>
+    <string name="play_confirm_button">Start</string>
+    <string name="access_confirm_play_label">Ask before PLAY</string>
+    <string name="access_confirm_play_hint">Shows the robot, its recorded points, the speed and who has it reserved before a trajectory starts. On by default.</string>
+    <string name="valve_n">VALVE %1$d</string>
+    <string name="vacuum_n">VACUUM %1$d</string>
+    <string name="networked_robot">NETWORKED ROBOT</string>
+    <string name="select_active_node">SELECT ACTIVE NODE</string>
+    <string name="viewport_title">3D VIEWPORT: %1$s</string>
+    <string name="viewport_model">MODEL: %1$s</string>
+    <string name="viewport_unknown">UNKNOWN</string>
+    <string name="viewport_generic">GENERIC</string>
+    <string name="refresh_description">Refresh</string>
+    <string name="camera_robot_disabled">%1$s (disabled)</string>
+    <string name="notification_safety_title">HYDRA-UMC SAFETY</string>
+    <string name="notification_safety_text">Active connection. Quick E-STOP available.</string>
 </resources>

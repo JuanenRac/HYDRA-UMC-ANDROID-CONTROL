@@ -326,4 +326,26 @@
     <string name="audit_local_ok">Ce téléphone : %1$d lignes lues, tous les hachages correspondent, %2$d liens entre voisines vérifiés, %3$d trous non comparables.</string>
     <string name="audit_local_broken_changed">Ce téléphone : la ligne %1$s ne correspond pas à son propre hachage - elle a été modifiée.</string>
     <string name="audit_local_broken_link">Ce téléphone : la ligne %1$s ne nomme pas la précédente - une ligne manque ou a été remplacée.</string>
+
+    <!-- Confirmation before PLAY and strings that were fixed text -->
+    <string name="play_confirm_title">Lancer la lecture ?</string>
+    <string name="play_confirm_message">%1$s va exécuter la trajectoire qu\'il possède : %2$d points enregistrés à %3$d%% de vitesse.\n%4$s</string>
+    <string name="play_confirm_free">Le robot n\'est pas réservé.</string>
+    <string name="play_confirm_mine">Réservé par vous.</string>
+    <string name="play_confirm_other">Réservé par %1$s : le serveur refuse la commande si elle n\'est pas la vôtre.</string>
+    <string name="play_confirm_button">Lancer</string>
+    <string name="access_confirm_play_label">Demander avant PLAY</string>
+    <string name="access_confirm_play_hint">Affiche le robot, ses points enregistrés, la vitesse et qui l\'a réservé avant de lancer une trajectoire. Activé par défaut.</string>
+    <string name="valve_n">VANNE %1$d</string>
+    <string name="vacuum_n">VIDE %1$d</string>
+    <string name="networked_robot">ROBOT EN RÉSEAU</string>
+    <string name="select_active_node">CHOISIR LE NŒUD ACTIF</string>
+    <string name="viewport_title">VUE 3D : %1$s</string>
+    <string name="viewport_model">MODÈLE : %1$s</string>
+    <string name="viewport_unknown">INCONNU</string>
+    <string name="viewport_generic">GÉNÉRIQUE</string>
+    <string name="refresh_description">Actualiser</string>
+    <string name="camera_robot_disabled">%1$s (désactivée)</string>
+    <string name="notification_safety_title">SÉCURITÉ HYDRA-UMC</string>
+    <string name="notification_safety_text">Connexion active. Arrêt d\'urgence rapide disponible.</string>
 </resources>

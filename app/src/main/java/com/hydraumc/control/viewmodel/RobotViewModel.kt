@@ -282,6 +282,10 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
     /** Which writes are checked (chosen in the list of reservations); the standard mode by default. */
     val conditionalMode = mutableStateOf(ConditionalMode.STANDARD)
     @Volatile private var conditionalModeTouched = false
+
+    /** Whether PLAY asks first (see [com.hydraumc.control.util.PlayConfirmation]); on until the person turns it off. */
+    val confirmPlay = mutableStateOf(true)
+    @Volatile private var confirmPlayTouched = false
     /** The last revision seen of each robot. */
     val revisions = RevisionTracker { conditionalMode.value }
     /** Whether the server was last seen to understand the `table` command (true until it says otherwise). */
@@ -478,6 +482,8 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
             // Unless the person already chose one while this was reading.
             val saved = prefs.loadConditionalMode()
             if (!conditionalModeTouched) conditionalMode.value = saved
+            val askBeforePlay = prefs.loadConfirmPlay()
+            if (!confirmPlayTouched) confirmPlay.value = askBeforePlay
         }
 
         viewModelScope.launch {
@@ -1630,6 +1636,13 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         conditionalModeTouched = true
         conditionalMode.value = mode
         viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) { prefs.saveConditionalMode(mode) }
+    }
+
+    /** Chooses whether PLAY asks first, and keeps the choice. */
+    fun setConfirmPlay(ask: Boolean) {
+        confirmPlayTouched = true
+        confirmPlay.value = ask
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) { prefs.saveConfirmPlay(ask) }
     }
 
     /** The server's `warnings` of a 200 answer (it applied nothing), joined; null when there are none. */

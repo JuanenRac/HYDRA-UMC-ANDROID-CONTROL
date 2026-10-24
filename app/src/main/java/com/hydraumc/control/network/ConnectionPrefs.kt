@@ -6,6 +6,7 @@
 package com.hydraumc.control.network
 
 import android.content.Context
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
@@ -21,6 +22,8 @@ private val KEY_PORT = stringPreferencesKey("port")
 private val KEY_CONTROLLER_ID = stringPreferencesKey("controller_id")
 /** Preference key for the conditional-writes mode (off, standard, strict). */
 private val KEY_CONDITIONAL_MODE = stringPreferencesKey("conditional_mode")
+/** Preference key for asking before PLAY starts a trajectory. */
+private val KEY_CONFIRM_PLAY = booleanPreferencesKey("confirm_play")
 
 /**
  * Helper class to manage loading and saving network connection settings.
@@ -56,6 +59,13 @@ class ConnectionPrefs(private val context: Context) {
 
     suspend fun saveConditionalMode(mode: ConditionalMode) {
         context.connectionDataStore.edit { prefs -> prefs[KEY_CONDITIONAL_MODE] = mode.key }
+    }
+
+    /** Whether PLAY asks first (the robot, its points, the speed and who reserved it); yes before any choice. */
+    suspend fun loadConfirmPlay(): Boolean = context.connectionDataStore.data.first()[KEY_CONFIRM_PLAY] ?: true
+
+    suspend fun saveConfirmPlay(ask: Boolean) {
+        context.connectionDataStore.edit { prefs -> prefs[KEY_CONFIRM_PLAY] = ask }
     }
 
     /** The controller id kept for this installation, or null before the first one was saved. */

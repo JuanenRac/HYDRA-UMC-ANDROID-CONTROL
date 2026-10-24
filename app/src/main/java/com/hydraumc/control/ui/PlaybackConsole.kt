@@ -32,15 +32,20 @@ import androidx.compose.material.icons.filled.Dangerous
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -49,6 +54,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import com.hydraumc.control.R
 import androidx.compose.ui.unit.dp
+import com.hydraumc.control.network.ClaimStanding
+import com.hydraumc.control.util.PlayConfirmation
 import com.hydraumc.control.viewmodel.RobotState
 import com.hydraumc.control.viewmodel.RobotViewModel
 
@@ -147,6 +154,42 @@ fun PlaybackConsole(viewModel: RobotViewModel, selectedRobot: RobotState?) {
 
     if (selectedRobot == null) return
     val stopHoldHint = stringResource(R.string.stop_hold_to_confirm)
+    var confirmingPlay by remember { mutableStateOf(false) }
+    val playDescription = stringResource(R.string.play)
+    val pauseDescription = stringResource(if (selectedRobot.isPaused) R.string.resume else R.string.pause)
+    val stopDescription = stringResource(R.string.stop)
+
+    if (confirmingPlay) {
+        val standing = viewModel.claimStandingOf(selectedRobot.id)
+        val reservation = when (standing) {
+            ClaimStanding.FREE -> stringResource(R.string.play_confirm_free)
+            ClaimStanding.MINE_HERE, ClaimStanding.MINE_ELSEWHERE -> stringResource(R.string.play_confirm_mine)
+            ClaimStanding.OTHER -> stringResource(R.string.play_confirm_other, viewModel.claimOf(selectedRobot.id)?.ownerUsername ?: "")
+        }
+        AlertDialog(
+            onDismissRequest = { confirmingPlay = false },
+            title = { Text(stringResource(R.string.play_confirm_title)) },
+            text = {
+                Text(
+                    stringResource(
+                        R.string.play_confirm_message,
+                        selectedRobot.name,
+                        selectedRobot.recordedPointsCount,
+                        PlayConfirmation.speedPercent(selectedRobot.speed),
+                        reservation,
+                    ),
+                )
+            },
+            confirmButton = {
+                Button(onClick = {
+                    confirmingPlay = false
+                    vibrate()
+                    viewModel.sendCommand("play")
+                }) { Text(stringResource(R.string.play_confirm_button)) }
+            },
+            dismissButton = { TextButton(onClick = { confirmingPlay = false }) { Text(stringResource(R.string.cancel_button)) } },
+        )
+    }
 
     Surface(
         modifier = Modifier
@@ -168,11 +211,15 @@ fun PlaybackConsole(viewModel: RobotViewModel, selectedRobot: RobotState?) {
 
             // PLAY
             IconButton(
-                onClick = { vibrate(); viewModel.sendCommand("play") },
+                onClick = {
+                    vibrate()
+                    if (PlayConfirmation.needed(viewModel.confirmPlay.value, selectedRobot.isPlaying)) confirmingPlay = true
+                    else viewModel.sendCommand("play")
+                },
                 enabled = selectedRobot.online,
                 modifier = Modifier.size(54.dp).background(if (selectedRobot.online) Color(0xFF15803D) else Color.DarkGray, CircleShape),
             ) {
-                Icon(Icons.Default.PlayArrow, contentDescription = "PLAY", tint = Color.White)
+                Icon(Icons.Default.PlayArrow, contentDescription = playDescription, tint = Color.White)
             }
 
             // PAUSE / RESUME
@@ -181,7 +228,7 @@ fun PlaybackConsole(viewModel: RobotViewModel, selectedRobot: RobotState?) {
                 enabled = selectedRobot.online && selectedRobot.isPlaying,
                 modifier = Modifier.size(54.dp).background(if (selectedRobot.online && selectedRobot.isPlaying) Color(0xFFB45309) else Color.DarkGray, CircleShape),
             ) {
-                Icon(if (selectedRobot.isPaused) Icons.Default.PlayArrow else Icons.Default.Pause, contentDescription = "PAUSE", tint = Color.White)
+                Icon(if (selectedRobot.isPaused) Icons.Default.PlayArrow else Icons.Default.Pause, contentDescription = pauseDescription, tint = Color.White)
             }
 
             // STOP - same long-press protection as E-STOP above.
@@ -202,7 +249,7 @@ fun PlaybackConsole(viewModel: RobotViewModel, selectedRobot: RobotState?) {
                     ),
                 contentAlignment = Alignment.Center,
             ) {
-                Icon(Icons.Default.Stop, contentDescription = "STOP", tint = Color.White)
+                Icon(Icons.Default.Stop, contentDescription = stopDescription, tint = Color.White)
             }
         }
     }
