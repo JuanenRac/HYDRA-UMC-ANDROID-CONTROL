@@ -1667,7 +1667,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
             e.isReservedByAnother -> app.getString(R.string.error_robot_reserved, e.serverMessage ?: "")
             e.isPermissionDenied -> app.getString(R.string.error_permission_denied)
             e.isRejectedCommand -> app.getString(R.string.error_command_rejected, command, e.serverMessage ?: "")
-            command == "stop" -> app.getString(R.string.error_stop_not_confirmed, command)
+            command == "stop" -> app.getString(R.string.error_stop_not_confirmed)
             else -> app.getString(R.string.error_command_failed, command)
         }
     }
@@ -2237,7 +2237,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         // the old location-permission-based BLE scan model.
         if (BlePermissions.needsLocationServices(Build.VERSION.SDK_INT)) {
             val locationManager = app.getSystemService(Context.LOCATION_SERVICE) as? LocationManager
-            if (locationManager?.isLocationEnabled != true) {
+            if (locationManager == null || !androidx.core.location.LocationManagerCompat.isLocationEnabled(locationManager)) {
                 reportBleError(BleError(BleErrorKind.LOCATION_OFF))
                 return
             }

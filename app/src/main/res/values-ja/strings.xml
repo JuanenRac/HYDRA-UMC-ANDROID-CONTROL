@@ -348,4 +348,8 @@
     <string name="camera_robot_disabled">%1$s(無効)</string>
     <string name="notification_safety_title">HYDRA-UMC 安全</string>
     <string name="notification_safety_text">接続中です。緊急停止をすぐに使えます。</string>
+    <string name="splash_tagline">産業用ロボットの制御</string>
+    <string name="login_subtitle">サーバーにサインインします</string>
+    <string name="show_password">表示</string>
+    <string name="hide_password">非表示</string>
 </resources>

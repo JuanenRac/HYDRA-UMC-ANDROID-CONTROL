@@ -348,4 +348,8 @@
     <string name="camera_robot_disabled">%1$s(已禁用)</string>
     <string name="notification_safety_title">HYDRA-UMC 安全</string>
     <string name="notification_safety_text">连接已建立。可快速紧急停止。</string>
+    <string name="splash_tagline">工业机器人控制</string>
+    <string name="login_subtitle">登录到您的服务器</string>
+    <string name="show_password">显示</string>
+    <string name="hide_password">隐藏</string>
 </resources>

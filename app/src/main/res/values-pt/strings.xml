@@ -348,4 +348,8 @@
     <string name="camera_robot_disabled">%1$s (desativada)</string>
     <string name="notification_safety_title">SEGURANÇA HYDRA-UMC</string>
     <string name="notification_safety_text">Ligação ativa. Paragem de emergência rápida disponível.</string>
+    <string name="splash_tagline">Controlo de robôs industriais</string>
+    <string name="login_subtitle">Inicie sessão no seu servidor</string>
+    <string name="show_password">Mostrar</string>
+    <string name="hide_password">Ocultar</string>
 </resources>
