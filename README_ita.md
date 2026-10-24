@@ -40,6 +40,19 @@ Un'app Android nativa (Kotlin + Jetpack Compose) che controlla un robot sulla pi
 | Destinazione | Uno smartphone o tablet Android |
 | Su hardware reale | Non ancora: per questa versione non risulta alcuna esecuzione su hardware reale |
 
+## 🚦 Stato del progetto
+
+Ogni riga è una parte di questo repository e il semaforo dice a che punto è oggi. È scritta in base a ciò che il repository può mostrare (test, compilazioni, esecuzioni), non a ciò che è previsto.
+
+🟢 Fatto e verificato · 🟡 Funziona, con limiti noti · 🟠 Fatto a metà o non ancora verificato · 🔴 Non fatto o non funzionante
+
+| Area | Stato | Cosa significa qui |
+|---|---|---|
+| Software | 🟡 | Funziona per il suo scopo principale; la verifica di onestà qui sopra elenca ciò che manca ancora |
+| Test | 🟢 | 300 test automatici, eseguiti a ogni modifica |
+| Hardware reale | 🔴 | Non ancora: per questa versione non risulta alcuna esecuzione su hardware reale |
+| Documentazione | 🟢 | README in otto lingue, verificato rispetto al manifesto a ogni modifica |
+
 ## 🏗️ Cosa è implementato
 
 - **Controllo Accessi e Biometria** (`ui/LoginScreen.kt`, `util/BiometricHelper.kt`) - Sistema di login professionale con supporto per **Impronta digitale e Sblocco con il Volto** (`androidx.biometric`), più campi IP/porta direttamente nella stessa schermata così un server può essere selezionato senza passare prima dalle Impostazioni. Include la funzione "Ricordami", un meccanismo di **Logout** sicuro, ed è completamente localizzato in **8 lingue**. Nome utente/password/token in cache (`network/AuthPrefs.kt`) risiedono in **EncryptedSharedPreferences** basate su Keystore (AES256-GCM), non in chiaro - un server di sviluppo (`NODE_ENV` non impostato) crea un account predefinito `admin`/`admin` al primo avvio; un server di produzione (`NODE_ENV=production`) richiede invece `HYDRA_UMC_BOOTSTRAP_ADMIN_USERNAME`/`HYDRA_UMC_BOOTSTRAP_ADMIN_PASSWORD` e non ricade mai silenziosamente su `admin`/`admin` - vedere il README di HYDRA-UMC-SERVER per la configurazione completa di produzione. Account aggiuntivi a privilegio inferiore di tipo **operator** restano creabili lato server da Config > Users in entrambi i casi.

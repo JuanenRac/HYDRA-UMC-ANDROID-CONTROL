@@ -41,6 +41,19 @@ Uma aplicação Android nativa (Kotlin + Jetpack Compose) que controla um robô 
 | Destino | Um telemóvel ou tablet Android |
 | Em hardware real | Ainda não: não há registo de execução em hardware real para esta versão |
 
+## 🚦 Estado do projeto
+
+Cada linha é uma parte deste repositório e a luz diz até onde chega hoje. É escrita com o que o repositório consegue demonstrar (testes, compilações, execuções), não com o que está previsto.
+
+🟢 Feito e verificado · 🟡 Funciona, com limites conhecidos · 🟠 Feito a meio ou ainda por verificar · 🔴 Por fazer ou a não funcionar
+
+| Área | Estado | O que significa aqui |
+|---|---|---|
+| Software | 🟡 | Funciona para o seu propósito principal; a verificação de honestidade acima lista o que ainda falta |
+| Testes | 🟢 | 300 testes automáticos, executados a cada alteração |
+| Hardware real | 🔴 | Ainda não: não há registo de execução em hardware real para esta versão |
+| Documentação | 🟢 | README em oito idiomas, verificado contra o manifesto a cada alteração |
+
 ## 🏗️ O que está implementado
 
 - **Controlo de acesso e biometria** (`ui/LoginScreen.kt`, `util/BiometricHelper.kt`) - sistema profissional de início de sessão com suporte a **impressão digital e desbloqueio facial** (`androidx.biometric`), mais campos de IP/porta no mesmo ecrã para que se possa apontar a um servidor sem uma ida separada às Definições. Inclui a funcionalidade «Lembrar-me», um mecanismo seguro de **Terminar sessão** e está totalmente localizada em **8 idiomas**. O utilizador/palavra-passe/token em cache (`network/AuthPrefs.kt`) vivem em **EncryptedSharedPreferences** apoiadas no Keystore (AES256-GCM), não em texto simples - um servidor de desenvolvimento (`NODE_ENV` por definir) cria uma conta `admin`/`admin` por defeito no primeiro arranque; um servidor de produção (`NODE_ENV=production`) exige em vez disso `HYDRA_UMC_BOOTSTRAP_ADMIN_USERNAME`/`HYDRA_UMC_BOOTSTRAP_ADMIN_PASSWORD` e nunca recorre em silêncio a `admin`/`admin` - ver o README do próprio HYDRA-UMC-SERVER para a configuração de produção completa. Contas adicionais de **operador**, com menos privilégios, podem ser criadas no servidor em Config > Users de qualquer das formas.
