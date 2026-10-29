@@ -110,7 +110,7 @@ jobs:
         shell: bash
         run: |
           chmod +x gradlew
-          ./gradlew test
+          ./gradlew test lint
       - name: Install ARM GNU Toolchain for firmware projects
         if: ${{ hashFiles('build_firmware.sh') != '' }}
         run: |

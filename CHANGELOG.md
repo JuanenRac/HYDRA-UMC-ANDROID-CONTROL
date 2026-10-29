@@ -8,6 +8,10 @@ All notable changes to this project are documented here.
 
 - **The layout of the README is checked in the CI:** the validator runs `tools/universal_readme_check.py` and lists, as a warning, what differs from the universal layout of the README.
 
+- **A cancelled system installer no longer leaves the update screen on "installing":** when the app comes back to the foreground after the Android installer was closed without replacing the app, the update is offered again.
+
+- **Android lint runs in the CI** next to the unit tests.
+
 ## [0.7.2] - A quiet start-up and a new sign-in, like the other apps of the family and bluetooth commands with an acknowledgement (cl
 
 ### Firmware and protocol

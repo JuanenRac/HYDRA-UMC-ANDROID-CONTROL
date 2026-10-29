@@ -263,6 +263,7 @@ class MainActivity : FragmentActivity() {
         // A user may have just approved Android's per-app "install unknown
         // apps" setting. Resume only the verified APK already in our cache;
         // no update is downloaded or installed merely because the app opens.
+        appUpdateViewModel.installerClosed()
         appUpdateViewModel.resumeInstallAfterPermissionApproval()
     }
 

@@ -31,10 +31,20 @@ sealed interface AppUpdateState {
     data class Failed(val message: String) : AppUpdateState
 }
 
+/**
+ * What the screen shows when the app comes back to the foreground after the
+ * system installer was opened. A finished installation replaces the running
+ * app, so still being here means the installer was cancelled or refused: the
+ * update is offered again instead of staying on "installing" forever.
+ */
+internal fun stateAfterInstallerReturn(current: AppUpdateState, pending: AvailableUpdate?): AppUpdateState =
+    if (current == AppUpdateState.Installing && pending != null) AppUpdateState.Available(pending) else current
+
 class AppUpdateViewModel(application: Application) : AndroidViewModel(application) {
     private val updater = GitHubReleaseUpdater(application.applicationContext)
     private val mutableState = MutableStateFlow<AppUpdateState>(AppUpdateState.Idle)
     val state: StateFlow<AppUpdateState> = mutableState.asStateFlow()
+    private var installingUpdate: AvailableUpdate? = null
 
     /** Safe to call at startup: it only reads release metadata, never downloads an APK. */
     fun checkForUpdate() {
@@ -59,6 +69,7 @@ class AppUpdateViewModel(application: Application) : AndroidViewModel(applicatio
                 is UpdateDownloadResult.Failed -> mutableState.value = AppUpdateState.Failed(result.message)
                 is UpdateDownloadResult.ReadyToInstall -> {
                     if (updater.canRequestPackageInstalls()) {
+                        installingUpdate = update
                         mutableState.value = AppUpdateState.Installing
                         updater.launchSystemInstaller(result.apk)
                     } else {
@@ -94,6 +105,7 @@ class AppUpdateViewModel(application: Application) : AndroidViewModel(applicatio
      */
     fun resumeInstallAfterPermissionApproval() {
         val permissionState = mutableState.value as? AppUpdateState.InstallPermissionRequired ?: return
+        installingUpdate = permissionState.update
         if (!updater.canRequestPackageInstalls()) return
         val apk = updater.cachedInstallableApk()
         if (apk == null) {
@@ -104,6 +116,12 @@ class AppUpdateViewModel(application: Application) : AndroidViewModel(applicatio
         }
         mutableState.value = AppUpdateState.Installing
         updater.launchSystemInstaller(apk)
+    }
+
+    /** Called on every return to the foreground, before the permission check above. */
+    fun installerClosed() {
+        val next = stateAfterInstallerReturn(mutableState.value, installingUpdate)
+        if (next != mutableState.value) mutableState.value = next
     }
 
     /** Hides a startup prompt; Settings can always issue a new explicit check. */
