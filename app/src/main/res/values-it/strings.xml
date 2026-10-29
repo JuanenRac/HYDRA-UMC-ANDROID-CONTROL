@@ -59,6 +59,7 @@
     <string name="error_stop_not_confirmed">STOP non confermato dal server: premilo di nuovo o usa il pulsante di emergenza fisico</string>
     <string name="error_session_expired">Sessione scaduta: accesso in corso</string>
     <string name="error_robot_reserved">Il robot è riservato da un altro account: %1$s</string>
+    <string name="error_stale_sequence">Un comando di movimento più recente di questo telefono aveva già raggiunto il robot, quindi il comando %1$s NON è stato applicato perché è arrivato fuori ordine. Ripetilo se lo vuoi ancora.</string>
     <string name="error_jog_out_of_reach">Questo movimento è fuori dalla portata del robot: non è stato inviato nulla.</string>
     <string name="stale_data_banner">Nessuna connessione - dati delle %1$s. Lo stato dei robot potrebbe non essere aggiornato.</string>
     <string name="stale_data_banner_unknown">Nessuna connessione - dati salvati. Lo stato dei robot potrebbe non essere aggiornato.</string>

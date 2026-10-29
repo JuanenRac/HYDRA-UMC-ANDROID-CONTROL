@@ -88,6 +88,9 @@ class HydraApiException(
     /** 403 `jog-not-armed`: the administrator requires the jog to be armed first and it is not. */
     val isJogNotArmed: Boolean get() = httpCode == 403 && serverCode == "jog-not-armed"
 
+    /** 409 `stale-sequence`: a later numbered motion command of this controller already reached the robot, so this one arrived out of order and was not applied. */
+    val isStaleSequence: Boolean get() = httpCode == 409 && serverCode == "stale-sequence"
+
     /** The server is rate limiting this client (429). */
     val isRateLimited: Boolean get() = httpCode == 429
 
@@ -259,10 +262,16 @@ class HydraApiClient(
                 .header("Authorization", "Bearer ${authToken ?: ""}")
                 .header("X-Controller-Id", SessionController.id)
                 .apply { if (ifMatch != null) header("If-Match", ifMatch) }
-                .post(payload.put("controllerId", SessionController.id).toString().toRequestBody(JSON_MEDIA_TYPE))
+                .post(numbered(payload).put("controllerId", SessionController.id).toString().toRequestBody(JSON_MEDIA_TYPE))
                 .build()
             executeExpectingJson(request, if (urgent) urgentClient() else client)
         }
+
+    /** Puts the next `seq` on a motion command (or a stop), so the server can order them; any other command goes out as it is. */
+    private fun numbered(payload: JSONObject): JSONObject {
+        if (CommandSequence.isNumbered(payload.optString("command"))) payload.put("seq", CommandSequence.next())
+        return payload
+    }
 
     /** Every active reservation (GET /api/claims): who controls which robot. */
     suspend fun getClaims(): List<ClaimInfo> = withContext(Dispatchers.IO) {

@@ -1662,6 +1662,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
             e.isSessionProblem -> app.getString(R.string.error_session_expired)
             e.isRevisionMismatch -> app.getString(R.string.error_revision_changed, command)
             e.isJogNotArmed -> app.getString(R.string.error_jog_not_armed)
+            e.isStaleSequence -> app.getString(R.string.error_stale_sequence, command)
             e.isOtherController -> app.getString(R.string.error_claim_other_controller, e.serverMessage ?: "")
             e.isControllerIdRequired -> app.getString(R.string.error_claim_controller_required, e.serverMessage ?: "")
             e.isReservedByAnother -> app.getString(R.string.error_robot_reserved, e.serverMessage ?: "")

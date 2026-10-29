@@ -1,0 +1,34 @@
+{
+  "contract": "watch-voice-relay",
+  "protocolVersion": 1,
+  "note": "One file, two repositories: HYDRA-UMC-WATCH and HYDRA-UMC-ANDROID-CONTROL keep an identical copy and each runs the vectors below against its own code. A change to a message starts here, in both copies.",
+  "levels": ["NOMINAL", "ATTENTION", "WARNING", "CRITICAL", "OFFLINE"],
+  "limits": {
+    "requestIdPattern": "^[A-Za-z0-9_-]{1,64}$",
+    "transcriptMax": 500,
+    "assistantTextMax": 500,
+    "localeLength": [2, 35],
+    "statusHeadlineMax": 80,
+    "statusDetailMax": 280
+  },
+  "errorCodes": ["connection_unavailable", "offline"],
+  "valid": [
+    {"type": "voice_turn", "requestId": "watch-voice-001", "transcript": "What is the status of robot 3?", "locale": "en-US"},
+    {"type": "voice_turn", "requestId": "a", "transcript": "x", "locale": "es"},
+    {"type": "assistant_reply", "requestId": "watch-voice-001", "text": "Robot 3 is online and idle.", "level": "NOMINAL", "speak": true, "requiresConfirmation": false},
+    {"type": "assistant_reply", "requestId": "r-2", "text": "Connection lost.", "level": "OFFLINE", "speak": false, "requiresConfirmation": false, "errorCode": "offline"},
+    {"type": "system_status", "headline": "Server unreachable", "detail": "Retrying", "level": "WARNING", "speak": false, "errorCode": "connection_unavailable"},
+    {"type": "system_status", "headline": "All good", "detail": "", "level": "NOMINAL", "speak": false}
+  ],
+  "invalid": [
+    {"why": "request id with a space", "type": "voice_turn", "requestId": "a b", "transcript": "hello", "locale": "en"},
+    {"why": "request id over 64 characters", "type": "voice_turn", "requestId": {"repeat": "a", "count": 65}, "transcript": "hello", "locale": "en"},
+    {"why": "blank transcript", "type": "voice_turn", "requestId": "r1", "transcript": "   ", "locale": "en"},
+    {"why": "transcript over 500 characters", "type": "voice_turn", "requestId": "r1", "transcript": {"repeat": "x", "count": 501}, "locale": "en"},
+    {"why": "locale of one character", "type": "voice_turn", "requestId": "r1", "transcript": "hello", "locale": "e"},
+    {"why": "blank assistant text", "type": "assistant_reply", "requestId": "r1", "text": " ", "level": "NOMINAL", "speak": true, "requiresConfirmation": false},
+    {"why": "blank status headline", "type": "system_status", "headline": "", "detail": "d", "level": "NOMINAL", "speak": false},
+    {"why": "status headline over 80 characters", "type": "system_status", "headline": {"repeat": "h", "count": 81}, "detail": "d", "level": "NOMINAL", "speak": false},
+    {"why": "status detail over 280 characters", "type": "system_status", "headline": "h", "detail": {"repeat": "d", "count": 281}, "level": "NOMINAL", "speak": false}
+  ]
+}

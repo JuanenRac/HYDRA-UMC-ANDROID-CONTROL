@@ -59,6 +59,7 @@
     <string name="error_stop_not_confirmed">STOP não confirmado pelo servidor: prima de novo ou use a paragem de emergência física</string>
     <string name="error_session_expired">Sessão expirada: a iniciar sessão de novo</string>
     <string name="error_robot_reserved">O robô está reservado por outra conta: %1$s</string>
+    <string name="error_stale_sequence">Um comando de movimento mais recente deste telemóvel já tinha chegado ao robô, por isso o comando %1$s NÃO foi aplicado, porque chegou fora de ordem. Repita-o se ainda o quiser.</string>
     <string name="error_jog_out_of_reach">Este movimento está fora do alcance do robô: não foi enviado nada.</string>
     <string name="stale_data_banner">Sem ligação - dados das %1$s. Os estados dos robôs podem estar desatualizados.</string>
     <string name="stale_data_banner_unknown">Sem ligação - dados guardados. Os estados dos robôs podem estar desatualizados.</string>
