@@ -1,34 +1,38 @@
+<!-- =============================================================================
+HYDRA-UMC-ANDROID-CONTROL - Android operator console for a HYDRA-UMC server: control, cameras, 3D view and a global STOP
+Copyright (C) JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
+GPL-3.0-or-later - see LICENSE
+============================================================================= -->
+
 <p align="center">
   <img src="images/HYDRA_UMC_BANNER.svg" alt="HYDRA-UMC-ANDROID-CONTROL banner" width="100%">
 </p>
 
-# 📱 HYDRA-UMC CONTROL
+# 📱 HYDRA-UMC-ANDROID-CONTROL
 
-<p align="center">
-  <a href="README.md">🇺🇸 English</a> |
-  <a href="README_spa.md">🇪🇸 Español</a> |
-  <a href="README_fra.md">🇫🇷 Français</a> |
-  <a href="README_ita.md">🇮🇹 Italiano</a> |
-  <a href="README_deu.md">🇩🇪 Deutsch</a> |
-  <a href="README_zho.md">🇨🇳 简体中文</a> |
-  <a href="README_jpn.md">🇯🇵 日本語</a> |
-  🇵🇹 <b>Português</b>
-</p>
+<p align="center"><a href="README.md">🇺🇸 English</a> | <a href="README_spa.md">🇪🇸 Español</a> | <a href="README_fra.md">🇫🇷 Français</a> | <a href="README_ita.md">🇮🇹 Italiano</a> | <a href="README_deu.md">🇩🇪 Deutsch</a> | <a href="README_zho.md">🇨🇳 简体中文</a> | <a href="README_jpn.md">🇯🇵 日本語</a> | 🇵🇹 <b>Português</b></p>
 
+### Os seus robôs HYDRA-UMC no bolso: encontre o servidor, mova e vigie os robôs e pare tudo com um botão vermelho.
 
 <p align="center">
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
-  <img src="https://img.shields.io/badge/Language-Kotlin-7F52FF.svg" alt="Kotlin">
-  <img src="https://img.shields.io/badge/UI-Jetpack%20Compose-4285F4.svg" alt="Compose">
-  <img src="https://img.shields.io/badge/Platform-Android-3DDC84.svg" alt="Android">
+  <img src="https://img.shields.io/badge/Language-Kotlin-7F52FF.svg" alt="Language">
+  <img src="https://img.shields.io/badge/UI-Jetpack%20Compose-4285F4.svg" alt="UI">
+  <img src="https://img.shields.io/badge/Platform-Android-3DDC84.svg" alt="Platform">
+  <img src="https://img.shields.io/badge/Tests-303%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Version-0.7.2-0f6cbd.svg" alt="Version">
+  <img src="https://img.shields.io/badge/Maturity-functional-0F6CBD.svg" alt="Maturity">
 </p>
 
+---
 
 Uma aplicação Android nativa (Kotlin + Jetpack Compose) que controla um robô da plataforma [HYDRA-UMC](https://github.com/JuanenRac/HYDRA-UMC) por Wi-Fi ou Bluetooth, falando exatamente o mesmo contrato [`REMOTE_API.md`](https://github.com/JuanenRac/HYDRA-UMC-SERVER/blob/main/docs/REMOTE_API.md) que o [HYDRA-UMC SUITE](https://github.com/JuanenRac/HYDRA-UMC-SUITE) usa - descoberta, leitura/escrita do estado completo e sincronização WebSocket em direto contra um back-end [HYDRA-UMC-SERVER](https://github.com/JuanenRac/HYDRA-UMC-SERVER) em execução (o mesmo com que o painel web do próprio [HYDRA-UMC STUDIO](https://github.com/JuanenRac/HYDRA-UMC-STUDIO) fala). Contraparte Android direta do [HYDRA-UMC-IOS-CONTROL](https://github.com/JuanenRac/HYDRA-UMC-IOS-CONTROL). Consulte o [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) para o desenho completo.
 
-> **Verificação de honestidade - o que realmente funciona hoje:** a lógica de negócio central - a cinemática do Parol6 (`kinematics/Parol6Kinematics.kt`), o contrato de estado da árvore de definições (`model/HydraState.kt`), o despacho atómico de comandos e o relé de turnos de voz (`viewmodel/RobotViewModel.kt`), o tratamento de religação do WebSocket (`network/HydraWebSocket.kt`), a análise de fotogramas MJPEG (`ui/MjpegPlayer.kt`), o canal de atualização na própria aplicação (`update/GitHubReleaseUpdater.kt`, `ReleaseMetadataParser.kt`, `SemanticVersion.kt`) e a contabilidade de pedidos do relé de voz do Wear (`wear/BoundedRequestScope.kt`, `WatchCompanionProtocol.kt`) são reais e cobertos por 280 testes unitários JVM/Robolectric a passar (`./gradlew testDebugUnitTest`). O que esses testes estruturalmente não alcançam - e que este ambiente de desenvolvimento só para Windows, sem dispositivo Android físico, não consegue verificar - é o `EncryptedSharedPreferences` real apoiado no Keystore do `network/AuthPrefs.kt`, o pedido biométrico de impressão digital/rosto do `androidx.biometric`, o transporte GATT Bluetooth do `network/HydraBleClient.kt` e o caminho de hardware `ImageDecoder` da API 28+ no `MjpegStreamParser`: código real e compilado que não foi reverificado em hardware desde que foi escrito. O arranque/início de sessão básicos *foram* confirmados em direto num dispositivo real em versões anteriores (ver as entradas `v0.3.2`/`v0.3.3` do `CHANGELOG.md`), mas isso é anterior ao Bluetooth, à biometria e ao caminho de descodificação por hardware. Consulte o `CHANGELOG.md` para saber exatamente o que foi entregue, incluindo as suas notas por entrada sobre o que continua por verificar em hardware.
+> **Verificação de honestidade - o que realmente funciona hoje:** a lógica de negócio central - a cinemática do Parol6 (`kinematics/Parol6Kinematics.kt`), o contrato de estado da árvore de definições (`model/HydraState.kt`), o despacho atómico de comandos e o relé de turnos de voz (`viewmodel/RobotViewModel.kt`), o tratamento de religação do WebSocket (`network/HydraWebSocket.kt`), a análise de fotogramas MJPEG (`ui/MjpegPlayer.kt`), o canal de atualização na própria aplicação (`update/GitHubReleaseUpdater.kt`, `ReleaseMetadataParser.kt`, `SemanticVersion.kt`) e a contabilidade de pedidos do relé de voz do Wear (`wear/BoundedRequestScope.kt`, `WatchCompanionProtocol.kt`) são reais e cobertos por 303 testes unitários JVM/Robolectric a passar (`./gradlew testDebugUnitTest`). O que esses testes estruturalmente não alcançam - e que este ambiente de desenvolvimento só para Windows, sem dispositivo Android físico, não consegue verificar - é o `EncryptedSharedPreferences` real apoiado no Keystore do `network/AuthPrefs.kt`, o pedido biométrico de impressão digital/rosto do `androidx.biometric`, o transporte GATT Bluetooth do `network/HydraBleClient.kt` e o caminho de hardware `ImageDecoder` da API 28+ no `MjpegStreamParser`: código real e compilado que não foi reverificado em hardware desde que foi escrito. O arranque/início de sessão básicos *foram* confirmados em direto num dispositivo real em versões anteriores (ver as entradas `v0.3.2`/`v0.3.3` do `CHANGELOG.md`), mas isso é anterior ao Bluetooth, à biometria e ao caminho de descodificação por hardware. Consulte o `CHANGELOG.md` para saber exatamente o que foi entregue, incluindo as suas notas por entrada sobre o que continua por verificar em hardware.
 
 > **Estado de segurança (safety e security):** este ecossistema não é um sistema de segurança certificado. Ainda não existe um caminho de E-STOP por hardware, nem limites ou interlocks impostos pelo firmware, nem um comando de movimento verificado; as imagens de firmware são verificadas com CRC32 e um HMAC-SHA256 de chave partilhada, não com uma assinatura assimétrica; TLS e TLS mútuo são opcionais e estão desativados por defeito; nenhuma placa própria foi ainda montada ou testada. Leia a [base de segurança](https://github.com/JuanenRac/HYDRA-UMC-DOCS/blob/main/docs/SECURITY_BASELINE.md) e o [modelo de ameaças](https://github.com/JuanenRac/HYDRA-UMC-DOCS/blob/main/docs/THREAT_MODEL.md) antes de confiar em qualquer afirmação aqui para a segurança de uma pessoa.
+
+---
 
 ## 📋 Num relance
 
@@ -36,10 +40,12 @@ Uma aplicação Android nativa (Kotlin + Jetpack Compose) que controla um robô 
 |---|---|
 | Versão | `0.7.2` |
 | Maturidade | Funcional |
-| Testes | 300 (`./gradlew testDebugUnitTest`) |
+| Testes | 303 (`./gradlew testDebugUnitTest`) |
 | Tecnologia | Kotlin / Jetpack / biometric auth / WebSocket client |
 | Destino | Um telemóvel ou tablet Android |
 | Em hardware real | Ainda não: não há registo de execução em hardware real para esta versão |
+
+**Ir para:** [Visão geral](#-visão-geral) · [Arquitetura](#-arquitetura) · [Funcionalidades](#-funcionalidades) · [Segurança e proteção](#-segurança-e-proteção) · [Interfaces](#-interfaces) · [Configuração](#-configuração) · [Início rápido](#-início-rápido) · [Testes](#-testes) · [Resolução de problemas](#-resolução-de-problemas) · [Estrutura do repositório](#-estrutura-do-repositório) · [Projetos relacionados](#-projetos-relacionados)
 
 ## 🚦 Estado do projeto
 
@@ -50,11 +56,25 @@ Cada linha é uma parte deste repositório e a luz diz até onde chega hoje. É 
 | Área | Estado | O que significa aqui |
 |---|---|---|
 | Software | 🟡 | Funciona para o seu propósito principal; a verificação de honestidade acima lista o que ainda falta |
-| Testes | 🟢 | 300 testes automáticos, executados a cada alteração |
+| Testes | 🟢 | 303 testes automáticos, executados a cada alteração |
 | Hardware real | 🔴 | Ainda não: não há registo de execução em hardware real para esta versão |
 | Documentação | 🟢 | README em oito idiomas, verificado contra o manifesto a cada alteração |
 
-## 🏗️ O que está implementado
+## 🎯 Visão geral
+
+Ecrãs da aplicação: **início de sessão** (endereço do servidor, palavra-passe, impressão digital ou rosto), **painel** (um carrossel 3D dos robôs com a sua matriz de módulos e a saúde do módulo de cálculo), **controlo** (joysticks, reproduzir, pausar, parar, reserva do robô), **câmaras** (MJPEG em direto com imagem em imagem), **vista 3D** (a cena real do STUDIO), **telemetria** (um registo ao estilo de terminal) e **definições** (ligação, segurança, notificações, atualizações). Um botão vermelho **Parar tudo** está na barra superior de cada ecrã e num widget do ecrã inicial.
+
+## 🧩 Papel no HYDRA-UMC
+
+A **HYDRA-UMC-ANDROID-CONTROL** é a consola nativa de operador Android do HYDRA-UMC: encontra um HYDRA-UMC-SERVER na rede local, inicia sessão e depois mostra os robôs, move-os, vigia as suas câmaras e uma vista 3D, e pára tudo com um toque. Fala o mesmo contrato remoto da SUITE e da aplicação iOS e guarda uma cópia do último estado para quando falta o Wi-Fi. Não é um dispositivo de segurança.
+
+## 🏛️ Arquitetura
+
+<p align="center">
+  <img src="images/architecture.svg" alt="HYDRA-UMC-ANDROID-CONTROL architecture" width="100%">
+</p>
+
+## ✨ Funcionalidades
 
 - **Controlo de acesso e biometria** (`ui/LoginScreen.kt`, `util/BiometricHelper.kt`) - sistema profissional de início de sessão com suporte a **impressão digital e desbloqueio facial** (`androidx.biometric`), mais campos de IP/porta no mesmo ecrã para que se possa apontar a um servidor sem uma ida separada às Definições. Inclui a funcionalidade «Lembrar-me», um mecanismo seguro de **Terminar sessão** e está totalmente localizada em **8 idiomas**. O utilizador/palavra-passe/token em cache (`network/AuthPrefs.kt`) vivem em **EncryptedSharedPreferences** apoiadas no Keystore (AES256-GCM), não em texto simples - um servidor de desenvolvimento (`NODE_ENV` por definir) cria uma conta `admin`/`admin` por defeito no primeiro arranque; um servidor de produção (`NODE_ENV=production`) exige em vez disso `HYDRA_UMC_BOOTSTRAP_ADMIN_USERNAME`/`HYDRA_UMC_BOOTSTRAP_ADMIN_PASSWORD` e nunca recorre em silêncio a `admin`/`admin` - ver o README do próprio HYDRA-UMC-SERVER para a configuração de produção completa. Contas adicionais de **operador**, com menos privilégios, podem ser criadas no servidor em Config > Users de qualquer das formas.
 - **Modo offline e cache de estado** (`network/StateCache.kt`) - motor de persistência integrado que usa **DataStore**. A aplicação guarda automaticamente em cache o último estado conhecido do sistema, permitindo ver o painel e auditar a configuração de imediato mesmo sem uma ligação Wi-Fi ativa.
@@ -84,7 +104,67 @@ Cada linha é uma parte deste repositório e a luz diz até onde chega hoje. É 
 
 **Estado: Wi-Fi, Bluetooth, biometria e notificações implementados.** A aplicação é uma consola industrial de operador; o Bluetooth ainda é experimental e nenhum ecrã substitui uma paragem de emergência física.
 
-## 🚀 Compilação
+## 🔒 Segurança e proteção
+
+| Ameaça | Defesa | Onde |
+|---|---|---|
+| Um token roubado do telemóvel | O token de sessão e o de renovação guardam-se com EncryptedSharedPreferences (AES-256-GCM por valor, chave mestra no Keystore do Android); a cópia de segurança automática dos dados da aplicação está desligada (`allowBackup=false`) | `network/AuthPrefs.kt`, `AndroidManifest.xml` |
+| Tráfego sem cifra para um servidor fora da rede local | O `PlainRemoteGuard` recusa HTTP e WebSocket sem cifra para esse servidor, a menos que Definições > Segurança > Permitir tráfego sem cifra fora da rede local esteja ativo (desligado por predefinição); uma sessão sem cifra mostra um aviso vermelho sobre cada ecrã | `network/TlsSettings.kt`, `ui/SecuritySettings.kt` |
+| Um servidor falso | TLS opcional com três modos (Automático, Exigir TLS, Só texto simples); com uma impressão digital SHA-256 fixada só se aceita um certificado com exatamente essa impressão, e pode confiar-se numa CA própria em vez disso | `network/TlsSettings.kt`, `network/HydraHttp.kt` |
+| Uma atualização falsa | Só se aceita o ficheiro chamado `HYDRA-UMC-ANDROID-CONTROL-release.apk` da última versão estável que não seja rascunho; a aplicação nunca instala sozinha, o instalador do Android pede consentimento | `update/ReleaseMetadataParser.kt` |
+| Um robô movido por duas pessoas, ou uma paragem que não chega | O robô é reservado antes de ser movido e o ecrã mostra quem o detém; a paragem global é enviada com tempos limite curtos, repetida uma vez, recorre a uma paragem por robô e mantém um estado persistente «PARAGEM NÃO CONFIRMADA» se não pôde ser entregue | `ui/GlobalStop.kt`, `network/AccessModels.kt`, `network/StopAllResult.kt` |
+
+**O que nunca faz:** substituir uma paragem de emergência física. A PARAGEM é a paragem por software do servidor e não corta a alimentação a nada.
+
+## 🔌 Interfaces
+
+| Tópico ou rota | O que leva |
+|---|---|
+| `POST /api/login`, `/api/logout`, `/api/refresh` | iniciar e terminar sessão e renová-la |
+| `GET /api/hydra-info` | reconhece um servidor real por `remoteApiVersion`; usado pela pesquisa da sub-rede e pelo endereço manual |
+| `GET /api/settings`, `/api/ecosystem/status`, `/api/system/metrics`, `/api/safety-limits`, `/api/claims` | o estado dos robôs, da família, do módulo de cálculo, os limites de segurança e as reservas |
+| `POST /api/robot/{id}/command`, `/claim`, `/release`, `/jog-arm` | um pequeno comando para um robô, a sua reserva e o armar de um movimento manual |
+| `POST /api/stop-all` | a PARAGEM global: todos os robôs, mesmo os reservados por outra pessoa |
+| `GET /api/audit`, `/api/camera/ticket`, `POST /api/voice/turn`, `GET /api/watch/system-status` | o registo de auditoria (administradores), um bilhete para o fluxo da câmara, um turno de voz e o cartão de estado do relógio |
+| WebSocket `hydra.bearer` | alterações de estado em direto enviadas pelo servidor; o token vai no subprotocolo e a aplicação religa-se a cada 3 segundos |
+| Bluetooth LE GATT | o contrato de `docs/BLE_CONTRACT.md`: mensagens com moldura, uma escrita de cada vez, permissões do Android 12; nenhum dispositivo HYDRA-UMC implementa ainda o outro lado |
+
+## ⚙️ Configuração
+
+A aplicação não tem ficheiro de configuração: tudo se define no ecrã e fica guardado no telemóvel. Os valores predefinidos e os limites vêm do código.
+
+| Variável | Predefinição | O que define |
+|---|---|---|
+| Definições > Segurança > Modo TLS | Automático | Automático, Exigir TLS ou Só texto simples; impressão digital SHA-256 fixada ou CA própria opcionais |
+| Definições > Segurança > Permitir tráfego sem cifra fora da rede local | desligado | deixa a aplicação falar HTTP e WebSocket sem cifra com um servidor que não está na rede local |
+| Endereço e porta do servidor | `3000` | escreve-se no ecrã de início de sessão, ou é encontrado pela pesquisa da sub-rede /24 do próprio telemóvel (1,5 s por equipamento, 16 de cada vez) mais mDNS |
+| Renovação da sessão | 20 s / 3 / 10 min | a aplicação renova a sessão sozinha no máximo 3 vezes em 10 minutos e com pelo menos 20 s de intervalo; passado isso pede de novo o início de sessão |
+| Definições > Notificações | ligado | avisos quando um robô termina um trabalho ou ocorre um evento crítico (dois canais: missões e segurança) |
+
+## 🚀 Início rápido
+
+Requer o JDK 21 e o SDK do Android (o Android Studio traz ambos), e um telemóvel ou emulador com Android 7.0 (API 24) ou superior.
+
+```bash
+./build-android.sh           # builds the debug APK and installs it by adb (build-android.bat on Windows)
+./gradlew assembleDebug      # only builds; the APK lands in app/build/outputs/apk/debug/
+./gradlew testDebugUnitTest  # runs the unit tests (gradlew.bat on Windows)
+```
+
+## 🧪 Testes
+
+303 testes automáticos correm com `./gradlew testDebugUnitTest`. Não precisam de hardware nem de nada fora desta máquina.
+
+A CI executa `HYDRA_UMC_CI=1 python tools/ci_validate.py`, que verifica o manifesto, os documentos, os oito README e as imagens.
+
+### Testar contra um servidor em direto
+
+1. Execute o back-end: `cd HYDRA-UMC-SERVER && npm run dev` (porta 3000) - esta é a API REST/WS real com que esta aplicação fala (ver Projetos relacionados abaixo); o `npm run dev` do próprio `HYDRA-UMC-STUDIO` apenas arranca o seu servidor de desenvolvimento Vite de frontend (porta 5173) contra esse mesmo back-end, não é o servidor da API em si.
+2. Ligue o seu dispositivo Android à mesma rede Wi-Fi.
+3. Use o **Seletor global de servidor** ou introduza o IP manualmente no cabeçalho.
+4. **Biometria:** ative «Início de sessão biométrico» no seu Perfil do utilizador para saltar o ecrã de palavra-passe no próximo arranque.
+
+## 🏗️ Compilação e publicação
 
 Requer **um JDK 21 especificamente** e o Android SDK.
 
@@ -114,21 +194,13 @@ gradlew.bat assembleDebug      # Windows
 
 O APK fica em `app/build/outputs/apk/debug/app-debug.apk`. Instale-o com `adb install -r -d app/build/outputs/apk/debug/app-debug.apk`, ou transfira-o para o dispositivo manualmente. Troque `assembleDebug` por `assembleRelease` para uma compilação de lançamento - assina com a chave de lançamento privada quando existe `keystore.properties` (ou as variáveis de ambiente de assinatura de lançamento) e, caso contrário, recorre à chave de depuração, que instala bem para testes mas nunca deve ser distribuída.
 
-## 🔢 Versionamento
+### Versionamento
 
 Este repositório segue uma política de todo o ecossistema: compilar nunca altera a versão. O `app/version.properties` guarda os valores atuais de `versionMajor`/`versionMinor`/`versionPatch`/`versionCode`; só o comando `bump` explícito os sobe (`python tools/hydra_project_tool.py bump`: `bump_manifest_version.py` para a versão nativa, o manifesto `hydra-umc.project.json` e o `CHANGELOG.md`, e `bump_version_code.py` para o `versionCode` do Android, separado e sempre monótono). O `app/build.gradle.kts` apenas *lê* o `version.properties` e nunca o escreve.
 
-- **Patch, estilo odómetro (base 10):** +1 em cada bump; quando passaria de 9 volta a 0 e é o minor que ganha +1 - p. ex. `0.0.9` -> `0.1.0`. O major nunca é tocado automaticamente.
 - **`versionCode`:** um contador monótono simples, +1 em cada bump, sem transporte - o Android exige que aumente estritamente em cada compilação que alguma vez seja distribuída.
 
 Um simples `./gradlew assembleDebug` (o caminho de «Compilação manual» acima, sem que nenhum dos scripts de subida tenha corrido antes) reutiliza o que o `version.properties` tinha por último - não sobe nada por si. A versão em execução é visível em direto na caixa **Acerca de** (`BuildConfig.VERSION_NAME`, que lê o `versionName` que o `version.properties` tiver por último). Consulte o [CHANGELOG.md](CHANGELOG.md) para o histórico de versões.
-
-## 📲 Testar contra um servidor em direto
-
-1. Execute o back-end: `cd HYDRA-UMC-SERVER && npm run dev` (porta 3000) - esta é a API REST/WS real com que esta aplicação fala (ver Projetos relacionados abaixo); o `npm run dev` do próprio `HYDRA-UMC-STUDIO` apenas arranca o seu servidor de desenvolvimento Vite de frontend (porta 5173) contra esse mesmo back-end, não é o servidor da API em si.
-2. Ligue o seu dispositivo Android à mesma rede Wi-Fi.
-3. Use o **Seletor global de servidor** ou introduza o IP manualmente no cabeçalho.
-4. **Biometria:** ative «Início de sessão biométrico» no seu Perfil do utilizador para saltar o ecrã de palavra-passe no próximo arranque.
 
 ## 🩺 Resolução de problemas
 
@@ -141,120 +213,58 @@ Um simples `./gradlew assembleDebug` (o caminho de «Compilação manual» acima
 
 ## 📂 Estrutura do repositório
 
+<p align="center">
+  <img src="images/repository-structure.svg" alt="Repository structure of HYDRA-UMC-ANDROID-CONTROL" width="100%">
+</p>
+
+<details>
+<summary>Versão em texto da árvore</summary>
+
 ```text
 HYDRA-UMC-ANDROID-CONTROL/
-├── app/
-│   ├── build.gradle.kts          # Configuração Gradle do módulo da aplicação - versões AGP/Kotlin/Compose, dependências, tipo de compilação release assinado com a chave de depuração
-│   ├── version.properties        # versionMajor/Minor/Patch/Code (só sobe com o comando `bump` explícito)
-│   ├── lint.xml                  # Definições do lint do Android
-│   ├── proguard-rules.pro        # Regras de redução/ofuscação de código da compilação de lançamento
-│   ├── src/main/
-│   │   ├── AndroidManifest.xml   # Permissões, declarações de atividades/recetores, usesCleartextTraffic (o servidor LAN fala HTTP simples, a menos que o TLS esteja ativado nele; cada chamada exige um token de sessão)
-│   │   ├── java/com/hydraumc/control/
-│   │   │   ├── MainActivity.kt          # Ponto de entrada - splash, controlo de acesso ao ecrã de login/principal, tratamento do E-STOP global seguro a frio
-│   │   │   ├── MainScreen.kt            # Esqueleto de navegação inferior, barra superior (seletor de servidor, perfil, telemetria, definições)
-│   │   │   ├── kinematics/
-│   │   │   │   └── Parol6Kinematics.kt   # Cinemática direta/inversa específica do Parol6
-│   │   │   ├── model/
-│   │   │   │   ├── BleDevice.kt          # Classe de dados do resultado de uma análise Bluetooth LE
-│   │   │   │   └── HydraState.kt         # Espelho campo a campo do settings.json (RobotView/ControllerView/JobView) + modelo de descoberta ServerInfo
-│   │   │   ├── network/
-│   │   │   │   ├── AuthPrefs.kt           # Armazenamento cifrado (AES256-GCM) de credenciais/sessão
-│   │   │   │   ├── ConnectionPrefs.kt     # IP/porta do servidor persistidos (DataStore Preferences)
-│   │   │   │   ├── Discovery.kt           # Análise concorrente de sub-rede /24 (principal) + ouvinte NSD/mDNS (secundário) para encontrar um servidor na LAN
-│   │   │   │   ├── AccessModels.kt         # Identificador de controlador, reservas, limites de segurança e verificação do jog (regras puras)
-│   │   │   │   ├── HydraApiClient.kt      # Cliente REST - login, leitura/escrita de definições, comandos atómicos de robô, métricas do sistema
-│   │   │   │   ├── HydraBleClient.kt      # Cliente GATT Bluetooth, transporte alternativo ao Wi-Fi
-│   │   │   │   ├── BleContract.kt / BleGatt.kt / AndroidBleGatt.kt   # Contrato BLE, abstração GATT e a sua implementação Android
-│   │   │   │   ├── TlsSettings.kt / HydraHttp.kt / TlsPrefs.kt      # TLS opcional: modos, impressão digital fixada, AC própria, armazenamento
-│   │   │   │   ├── HydraWebSocket.kt      # Envio em direto de deltas de estado por WS, tratamento de reconexão
-│   │   │   │   ├── StateCache.kt          # Cache do último estado conhecido (DataStore) para ver o painel offline
-│   │   │   │   ├── StopAllResult.kt       # Resultado do STOP global (resposta por robô, estado)
-│   │   │   │   ├── ContractV2.kt          # O segundo contrato do servidor como regras puras: escritas condicionais por revisão do robô, o movimento atómico da mesa e o registo de auditoria
-│   │   │   │   ├── BleCommands.kt         # Um comando de robô a enviar por Bluetooth LE e o seu acuse (ver docs/BLE_CONTRACT.md)
-│   │   │   │   └── BlePermissions.kt      # As permissões em tempo de execução de que o Bluetooth LE precisa em cada versão do Android
-│   │   │   ├── ui/
-│   │   │   │   ├── AboutDialog.kt          # Caixa de informação da aplicação/versão
-│   │   │   │   ├── AccessPanel.kt          # Painel de reserva e armamento do jog do ecrã Control
-│   │   │   │   ├── AuditDialog.kt           # Registo de auditoria do servidor (administradores), com a verificação da cadeia
-│   │   │   │   ├── CameraScreen.kt         # Sinal de câmara MJPEG por robô + interruptor de visão ligada/desligada
-│   │   │   │   ├── ControlScreen.kt        # Controlos manuais de jog, E-STOP/play/pause/stop com proteção de pressão longa
-│   │   │   │   ├── DashboardScreen.kt      # Seletor de robôs em carrossel 3D + saúde do sistema + matriz de módulos
-│   │   │   │   ├── GlobalStop.kt           # Botão STOP global + aviso de resultado (um toque, todos os robôs)
-│   │   │   │   ├── Joystick3D.kt           # Componente reutilizável de joystick de 2 eixos
-│   │   │   │   ├── LoginScreen.kt          # Utilizador/palavra-passe + IP/porta, início de sessão biométrico
-│   │   │   │   ├── MjpegPlayer.kt          # Analisador de fluxo MJPEG + renderizador Canvas
-│   │   │   │   ├── PlaybackConsole.kt      # Consola flutuante partilhada de STOP/play/pause/stop
-│   │   │   │   ├── SettingsScreen.kt       # Interface de análise Wi-Fi/Bluetooth, definições de ligação
-│   │   │   │   ├── SplashScreen.kt         # Ecrã de abertura Compose personalizado
-│   │   │   │   ├── TelemetryScreen.kt      # Visualizador de registos de eventos/sincronização ao estilo de terminal
-│   │   │   │   ├── ThreeDScreen.kt         # Vista 3D real - WebView que embebe a cena 3D sem cabeça do próprio STUDIO
-│   │   │   │   ├── UserProfileDialog.kt    # Edição de perfil + caixa de alternância biométrica
-│   │   │   │   ├── VoiceAssistantDialog.kt # Botão de microfone/texto na aplicação para o HYDRA-UMC-VOICE-UI
-│   │   │   │   ├── theme/
-│   │   │   │   │   ├── Color.kt, Theme.kt, Typography.kt   # Esquema de cores Material 3, invólucro de tema, escala tipográfica
-│   │   │   │   │   └── HydraButton.kt, IndustrialComponents.kt, IndustrialStyle.kt   # Blocos de interface partilhados com estilo industrial
-│   │   │   │   └── SecuritySettings.kt                                           # Definições > Segurança: TLS opcional e configurável (modo, impressão digital fixada, CA)
-│   │   │   ├── update/
-│   │   │   │   ├── GitHubReleaseUpdater.kt   # Cliente seguro de atualização por Release do GitHub
-│   │   │   │   ├── ReleaseMetadataParser.kt  # Analisador seguro de metadados de Release do GitHub
-│   │   │   │   └── SemanticVersion.kt        # Analisador estrito de versão semântica para atualizações
-│   │   │   ├── util/
-│   │   │   │   ├── BiometricHelper.kt      # Invólucro do pedido androidx.biometric
-│   │   │   │   ├── NotificationHelper.kt   # Notificações push de trabalho concluído/segurança
-│   │   │   │   ├── NotificationPrefs.kt    # Armazenamento persistente do interruptor de notificações na aplicação
-│   │   │   │   ├── BleErrorText.kt         # O texto dos erros de Bluetooth, no idioma do telemóvel
-│   │   │   │   ├── JsonText.kt             # Lê um campo de texto como a interface o entende (um null do JSON não é a palavra "null")
-│   │   │   │   ├── OptimisticRollback.kt   # Anular ao nível do campo numa edição otimista
-│   │   │   │   ├── PlayConfirmation.kt     # Quando o PLAY pergunta primeiro: as regras da confirmação antes de iniciar uma trajetória
-│   │   │   │   ├── RenewalBudget.kt        # Com que frequência a app pode renovar a sessão sozinha (um intervalo mínimo e um máximo por janela)
-│   │   │   │   ├── StaleData.kt            # Quando os dados do robô no ecrã são uma cópia lembrada e não uma leitura em direto
-│   │   │   │   └── ViewerUrl.kt            # O endereço do visualizador 3D incorporado: o token de acesso vai no fragmento, que nunca é enviado ao servidor
-│   │   │   ├── viewmodel/
-│   │   │   │   ├── AppUpdateViewModel.kt   # Estado de atualização da aplicação ciente do ciclo de vida
-│   │   │   │   └── RobotViewModel.kt   # ViewModel partilhado - rede, autenticação, descoberta, despacho atómico de comandos, todo o estado da interface
-│   │   │   ├── wear/
-│   │   │   │   ├── BoundedRequestScope.kt     # Âmbito de trabalhos em curso por requestId; uma tentativa substituída é cancelada, cancelAll() ao destruir o serviço
-│   │   │   │   ├── WatchCompanionProtocol.kt    # Contrato de rede do estado de versão do companheiro Watch
-│   │   │   │   ├── WatchVoiceRelayContract.kt   # Contrato de rede autenticado do relé de voz do Watch
-│   │   │   │   └── WatchVoiceRelayService.kt    # Serviço de relé de voz Wear OS
-│   │   │   └── widget/
-│   │   │       └── GlobalStopWidget.kt # Widget de ecrã inicial para um E-STOP global
-│   │   └── res/
-│   │       ├── drawable/, layout/, mipmap*/, xml/   # Ícones, disposição do widget, ícones de arranque, regras de cópia de segurança/extração de dados
-│   │       └── values/, values-es/, values-de/, values-fr/, values-it/, values-ja/, values-zh/, values-pt/   # Cadeias em 8 idiomas, cores, tema
-│   └── src/test/             # Testes unitários na JVM das regras puras: cinemática, acesso, contrato v2, tramas e comandos BLE, TLS, o atualizador e os utilitários
-├── docs/
-│   ├── ARCHITECTURE.md              # Notas de desenho/arquitetura
-│   ├── GITHUB_RELEASE_UPDATES.md    # Fluxo de verificação/descarga/instalação da atualização na aplicação
-│   ├── WATCH_VOICE_RELAY.md         # Contrato do relé de voz Watch-telemóvel-servidor
-│   └── BLE_CONTRACT.md              # Como a app fala com um dispositivo HYDRA-UMC por Bluetooth Low Energy (GATT): serviço, características, tramagem
-├── images/                       # Faixa do README + ativos de origem do ecrã de abertura
-├── tools/
-│   ├── build_test.py             # Verificação de compilação sem subir versão
-│   ├── ci_validate.py            # Validação de manifesto/CHANGELOG/docs usada pelo CI
-│   ├── test_publish_script.py    # Verifica que o publish-github-release.sh nunca põe o token do GitHub numa linha de comandos
-│   ├── _doc_policy.py            # Regras de documentação partilhadas pela família (cópia da de HYDRA-UMC-SDK, mantida em sincronia)
-│   ├── _readme_parity.py         # Verificação de que os oito README partilham a mesma estrutura (cópia da de HYDRA-UMC-SDK, mantida em sincronia)
-│   └── hydra_project_tool.py     # Os mesmos comandos em todos os repositórios: validate, test, ci, version, status, bump
-├── dist/                         # Saída do APK de lançamento assinado (ignorado pelo git)
-├── build-android.bat / .sh       # Scripts de conveniência de compilação num só passo + instalação por adb
-├── build-test.bat / .sh          # Verificação de compilação sem subir versão
-├── prepare-github-release.bat / .sh  # Constrói um APK de lançamento estável, assinado em privado, sem subir a versão
-├── publish-github-release.ps1 / .sh  # Só local: publica o APK de dist/ como uma Release do GitHub
-├── bump_manifest_version.py      # Sincroniza a versão do hydra-umc.project.json com a nativa (--sync)
-├── bump_version_code.py          # Subida do contador versionCode do Android (executada só pelo comando `bump` explícito)
-├── gradlew, gradlew.bat          # Wrapper do Gradle
-├── build.gradle.kts, settings.gradle.kts, gradle.properties   # Configuração Gradle do projeto raiz
-├── local.properties              # Caminho local do Android SDK (específico da máquina, não é enviado)
-├── keystore.properties.example   # Modelo da configuração privada de assinatura de lançamento
-├── .env.example                  # Exemplo de variáveis de ambiente
-├── README.md                     # Este ficheiro
-├── README_spa.md / README_ita.md / README_fra.md / README_deu.md / README_zho.md / README_jpn.md / README_por.md   # Traduções
-└── LICENSE                       # GPL-3.0-or-later
+├── app/src/main/java/com/hydraumc/control/
+│   ├── MainActivity.kt                                          Ponto de entrada - splash, controlo de acesso ao ecrã de login/principal, tratamento do E-STOP global seguro a frio
+│   ├── MainScreen.kt                                            Esqueleto de navegação inferior, barra superior (seletor de servidor, perfil, telemetria, definições)
+│   ├── kinematics/                                              cinemática direta e inversa do braço PAROL6
+│   ├── model/                                                   o estado do servidor tal como a aplicação o lê
+│   ├── network/                                                 cliente REST, WebSocket e descoberta
+│   ├── ui/                                                      ecrãs e widgets
+│   ├── update/                                                  o canal de atualização da aplicação
+│   ├── util/                                                    regras puras da aplicação
+│   ├── viewmodel/                                               o estado partilhado que cada ecrã escuta
+│   ├── wear/                                                    reencaminhamento de voz e estado
+│   └── widget/                                                  o widget de PARAGEM do ecrã inicial
+├── docs/                                                        documentos do projeto
+├── images/                                                      Faixa do README + ativos de origem do ecrã de abertura
+├── tools/                                                       ferramentas do projeto e verificações da CI
+├── .github/                                                     fluxo de CI e modelos de problemas
+├── gradle/                                                      ficheiros do wrapper do Gradle
+├── bump_manifest_version.py                                     Sincroniza a versão do hydra-umc.project.json com a nativa (--sync)
+├── bump_version_code.py                                         Subida do contador versionCode do Android (executada só pelo comando `bump` explícito)
+├── gradlew / gradlew.bat                                        Wrapper do Gradle
+├── build.gradle.kts / settings.gradle.kts / gradle.properties   Configuração Gradle do projeto raiz
+├── keystore.properties.example                                  Modelo da configuração privada de assinatura de lançamento
+├── .env.example                                                 Exemplo de variáveis de ambiente
+├── LICENSE                                                      GPL-3.0-or-later
+├── CHANGELOG.md                                                 o que mudou em cada versão
+├── build-test.sh                                                verificação de compilação sem alterações
+├── hydra-umc.project.json                                       manifesto: versão, maturidade, família
+├── test.sh                                                      verificação de compilação sem alterações
+├── prepare-github-release.sh / prepare-github-release.bat       compila o APK de lançamento assinado em privado; não muda nenhuma versão
+├── publish-github-release.sh / publish-github-release.ps1       publica esse APK como a versão do GitHub da versão atual
+├── app/version.properties                                       versão e versionCode
+└── app/src/test/                                                testes unitários na JVM
 ```
 
----
+</details>
+
+## 🗺️ Roteiro e limites conhecidos
+
+O Bluetooth LE continua experimental até que um dispositivo implemente o lado periférico de `docs/BLE_CONTRACT.md`. O TLS e a impressão digital fixada foram testados com handshakes reais contra um servidor de testes local, não contra um servidor HYDRA-UMC com TLS. A vista 3D incorporada ainda não segue as definições de TLS. O armazenamento no Keystore, o pedido biométrico e o transporte Bluetooth não foram verificados de novo em hardware desde que foram escritos.
+
+## 🌍 Idiomas
+
+Este README e os documentos do repositório existem em oito idiomas: inglês, espanhol, alemão, francês, italiano, japonês, chinês e português (Portugal). São escritos em conjunto e a CI verifica que os oito ficheiros têm as mesmas secções e as mesmas ligações.
 
 ## 🔗 Projetos relacionados
 
@@ -349,24 +359,27 @@ Este projeto faz parte do ecossistema de robótica HYDRA-UMC do mesmo autor (Jua
 - **[HYDRA-UMC-OPS-AGENT](https://github.com/JuanenRac/HYDRA-UMC-OPS-AGENT)** — coordenador de incidentes de manutenção: um papel de borda de poucos privilégios recolhe um inventário/estado higienizado, um papel de plano de controlo mostra-o só de leitura e pede a um fornecedor de IA que sugira um diagnóstico; nunca aplica um patch nem implanta nada.
 - **[HYDRA-UMC-DEV-SERVER](https://github.com/JuanenRac/HYDRA-UMC-DEV-SERVER)** — anfitrião de desenvolvimento reproduzível (Raspberry Pi 5 / CM5) que guarda o código-fonte do ecossistema e executa tarefas limitadas de compilação/teste numa fila durável; um papel de desenvolvimento dedicado, explicitamente não um CM5 operacional.
 
----
+## 📚 Documentação
 
-## 📚 Documentação e comunidade
+Onde ler mais:
 
-- **[CONTRIBUTING.md](CONTRIBUTING.md)** — pilha tecnológica e diretrizes de código para um pull request.
-- **[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)** — as normas de comportamento esperadas nesta comunidade.
-- **[SECURITY.md](SECURITY.md)** — como comunicar uma vulnerabilidade e as áreas de segurança em que este projeto se concentra.
-- **[SUPPORT.md](SUPPORT.md)** — onde fazer perguntas e comunicar erros.
-- **[LICENSE.md](LICENSE.md)** — a licença deste projeto.
+* [docs/SOURCE_MAP.md](docs/SOURCE_MAP.md) - cada ficheiro fonte da aplicação com uma linha sobre o que faz
+* [Base de segurança do ecossistema](https://github.com/JuanenRac/HYDRA-UMC-DOCS/blob/main/docs/SECURITY_BASELINE.md)
+* [Modelo de ameaças do ecossistema](https://github.com/JuanenRac/HYDRA-UMC-DOCS/blob/main/docs/THREAT_MODEL.md)
+* [Registo de alterações deste repositório](CHANGELOG.md)
+* [Licença deste repositório](LICENSE.md)
+
+## 🤝 Contribuir e comunidade
+
+* Antes de um pull request execute `HYDRA_UMC_CI=1 py -3 tools/ci_validate.py` (ou `HYDRA_UMC_CI=1 python3 tools/ci_validate.py`): tem de imprimir `CI_VALIDATION=PASS`. Não execute `build.sh` nem `build.bat` para esta verificação; compilar não é verificar.
+* Os oito README são escritos a partir de uma única fonte em HYDRA-UMC-DOCS; não os edite à mão. Altere a fonte e escreva-os de novo com `tools/make_readmes.py`.
+* Não afirme num README o que não foi executado: diga «simulado» ou «não testado em hardware» quando for a verdade.
+* Consulte [CONTRIBUTING.md](CONTRIBUTING.md), o [código de conduta](CODE_OF_CONDUCT.md), [SECURITY.md](SECURITY.md) e [SUPPORT.md](SUPPORT.md).
 
 ## 👤 AUTOR
-**JuanenRac** (Electro Hobby 3D)
-📧 electrohobby3d@gmail.com
-📺 [youtube.com/@electrohobby3d](https://youtube.com/@electrohobby3d)
+
+**JuanenRac (Electro Hobby 3D)** · electrohobby3d@gmail.com
 
 ## 📜 LICENÇA
 
-**GNU General Public License v3.0 or later (GPL-3.0-or-later)** para o código-fonte - veja [`LICENSE`](LICENSE).
-
-Esta documentação (este README e as suas próprias traduções - `README_spa.md`, `README_ita.md`, `README_fra.md`, `README_deu.md`, `README_zho.md`, `README_jpn.md`, `README_por.md`) está disponível sob a **Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)**. Texto completo em https://creativecommons.org/licenses/by-sa/4.0/.
-
+GPL-3.0-or-later - [LICENSE](LICENSE).

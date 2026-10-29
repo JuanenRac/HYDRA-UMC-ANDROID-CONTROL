@@ -1,33 +1,38 @@
+<!-- =============================================================================
+HYDRA-UMC-ANDROID-CONTROL - Android operator console for a HYDRA-UMC server: control, cameras, 3D view and a global STOP
+Copyright (C) JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
+GPL-3.0-or-later - see LICENSE
+============================================================================= -->
+
 <p align="center">
   <img src="images/HYDRA_UMC_BANNER.svg" alt="HYDRA-UMC-ANDROID-CONTROL banner" width="100%">
 </p>
 
-# 📱 HYDRA-UMC CONTROL
+# 📱 HYDRA-UMC-ANDROID-CONTROL
 
-<p align="center">
-  <a href="README.md">🇺🇸 English</a> |
-  <a href="README_spa.md">🇪🇸 Español</a> |
-  <a href="README_fra.md">🇫🇷 Français</a> |
-  <a href="README_ita.md">🇮🇹 Italiano</a> |
-  <a href="README_deu.md">🇩🇪 Deutsch</a> |
-  🇨🇳 <b>简体中文</b> |
-  <a href="README_jpn.md">🇯🇵 日本語</a>
-</p>
+<p align="center"><a href="README.md">🇺🇸 English</a> | <a href="README_spa.md">🇪🇸 Español</a> | <a href="README_fra.md">🇫🇷 Français</a> | <a href="README_ita.md">🇮🇹 Italiano</a> | <a href="README_deu.md">🇩🇪 Deutsch</a> | 🇨🇳 <b>简体中文</b> | <a href="README_jpn.md">🇯🇵 日本語</a> | <a href="README_por.md">🇵🇹 Português</a></p>
 
+### 把 HYDRA-UMC 机器人装进口袋：找到服务器，移动并监看机器人，用一个红色按钮全部停止。
 
 <p align="center">
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
-  <img src="https://img.shields.io/badge/Language-Kotlin-7F52FF.svg" alt="Kotlin">
-  <img src="https://img.shields.io/badge/UI-Jetpack%20Compose-4285F4.svg" alt="Compose">
-  <img src="https://img.shields.io/badge/Platform-Android-3DDC84.svg" alt="Android">
+  <img src="https://img.shields.io/badge/Language-Kotlin-7F52FF.svg" alt="Language">
+  <img src="https://img.shields.io/badge/UI-Jetpack%20Compose-4285F4.svg" alt="UI">
+  <img src="https://img.shields.io/badge/Platform-Android-3DDC84.svg" alt="Platform">
+  <img src="https://img.shields.io/badge/Tests-303%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Version-0.7.2-0f6cbd.svg" alt="Version">
+  <img src="https://img.shields.io/badge/Maturity-functional-0F6CBD.svg" alt="Maturity">
 </p>
 
+---
 
 一款原生 Android 应用（Kotlin + Jetpack Compose），通过 Wi-Fi 或蓝牙控制 [HYDRA-UMC](https://github.com/JuanenRac/HYDRA-UMC) 平台上的机器人，使用与 [HYDRA-UMC SUITE](https://github.com/JuanenRac/HYDRA-UMC-SUITE) 完全相同的 [`REMOTE_API.md`](https://github.com/JuanenRac/HYDRA-UMC-SERVER/blob/main/docs/REMOTE_API.md) 契约——针对运行中的 [HYDRA-UMC-SERVER](https://github.com/JuanenRac/HYDRA-UMC-SERVER) 后端（与 [HYDRA-UMC STUDIO](https://github.com/JuanenRac/HYDRA-UMC-STUDIO) 自身网页仪表盘所通信的同一个后端）进行发现、完整状态读写以及实时 WebSocket 同步。是 [HYDRA-UMC-IOS-CONTROL](https://github.com/JuanenRac/HYDRA-UMC-IOS-CONTROL) 的直接 Android 版本对应物。完整设计参见 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)。
 
-> **诚实检查——今天真正可运行的部分：** 核心业务逻辑——Parol6 运动学（`kinematics/Parol6Kinematics.kt`）、settings 树状态契约（`model/HydraState.kt`）、原子命令下发与语音中继（`viewmodel/RobotViewModel.kt`）、WebSocket 重连处理（`network/HydraWebSocket.kt`）、MJPEG 帧解析（`ui/MjpegPlayer.kt`）、应用内更新通道（`update/GitHubReleaseUpdater.kt`、`ReleaseMetadataParser.kt`、`SemanticVersion.kt`），以及 Wear 语音中继请求管理（`wear/BoundedRequestScope.kt`、`WatchCompanionProtocol.kt`）都是真实的，并由 280 个通过的 JVM/Robolectric 单元测试覆盖（`./gradlew testDebugUnitTest`）。这些测试在结构上无法触及——而这个仅有 Windows 的开发环境也没有实体 Android 设备可以验证——的是 `network/AuthPrefs.kt` 中真正基于 Keystore 的 `EncryptedSharedPreferences`、`androidx.biometric` 的指纹/面部提示、`network/HydraBleClient.kt` 的蓝牙 GATT 传输，以及 `MjpegStreamParser` 中 API 28+ 的硬件 `ImageDecoder` 路径：这些都是真实、已编译的代码，但自编写以来尚未在真实硬件上重新验证过。早期版本的基本启动/登录*确实*在真实设备上得到过现场确认（见 `CHANGELOG.md` 的 `v0.3.2`/`v0.3.3` 条目），但那早于蓝牙、生物识别和硬件解码路径。具体已交付的内容见 `CHANGELOG.md`，其中每条记录也附有关于哪些部分仍未经硬件验证的说明。
+> **诚实检查——今天真正可运行的部分：** 核心业务逻辑——Parol6 运动学（`kinematics/Parol6Kinematics.kt`）、settings 树状态契约（`model/HydraState.kt`）、原子命令下发与语音中继（`viewmodel/RobotViewModel.kt`）、WebSocket 重连处理（`network/HydraWebSocket.kt`）、MJPEG 帧解析（`ui/MjpegPlayer.kt`）、应用内更新通道（`update/GitHubReleaseUpdater.kt`、`ReleaseMetadataParser.kt`、`SemanticVersion.kt`），以及 Wear 语音中继请求管理（`wear/BoundedRequestScope.kt`、`WatchCompanionProtocol.kt`）都是真实的，并由 303 个通过的 JVM/Robolectric 单元测试覆盖（`./gradlew testDebugUnitTest`）。这些测试在结构上无法触及——而这个仅有 Windows 的开发环境也没有实体 Android 设备可以验证——的是 `network/AuthPrefs.kt` 中真正基于 Keystore 的 `EncryptedSharedPreferences`、`androidx.biometric` 的指纹/面部提示、`network/HydraBleClient.kt` 的蓝牙 GATT 传输，以及 `MjpegStreamParser` 中 API 28+ 的硬件 `ImageDecoder` 路径：这些都是真实、已编译的代码，但自编写以来尚未在真实硬件上重新验证过。早期版本的基本启动/登录*确实*在真实设备上得到过现场确认（见 `CHANGELOG.md` 的 `v0.3.2`/`v0.3.3` 条目），但那早于蓝牙、生物识别和硬件解码路径。具体已交付的内容见 `CHANGELOG.md`，其中每条记录也附有关于哪些部分仍未经硬件验证的说明。
 
 > **安全与安防现状:**本生态系统不是经认证的安全系统。目前尚无硬件 E-STOP 通路,没有由固件强制执行的限位或联锁,也没有经过验证的运动指令;固件映像使用 CRC32 和共享密钥的 HMAC-SHA256 校验,而非非对称签名;TLS 与双向 TLS 均为可选项,默认关闭;自制电路板尚未组装或测试。在依赖此处任何说法来保障人身安全之前,请先阅读[安全基线](https://github.com/JuanenRac/HYDRA-UMC-DOCS/blob/main/docs/SECURITY_BASELINE.md)和[威胁模型](https://github.com/JuanenRac/HYDRA-UMC-DOCS/blob/main/docs/THREAT_MODEL.md)。
+
+---
 
 ## 📋 速览
 
@@ -35,10 +40,12 @@
 |---|---|
 | 版本 | `0.7.2` |
 | 成熟度 | 可用 |
-| 测试 | 300 (`./gradlew testDebugUnitTest`) |
+| 测试 | 303 (`./gradlew testDebugUnitTest`) |
 | 技术栈 | Kotlin / Jetpack / biometric auth / WebSocket client |
 | 目标 | Android 手机或平板 |
 | 真实硬件 | 尚未：此版本没有在真实硬件上运行的记录 |
+
+**跳转：** [概述](#-概述) · [架构](#-架构) · [功能](#-功能) · [安全与防护](#-安全与防护) · [接口](#-接口) · [配置](#-配置) · [快速开始](#-快速开始) · [测试](#-测试) · [故障排除](#-故障排除) · [仓库结构](#-仓库结构) · [相关项目](#-相关项目)
 
 ## 🚦 项目状态
 
@@ -49,11 +56,25 @@
 | 领域 | 状态 | 在这里的含义 |
 |---|---|---|
 | 软件 | 🟡 | 主要用途可用；上面的诚实性检查列出了仍然缺少的内容 |
-| 测试 | 🟢 | 300 项自动测试，每次变更都会运行 |
+| 测试 | 🟢 | 303 项自动测试，每次变更都会运行 |
 | 真实硬件 | 🔴 | 尚未：此版本没有在真实硬件上运行的记录 |
 | 文档 | 🟢 | 八种语言的 README，每次变更都会与清单核对 |
 
-## 🏗️ 已实现的功能
+## 🎯 概述
+
+应用的界面：**登录**（服务器地址、密码、指纹或面部）、**仪表盘**（机器人的 3D 轮播，附模块矩阵和计算模块的健康状态）、**控制**（摇杆、播放、暂停、停止、机器人预约）、**摄像头**（带画中画的实时 MJPEG）、**3D 视图**（STUDIO 的真实场景）、**遥测**（终端风格的日志）和**设置**（连接、安全、通知、更新）。红色的**全部停止**按钮位于每个界面的顶部栏，也在主屏幕小组件上。
+
+## 🧩 在 HYDRA-UMC 中的角色
+
+**HYDRA-UMC-ANDROID-CONTROL** 是 HYDRA-UMC 的原生 Android 操作员控制台：它在本地网络中找到 HYDRA-UMC-SERVER，登录后显示机器人、移动它们、查看摄像头和 3D 视图，并可一键全部停止。它使用与 SUITE 和 iOS 应用相同的远程契约，并保留最后状态的副本以应对没有 Wi-Fi 的情况。它不是安全设备。
+
+## 🏛️ 架构
+
+<p align="center">
+  <img src="images/architecture.svg" alt="HYDRA-UMC-ANDROID-CONTROL architecture" width="100%">
+</p>
+
+## ✨ 功能
 
 - **访问控制与生物识别**（`ui/LoginScreen.kt`、`util/BiometricHelper.kt`）—— 专业级登录系统，支持**指纹和面部解锁**（`androidx.biometric`），并在同一界面上直接提供 IP/端口字段,无需先单独跳转到设置页面才能指定服务器。包含“记住我”功能、安全的**退出登录**机制,并完全支持**8 种语言**本地化。缓存的用户名/密码/令牌（`network/AuthPrefs.kt`）存放在由 Keystore 支持的**加密 SharedPreferences**（AES256-GCM）中,而非明文——开发服务器(未设置 `NODE_ENV`)会在首次启动时预置默认的 `admin`/`admin` 账户;生产服务器(`NODE_ENV=production`)则要求改用 `HYDRA_UMC_BOOTSTRAP_ADMIN_USERNAME`/`HYDRA_UMC_BOOTSTRAP_ADMIN_PASSWORD`,绝不会静默回退到 `admin`/`admin` —— 完整的生产环境配置请参见 HYDRA-UMC-SERVER 自身的 README。无论哪种情况,额外的低权限**操作员**账户都可以在服务端从 Config > Users 创建。
 - **离线模式与状态缓存**（`network/StateCache.kt`）—— 使用 **DataStore** 集成的持久化引擎。本应用会自动缓存最后已知的系统状态,即使没有活动的 Wi-Fi 连接,也能实现即时的仪表盘查看和配置审查。
@@ -82,7 +103,67 @@
 
 **状态：Wi-Fi、蓝牙、生物识别和通知均已实现。** 本应用是一款工业操作员控制台；蓝牙仍处于实验阶段，任何屏幕都不能取代物理急停。
 
-## 🚀 构建
+## 🔒 安全与防护
+
+| 威胁 | 防御 | 位置 |
+|---|---|---|
+| 从手机窃取的令牌 | 登录令牌和刷新令牌使用 EncryptedSharedPreferences 保存（每个值 AES-256-GCM，主密钥在 Android Keystore 中）；应用数据的自动备份已关闭（`allowBackup=false`） | `network/AuthPrefs.kt`, `AndroidManifest.xml` |
+| 向本地网络之外的服务器发送明文流量 | `PlainRemoteGuard` 会拒绝向此类服务器发送未加密的 HTTP 和 WebSocket，除非“设置 > 安全 > 允许在本地网络之外使用明文流量”已开启（默认关闭）；未加密的会话会在每个界面上方显示红色警告 | `network/TlsSettings.kt`, `ui/SecuritySettings.kt` |
+| 伪造的服务器 | 可选的 TLS，有三种模式（自动、要求 TLS、仅明文）；固定 SHA-256 指纹后，只接受指纹完全相同的证书，也可以改为信任自定义 CA | `network/TlsSettings.kt`, `network/HydraHttp.kt` |
+| 伪造的更新 | 只接受最新稳定、非草稿发布中名为 `HYDRA-UMC-ANDROID-CONTROL-release.apk` 的资源；应用从不自行安装，由 Android 自带的安装程序请求同意 | `update/ReleaseMetadataParser.kt` |
+| 被两个人同时移动的机器人，或没有送达的停止 | 机器人在点动前先预约，屏幕会显示谁持有它；全局停止以较短的超时发送，重试一次，回退为逐个机器人停止，若未能送达则保持“停止未确认”状态 | `ui/GlobalStop.kt`, `network/AccessModels.kt`, `network/StopAllResult.kt` |
+
+**它绝不做的事：** 替代物理紧急停止。停止是服务器的软件停止，不会切断任何设备的电源。
+
+## 🔌 接口
+
+| 主题或路由 | 内容 |
+|---|---|
+| `POST /api/login`, `/api/logout`, `/api/refresh` | 登录、登出并续期会话 |
+| `GET /api/hydra-info` | 通过 `remoteApiVersion` 识别真正的服务器；子网扫描和手动地址都使用它 |
+| `GET /api/settings`, `/api/ecosystem/status`, `/api/system/metrics`, `/api/safety-limits`, `/api/claims` | 机器人、系列、计算模块的状态，安全限制和预约 |
+| `POST /api/robot/{id}/command`, `/claim`, `/release`, `/jog-arm` | 针对单个机器人的小命令、它的预约以及点动的武装 |
+| `POST /api/stop-all` | 全局停止：所有机器人，包括被他人预约的 |
+| `GET /api/audit`, `/api/camera/ticket`, `POST /api/voice/turn`, `GET /api/watch/system-status` | 审计记录（管理员）、摄像头流的票据、语音回合和手表的状态卡 |
+| WebSocket `hydra.bearer` | 服务器推送的实时状态变化；令牌放在子协议中，应用每 3 秒重连一次 |
+| Bluetooth LE GATT | `docs/BLE_CONTRACT.md` 的契约：带帧的消息、一次一个写入、Android 12 权限；目前还没有 HYDRA-UMC 设备实现另一端 |
+
+## ⚙️ 配置
+
+应用没有配置文件：一切都在屏幕上设置并保存在手机上。默认值和限制来自代码。
+
+| 变量 | 默认值 | 设置内容 |
+|---|---|---|
+| 设置 > 安全 > TLS 模式 | 自动 | 自动、要求 TLS 或仅明文；可选固定 SHA-256 指纹或自定义 CA |
+| 设置 > 安全 > 允许在本地网络之外使用明文流量 | 关闭 | 允许应用与本地网络之外的服务器使用明文 HTTP 和 WebSocket 通信 |
+| 服务器地址和端口 | `3000` | 在登录界面输入，或通过扫描手机自身的 /24 子网（每台主机 1.5 秒，同时 16 台）加 mDNS 找到 |
+| 会话续期 | 20 s / 3 / 10 min | 应用在 10 分钟内最多自行续期 3 次，间隔至少 20 秒；超过后会再次要求登录 |
+| 设置 > 通知 | 开启 | 机器人完成任务或发生关键事件时提醒（两个通道：任务和安全） |
+
+## 🚀 快速开始
+
+需要 JDK 21 和 Android SDK（Android Studio 两者都带），以及运行 Android 7.0（API 24）或更高版本的手机或模拟器。
+
+```bash
+./build-android.sh           # builds the debug APK and installs it by adb (build-android.bat on Windows)
+./gradlew assembleDebug      # only builds; the APK lands in app/build/outputs/apk/debug/
+./gradlew testDebugUnitTest  # runs the unit tests (gradlew.bat on Windows)
+```
+
+## 🧪 测试
+
+运行 `./gradlew testDebugUnitTest` 会执行 303 个自动测试。 不需要硬件，也不需要这台机器以外的任何东西。
+
+CI 运行 `HYDRA_UMC_CI=1 python tools/ci_validate.py`，检查清单、文档、八个 README 和图片。
+
+### 针对真实服务器进行测试
+
+1. 运行后端：`cd HYDRA-UMC-SERVER && npm run dev`（端口 3000）——这才是本应用实际通信的真正 REST/WS API（见下方“相关项目”）;`HYDRA-UMC-STUDIO` 自身的 `npm run dev` 只会针对同一个后端启动其 Vite 前端开发服务器（端口 5173）,它本身并不是那个 API 服务器。
+2. 将你的 Android 设备连接到同一个 Wi-Fi。
+3. 使用**全局服务器选择器**,或在顶部手动输入 IP。
+4. **生物识别：** 在用户资料中启用“生物识别登录”,下次启动时即可跳过密码界面。
+
+## 🏗️ 构建与发布
 
 需要**特别是 JDK 21** 以及 Android SDK。
 
@@ -112,23 +193,15 @@ gradlew.bat assembleDebug      # Windows
 
 APK 会生成在 `app/build/outputs/apk/debug/app-debug.apk`。使用 `adb install -r -d app/build/outputs/apk/debug/app-debug.apk` 安装,或手动传输到设备上。将 `assembleDebug` 替换为 `assembleRelease` 即可构建发布版本——存在 `keystore.properties`（或发布签名环境变量）时使用私有发布密钥签名，否则回退到调试密钥；调试密钥可正常安装用于测试，但绝不能用于分发。
 
-## 🔢 版本管理
+### 版本管理
 
 本仓库遵循生态系统统一的策略：构建绝不会更改版本号。`app/version.properties` 保存当前的 `versionMajor`/`versionMinor`/`versionPatch`/`versionCode`；只有显式的 `bump` 命令才会提升它们（`python tools/hydra_project_tool.py bump`：`bump_manifest_version.py` 处理原生版本、`hydra-umc.project.json` 清单和 `CHANGELOG.md`，`bump_version_code.py` 处理独立且始终单调递增的 Android `versionCode`）。`app/build.gradle.kts` 只*读取* `version.properties`，从不写入。
 
-- **Patch,里程表方式（十进制）：** 每次 bump +1;一旦超过 9 就重置为 0,并将 minor 加 1——例如 `0.0.9` -> `0.1.0`。Major 从不被自动修改。
 - **`versionCode`：** 一个纯粹的单调计数器,每次 bump +1,不进位——Android 要求它在每一个曾经发布过的构建中都严格递增。
 
 单纯执行 `./gradlew assembleDebug`（上面的"手动构建"方式,事先不运行任何递增脚本）只会沿用 `version.properties` 中已有的值——它本身不会递增任何东西。当前运行的版本可在 **About** 对话框中实时查看（`BuildConfig.VERSION_NAME`,读取的是 `version.properties` 中最后保存的 `versionName`）。完整版本历史见 [CHANGELOG.md](CHANGELOG.md)。
 
-## 📲 针对真实服务器进行测试
-
-1. 运行后端：`cd HYDRA-UMC-SERVER && npm run dev`（端口 3000）——这才是本应用实际通信的真正 REST/WS API（见下方“相关项目”）;`HYDRA-UMC-STUDIO` 自身的 `npm run dev` 只会针对同一个后端启动其 Vite 前端开发服务器（端口 5173）,它本身并不是那个 API 服务器。
-2. 将你的 Android 设备连接到同一个 Wi-Fi。
-3. 使用**全局服务器选择器**,或在顶部手动输入 IP。
-4. **生物识别：** 在用户资料中启用“生物识别登录”,下次启动时即可跳过密码界面。
-
-## 🩺 故障排查
+## 🩺 故障排除
 
 | 症状 | 原因 | 解决方法 |
 |---|---|---|
@@ -139,118 +212,58 @@ APK 会生成在 `app/build/outputs/apk/debug/app-debug.apk`。使用 `adb insta
 
 ## 📂 仓库结构
 
+<p align="center">
+  <img src="images/repository-structure.svg" alt="Repository structure of HYDRA-UMC-ANDROID-CONTROL" width="100%">
+</p>
+
+<details>
+<summary>目录树的文本版本</summary>
+
 ```text
 HYDRA-UMC-ANDROID-CONTROL/
-├── app/
-│   ├── build.gradle.kts          # 应用模块 Gradle 配置——AGP/Kotlin/Compose 版本、依赖、debug 签名的 release 构建类型
-│   ├── version.properties        # versionMajor/Minor/Patch/Code (仅由显式 `bump` 命令递增)
-│   ├── lint.xml                  # Android lint 设置
-│   ├── proguard-rules.pro        # release 构建的代码压缩/混淆规则
-│   ├── src/main/
-│   │   ├── AndroidManifest.xml   # 权限、activity/receiver 声明、usesCleartextTraffic（局域网服务器使用纯 HTTP，除非在服务器上启用 TLS；每次调用都需要登录令牌）
-│   │   ├── java/com/hydraumc/control/
-│   │   │   ├── MainActivity.kt          # 入口点——启动画面、登录/主界面门禁、冷启动安全的全局紧急停止处理
-│   │   │   ├── MainScreen.kt            # 底部导航脚手架、顶部栏（服务器选择器、资料、遥测、设置）
-│   │   │   ├── kinematics/
-│   │   │   │   └── Parol6Kinematics.kt   # Parol6 专用的正/逆运动学
-│   │   │   ├── model/
-│   │   │   │   ├── BleDevice.kt          # 蓝牙 LE 扫描结果数据类
-│   │   │   │   └── HydraState.kt         # settings.json 逐字段镜像（RobotView/ControllerView/JobView）+ ServerInfo 发现模型
-│   │   │   ├── network/
-│   │   │   │   ├── AuthPrefs.kt           # 加密（AES256-GCM）凭证/会话存储
-│   │   │   │   ├── ConnectionPrefs.kt     # 持久化的服务器 IP/端口（DataStore Preferences）
-│   │   │   │   ├── Discovery.kt           # 并发 /24 子网扫描（主要）+ NSD/mDNS 监听器（次要），用于在局域网中查找服务器
-│   │   │   │   ├── AccessModels.kt         # 控制器 ID、预留、安全限值与点动检查（纯规则）
-│   │   │   │   ├── HydraApiClient.kt      # REST 客户端——登录、设置读写、原子化机器人指令、系统指标
-│   │   │   │   ├── HydraBleClient.kt      # 蓝牙 GATT 客户端，Wi-Fi 之外的替代传输方式
-│   │   │   │   ├── BleContract.kt / BleGatt.kt / AndroidBleGatt.kt   # BLE 约定、GATT 抽象及其 Android 实现
-│   │   │   │   ├── TlsSettings.kt / HydraHttp.kt / TlsPrefs.kt      # 可选 TLS：模式、固定指纹、自定义 CA、存储
-│   │   │   │   ├── HydraWebSocket.kt      # 通过 WS 进行实时状态增量推送、重连处理
-│   │   │   │   ├── StateCache.kt          # 最后已知状态缓存（DataStore），用于离线仪表盘查看
-│   │   │   │   ├── StopAllResult.kt       # 全局 STOP 的结果（每台机器人的应答、状态）
-│   │   │   │   ├── ContractV2.kt          # 服务器的第二份契约,以纯规则表达: 按机器人修订号的条件写入、工作台的原子移动和审计记录
-│   │   │   │   ├── BleCommands.kt         # 经蓝牙 LE 发送的一条机器人命令及其确认 (见 docs/BLE_CONTRACT.md)
-│   │   │   │   └── BlePermissions.kt      # 各 Android 版本上蓝牙 LE 所需的运行时权限
-│   │   │   ├── ui/
-│   │   │   │   ├── AboutDialog.kt          # 应用/版本信息对话框
-│   │   │   │   ├── AccessPanel.kt          # Control 屏幕的预留与点动解锁面板
-│   │   │   │   ├── AuditDialog.kt           # 服务器的审计记录(管理员)及链校验
-│   │   │   │   ├── CameraScreen.kt         # 每机器人 MJPEG 摄像头画面 + 视觉开关
-│   │   │   │   ├── ControlScreen.kt        # 手动点动控制、带长按保护的紧急停止/播放/暂停/停止
-│   │   │   │   ├── DashboardScreen.kt      # 3D 轮播机器人选择器 + 系统健康状态 + 模块矩阵
-│   │   │   │   ├── GlobalStop.kt           # 全局 STOP 按钮和结果横幅（一次点击,所有机器人）
-│   │   │   │   ├── Joystick3D.kt           # 可复用的双轴摇杆控件
-│   │   │   │   ├── LoginScreen.kt          # 用户名/密码 + IP/端口输入，生物识别登录
-│   │   │   │   ├── MjpegPlayer.kt          # MJPEG 流解析器 + Canvas 渲染器
-│   │   │   │   ├── PlaybackConsole.kt      # 共享的悬浮式停止/播放/暂停/停止控制台
-│   │   │   │   ├── SettingsScreen.kt       # Wi-Fi/蓝牙扫描界面、连接设置
-│   │   │   │   ├── SplashScreen.kt         # 自定义 Compose 启动画面
-│   │   │   │   ├── TelemetryScreen.kt      # 终端风格的事件/同步日志查看器
-│   │   │   │   ├── ThreeDScreen.kt         # 真实 3D 视口——通过 WebView 嵌入 STUDIO 自身的无头式 3D 场景
-│   │   │   │   ├── UserProfileDialog.kt    # 资料编辑 + 生物识别开关对话框
-│   │   │   │   ├── VoiceAssistantDialog.kt # 应用内麦克风/文本按钮,连接 HYDRA-UMC-VOICE-UI
-│   │   │   │   ├── theme/
-│   │   │   │   │   ├── Color.kt, Theme.kt, Typography.kt   # Material 3 配色方案、主题包装器、字体比例
-│   │   │   │   │   └── HydraButton.kt, IndustrialComponents.kt, IndustrialStyle.kt   # 共享的工业风 UI 构建组件
-│   │   │   │   └── SecuritySettings.kt                                           # 设置 > 安全: 可选且可配置的 TLS (模式、固定指纹、CA)
-│   │   │   ├── update/
-│   │   │   │   ├── GitHubReleaseUpdater.kt   # 安全的 GitHub Release 更新客户端
-│   │   │   │   ├── ReleaseMetadataParser.kt  # 安全的 GitHub Release 元数据解析器
-│   │   │   │   └── SemanticVersion.kt        # 用于更新的严格语义化版本解析器
-│   │   │   ├── util/
-│   │   │   │   ├── BiometricHelper.kt      # androidx.biometric 提示包装器
-│   │   │   │   ├── NotificationHelper.kt   # 作业完成/安全推送通知
-│   │   │   │   ├── NotificationPrefs.kt    # 应用内通知开关的持久化存储
-│   │   │   │   ├── BleErrorText.kt         # 蓝牙错误的文字,使用手机的语言
-│   │   │   │   ├── JsonText.kt             # 按界面的本意读取文本字段 (JSON 的 null 不是文字 "null")
-│   │   │   │   ├── OptimisticRollback.kt   # 对乐观编辑按字段撤销
-│   │   │   │   ├── PlayConfirmation.kt     # PLAY 何时先询问: 轨迹开始前确认的规则
-│   │   │   │   ├── RenewalBudget.kt        # 应用可自行续期会话的频率 (最小间隔与每个窗口的上限)
-│   │   │   │   ├── StaleData.kt            # 屏幕上的机器人数据是缓存副本而非实时读数的情形
-│   │   │   │   └── ViewerUrl.kt            # 内嵌 3D 查看器的地址: 访问令牌放在从不发送给服务器的片段中
-│   │   │   ├── viewmodel/
-│   │   │   │   ├── AppUpdateViewModel.kt   # 感知生命周期的应用更新状态
-│   │   │   │   └── RobotViewModel.kt   # 共享 ViewModel——网络、认证、发现、原子指令分发、所有 UI 状态
-│   │   │   ├── wear/
-│   │   │   │   ├── BoundedRequestScope.kt     # 按 requestId 管理的进行中任务作用域；被取代的尝试会被取消，服务销毁时 cancelAll()
-│   │   │   │   ├── WatchCompanionProtocol.kt    # 手表伴生设备版本状态通信契约
-│   │   │   │   ├── WatchVoiceRelayContract.kt   # 已认证的手表语音中继通信契约
-│   │   │   │   └── WatchVoiceRelayService.kt    # Wear OS 语音中继服务
-│   │   │   └── widget/
-│   │   │       └── GlobalStopWidget.kt # 实现全局紧急停止的主屏幕小组件
-│   │   └── res/
-│   │       ├── drawable/, layout/, mipmap*/, xml/   # 图标、小组件布局、启动器图标、备份/数据提取规则
-│   │       └── values/, values-es/, values-de/, values-fr/, values-it/, values-ja/, values-zh/, values-pt/   # Strings in 8 languages, colors, theme
-│   └── src/test/             # 纯规则的 JVM 单元测试: 运动学、访问、契约 v2、BLE 分帧与命令、TLS、更新器和辅助模块
-├── docs/
-│   ├── ARCHITECTURE.md              # 设计/架构说明
-│   ├── GITHUB_RELEASE_UPDATES.md    # 应用内更新检查/下载/安装流程
-│   ├── WATCH_VOICE_RELAY.md         # 手表-手机-服务器语音中继契约
-│   └── BLE_CONTRACT.md              # 应用如何通过蓝牙低功耗 (GATT) 与 HYDRA-UMC 设备通信: 服务、特征、分帧
-├── images/                       # README 横幅 + 启动画面源资产
-├── tools/
-│   ├── build_test.py             # 不递增版本号的构建/编译检查
-│   ├── ci_validate.py            # CI 使用的 manifest/CHANGELOG/docs 校验
-│   ├── test_publish_script.py    # 检查 publish-github-release.sh 绝不把 GitHub 令牌放在命令行上
-│   ├── _doc_policy.py            # 家族共享的文档规则 (HYDRA-UMC-SDK 的副本,保持同步)
-│   ├── _readme_parity.py         # 检查八个 README 结构一致 (HYDRA-UMC-SDK 的副本,保持同步)
-│   └── hydra_project_tool.py     # 每个仓库相同的命令: validate、test、ci、version、status、bump
-├── dist/                         # 已签名发布 APK 输出（已被 gitignore）
-├── build-android.bat / .sh       # 一键构建 + adb 安装便捷脚本
-├── build-test.bat / .sh          # 不递增版本号的构建/编译检查
-├── prepare-github-release.bat / .sh  # 构建一个私密签名、稳定的发布 APK，不递增版本号
-├── publish-github-release.ps1 / .sh  # 仅限本地：将 dist/ 中的 APK 发布为 GitHub Release
-├── bump_manifest_version.py      # 将 hydra-umc.project.json 的版本与原生版本同步（--sync）
-├── bump_version_code.py          # Android versionCode 计数器递增（仅由显式 `bump` 命令运行）
-├── gradlew, gradlew.bat          # Gradle 包装器
-├── build.gradle.kts, settings.gradle.kts, gradle.properties   # 根 Gradle 项目配置
-├── local.properties              # 本地 Android SDK 路径（机器特定，不提交）
-├── keystore.properties.example   # 私密发布签名配置模板
-├── .env.example                  # 环境变量示例
-├── README.md                     # 本文件
-├── README_spa.md / README_ita.md / README_fra.md / README_deu.md / README_zho.md / README_jpn.md / README_por.md   # 翻译
-└── LICENSE                       # GPL-3.0-or-later
+├── app/src/main/java/com/hydraumc/control/
+│   ├── MainActivity.kt                                          入口点——启动画面、登录/主界面门禁、冷启动安全的全局紧急停止处理
+│   ├── MainScreen.kt                                            底部导航脚手架、顶部栏（服务器选择器、资料、遥测、设置）
+│   ├── kinematics/                                              PAROL6 机械臂的正逆运动学
+│   ├── model/                                                   应用读取到的服务器状态
+│   ├── network/                                                 REST 客户端、WebSocket 和发现
+│   ├── ui/                                                      界面和控件
+│   ├── update/                                                  应用内更新通道
+│   ├── util/                                                    应用的纯规则
+│   ├── viewmodel/                                               每个界面监听的共享状态
+│   ├── wear/                                                    语音和状态中继
+│   └── widget/                                                  主屏幕的停止小组件
+├── docs/                                                        项目文档
+├── images/                                                      README 横幅 + 启动画面源资产
+├── tools/                                                       项目工具和 CI 检查
+├── .github/                                                     CI 工作流和 Issue 模板
+├── gradle/                                                      Gradle 包装器文件
+├── bump_manifest_version.py                                     将 hydra-umc.project.json 的版本与原生版本同步（--sync）
+├── bump_version_code.py                                         Android versionCode 计数器递增（仅由显式 `bump` 命令运行）
+├── gradlew / gradlew.bat                                        Gradle 包装器
+├── build.gradle.kts / settings.gradle.kts / gradle.properties   根 Gradle 项目配置
+├── keystore.properties.example                                  私密发布签名配置模板
+├── .env.example                                                 环境变量示例
+├── LICENSE                                                      GPL-3.0-or-later
+├── CHANGELOG.md                                                 每个版本的变更
+├── build-test.sh                                                不修改内容的构建检查
+├── hydra-umc.project.json                                       清单：版本、成熟度、系列
+├── test.sh                                                      不修改内容的构建检查
+├── prepare-github-release.sh / prepare-github-release.bat       构建用私钥签名的发布 APK；不改变任何版本
+├── publish-github-release.sh / publish-github-release.ps1       把该 APK 发布为当前版本的 GitHub 发布
+├── app/version.properties                                       版本和 versionCode
+└── app/src/test/                                                JVM 单元测试
 ```
+
+</details>
+
+## 🗺️ 路线图与已知限制
+
+在有设备实现 `docs/BLE_CONTRACT.md` 的外设一侧之前，蓝牙 LE 仍是实验性的。TLS 和固定指纹是用真实握手对本地测试服务器测试的，而不是对启用 TLS 的 HYDRA-UMC 服务器。内嵌的 3D 视图尚未遵循 TLS 设置。Keystore 存储、生物识别提示和蓝牙传输自编写以来没有在硬件上重新验证过。
+
+## 🌍 语言
+
+本 README 和仓库文档提供八种语言：英语、西班牙语、德语、法语、意大利语、日语、中文和葡萄牙语（葡萄牙）。它们同时编写，并由 CI 检查八个文件拥有相同的章节和相同的链接。
 
 ## 🔗 相关项目
 
@@ -345,23 +358,27 @@ HYDRA-UMC-ANDROID-CONTROL/
 - **[HYDRA-UMC-OPS-AGENT](https://github.com/JuanenRac/HYDRA-UMC-OPS-AGENT)** — 维护事件协调器：一个低权限的边缘角色采集经过脱敏的库存/健康快照，一个控制面角色以只读方式渲染它，并请求某个 AI 提供方给出诊断建议——从不应用补丁，也从不部署任何内容。
 - **[HYDRA-UMC-DEV-SERVER](https://github.com/JuanenRac/HYDRA-UMC-DEV-SERVER)** — 可复现的开发主机（Raspberry Pi 5 / CM5），保存整个生态系统的源代码，并在持久队列下运行有界的构建/测试任务；这是专用的开发角色，明确区别于运行中的 CM5。
 
----
+## 📚 文档
 
-## 📚 文档与社区
+更多阅读：
 
-- **[CONTRIBUTING.md](CONTRIBUTING.md)** —— 提交 Pull Request 所需的技术栈和编码规范。
-- **[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)** —— 本社区所期望的行为准则。
-- **[SECURITY.md](SECURITY.md)** —— 如何报告漏洞，以及本项目真实的安全关注重点。
-- **[SUPPORT.md](SUPPORT.md)** —— 在哪里提问和报告缺陷。
-- **[LICENSE.md](LICENSE.md)** —— 本项目自身的许可证。
+* [docs/SOURCE_MAP.md](docs/SOURCE_MAP.md) - 应用的每个源文件及一行说明
+* [生态系统的安全基线](https://github.com/JuanenRac/HYDRA-UMC-DOCS/blob/main/docs/SECURITY_BASELINE.md)
+* [生态系统的威胁模型](https://github.com/JuanenRac/HYDRA-UMC-DOCS/blob/main/docs/THREAT_MODEL.md)
+* [本仓库的更新日志](CHANGELOG.md)
+* [本仓库的许可证](LICENSE.md)
+
+## 🤝 参与贡献与社区
+
+* 提交 pull request 之前，请运行 `HYDRA_UMC_CI=1 py -3 tools/ci_validate.py`（或 `HYDRA_UMC_CI=1 python3 tools/ci_validate.py`）：它必须输出 `CI_VALIDATION=PASS`。此检查不要运行 `build.sh` 或 `build.bat`；构建不是检查。
+* 八个 README 由 HYDRA-UMC-DOCS 中的同一个源生成；请勿手工编辑。修改源文件，再用 `tools/make_readmes.py` 重新生成。
+* 不要在 README 中声称尚未运行过的内容：属实时请写“仅模拟”或“尚未在硬件上试过”。
+* 请参阅 [CONTRIBUTING.md](CONTRIBUTING.md)、[行为准则](CODE_OF_CONDUCT.md)、[SECURITY.md](SECURITY.md) 和 [SUPPORT.md](SUPPORT.md)。
 
 ## 👤 作者
-**JuanenRac** (Electro Hobby 3D)
-📧 electrohobby3d@gmail.com
-📺 [youtube.com/@electrohobby3d](https://youtube.com/@electrohobby3d)
+
+**JuanenRac (Electro Hobby 3D)** · electrohobby3d@gmail.com
 
 ## 📜 许可证
 
-源代码采用 **GNU 通用公共许可证 v3.0（GPL-3.0-or-later）**——见 [`LICENSE`](LICENSE)。
-
-本文档（本 README 及其自身的翻译版本——`README_spa.md`、`README_ita.md`、`README_fra.md`、`README_deu.md`、`README_zho.md`、`README_jpn.md`、`README_por.md`）依据 **知识共享 署名-相同方式共享 4.0 国际许可协议（CC BY-SA 4.0）** 提供。完整文本见 https://creativecommons.org/licenses/by-sa/4.0/。
+GPL-3.0-or-later - [LICENSE](LICENSE).

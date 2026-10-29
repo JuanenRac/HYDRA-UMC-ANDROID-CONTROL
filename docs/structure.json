@@ -1,0 +1,694 @@
+{
+  "repo": "HYDRA-UMC-ANDROID-CONTROL",
+  "ecosystem": "hydra",
+  "svg": "en",
+  "exempt": [
+    "CODE_OF_CONDUCT.md",
+    "CONTRIBUTING.md",
+    "SECURITY.md",
+    "SUPPORT.md",
+    "LICENSE",
+    "LICENSE.md",
+    "build-android.bat",
+    "build-android.sh",
+    "build-test.bat",
+    "prepare-github-release.bat",
+    "prepare-github-release.sh",
+    "publish-github-release.ps1",
+    "publish-github-release.sh",
+    "test.bat"
+  ],
+  "cards": [
+    {
+      "name": "app/src/main/java/com/hydraumc/control/",
+      "span": 3,
+      "accent": "a",
+      "rows": [
+        {
+          "name": "MainActivity.kt",
+          "desc": {
+            "en": "Entry point - splash",
+            "es": "Punto de entrada",
+            "de": "Einstiegspunkt",
+            "fr": "Point d'entrée",
+            "it": "Punto di ingresso",
+            "ja": "エントリポイント——スプラッシュ",
+            "zh": "入口点——启动画面、登录/主界面门禁、冷启动",
+            "pt": "Ponto de entrada"
+          },
+          "tree_desc": {
+            "en": "Entry point - splash, login/main screen gating, cold-start-safe global E-STOP handling",
+            "es": "Punto de entrada - splash, control de acceso a login/pantalla principal, manejo de E-STOP global seguro en arranque frío",
+            "de": "Einstiegspunkt - Splash, Login-/Hauptbildschirm-Zugriffssteuerung, kaltstartsichere globale E-STOP-Behandlung",
+            "fr": "Point d'entrée - écran de démarrage, contrôle d'accès login/écran principal, gestion sûre de l'E-STOP global au démarrage à froid",
+            "it": "Punto di ingresso - splash, gating login/schermata principale, gestione dell'E-STOP globale sicura in avvio a freddo",
+            "ja": "エントリポイント——スプラッシュ、ログイン/メイン画面ゲーティング、コールドスタートセーフなグローバル緊急停止処理",
+            "zh": "入口点——启动画面、登录/主界面门禁、冷启动安全的全局紧急停止处理",
+            "pt": "Ponto de entrada - splash, controlo de acesso ao ecrã de login/principal, tratamento do E-STOP global seguro a frio"
+          }
+        },
+        {
+          "name": "MainScreen.kt",
+          "desc": {
+            "en": "Bottom-nav scaffold, top bar",
+            "es": "Estructura de navegación inferior",
+            "de": "Unteres Navigations-Grundgerüst",
+            "fr": "Structure de navigation inférieure",
+            "it": "Struttura di navigazione inferiore, top bar",
+            "ja": "ボトムナビゲーションのスキャフォールド",
+            "zh": "底部导航脚手架、顶部栏（服务器选择器、资料",
+            "pt": "Esqueleto de navegação inferior"
+          },
+          "tree_desc": {
+            "en": "Bottom-nav scaffold, top bar (server selector, profile, telemetry, settings)",
+            "es": "Estructura de navegación inferior, barra superior (selector de servidor, perfil, telemetría, ajustes)",
+            "de": "Unteres Navigations-Grundgerüst, obere Leiste (Serverauswahl, Profil, Telemetrie, Einstellungen)",
+            "fr": "Structure de navigation inférieure, barre supérieure (sélecteur de serveur, profil, télémétrie, réglages)",
+            "it": "Struttura di navigazione inferiore, top bar (selettore server, profilo, telemetria, impostazioni)",
+            "ja": "ボトムナビゲーションのスキャフォールド、トップバー（サーバーセレクター、プロフィール、テレメトリ、設定）",
+            "zh": "底部导航脚手架、顶部栏（服务器选择器、资料、遥测、设置）",
+            "pt": "Esqueleto de navegação inferior, barra superior (seletor de servidor, perfil, telemetria, definições)"
+          }
+        },
+        {
+          "name": "kinematics/",
+          "desc": {
+            "en": "forward and inverse kinematics",
+            "es": "cinemática directa e inversa del brazo",
+            "de": "Vorwärts- und Rückwärtskinematik des",
+            "fr": "cinématique directe et inverse du bras",
+            "it": "cinematica diretta e inversa del braccio",
+            "ja": "PAROL6 アームの順運動学と逆運動学",
+            "zh": "PAROL6 机械臂的正逆运动学",
+            "pt": "cinemática direta e inversa do braço PAROL6"
+          },
+          "tree_desc": {
+            "en": "forward and inverse kinematics of the PAROL6 arm",
+            "es": "cinemática directa e inversa del brazo PAROL6",
+            "de": "Vorwärts- und Rückwärtskinematik des PAROL6-Arms",
+            "fr": "cinématique directe et inverse du bras PAROL6",
+            "it": "cinematica diretta e inversa del braccio PAROL6",
+            "ja": "PAROL6 アームの順運動学と逆運動学",
+            "zh": "PAROL6 机械臂的正逆运动学",
+            "pt": "cinemática direta e inversa do braço PAROL6"
+          }
+        },
+        {
+          "name": "model/",
+          "desc": {
+            "en": "the state of the server as the app reads it",
+            "es": "el estado del servidor tal como lo lee la",
+            "de": "der Zustand des Servers",
+            "fr": "l'état du serveur tel que l'application le",
+            "it": "lo stato del server come lo legge l'app",
+            "ja": "アプリが読み取るサーバーの状態",
+            "zh": "应用读取到的服务器状态",
+            "pt": "o estado do servidor tal como a aplicação o"
+          },
+          "tree_desc": {
+            "en": "the state of the server as the app reads it",
+            "es": "el estado del servidor tal como lo lee la aplicación",
+            "de": "der Zustand des Servers, wie die App ihn liest",
+            "fr": "l'état du serveur tel que l'application le lit",
+            "it": "lo stato del server come lo legge l'app",
+            "ja": "アプリが読み取るサーバーの状態",
+            "zh": "应用读取到的服务器状态",
+            "pt": "o estado do servidor tal como a aplicação o lê"
+          }
+        },
+        {
+          "name": "network/",
+          "desc": {
+            "en": "REST client, WebSocket and discovery",
+            "es": "cliente REST, WebSocket y descubrimiento",
+            "de": "REST-Client, WebSocket und Erkennung",
+            "fr": "client REST, WebSocket et découverte",
+            "it": "client REST, WebSocket e individuazione",
+            "ja": "REST クライアント、WebSocket",
+            "zh": "REST 客户端、WebSocket 和发现",
+            "pt": "cliente REST, WebSocket e descoberta"
+          },
+          "tree_desc": {
+            "en": "REST client, WebSocket and discovery",
+            "es": "cliente REST, WebSocket y descubrimiento",
+            "de": "REST-Client, WebSocket und Erkennung",
+            "fr": "client REST, WebSocket et découverte",
+            "it": "client REST, WebSocket e individuazione",
+            "ja": "REST クライアント、WebSocket、探索",
+            "zh": "REST 客户端、WebSocket 和发现",
+            "pt": "cliente REST, WebSocket e descoberta"
+          }
+        },
+        {
+          "name": "ui/",
+          "desc": {
+            "en": "screens and widgets",
+            "es": "pantallas y widgets",
+            "de": "Ansichten und Widgets",
+            "fr": "écrans et widgets",
+            "it": "schermate e widget",
+            "ja": "画面とウィジェット",
+            "zh": "界面和控件",
+            "pt": "ecrãs e widgets"
+          },
+          "tree_desc": {
+            "en": "screens and widgets",
+            "es": "pantallas y widgets",
+            "de": "Ansichten und Widgets",
+            "fr": "écrans et widgets",
+            "it": "schermate e widget",
+            "ja": "画面とウィジェット",
+            "zh": "界面和控件",
+            "pt": "ecrãs e widgets"
+          }
+        },
+        {
+          "name": "update/",
+          "desc": {
+            "en": "the in-app update channel",
+            "es": "el canal de actualización de la aplicación",
+            "de": "der App-eigene Update-Kanal",
+            "fr": "le canal de mise à jour de l'application",
+            "it": "il canale di aggiornamento dell'app",
+            "ja": "アプリ内の更新チャンネル",
+            "zh": "应用内更新通道",
+            "pt": "o canal de atualização da aplicação"
+          },
+          "tree_desc": {
+            "en": "the in-app update channel",
+            "es": "el canal de actualización de la aplicación",
+            "de": "der App-eigene Update-Kanal",
+            "fr": "le canal de mise à jour de l'application",
+            "it": "il canale di aggiornamento dell'app",
+            "ja": "アプリ内の更新チャンネル",
+            "zh": "应用内更新通道",
+            "pt": "o canal de atualização da aplicação"
+          }
+        },
+        {
+          "name": "util/",
+          "desc": {
+            "en": "pure rules of the app",
+            "es": "reglas puras de la aplicación",
+            "de": "reine Regeln der App",
+            "fr": "règles pures de l'application",
+            "it": "regole pure dell'app",
+            "ja": "アプリの純粋なルール",
+            "zh": "应用的纯规则",
+            "pt": "regras puras da aplicação"
+          },
+          "tree_desc": {
+            "en": "pure rules of the app",
+            "es": "reglas puras de la aplicación",
+            "de": "reine Regeln der App",
+            "fr": "règles pures de l'application",
+            "it": "regole pure dell'app",
+            "ja": "アプリの純粋なルール",
+            "zh": "应用的纯规则",
+            "pt": "regras puras da aplicação"
+          }
+        },
+        {
+          "name": "viewmodel/",
+          "desc": {
+            "en": "the shared state every screen listens to",
+            "es": "el estado compartido que escucha cada",
+            "de": "der gemeinsame Zustand",
+            "fr": "l'état partagé que chaque écran écoute",
+            "it": "lo stato condiviso che ogni schermata",
+            "ja": "すべての画面が監視する共有状態",
+            "zh": "每个界面监听的共享状态",
+            "pt": "o estado partilhado que cada ecrã escuta"
+          },
+          "tree_desc": {
+            "en": "the shared state every screen listens to",
+            "es": "el estado compartido que escucha cada pantalla",
+            "de": "der gemeinsame Zustand, den jede Ansicht beobachtet",
+            "fr": "l'état partagé que chaque écran écoute",
+            "it": "lo stato condiviso che ogni schermata ascolta",
+            "ja": "すべての画面が監視する共有状態",
+            "zh": "每个界面监听的共享状态",
+            "pt": "o estado partilhado que cada ecrã escuta"
+          }
+        },
+        {
+          "name": "wear/",
+          "desc": {
+            "en": "voice and status relay",
+            "es": "relé de voz y estado",
+            "de": "Sprach- und Status-Relay",
+            "fr": "relais de voix et d'état",
+            "it": "relay di voce e stato",
+            "ja": "音声・状態の中継",
+            "zh": "语音和状态中继",
+            "pt": "reencaminhamento de voz e estado"
+          },
+          "tree_desc": {
+            "en": "voice and status relay",
+            "es": "relé de voz y estado",
+            "de": "Sprach- und Status-Relay",
+            "fr": "relais de voix et d'état",
+            "it": "relay di voce e stato",
+            "ja": "音声・状態の中継",
+            "zh": "语音和状态中继",
+            "pt": "reencaminhamento de voz e estado"
+          }
+        },
+        {
+          "name": "widget/",
+          "desc": {
+            "en": "the home-screen STOP widget",
+            "es": "el widget de PARO de la pantalla de inicio",
+            "de": "das STOPP-Widget des Startbildschirms",
+            "fr": "le widget ARRÊT de l'écran d'accueil",
+            "it": "il widget STOP della schermata iniziale",
+            "ja": "ホーム画面の停止ウィジェット",
+            "zh": "主屏幕的停止小组件",
+            "pt": "o widget de PARAGEM do ecrã inicial"
+          },
+          "tree_desc": {
+            "en": "the home-screen STOP widget",
+            "es": "el widget de PARO de la pantalla de inicio",
+            "de": "das STOPP-Widget des Startbildschirms",
+            "fr": "le widget ARRÊT de l'écran d'accueil",
+            "it": "il widget STOP della schermata iniziale",
+            "ja": "ホーム画面の停止ウィジェット",
+            "zh": "主屏幕的停止小组件",
+            "pt": "o widget de PARAGEM do ecrã inicial"
+          }
+        }
+      ],
+      "sub": {
+        "en": "the Kotlin source",
+        "es": "el código Kotlin",
+        "de": "der Kotlin-Quellcode",
+        "fr": "le code Kotlin",
+        "it": "il codice Kotlin",
+        "ja": "Kotlin のソース",
+        "zh": "Kotlin 源码",
+        "pt": "o código Kotlin"
+      },
+      "columns": 2
+    },
+    {
+      "name": {
+        "en": "folders",
+        "es": "carpetas",
+        "de": "Ordner",
+        "fr": "dossiers",
+        "it": "cartelle",
+        "ja": "フォルダ",
+        "zh": "文件夹",
+        "pt": "pastas"
+      },
+      "kind": "group",
+      "span": 3,
+      "accent": "b",
+      "columns": 2,
+      "rows": [
+        {
+          "name": "docs/",
+          "desc": {
+            "en": "documents of the project",
+            "es": "documentos del proyecto",
+            "de": "Dokumente des Projekts",
+            "fr": "documents du projet",
+            "it": "documenti del progetto",
+            "ja": "プロジェクトの文書",
+            "zh": "项目文档",
+            "pt": "documentos do projeto"
+          },
+          "tree_desc": {
+            "en": "documents of the project",
+            "es": "documentos del proyecto",
+            "de": "Dokumente des Projekts",
+            "fr": "documents du projet",
+            "it": "documenti del progetto",
+            "ja": "プロジェクトの文書",
+            "zh": "项目文档",
+            "pt": "documentos do projeto"
+          }
+        },
+        {
+          "name": "images/",
+          "desc": {
+            "en": "README banner + splash screen source assets",
+            "es": "Recursos fuente del banner del README +",
+            "de": "Quellressourcen für das README-Banner + den",
+            "fr": "Ressources sources de la bannière README +",
+            "it": "Asset sorgente del banner del README +",
+            "ja": "README バナー + スプラッシュスクリ",
+            "zh": "README 横幅 + 启动画面源资产",
+            "pt": "Faixa do README + ativos de origem do ecrã"
+          },
+          "tree_desc": {
+            "en": "README banner + splash screen source assets",
+            "es": "Recursos fuente del banner del README + pantalla de bienvenida",
+            "de": "Quellressourcen für das README-Banner + den Splashscreen",
+            "fr": "Ressources sources de la bannière README + écran de démarrage",
+            "it": "Asset sorgente del banner del README + schermata di avvio",
+            "ja": "README バナー + スプラッシュスクリーンのソースアセット",
+            "zh": "README 横幅 + 启动画面源资产",
+            "pt": "Faixa do README + ativos de origem do ecrã de abertura"
+          }
+        },
+        {
+          "name": "tools/",
+          "desc": {
+            "en": "project tools and CI checks",
+            "es": "herramientas del proyecto y comprobaciones",
+            "de": "Projektwerkzeuge und CI-Prüfungen",
+            "fr": "outils du projet et vérifications de la CI",
+            "it": "strumenti del progetto e controlli della CI",
+            "ja": "プロジェクトのツールと CI の検査",
+            "zh": "项目工具和 CI 检查",
+            "pt": "ferramentas do projeto e verificações da CI"
+          },
+          "tree_desc": {
+            "en": "project tools and CI checks",
+            "es": "herramientas del proyecto y comprobaciones del CI",
+            "de": "Projektwerkzeuge und CI-Prüfungen",
+            "fr": "outils du projet et vérifications de la CI",
+            "it": "strumenti del progetto e controlli della CI",
+            "ja": "プロジェクトのツールと CI の検査",
+            "zh": "项目工具和 CI 检查",
+            "pt": "ferramentas do projeto e verificações da CI"
+          }
+        },
+        {
+          "name": ".github/",
+          "desc": {
+            "en": "CI workflow and issue templates",
+            "es": "flujo de CI y plantillas de incidencias",
+            "de": "CI-Workflow und Issue-Vorlagen",
+            "fr": "workflow de CI et modèles de tickets",
+            "it": "workflow di CI e modelli di segnalazione",
+            "ja": "CI ワークフローと Issue テンプレート",
+            "zh": "CI 工作流和 Issue 模板",
+            "pt": "fluxo de CI e modelos de problemas"
+          }
+        },
+        {
+          "name": "gradle/",
+          "desc": {
+            "en": "Gradle wrapper files",
+            "es": "ficheros del contenedor de Gradle",
+            "de": "Dateien des Gradle-Wrappers",
+            "fr": "fichiers de l'enveloppe Gradle",
+            "it": "file del wrapper Gradle",
+            "ja": "Gradle ラッパーのファイル",
+            "zh": "Gradle 包装器文件",
+            "pt": "ficheiros do wrapper do Gradle"
+          }
+        }
+      ]
+    },
+    {
+      "name": {
+        "en": "project files",
+        "es": "ficheros del proyecto",
+        "de": "Projektdateien",
+        "fr": "fichiers du projet",
+        "it": "file del progetto",
+        "ja": "プロジェクトのファイル",
+        "zh": "项目文件",
+        "pt": "ficheiros do projeto"
+      },
+      "kind": "group",
+      "span": 3,
+      "accent": "c",
+      "columns": 2,
+      "rows": [
+        {
+          "name": "bump_manifest_version.py",
+          "desc": {
+            "en": "Syncs hydra-umc.project.json's version",
+            "es": "Sincroniza la versión de",
+            "de": "Synchronisiert die Version von",
+            "fr": "Synchronise la version de",
+            "it": "Sincronizza la versione di",
+            "ja": "hydra-umc.project.json",
+            "zh": "将 hydra-umc.project.js",
+            "pt": "Sincroniza a versão do"
+          },
+          "tree_desc": {
+            "en": "Syncs hydra-umc.project.json's version to the native one (--sync)",
+            "es": "Sincroniza la versión de hydra-umc.project.json con la nativa (--sync)",
+            "de": "Synchronisiert die Version von hydra-umc.project.json mit der nativen (--sync)",
+            "fr": "Synchronise la version de hydra-umc.project.json avec la version native (--sync)",
+            "it": "Sincronizza la versione di hydra-umc.project.json con quella nativa (--sync)",
+            "ja": "hydra-umc.project.json のバージョンをネイティブ側と同期（--sync）",
+            "zh": "将 hydra-umc.project.json 的版本与原生版本同步（--sync）",
+            "pt": "Sincroniza a versão do hydra-umc.project.json com a nativa (--sync)"
+          }
+        },
+        {
+          "name": "bump_version_code.py",
+          "desc": {
+            "en": "Android versionCode counter bump",
+            "es": "Incremento del contador versionCode de",
+            "de": "Erhöhung des Android-versionCode-Zählers",
+            "fr": "Incrément du compteur versionCode d'Android",
+            "it": "Incremento del contatore versionCode di",
+            "ja": "app/version.properties",
+            "zh": "Android versionCode 计数",
+            "pt": "Subida do contador versionCode do Android"
+          },
+          "tree_desc": {
+            "en": "Android versionCode counter bump (run only by the explicit `bump` command)",
+            "es": "Incremento del contador versionCode de Android (solo lo ejecuta el comando `bump` explícito)",
+            "de": "Erhöhung des Android-versionCode-Zählers (nur vom expliziten `bump`-Befehl ausgeführt)",
+            "fr": "Incrément du compteur versionCode d'Android (exécuté seulement par la commande `bump` explicite)",
+            "it": "Incremento del contatore versionCode di Android (eseguito solo dal comando `bump` esplicito)",
+            "ja": "app/version.properties 内の Android 独自の versionCode カウンターを増加",
+            "zh": "Android versionCode 计数器递增（仅由显式 `bump` 命令运行）",
+            "pt": "Subida do contador versionCode do Android (executada só pelo comando `bump` explícito)"
+          }
+        },
+        {
+          "name": "gradlew / gradlew.bat",
+          "desc": {
+            "en": "Gradle wrapper",
+            "es": "Wrapper de Gradle",
+            "de": "Gradle-Wrapper",
+            "fr": "Wrapper Gradle",
+            "it": "Wrapper di Gradle",
+            "ja": "Gradle ラッパー",
+            "zh": "Gradle 包装器",
+            "pt": "Wrapper do Gradle"
+          },
+          "tree_desc": {
+            "en": "Gradle wrapper",
+            "es": "Wrapper de Gradle",
+            "de": "Gradle-Wrapper",
+            "fr": "Wrapper Gradle",
+            "it": "Wrapper di Gradle",
+            "ja": "Gradle ラッパー",
+            "zh": "Gradle 包装器",
+            "pt": "Wrapper do Gradle"
+          },
+          "tree_name": "gradlew / gradlew.bat"
+        },
+        {
+          "name": "build.gradle.kts ...",
+          "desc": {
+            "en": "Root Gradle project config",
+            "es": "Configuración raíz del proyecto Gradle",
+            "de": "Root-Konfiguration des Gradle-Projekts",
+            "fr": "Configuration racine du projet Gradle",
+            "it": "Configurazione root del progetto Gradle",
+            "ja": "ルート Gradle プロジェクト設定",
+            "zh": "根 Gradle 项目配置",
+            "pt": "Configuração Gradle do projeto raiz"
+          },
+          "tree_desc": {
+            "en": "Root Gradle project config",
+            "es": "Configuración raíz del proyecto Gradle",
+            "de": "Root-Konfiguration des Gradle-Projekts",
+            "fr": "Configuration racine du projet Gradle",
+            "it": "Configurazione root del progetto Gradle",
+            "ja": "ルート Gradle プロジェクト設定",
+            "zh": "根 Gradle 项目配置",
+            "pt": "Configuração Gradle do projeto raiz"
+          },
+          "tree_name": "build.gradle.kts / settings.gradle.kts / gradle.properties"
+        },
+        {
+          "name": "keystore.properties.example",
+          "desc": {
+            "en": "Private release signing configuration",
+            "es": "Plantilla de configuración privada de firma",
+            "de": "Vorlage für die private",
+            "fr": "Modèle de configuration privée de signature",
+            "it": "Template di configurazione privata per la",
+            "ja": "プライベートリリース署名設定のテンプレート",
+            "zh": "私密发布签名配置模板",
+            "pt": "Modelo da configuração privada de"
+          },
+          "tree_desc": {
+            "en": "Private release signing configuration template",
+            "es": "Plantilla de configuración privada de firma de release",
+            "de": "Vorlage für die private Release-Signierkonfiguration",
+            "fr": "Modèle de configuration privée de signature de release",
+            "it": "Template di configurazione privata per la firma di release",
+            "ja": "プライベートリリース署名設定のテンプレート",
+            "zh": "私密发布签名配置模板",
+            "pt": "Modelo da configuração privada de assinatura de lançamento"
+          }
+        },
+        {
+          "name": ".env.example",
+          "desc": {
+            "en": "Example environment variables",
+            "es": "Ejemplo de variables de entorno",
+            "de": "Beispiel für Umgebungsvariablen",
+            "fr": "Exemple de variables d'environnement",
+            "it": "Esempio di variabili d'ambiente",
+            "ja": "環境変数の例",
+            "zh": "环境变量示例",
+            "pt": "Exemplo de variáveis de ambiente"
+          },
+          "tree_desc": {
+            "en": "Example environment variables",
+            "es": "Ejemplo de variables de entorno",
+            "de": "Beispiel für Umgebungsvariablen",
+            "fr": "Exemple de variables d'environnement",
+            "it": "Esempio di variabili d'ambiente",
+            "ja": "環境変数の例",
+            "zh": "环境变量示例",
+            "pt": "Exemplo de variáveis de ambiente"
+          }
+        },
+        {
+          "name": "LICENSE",
+          "desc": {
+            "en": "GPL-3.0-or-later",
+            "es": "GPL-3.0-or-later",
+            "de": "GPL-3.0-or-later",
+            "fr": "GPL-3.0-or-later",
+            "it": "GPL-3.0-or-later",
+            "ja": "GPL-3.0-or-later",
+            "zh": "GPL-3.0-or-later",
+            "pt": "GPL-3.0-or-later"
+          },
+          "tree_desc": {
+            "en": "GPL-3.0-or-later",
+            "es": "GPL-3.0-or-later",
+            "de": "GPL-3.0-or-later",
+            "fr": "GPL-3.0-or-later",
+            "it": "GPL-3.0-or-later",
+            "ja": "GPL-3.0-or-later",
+            "zh": "GPL-3.0-or-later",
+            "pt": "GPL-3.0-or-later"
+          }
+        },
+        {
+          "name": "CHANGELOG.md",
+          "desc": {
+            "en": "what changed in each version",
+            "es": "qué cambió en cada versión",
+            "de": "was sich in jeder Version geändert hat",
+            "fr": "ce qui a changé à chaque version",
+            "it": "cosa è cambiato in ogni versione",
+            "ja": "各バージョンの変更点",
+            "zh": "每个版本的变更",
+            "pt": "o que mudou em cada versão"
+          }
+        },
+        {
+          "name": "build-test.sh",
+          "desc": {
+            "en": "non-mutating build check",
+            "es": "comprobación de compilación sin cambios",
+            "de": "Build-Prüfung ohne Änderungen",
+            "fr": "vérification de build sans modification",
+            "it": "controllo di build senza modifiche",
+            "ja": "変更を伴わないビルド確認",
+            "zh": "不修改内容的构建检查",
+            "pt": "verificação de compilação sem alterações"
+          }
+        },
+        {
+          "name": "hydra-umc.project.json",
+          "desc": {
+            "en": "manifest: version, maturity, family",
+            "es": "manifiesto: versión, madurez, familia",
+            "de": "Manifest: Version, Reifegrad, Familie",
+            "fr": "manifeste : version, maturité, famille",
+            "it": "manifesto: versione, maturità, famiglia",
+            "ja": "マニフェスト：バージョン、成熟度、ファミリー",
+            "zh": "清单：版本、成熟度、系列",
+            "pt": "manifesto: versão, maturidade, família"
+          }
+        },
+        {
+          "name": "test.sh",
+          "desc": {
+            "en": "non-mutating build check",
+            "es": "comprobación de compilación sin cambios",
+            "de": "Build-Prüfung ohne Änderungen",
+            "fr": "vérification de build sans modification",
+            "it": "controllo di build senza modifiche",
+            "ja": "変更を伴わないビルド確認",
+            "zh": "不修改内容的构建检查",
+            "pt": "verificação de compilação sem alterações"
+          }
+        },
+        {
+          "name": "prepare-github-release.sh ...",
+          "tree_name": "prepare-github-release.sh / prepare-github-release.bat",
+          "desc": {
+            "en": "builds the privately signed release APK; changes no version",
+            "es": "compila el APK de release firmado en privado; no cambia ninguna versión",
+            "de": "baut die privat signierte Release-APK; ändert keine Version",
+            "fr": "construit l'APK de release signé en privé ; ne change aucune version",
+            "it": "compila l'APK di release firmato in privato; non cambia nessuna versione",
+            "ja": "非公開鍵で署名したリリース APK をビルド。バージョンは変更しない",
+            "zh": "构建用私钥签名的发布 APK；不改变任何版本",
+            "pt": "compila o APK de lançamento assinado em privado; não muda nenhuma versão"
+          }
+        },
+        {
+          "name": "publish-github-release.sh ...",
+          "tree_name": "publish-github-release.sh / publish-github-release.ps1",
+          "desc": {
+            "en": "publishes that APK as the GitHub release of the current version",
+            "es": "publica ese APK como la release de GitHub de la versión actual",
+            "de": "veröffentlicht diese APK als GitHub-Release der aktuellen Version",
+            "fr": "publie cet APK comme release GitHub de la version courante",
+            "it": "pubblica quell'APK come release GitHub della versione corrente",
+            "ja": "その APK を現在のバージョンの GitHub リリースとして公開",
+            "zh": "把该 APK 发布为当前版本的 GitHub 发布",
+            "pt": "publica esse APK como a versão do GitHub da versão atual"
+          }
+        },
+        {
+          "name": "app/version.properties",
+          "desc": {
+            "en": "version and versionCode",
+            "es": "versión y versionCode",
+            "de": "Version und versionCode",
+            "fr": "version et versionCode",
+            "it": "versione e versionCode",
+            "ja": "バージョンと versionCode",
+            "zh": "版本和 versionCode",
+            "pt": "versão e versionCode"
+          }
+        },
+        {
+          "name": "app/src/test/",
+          "desc": {
+            "en": "JVM unit tests",
+            "es": "pruebas unitarias en JVM",
+            "de": "JVM-Unit-Tests",
+            "fr": "tests unitaires JVM",
+            "it": "test unitari JVM",
+            "ja": "JVM ユニットテスト",
+            "zh": "JVM 单元测试",
+            "pt": "testes unitários na JVM"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,205 @@
+{
+  "repo": "HYDRA-UMC-ANDROID-CONTROL",
+  "ecosystem": "hydra",
+  "tagline": "A phone console that finds the server, keeps its credential encrypted, and puts one STOP on every screen.",
+  "description": "HYDRA-UMC-ANDROID-CONTROL scans the local network for a HYDRA-UMC-SERVER, signs in with a token kept in the Android Keystore, sends small atomic commands over REST and listens to the state over a WebSocket, with Bluetooth LE as a second transport that no device answers yet.",
+  "columns": [
+    "WHO USES IT",
+    "THIS REPOSITORY",
+    "WHAT IT TALKS TO"
+  ],
+  "nodes": [
+    {
+      "id": "op",
+      "column": 0,
+      "level": "tested",
+      "title": "The operator",
+      "lines": [
+        "screens: dashboard, control,",
+        "cameras, 3D, telemetry"
+      ],
+      "code": [
+        "app/src/main/java/com/hydraumc/control/MainScreen.kt",
+        "app/src/main/java/com/hydraumc/control/ui/ControlScreen.kt"
+      ]
+    },
+    {
+      "id": "wid",
+      "column": 0,
+      "level": "tested",
+      "title": "Widget + notification",
+      "lines": [
+        "the STOP button outside",
+        "the app"
+      ],
+      "code": [
+        "app/src/main/java/com/hydraumc/control/widget/GlobalStopWidget.kt"
+      ]
+    },
+    {
+      "id": "wat",
+      "column": 0,
+      "level": "contract",
+      "title": "HYDRA-UMC-WATCH",
+      "lines": [
+        "voice and status relay",
+        "over the Data Layer"
+      ],
+      "code": [
+        "app/src/main/java/com/hydraumc/control/wear/WatchVoiceRelayService.kt"
+      ]
+    },
+    {
+      "id": "srv",
+      "column": 2,
+      "level": "contract",
+      "title": "HYDRA-UMC-SERVER",
+      "lines": [
+        "REST and WebSocket; the",
+        "STUDIO 3D view in a WebView"
+      ]
+    },
+    {
+      "id": "per",
+      "column": 2,
+      "level": "untested",
+      "title": "BLE peripheral",
+      "lines": [
+        "no HYDRA-UMC device",
+        "answers yet"
+      ]
+    },
+    {
+      "id": "gh",
+      "column": 2,
+      "level": "contract",
+      "title": "GitHub releases",
+      "lines": [
+        "the one APK asset the",
+        "code accepts, by name"
+      ]
+    },
+    {
+      "id": "net",
+      "column": 1,
+      "level": "tested",
+      "title": "network",
+      "lines": [
+        "REST client, WebSocket,",
+        "discovery, optional TLS"
+      ],
+      "code": [
+        "app/src/main/java/com/hydraumc/control/network/HydraApiClient.kt",
+        "app/src/main/java/com/hydraumc/control/network/HydraWebSocket.kt",
+        "app/src/main/java/com/hydraumc/control/network/Discovery.kt",
+        "app/src/main/java/com/hydraumc/control/network/TlsSettings.kt"
+      ]
+    },
+    {
+      "id": "sto",
+      "column": 1,
+      "level": "tested",
+      "title": "stored state",
+      "lines": [
+        "encrypted credential,",
+        "last-known-state cache"
+      ],
+      "code": [
+        "app/src/main/java/com/hydraumc/control/network/AuthPrefs.kt",
+        "app/src/main/java/com/hydraumc/control/network/StateCache.kt"
+      ]
+    },
+    {
+      "id": "vm",
+      "column": 1,
+      "level": "tested",
+      "title": "RobotViewModel",
+      "lines": [
+        "atomic commands, STOP,",
+        "reservations, voice turn"
+      ],
+      "code": [
+        "app/src/main/java/com/hydraumc/control/viewmodel/RobotViewModel.kt"
+      ]
+    },
+    {
+      "id": "ble",
+      "column": 1,
+      "level": "tested",
+      "title": "Bluetooth LE client",
+      "lines": [
+        "framed GATT messages,",
+        "one write at a time"
+      ],
+      "code": [
+        "app/src/main/java/com/hydraumc/control/network/HydraBleClient.kt",
+        "app/src/main/java/com/hydraumc/control/network/BleContract.kt"
+      ]
+    },
+    {
+      "id": "upd",
+      "column": 1,
+      "level": "tested",
+      "title": "update channel",
+      "lines": [
+        "latest stable release,",
+        "never installs by itself"
+      ],
+      "code": [
+        "app/src/main/java/com/hydraumc/control/update/GitHubReleaseUpdater.kt"
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "from": "op",
+      "to": "vm",
+      "level": "tested"
+    },
+    {
+      "from": "wid",
+      "to": "vm",
+      "level": "tested"
+    },
+    {
+      "from": "wat",
+      "to": "vm",
+      "level": "contract",
+      "label": "voice relay"
+    },
+    {
+      "from": "net",
+      "to": "vm",
+      "level": "tested"
+    },
+    {
+      "from": "vm",
+      "to": "ble",
+      "level": "tested"
+    },
+    {
+      "from": "net",
+      "to": "sto",
+      "level": "tested"
+    },
+    {
+      "from": "upd",
+      "to": "gh",
+      "level": "contract",
+      "label": "checks"
+    },
+    {
+      "from": "net",
+      "to": "srv",
+      "level": "contract",
+      "label": "REST + WS"
+    },
+    {
+      "from": "ble",
+      "to": "per",
+      "level": "untested",
+      "label": "GATT"
+    }
+  ],
+  "footer": "Unit-tested on a plain JVM; the Wi-Fi path was tried against a local server, Bluetooth LE and TLS against a real HYDRA-UMC server were not."
+}
