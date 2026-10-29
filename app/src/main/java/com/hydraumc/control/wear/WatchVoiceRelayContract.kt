@@ -42,9 +42,12 @@ data class WatchVoiceTurn(
  * [errorCode] is a stable, NEVER-translated protocol identifier for
  * this relay's own SYSTEM fallback replies (WatchVoiceRelayService's own
  * catch block below, generated locally on the phone, in English, with no
- * access to the watch's own locale) - as opposed to [text], which for a
- * REAL AI reply is already correctly localized upstream (Voice UI answers
- * in the request's own locale) and needs no translation here at all. The
+ * access to the watch's own locale) - as opposed to [text], which is whatever the
+ * server relays. The request carries the locale of the watch, but the server does
+ * not translate: the fixed replies it composes itself (the status line, the
+ * confirmation prompts) are in English today, and a reply of the language model
+ * follows the locale only as far as the model does. So [text] is NOT guaranteed to
+ * be in the language of the watch, and this phone does no translation either. The
  * watch (not this phone) resolves a known [errorCode] to a real localized
  * string from its own strings.xml (see HYDRA-UMC-WATCH's own
  * errorCodeToStringRes()) instead of ever speaking/showing this phone's
