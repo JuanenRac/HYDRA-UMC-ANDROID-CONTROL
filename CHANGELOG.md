@@ -11,6 +11,8 @@ All notable changes to this project are documented here.
 - **A state change rebuilds only the robot that changed:** a delta, an optimistic command, its rollback and a global stop re-derive the display row of the robots they touch and reuse the others; a full state replace still rebuilds all of them.
 
 - **The update is checked against the digest of the release:** when the release feed publishes a SHA-256 for the APK, the downloaded file must match it before the installer is offered; a release that publishes none is accepted as before. The HTTP client library moves to 4.12.
+- **A quick settings tile for the global stop:** the tile opens the app and asks it for the same global stop as the widget and the notification; only the system can bind to it.
+
 ## [0.7.3] - Numbered motion commands, a shared Watch relay contract, a cancelled installer no longer leaves the update screen on installing, Android lint in the CI and the universal README
 
 - **Motion commands are numbered:** a jog, a table move, a joint move and a stop carry a rising number, so the server can refuse a jog that arrives after a later stop; a refusal for arriving out of order is told apart from a reservation and shown in the eight languages.
