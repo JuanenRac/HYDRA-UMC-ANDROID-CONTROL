@@ -91,6 +91,9 @@ class HydraApiException(
     /** 409 `stale-sequence`: a later numbered motion command of this controller already reached the robot, so this one arrived out of order and was not applied. */
     val isStaleSequence: Boolean get() = httpCode == 409 && serverCode == "stale-sequence"
 
+    /** 423 `robot-disabled`: the robot is in safe mode and refuses every command but STOP until an administrator enables it. */
+    val isRobotDisabled: Boolean get() = httpCode == 423 || serverCode == "robot-disabled"
+
     /** The server is rate limiting this client (429). */
     val isRateLimited: Boolean get() = httpCode == 429
 

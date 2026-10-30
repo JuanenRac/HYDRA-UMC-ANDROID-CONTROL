@@ -56,4 +56,18 @@ class RobotViewContractTest {
         assertTrue(robot.playbackState.getBoolean("isPlaying"))
         assertTrue(robot.playbackState.getBoolean("playing"))
     }
+
+    @Test
+    fun `a robot is enabled unless the server says it is in safe mode`() {
+        val robot = RobotView(JSONObject().put("id", 1))
+        assertTrue(robot.isEnabled)
+
+        robot.setEnabled(false)
+        assertFalse(robot.isEnabled)
+        assertFalse(robot.raw.getBoolean("enabled"))
+
+        robot.setEnabled(true)
+        assertTrue(robot.isEnabled)
+        assertFalse(RobotView(JSONObject().put("id", 2).put("enabled", false)).isEnabled)
+    }
 }

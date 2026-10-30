@@ -212,6 +212,17 @@ class RobotView(val raw: JSONObject) {
         }
     }
 
+    /**
+     * Whether the robot accepts commands. A robot in safe mode (disabled) refuses everything but STOP until an
+     * administrator enables it; a server that does not know the field means enabled.
+     */
+    val isEnabled: Boolean get() = raw.optBoolean("enabled", true)
+
+    /** Sets the safe-mode flag; the answer of the server replaces it at the next state read. */
+    fun setEnabled(enabled: Boolean) {
+        raw.put("enabled", enabled)
+    }
+
     /** Sets the pause state explicitly so combined robots cannot diverge. */
     fun setPaused(paused: Boolean) {
         val pb = playbackState

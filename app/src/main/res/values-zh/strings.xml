@@ -301,4 +301,13 @@
     <string name="watch_relay_connection_unavailable">无法连接 HYDRA-UMC。请检查已配对手机的会话。</string>
     <string name="watch_status_offline_headline">HYDRA-UMC 离线</string>
     <string name="watch_status_offline_detail">请检查已配对手机的连接和服务器会话。</string>
+    <string name="safe_mode_disable">停用机器人(安全模式)</string>
+    <string name="safe_mode_enable">启用机器人</string>
+    <string name="safe_mode_disable_title">要停用机器人吗？</string>
+    <string name="safe_mode_disable_message">%1$s 将停止，并拒绝除 STOP 以外的所有命令，直到管理员重新启用。</string>
+    <string name="safe_mode_disable_button">停用</string>
+    <string name="safe_mode_enable_title">要启用机器人吗？</string>
+    <string name="safe_mode_enable_message">%1$s 将重新接受命令。请确认其周围区域没有人员和障碍。</string>
+    <string name="safe_mode_enable_button">启用</string>
+    <string name="error_robot_disabled">机器人处于安全模式(已停用)：命令 %1$s 未被应用。在管理员启用之前，只有 STOP 可用。</string>
 </resources>

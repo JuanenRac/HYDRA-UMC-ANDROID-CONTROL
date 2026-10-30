@@ -30,6 +30,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Dangerous
 import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PowerOff
+import androidx.compose.material.icons.filled.PowerSettingsNew
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.AlertDialog
@@ -155,6 +157,8 @@ fun PlaybackConsole(viewModel: RobotViewModel, selectedRobot: RobotState?) {
     if (selectedRobot == null) return
     val stopHoldHint = stringResource(R.string.stop_hold_to_confirm)
     var confirmingPlay by remember { mutableStateOf(false) }
+    var confirmingSafeMode by remember { mutableStateOf(false) }
+    val safeModeDescription = stringResource(if (selectedRobot.isEnabled) R.string.safe_mode_disable else R.string.safe_mode_enable)
     val playDescription = stringResource(R.string.play)
     val pauseDescription = stringResource(if (selectedRobot.isPaused) R.string.resume else R.string.pause)
     val stopDescription = stringResource(R.string.stop)
@@ -188,6 +192,23 @@ fun PlaybackConsole(viewModel: RobotViewModel, selectedRobot: RobotState?) {
                 }) { Text(stringResource(R.string.play_confirm_button)) }
             },
             dismissButton = { TextButton(onClick = { confirmingPlay = false }) { Text(stringResource(R.string.cancel_button)) } },
+        )
+    }
+
+    if (confirmingSafeMode) {
+        val disabling = selectedRobot.isEnabled
+        AlertDialog(
+            onDismissRequest = { confirmingSafeMode = false },
+            title = { Text(stringResource(if (disabling) R.string.safe_mode_disable_title else R.string.safe_mode_enable_title)) },
+            text = { Text(stringResource(if (disabling) R.string.safe_mode_disable_message else R.string.safe_mode_enable_message, selectedRobot.name)) },
+            confirmButton = {
+                Button(onClick = {
+                    confirmingSafeMode = false
+                    vibrate()
+                    viewModel.sendCommand(if (disabling) "disable" else "enable")
+                }) { Text(stringResource(if (disabling) R.string.safe_mode_disable_button else R.string.safe_mode_enable_button)) }
+            },
+            dismissButton = { TextButton(onClick = { confirmingSafeMode = false }) { Text(stringResource(R.string.cancel_button)) } },
         )
     }
 
@@ -229,6 +250,24 @@ fun PlaybackConsole(viewModel: RobotViewModel, selectedRobot: RobotState?) {
                 modifier = Modifier.size(54.dp).background(if (selectedRobot.online && selectedRobot.isPlaying) Color(0xFFB45309) else Color.DarkGray, CircleShape),
             ) {
                 Icon(if (selectedRobot.isPaused) Icons.Default.PlayArrow else Icons.Default.Pause, contentDescription = pauseDescription, tint = Color.White)
+            }
+
+            // SAFE MODE (disable / enable the robot). Anyone signed in may disable it, like a stop; only an administrator is
+            // offered the enable. Both ask first.
+            val safeModeAllowed = selectedRobot.online && (selectedRobot.isEnabled || viewModel.isAdmin())
+            IconButton(
+                onClick = { vibrate(); confirmingSafeMode = true },
+                enabled = safeModeAllowed,
+                modifier = Modifier.size(54.dp).background(
+                    if (!safeModeAllowed) Color.DarkGray else if (selectedRobot.isEnabled) Color(0xFF475569) else Color(0xFF047857),
+                    CircleShape,
+                ),
+            ) {
+                Icon(
+                    if (selectedRobot.isEnabled) Icons.Default.PowerOff else Icons.Default.PowerSettingsNew,
+                    contentDescription = safeModeDescription,
+                    tint = Color.White,
+                )
             }
 
             // STOP - same long-press protection as E-STOP above.

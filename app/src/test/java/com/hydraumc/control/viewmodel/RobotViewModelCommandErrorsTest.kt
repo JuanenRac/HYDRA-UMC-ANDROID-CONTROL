@@ -134,13 +134,27 @@ class RobotViewModelCommandErrorsTest {
     }
 
     @Test
-    fun `enable and disable are no longer offered`() {
+    fun `disable is sent to the server and a robot in safe mode is told apart from the other refusals`() {
+        server.enqueue(MockResponse().setResponseCode(200).setBody("{}"))
         val viewModel = newViewModel()
 
         viewModel.sendCommand("disable")
+        waitUntil { server.requestCount == 1 }
 
-        assertEquals("nothing is sent for a command the server does not have", 0, server.requestCount)
-        assertTrue(viewModel.lastError.value!!.contains("Unknown command"))
+        assertTrue(server.takeRequest().body.readUtf8().contains("\"command\":\"disable\""))
+        assertFalse(viewModel.state.robotById(1)!!.isEnabled)
+    }
+
+    @Test
+    fun `a 423 robot-disabled answer reads as safe mode`() {
+        server.enqueue(MockResponse().setResponseCode(423).setBody("""{"error":"robot 1 is disabled (safe mode): enable it first","code":"robot-disabled","robotId":1}"""))
+        val viewModel = newViewModel()
+
+        viewModel.sendCommand("play")
+        waitUntil { viewModel.lastError.value != null }
+
+        assertTrue(viewModel.lastError.value!!.contains("safe mode"))
+        assertFalse(viewModel.state.robotById(1)!!.isPlaying)
     }
 
     @Test

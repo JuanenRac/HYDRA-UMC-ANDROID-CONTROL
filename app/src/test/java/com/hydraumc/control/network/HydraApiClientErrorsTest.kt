@@ -68,6 +68,16 @@ class HydraApiClientErrorsTest {
     }
 
     @Test
+    fun `a robot in safe mode answers 423 and is told apart from the other refusals`() {
+        val e = refusal(423, """{"error":"robot 1 is disabled (safe mode): enable it first","code":"robot-disabled","robotId":1}""")
+        assertEquals(423, e.httpCode)
+        assertTrue(e.isRobotDisabled)
+        assertFalse(e.isPermissionDenied)
+        assertFalse(e.isRejectedCommand)
+        assertFalse(refusal(400, """{"error":"unknown command"}""").isRobotDisabled)
+    }
+
+    @Test
     fun `a 403 without a token code is a missing permission, not an expired session`() {
         val e = refusal(403, """{"error":"Access denied: admin privileges required"}""")
         assertFalse(e.isSessionProblem)

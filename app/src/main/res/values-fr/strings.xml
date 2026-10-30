@@ -301,4 +301,13 @@
     <string name="watch_relay_connection_unavailable">Connexion à HYDRA-UMC indisponible. Vérifiez la session du téléphone associé.</string>
     <string name="watch_status_offline_headline">HYDRA-UMC hors ligne</string>
     <string name="watch_status_offline_detail">Vérifiez la connexion du téléphone associé et la session du serveur.</string>
+    <string name="safe_mode_disable">Désactiver le robot (mode sûr)</string>
+    <string name="safe_mode_enable">Activer le robot</string>
+    <string name="safe_mode_disable_title">Désactiver le robot ?</string>
+    <string name="safe_mode_disable_message">%1$s s\'arrêtera et refusera toutes les commandes sauf STOP jusqu\'à ce qu\'un administrateur le réactive.</string>
+    <string name="safe_mode_disable_button">DÉSACTIVER</string>
+    <string name="safe_mode_enable_title">Activer le robot ?</string>
+    <string name="safe_mode_enable_message">%1$s acceptera de nouveau les commandes. Vérifiez que la zone autour de lui est dégagée.</string>
+    <string name="safe_mode_enable_button">ACTIVER</string>
+    <string name="error_robot_disabled">Le robot est en mode sûr (désactivé) : la commande %1$s n\'a pas été appliquée. Seul STOP fonctionne jusqu\'à ce qu\'un administrateur l\'active.</string>
 </resources>

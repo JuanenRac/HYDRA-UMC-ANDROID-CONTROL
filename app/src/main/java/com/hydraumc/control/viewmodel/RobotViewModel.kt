@@ -140,6 +140,8 @@ data class RobotState(
     val online: Boolean,
     val isPlaying: Boolean,
     val isPaused: Boolean,
+    // False while the robot is in safe mode (disabled): it refuses everything but STOP.
+    val isEnabled: Boolean = true,
     val activeStep: Int,
     val hasXYTable: Boolean,
     val hasAtc: Boolean,
@@ -191,6 +193,7 @@ private fun RobotView.toDisplay(): RobotState = RobotState(
     online = online,
     isPlaying = isPlaying,
     isPaused = isPaused,
+    isEnabled = isEnabled,
     activeStep = playbackState.optInt("activeStep", -1),
     hasXYTable = hasXYTable,
     hasAtc = hasAtc,
@@ -1660,6 +1663,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         val app = getApplication<Application>()
         return when {
             e.isSessionProblem -> app.getString(R.string.error_session_expired)
+            e.isRobotDisabled -> app.getString(R.string.error_robot_disabled, command)
             e.isRevisionMismatch -> app.getString(R.string.error_revision_changed, command)
             e.isJogNotArmed -> app.getString(R.string.error_jog_not_armed)
             e.isStaleSequence -> app.getString(R.string.error_stale_sequence, command)
@@ -1974,6 +1978,11 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                 sendAtomicCommand(command, params, propagateToCombined = true) { it.setPaused(paused) }
             }
             "stop" -> sendAtomicCommand(command, propagateToCombined = true) { it.stop() }
+            // Safe mode of the selected robot (only this robot, never its combined group). `disable` stops it and the
+            // server then refuses everything but STOP; `enable` brings it back and the server only allows it to an
+            // administrator (it answers 403 to anyone else).
+            "disable" -> sendAtomicCommand(command) { it.stop(); it.setEnabled(false) }
+            "enable" -> sendAtomicCommand(command) { it.setEnabled(true) }
             else -> lastError.value = getApplication<Application>().getString(R.string.error_unknown_command, command)
         }
     }

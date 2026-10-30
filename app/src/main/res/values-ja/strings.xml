@@ -301,4 +301,13 @@
     <string name="watch_relay_connection_unavailable">HYDRA-UMC に接続できません。ペアリング済みのスマートフォンのセッションを確認してください。</string>
     <string name="watch_status_offline_headline">HYDRA-UMC オフライン</string>
     <string name="watch_status_offline_detail">ペアリング済みのスマートフォンの接続とサーバーのセッションを確認してください。</string>
+    <string name="safe_mode_disable">ロボットを無効にする(セーフモード)</string>
+    <string name="safe_mode_enable">ロボットを有効にする</string>
+    <string name="safe_mode_disable_title">ロボットを無効にしますか?</string>
+    <string name="safe_mode_disable_message">%1$s は停止し、管理者が再び有効にするまで STOP 以外のコマンドをすべて拒否します。</string>
+    <string name="safe_mode_disable_button">無効にする</string>
+    <string name="safe_mode_enable_title">ロボットを有効にしますか?</string>
+    <string name="safe_mode_enable_message">%1$s は再びコマンドを受け付けます。周囲に人や物がないことを確認してください。</string>
+    <string name="safe_mode_enable_button">有効にする</string>
+    <string name="error_robot_disabled">ロボットはセーフモード(無効)です。コマンド %1$s は適用されませんでした。管理者が有効にするまで STOP のみ動作します。</string>
 </resources>
