@@ -65,6 +65,7 @@ import com.hydraumc.control.wear.WatchVoiceTurn
 import com.hydraumc.control.util.NotificationHelper
 import com.hydraumc.control.util.OptimisticRollback
 import com.hydraumc.control.util.StaleData
+import com.hydraumc.control.util.reuseUnchangedRows
 import kotlinx.coroutines.launch
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
@@ -1159,14 +1160,26 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    private fun applyState(newState: HydraState, isFromCache: Boolean = false) {
+    /**
+     * [changedRobotIds] lists the robots whose raw state was mutated in place
+     * since the last call; only their display rows are rebuilt and every other
+     * row is reused. null (the default) means a full replace: rebuild all.
+     */
+    private fun applyState(newState: HydraState, isFromCache: Boolean = false, changedRobotIds: Set<Int>? = null) {
         val oldState = state
         state = newState
         if (!isFromCache) {
             stateIsLive.value = true
             stateAtMs.value = System.currentTimeMillis()
         }
-        robots.value = newState.allRobots.map { it.toDisplay() }
+        robots.value = reuseUnchangedRows(
+            previous = if (newState === oldState) robots.value else emptyList(),
+            views = newState.allRobots,
+            changedIds = if (newState === oldState) changedRobotIds else null,
+            viewId = { it.id },
+            rowId = { it.id },
+            convert = { it.toDisplay() },
+        )
         jobs.value = newState.allJobs.map { JobState(it.name) }
         
         if (!isFromCache) {
@@ -1313,7 +1326,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                 cameraRaw.put(key, cameraPatch.get(key))
             }
         }
-        applyState(state)
+        applyState(state, changedRobotIds = setOf(robotId))
     }
 
     // Every write in this app goes through the real atomic
@@ -1423,7 +1436,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         val edits = snapshots.map { (id, before) ->
             id to OptimisticRollback.diff(before, JSONObject(state.robotById(id)?.raw?.toString() ?: "{}"))
         }
-        applyState(state)
+        applyState(state, changedRobotIds = affectedIds.toSet())
 
         val payload = JSONObject().put("command", command).apply { if (params != null) put("params", params) }
 
@@ -1432,7 +1445,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                 val raw = state.robotById(id)?.raw ?: continue
                 OptimisticRollback.restore(raw, changes)
             }
-            applyState(state)
+            applyState(state, changedRobotIds = edits.map { it.first }.toSet())
         }
 
         val isJog = command == "jog" || command == "table"
@@ -1884,7 +1897,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                 // Show the stop at once; the next state broadcast confirms or corrects it.
                 outcome.result.robots.filter { it.stopped }.forEach { r -> state.robotById(r.robotId)?.stop() }
                 jogArmedUntilMs.value = emptyMap() // the server disarms every jog on a global stop
-                applyState(state)
+                applyState(state, changedRobotIds = outcome.result.robots.filter { it.stopped }.map { it.robotId }.toSet())
                 logTelemetry("TX OK [stop-all] -> ${outcome.result.stoppedCount} stopped, ${outcome.result.failedCount} failed")
                 lastError.value = null
             } else if (outcome is StopAllStatus.NotConfirmed) {

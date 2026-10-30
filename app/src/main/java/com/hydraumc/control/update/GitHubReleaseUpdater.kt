@@ -26,6 +26,8 @@ data class AvailableUpdate(
     val releaseName: String,
     val notes: String,
     val assetUrl: String,
+    /** Lowercase hex SHA-256 the release feed publishes for the APK asset, when it does. */
+    val sha256: String? = null,
 )
 
 /** Result of checking the trusted public release endpoint. */
@@ -91,6 +93,7 @@ class GitHubReleaseUpdater(private val context: Context) {
                     apk.delete()
                     val expectedLength = body.contentLength()
                     var downloaded = 0L
+                    val digest = java.security.MessageDigest.getInstance("SHA-256")
                     body.byteStream().use { input ->
                         partial.outputStream().use { output ->
                             val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
@@ -98,6 +101,7 @@ class GitHubReleaseUpdater(private val context: Context) {
                                 val bytesRead = input.read(buffer)
                                 if (bytesRead == -1) break
                                 output.write(buffer, 0, bytesRead)
+                                digest.update(buffer, 0, bytesRead)
                                 downloaded += bytesRead
                                 onProgress(
                                     if (expectedLength > 0) ((downloaded * 100) / expectedLength).toInt() else null,
@@ -111,6 +115,11 @@ class GitHubReleaseUpdater(private val context: Context) {
                         return@withContext UpdateDownloadResult.Failed(
                             "APK download was incomplete: expected $expectedLength bytes, received $downloaded.",
                         )
+                    }
+                    val actual = digest.digest().joinToString("") { "%02x".format(it) }
+                    if (!ReleaseMetadataParser.digestMatches(update.sha256, actual)) {
+                        partial.delete()
+                        return@withContext UpdateDownloadResult.Failed("Downloaded APK does not match the SHA-256 published by the release.")
                     }
                     if (!partial.renameTo(apk)) {
                         return@withContext UpdateDownloadResult.Failed("Could not finalise the downloaded APK.")

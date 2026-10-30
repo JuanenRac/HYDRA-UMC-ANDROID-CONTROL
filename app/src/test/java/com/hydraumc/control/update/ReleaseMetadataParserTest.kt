@@ -31,6 +31,21 @@ class ReleaseMetadataParserTest {
         assertTrue(ReleaseMetadataParser.parseLatestStable(release("v0.4.5", "http://example.invalid/app.apk"), "0.4.4") is UpdateCheckResult.Failed)
     }
 
+    @Test fun `reads the sha256 digest the feed publishes and ignores anything else`() {
+        val hex = "a".repeat(64)
+        assertEquals(hex, ReleaseMetadataParser.parseDigest("sha256:${hex.uppercase()}"))
+        assertEquals(null, ReleaseMetadataParser.parseDigest("sha1:$hex"))
+        assertEquals(null, ReleaseMetadataParser.parseDigest("sha256:abc"))
+        assertEquals(null, ReleaseMetadataParser.parseDigest(""))
+    }
+
+    @Test fun `a published digest must match and a missing one cannot be checked`() {
+        val hex = "b".repeat(64)
+        assertTrue(ReleaseMetadataParser.digestMatches(hex, hex))
+        assertTrue(!ReleaseMetadataParser.digestMatches(hex, "c".repeat(64)))
+        assertTrue(ReleaseMetadataParser.digestMatches(null, hex))
+    }
+
     @Test fun `does not offer draft prerelease or non newer releases`() {
         assertEquals(UpdateCheckResult.UpToDate, ReleaseMetadataParser.parseLatestStable(release("v0.4.5", extras = ",\"draft\":true"), "0.4.4"))
         assertEquals(UpdateCheckResult.UpToDate, ReleaseMetadataParser.parseLatestStable(release("v0.4.4"), "0.4.4"))
