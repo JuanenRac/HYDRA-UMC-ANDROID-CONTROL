@@ -6,6 +6,8 @@ All notable changes to this project are documented here.
 
 - **Safe mode of a robot (disable and enable):** the playback bar of the Control screen has a button that disables the selected robot, after asking; a disabled robot stops and the server refuses every command but STOP until it is enabled again. The same button enables it again, offered only to an administrator (the server answers 403 to anyone else) and also after asking. The app reads the `enabled` flag of the robot and shows a clear message when the server answers 423 `robot-disabled`. The texts are in the eight languages.
 
+- **The connection state is an enum:** the connection indicator is no longer a translated text that the code compares; the screens and the view model use the connection state itself and translate it only to show it. Unused code of the app (the array-merging helper of the state and the settings upload call) was removed.
+
 ## [0.7.3] - Numbered motion commands, a shared Watch relay contract, a cancelled installer no longer leaves the update screen on installing, Android lint in the CI and the universal README
 
 - **Motion commands are numbered:** a jog, a table move, a joint move and a stop carry a rising number, so the server can refuse a jog that arrives after a later stop; a refusal for arriving out of order is told apart from a reservation and shown in the eight languages.

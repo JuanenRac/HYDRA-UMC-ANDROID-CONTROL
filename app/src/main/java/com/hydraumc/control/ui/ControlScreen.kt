@@ -39,6 +39,7 @@ import android.annotation.SuppressLint
 import com.hydraumc.control.viewmodel.RobotViewModel
 import com.hydraumc.control.viewmodel.RobotState
 import com.hydraumc.control.R
+import com.hydraumc.control.network.WsStatus
 import com.hydraumc.control.ui.theme.metallicIndustrial
 import com.hydraumc.control.ui.theme.StatusLed
 import com.hydraumc.control.ui.theme.HydraButton
@@ -127,12 +128,12 @@ fun ControlScreen(viewModel: RobotViewModel) {
 
     val robots = viewModel.robots.value
     val selectedId = viewModel.selectedRobotId.value
-    val connectionStatus = viewModel.connectionStatus.value
+    val connectionState = viewModel.connectionState.value
     val selectedRobot = robots.find { it.id == selectedId }
 
     // Reservations and the safety limits of the selected robot model are read from the server
     // when this screen opens, when the robot changes and every 15 s while it stays open.
-    LaunchedEffect(selectedId, connectionStatus) {
+    LaunchedEffect(selectedId, connectionState) {
         // The server pushes the reservations when they change: after the first read, the poll rests while a push is recent.
         var first = true
         while (true) {
@@ -187,17 +188,9 @@ fun ControlScreen(viewModel: RobotViewModel) {
                             color = Color.LightGray,
                             fontWeight = FontWeight.Bold
                         )
-                        // connectionStatus is itself a localized string (always
-                        // set from getString(R.string.status_connected) - see
-                        // RobotViewModel.kt), so it has to be compared against
-                        // that same resource, not a hardcoded English literal -
-                        // a literal match here always fails in es/de/fr/it,
-                        // showing "disconnected" (red) even while connected.
-                        // Same comparison DashboardScreen.kt already uses correctly.
-                        val connectedLabel = stringResource(R.string.status_connected)
-                        val isConnected = connectionStatus == connectedLabel
+                        val isConnected = connectionState == WsStatus.CONNECTED
                         Text(
-                            text = (if (isConnected) connectedLabel else connectionStatus).uppercase(),
+                            text = connectionState.label().uppercase(),
                             style = MaterialTheme.typography.labelSmall,
                             color = if (isConnected) Color(0xFF10B981) else Color(0xFFF43F5E),
                             fontWeight = FontWeight.Black
@@ -205,7 +198,7 @@ fun ControlScreen(viewModel: RobotViewModel) {
                     }
                 }
                 StatusLed(
-                    isOn = connectionStatus == stringResource(R.string.status_connected),
+                    isOn = connectionState == WsStatus.CONNECTED,
                     activeColor = MetallicCyan,
                     size = 20.dp
                 )

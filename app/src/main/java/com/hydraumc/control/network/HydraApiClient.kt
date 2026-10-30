@@ -22,8 +22,6 @@
 //     sendAtomicCommand()) uses: a much smaller payload than a full
 //     POST /api/settings for a single jog tick, and it lets the server (not
 //     every client independently) own the combinedWith fan-out logic.
-//     postSettings() below needs an administrator account and no screen of
-//     this app calls it; individual robot commands never go through it.
 //
 // Deliberately built on plain OkHttp + org.json rather than Retrofit/Gson.
 // =============================================================================
@@ -237,20 +235,6 @@ class HydraApiClient(
             .get()
             .build()
         executeExpectingJson(request)
-    }
-
-    /** 
-     * Overwrites the full system settings on the server.
-     */
-    suspend fun postSettings(payload: JSONObject): Unit = withContext(Dispatchers.IO) {
-        val body = payload.toString().toRequestBody(JSON_MEDIA_TYPE)
-        val request = Request.Builder()
-            .url("$baseUrl/api/settings")
-            .header("Authorization", "Bearer ${authToken ?: ""}")
-            .post(body)
-            .build()
-        executeExpectingJson(request)
-        Unit
     }
 
     /**

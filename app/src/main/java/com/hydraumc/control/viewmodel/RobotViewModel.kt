@@ -307,7 +307,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
 
     val ipAddress = mutableStateOf("192.168.1.100")
     val port = mutableStateOf("3000")
-    val connectionStatus = mutableStateOf(application.getString(R.string.status_disconnected))
+    val connectionState = mutableStateOf(WsStatus.DISCONNECTED)
 
     val lastError = mutableStateOf<String?>(null)
     /** What the global STOP is doing or did; null before the first one. */
@@ -333,7 +333,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
     /** True while the robots shown come from the offline copy or the link to the server is down. */
     val isShowingStaleData: Boolean
         get() = StaleData.isStale(
-            connected = connectionStatus.value == getApplication<Application>().getString(R.string.status_connected),
+            connected = connectionState.value == WsStatus.CONNECTED,
             hasRobots = robots.value.isNotEmpty(),
         )
     var apiClient: HydraApiClient? = null
@@ -435,7 +435,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                 isAppInForeground = true
                 val client = apiClient
                 if ((client != null) && (metricsJob?.isActive != true) &&
-                    (connectionStatus.value == getApplication<Application>().getString(R.string.status_connected))
+                    (connectionState.value == WsStatus.CONNECTED)
                 ) {
                     startMetricsLoop(client)
                 }
@@ -459,7 +459,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     init {
-        connectionStatus.value = application.getString(R.string.status_disconnected)
+        connectionState.value = WsStatus.DISCONNECTED
         NotificationHelper.createChannel(application)
 
         viewModelScope.launch {
@@ -727,7 +727,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         ws?.disconnect()
         ws = null
         NotificationHelper.hideSafetyNotification(getApplication())
-        connectionStatus.value = getApplication<Application>().getString(R.string.status_disconnected)
+        connectionState.value = WsStatus.DISCONNECTED
         val client = apiClient
         apiClient = null
         authTokenState.value = null
@@ -846,7 +846,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         if (!renewalBudget.tryAcquire()) {
             logTelemetry("The session was rejected again right after being renewed: back to the sign-in")
             isLoggedIn.value = false
-            connectionStatus.value = getApplication<Application>().getString(R.string.status_disconnected)
+            connectionState.value = WsStatus.DISCONNECTED
             lastError.value = "The server keeps rejecting the session right after renewing it. Sign in again; if it repeats, check the server."
             ws?.disconnect()
             return
@@ -854,7 +854,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         reloginJob = viewModelScope.launch {
             if (!attemptSilentRelogin()) {
                 isLoggedIn.value = false
-                connectionStatus.value = getApplication<Application>().getString(R.string.status_disconnected)
+                connectionState.value = WsStatus.DISCONNECTED
                 ws?.disconnect()
             }
         }
@@ -974,7 +974,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
             return
         }
 
-        connectionStatus.value = getApplication<Application>().getString(R.string.status_connecting)
+        connectionState.value = WsStatus.CONNECTING
         lastError.value = null
         plainRemoteHost.value = null
         isSwitchingServer = true
@@ -1063,7 +1063,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
             // connectionStatus == "Connected") deliberately stays alive while
             // backgrounded. The appLifecycleObserver relaunches this loop via
             // ON_START once the app returns to the foreground.
-            while(connectionStatus.value == getApplication<Application>().getString(R.string.status_connected) && isAppInForeground) {
+            while(connectionState.value == WsStatus.CONNECTED && isAppInForeground) {
                 try {
                     val m = client.getSystemMetrics()
                     metrics.value = SystemMetrics(
@@ -1092,17 +1092,16 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                 useTls = useTls,
                 token = if (token.isNotEmpty()) token else null,
                 onStatus = { status ->
-                    connectionStatus.value = when (status) {
+                    connectionState.value = status
+                    when (status) {
                         WsStatus.CONNECTING -> {
                             logTelemetry("WebSocket connecting...")
-                            getApplication<Application>().getString(R.string.status_connecting)
                         }
                         WsStatus.CONNECTED -> {
                             logTelemetry("WebSocket CONNECTED")
                             if (notificationsEnabled.value) {
                                 NotificationHelper.showSafetyNotification(getApplication())
                             }
-                            getApplication<Application>().getString(R.string.status_connected)
                         }
                         WsStatus.DISCONNECTED -> {
                             logTelemetry("WebSocket DISCONNECTED")
@@ -1110,7 +1109,6 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                             if (!isSwitchingServer) {
                                 discoveredServers.value = emptyList()
                             }
-                            getApplication<Application>().getString(R.string.status_disconnected)
                         }
                     }
                     if (status == WsStatus.CONNECTED) {
@@ -2190,7 +2188,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                     if (discoveredServers.value.none { (it.host == server.host) && (it.port == server.port) }) {
                         discoveredServers.value += server
                     }
-                    if (connectionStatus.value == getApplication<Application>().getString(R.string.status_disconnected) && discoveredServers.value.size == 1) {
+                    if (connectionState.value == WsStatus.DISCONNECTED && discoveredServers.value.size == 1) {
                         logTelemetry("Auto-connecting to first discovered server: ${server.displayName}")
                         connectToDiscovered(server)
                     }
@@ -2330,17 +2328,13 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
 
         lastError.value = null
         lastBtError.value = null
-        connectionStatus.value = getApplication<Application>().getString(R.string.status_connecting)
-
+        connectionState.value = WsStatus.CONNECTING
         bleClient = HydraBleClient.forAndroid(
             context = getApplication(),
             deviceAddress = device.address,
             onStatus = { status ->
-                connectionStatus.value = when (status) {
-                    WsStatus.CONNECTING -> getApplication<Application>().getString(R.string.status_connecting)
-                    WsStatus.CONNECTED -> getApplication<Application>().getString(R.string.status_connected)
-                    WsStatus.DISCONNECTED -> getApplication<Application>().getString(R.string.status_disconnected)
-                }
+                // BLE reports the same three states
+                connectionState.value = status
             },
             onSettings = { payload ->
                 try {

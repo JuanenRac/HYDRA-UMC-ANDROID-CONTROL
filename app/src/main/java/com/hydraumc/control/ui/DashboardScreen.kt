@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.lerp
 import com.hydraumc.control.viewmodel.RobotViewModel
 import com.hydraumc.control.R
+import com.hydraumc.control.network.WsStatus
 import com.hydraumc.control.ui.theme.metallicIndustrial
 import com.hydraumc.control.ui.theme.StatusLed
 import java.util.Locale
@@ -38,13 +39,13 @@ fun DashboardScreen(viewModel: RobotViewModel) {
     /** Current list of robots fetched from the system state. */
     val robots = viewModel.robots.value
     /** Current server connection status. */
-    val connectionStatus = viewModel.connectionStatus.value
+    val connectionState = viewModel.connectionState.value
     /** Current active server info. */
     val activeServer = viewModel.activeServer.value
     /** Current system metrics. */
     val metrics = viewModel.metrics.value
     /** Boolean flag indicating if the app is successfully connected to a server. */
-    val isConnected = connectionStatus == stringResource(R.string.status_connected)
+    val isConnected = connectionState == WsStatus.CONNECTED
 
     Column(
         modifier = Modifier.fillMaxSize().padding(16.dp).verticalScroll(rememberScrollState()),
@@ -64,13 +65,13 @@ fun DashboardScreen(viewModel: RobotViewModel) {
                 style = MaterialTheme.typography.bodyMedium,
                 color = Color.White,
             )
-            val statusColor = when (connectionStatus) {
-                stringResource(R.string.status_connected) -> Color(0xFF00C853)
-                stringResource(R.string.status_connecting) -> Color(0xFFFFA000)
-                else -> Color.Red
+            val statusColor = when (connectionState) {
+                WsStatus.CONNECTED -> Color(0xFF00C853)
+                WsStatus.CONNECTING -> Color(0xFFFFA000)
+                WsStatus.DISCONNECTED -> Color.Red
             }
             Text(
-                text = " $connectionStatus",
+                text = " ${connectionState.label()}",
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Bold,
                 color = statusColor,

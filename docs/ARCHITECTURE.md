@@ -23,8 +23,7 @@ no code shared between the three clients.
   so a second `connect()` call cancels and replaces any in-flight connection attempt instead of racing it.
 - **Incoming state** (`RobotViewModel.kt`): a `settings` WebSocket message carries the full state tree and replaces
   the local one. A schema-2 `delta` message carries `{controllerId, robotId, patch}` and only the keys of the patch
-  are written into that robot. Neither path merges arrays: an array in a patch replaces the stored one. (`HydraState.merge()` and
-  its `mergeArrays` helper are kept for a future partial-message type; nothing calls them today.)
+  are written into that robot. Neither path merges arrays: an array in a patch replaces the stored one.
 - **Discovery** (`Discovery.kt`): two mechanisms run side by side. (1) A deterministic subnet scanner that probes
   `GET /api/hydra-info` concurrently across the phone's own `/24`, including its own LAN IP and `127.0.0.1` - a
   direct Kotlin port of HYDRA-UMC-SUITE's `discovery.py`. (2) An NSD/mDNS listener as a secondary path, useful when
@@ -141,7 +140,7 @@ app/src/main/java/com/hydraumc/control/
 ├── kinematics/
 │   └── Parol6Kinematics.kt      # Parol6-specific forward/inverse kinematics
 ├── model/
-│   ├── HydraState.kt            # JSONObject views + delta merge logic (mergeArrays, pos.tx/ty mirroring)
+│   ├── HydraState.kt            # JSONObject views (pos.tx/ty mirroring)
 │   └── BleDevice.kt             # Discovered BLE device (name/address/rssi)
 ├── network/
 │   ├── HydraApiClient.kt        # REST client, atomic command support
