@@ -20,7 +20,7 @@ GPL-3.0-or-later - see LICENSE
   <img src="https://img.shields.io/badge/UI-Jetpack%20Compose-4285F4.svg" alt="UI">
   <img src="https://img.shields.io/badge/Platform-Android-3DDC84.svg" alt="Platform">
   <img src="https://img.shields.io/badge/Tests-303%20passing-2ea44f.svg" alt="Tests">
-  <img src="https://img.shields.io/badge/Version-0.7.3-0f6cbd.svg" alt="Version">
+  <img src="https://img.shields.io/badge/Version-0.7.4-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-functional-0F6CBD.svg" alt="Maturity">
 </p>
 
@@ -38,7 +38,7 @@ Wi-Fi または Bluetooth 経由で [HYDRA-UMC](https://github.com/JuanenRac/HYD
 
 | | |
 |---|---|
-| バージョン | `0.7.3` |
+| バージョン | `0.7.4` |
 | 成熟度 | 機能する |
 | テスト | 303 (`./gradlew testDebugUnitTest`) |
 | 技術 | Kotlin / Jetpack / biometric auth / WebSocket client |

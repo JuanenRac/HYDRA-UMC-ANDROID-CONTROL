@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+## [0.7.4] - Safe mode of a robot, the connection state as an enum, a rebuild of only the robot that changed, the update checked against the digest of the release and a quick settings tile for the global stop
+
 - **Safe mode of a robot (disable and enable):** the playback bar of the Control screen has a button that disables the selected robot, after asking; a disabled robot stops and the server refuses every command but STOP until it is enabled again. The same button enables it again, offered only to an administrator (the server answers 403 to anyone else) and also after asking. The app reads the `enabled` flag of the robot and shows a clear message when the server answers 423 `robot-disabled`. The texts are in the eight languages.
 
 - **The connection state is an enum:** the connection indicator is no longer a translated text that the code compares; the screens and the view model use the connection state itself and translate it only to show it. Unused code of the app (the array-merging helper of the state and the settings upload call) was removed.
