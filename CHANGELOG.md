@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+## [0.7.3] - Numbered motion commands, a shared Watch relay contract, a cancelled installer no longer leaves the update screen on installing, Android lint in the CI and the universal README
+
 - **Motion commands are numbered:** a jog, a table move, a joint move and a stop carry a rising number, so the server can refuse a jog that arrives after a later stop; a refusal for arriving out of order is told apart from a reservation and shown in the eight languages.
 
 - **The Watch relay contract is a shared file:** `docs/watch_relay_contract.json` (identical in the Watch repository) lists valid and invalid messages and the limits, and a test runs them against the relay messages of this app.
