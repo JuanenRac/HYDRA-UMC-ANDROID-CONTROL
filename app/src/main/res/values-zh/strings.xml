@@ -347,4 +347,38 @@
     <string name="safe_mode_enable_message">%1$s 将重新接受命令。请确认其周围区域没有人员和障碍。</string>
     <string name="safe_mode_enable_button">启用</string>
     <string name="error_robot_disabled">机器人处于安全模式(已停用)：命令 %1$s 未被应用。在管理员启用之前，只有 STOP 可用。</string>
+
+    <!-- Access options of the server (administrators only) -->
+    <string name="server_options_title">服务器访问选项</string>
+    <string name="server_options_intro">只有管理员才能更改的服务器开关。每项都会显示其值的来源；由服务器环境固定的值已锁定。</string>
+    <string name="server_options_save">保存服务器选项</string>
+    <string name="server_options_saved">服务器选项已保存。</string>
+    <string name="server_options_none">此服务器暂不提供这些选项。</string>
+    <string name="server_options_failure_unavailable">此服务器暂不提供访问选项。</string>
+    <string name="server_options_failure_session">会话已结束，请重新登录。</string>
+    <string name="server_options_failure_forbidden">只有管理员才能查看或更改这些选项。</string>
+    <string name="server_options_failure_network">无法连接到服务器。</string>
+    <string name="server_options_failure_other">服务器未接受该请求。</string>
+    <string name="server_options_confirm_title">要降低服务器的保护吗？</string>
+    <string name="server_options_confirm_yes">仍然保存</string>
+    <string name="server_options_confirm_camera">摄像头画面将无需票据或登录即可向整个网络开放。</string>
+    <string name="server_options_confirm_ws">将接受 WebSocket 地址中的令牌；代理和服务器可能会记录它。</string>
+    <string name="server_options_confirm_log">日志中的机密信息将不再被隐去。</string>
+    <string name="server_options_confirm_voice">已确认的语音请求将不再需要经过验证的签名。</string>
+    <string name="server_options_source_env">已在服务器环境中设置（锁定）</string>
+    <string name="server_options_source_config">已从此界面保存</string>
+    <string name="server_options_source_default">默认</string>
+    <string name="server_options_health_label">允许网络上的任何人无需登录读取 GET /health</string>
+    <string name="server_options_health_help">默认关闭:此时该路由的响应就像不存在一样。开启后只返回最简的健康报告,供监控程序或负载均衡器使用。</string>
+    <string name="server_options_health_confirm">GET /health 将无需登录即可响应。要开放吗?</string>
+    <string name="server_options_stop_label">在 MQTT 桥上通告全局停止(保留的 SAFE_STOP)</string>
+    <string name="server_options_stop_help">默认关闭。需要开启 MQTT 桥。该状态会一直保留,直到管理员解除。</string>
+    <string name="server_options_address_label">在连接历史中保存每个客户端的地址和用户代理</string>
+    <string name="server_options_address_help">默认关闭:没有它们历史也能工作。开启后,只有管理员能看到。</string>
+    <string name="server_options_address_confirm">地址和用户代理属于个人数据。要保存到连接历史吗?</string>
+    <string name="server_options_camera_label">允许摄像头画面无需票据或登录即可打开</string>
+    <string name="server_options_ws_label">接受 WebSocket 地址中的令牌（/ws?token=）</string>
+    <string name="server_options_log_label">在日志中隐去机密信息</string>
+    <string name="server_options_voice_label">要求已确认的语音请求带有已验证的签名</string>
+    <string name="server_options_exposure_help">安全默认值：画面需要票据，地址中不带令牌，机密信息被隐去，不要求签名（语音服务共享其密钥后再开启）。由服务器环境固定的值无法在此更改。</string>
 </resources>

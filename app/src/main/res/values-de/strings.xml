@@ -347,4 +347,38 @@
     <string name="safe_mode_enable_message">%1$s nimmt wieder Befehle an. Stelle sicher, dass der Bereich um ihn frei ist.</string>
     <string name="safe_mode_enable_button">AKTIVIEREN</string>
     <string name="error_robot_disabled">Der Roboter ist im sicheren Modus (deaktiviert): der Befehl %1$s wurde nicht ausgeführt. Nur STOP funktioniert, bis ein Administrator ihn aktiviert.</string>
+
+    <!-- Access options of the server (administrators only) -->
+    <string name="server_options_title">Zugriffsoptionen des Servers</string>
+    <string name="server_options_intro">Schalter des Servers, die nur ein Administrator ändern kann. Jeder zeigt, woher sein Wert stammt; ein von der Umgebung des Servers festgelegter Wert ist gesperrt.</string>
+    <string name="server_options_save">Serveroptionen speichern</string>
+    <string name="server_options_saved">Serveroptionen gespeichert.</string>
+    <string name="server_options_none">Dieser Server bietet diese Optionen noch nicht an.</string>
+    <string name="server_options_failure_unavailable">Dieser Server bietet die Zugriffsoptionen noch nicht an.</string>
+    <string name="server_options_failure_session">Ihre Sitzung ist beendet. Melden Sie sich erneut an.</string>
+    <string name="server_options_failure_forbidden">Nur ein Administrator kann diese Optionen lesen oder ändern.</string>
+    <string name="server_options_failure_network">Der Server ist nicht erreichbar.</string>
+    <string name="server_options_failure_other">Der Server hat die Anfrage nicht angenommen.</string>
+    <string name="server_options_confirm_title">Den Schutz des Servers verringern?</string>
+    <string name="server_options_confirm_yes">Trotzdem speichern</string>
+    <string name="server_options_confirm_camera">Die Kamerabilder werden ohne Ticket und Anmeldung für das ganze Netz geöffnet.</string>
+    <string name="server_options_confirm_ws">Ein Token in der WebSocket-Adresse wird akzeptiert; Proxys und Server können ihn protokollieren.</string>
+    <string name="server_options_confirm_log">Geheimnisse werden im Protokoll nicht mehr geschwärzt.</string>
+    <string name="server_options_confirm_voice">Eine bestätigte gesprochene Anfrage braucht keine geprüfte Signatur mehr.</string>
+    <string name="server_options_source_env">In der Umgebung des Servers gesetzt (gesperrt)</string>
+    <string name="server_options_source_config">Von diesem Bildschirm gespeichert</string>
+    <string name="server_options_source_default">Standard</string>
+    <string name="server_options_health_label">GET /health für jeden im Netzwerk ohne Anmeldung lesbar machen</string>
+    <string name="server_options_health_help">Standardmäßig aus: Die Route antwortet dann, als gäbe es sie nicht. Eingeschaltet zeigt sie nur einen minimalen Gesundheitsbericht, für Überwachung oder Load Balancer.</string>
+    <string name="server_options_health_confirm">GET /health antwortet dann ohne Anmeldung. Öffnen?</string>
+    <string name="server_options_stop_label">Einen globalen Stopp auf der MQTT-Brücke ankündigen (gehaltenes SAFE_STOP)</string>
+    <string name="server_options_stop_help">Standardmäßig aus. Die MQTT-Brücke muss eingeschaltet sein. Der Zustand bleibt, bis ein Administrator ihn freigibt.</string>
+    <string name="server_options_address_label">Adresse und User-Agent jedes Clients im Verbindungsverlauf speichern</string>
+    <string name="server_options_address_help">Standardmäßig aus: Der Verlauf funktioniert auch ohne sie. Wenn an, sehen nur Administratoren sie.</string>
+    <string name="server_options_address_confirm">Adresse und User-Agent sind personenbezogene Daten. Im Verbindungsverlauf speichern?</string>
+    <string name="server_options_camera_label">Kamerabilder ohne Ticket oder Anmeldung freigeben</string>
+    <string name="server_options_ws_label">Ein Token in der WebSocket-Adresse akzeptieren (/ws?token=)</string>
+    <string name="server_options_log_label">Geheimnisse im Protokoll schwärzen</string>
+    <string name="server_options_voice_label">Eine geprüfte Signatur bei einer bestätigten gesprochenen Anfrage verlangen</string>
+    <string name="server_options_exposure_help">Sichere Voreinstellungen: Bilder verlangen ein Ticket, kein Token in der Adresse, Geheimnisse geschwärzt, Signatur nicht verlangt (einschalten, sobald der Sprachdienst seinen Schlüssel teilt). Ein von der Umgebung des Servers festgelegter Wert lässt sich hier nicht ändern.</string>
 </resources>

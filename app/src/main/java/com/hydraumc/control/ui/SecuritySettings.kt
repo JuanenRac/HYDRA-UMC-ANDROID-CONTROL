@@ -100,6 +100,9 @@ fun SecuritySettings(viewModel: RobotViewModel) {
             Spacer(modifier = Modifier.height(8.dp))
             Text(message, style = MaterialTheme.typography.bodySmall)
         }
+
+        // The access options of the server itself: only an administrator can read or change them.
+        if (viewModel.isAdmin()) ServerOptionsSection(viewModel)
     }
 }
 

@@ -347,4 +347,38 @@
     <string name="safe_mode_enable_message">%1$s acceptera de nouveau les commandes. Vérifiez que la zone autour de lui est dégagée.</string>
     <string name="safe_mode_enable_button">ACTIVER</string>
     <string name="error_robot_disabled">Le robot est en mode sûr (désactivé) : la commande %1$s n\'a pas été appliquée. Seul STOP fonctionne jusqu\'à ce qu\'un administrateur l\'active.</string>
+
+    <!-- Access options of the server (administrators only) -->
+    <string name="server_options_title">Options d\'accès du serveur</string>
+    <string name="server_options_intro">Interrupteurs du serveur que seul un administrateur peut modifier. Chacun indique l\'origine de sa valeur ; une valeur fixée par l\'environnement du serveur est verrouillée.</string>
+    <string name="server_options_save">Enregistrer les options du serveur</string>
+    <string name="server_options_saved">Options du serveur enregistrées.</string>
+    <string name="server_options_none">Ce serveur ne propose pas encore ces options.</string>
+    <string name="server_options_failure_unavailable">Ce serveur ne propose pas encore les options d\'accès.</string>
+    <string name="server_options_failure_session">Votre session a pris fin. Reconnectez-vous.</string>
+    <string name="server_options_failure_forbidden">Seul un administrateur peut lire ou modifier ces options.</string>
+    <string name="server_options_failure_network">Le serveur est injoignable.</string>
+    <string name="server_options_failure_other">Le serveur n\'a pas accepté la requête.</string>
+    <string name="server_options_confirm_title">Réduire la protection du serveur ?</string>
+    <string name="server_options_confirm_yes">Enregistrer quand même</string>
+    <string name="server_options_confirm_camera">Les images des caméras seront ouvertes à tout le réseau sans ticket ni connexion.</string>
+    <string name="server_options_confirm_ws">Un jeton dans l\'adresse du WebSocket sera accepté ; les proxys et serveurs peuvent l\'enregistrer.</string>
+    <string name="server_options_confirm_log">Les secrets ne seront plus masqués dans le journal.</string>
+    <string name="server_options_confirm_voice">Une demande vocale confirmée n\'exigera plus de signature vérifiée.</string>
+    <string name="server_options_source_env">Défini dans l\'environnement du serveur (verrouillé)</string>
+    <string name="server_options_source_config">Enregistré depuis cet écran</string>
+    <string name="server_options_source_default">Par défaut</string>
+    <string name="server_options_health_label">Permettre à tout le réseau de lire GET /health sans connexion</string>
+    <string name="server_options_health_help">Désactivé par défaut : la route répond alors comme si elle n\'existait pas. Activée, elle ne montre qu\'un rapport de santé minimal, pour un superviseur ou un répartiteur de charge.</string>
+    <string name="server_options_health_confirm">GET /health répondra sans connexion. L\'ouvrir ?</string>
+    <string name="server_options_stop_label">Annoncer un arrêt global sur le pont MQTT (SAFE_STOP retenu)</string>
+    <string name="server_options_stop_help">Désactivé par défaut. Nécessite le pont MQTT actif. L\'état reste jusqu\'à ce qu\'un administrateur le libère.</string>
+    <string name="server_options_address_label">Conserver l\'adresse et l\'agent utilisateur de chaque client dans l\'historique des connexions</string>
+    <string name="server_options_address_help">Désactivé par défaut : l\'historique fonctionne sans eux. Une fois activé, seuls les administrateurs les voient.</string>
+    <string name="server_options_address_confirm">L\'adresse et l\'agent utilisateur sont des données personnelles. Les conserver dans l\'historique des connexions ?</string>
+    <string name="server_options_camera_label">Laisser les images des caméras ouvertes sans ticket ni connexion</string>
+    <string name="server_options_ws_label">Accepter un jeton dans l\'adresse du WebSocket (/ws?token=)</string>
+    <string name="server_options_log_label">Masquer les secrets dans le journal</string>
+    <string name="server_options_voice_label">Exiger une signature vérifiée sur une demande vocale confirmée</string>
+    <string name="server_options_exposure_help">Valeurs sûres : les images demandent un ticket, pas de jeton dans l\'adresse, secrets masqués, signature non exigée (à activer quand le service vocal partage sa clé). Une valeur fixée par l\'environnement du serveur ne peut pas être modifiée ici.</string>
 </resources>

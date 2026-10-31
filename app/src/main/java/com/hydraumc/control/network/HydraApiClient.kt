@@ -367,6 +367,26 @@ class HydraApiClient(
         executeExpectingText(request, client)
     }
 
+    /** The access options of the server (GET /api/admin/server-config, administrators only) as text, for [ServerSecurity.parse]. */
+    suspend fun getServerConfigBody(): String = withContext(Dispatchers.IO) {
+        val request = Request.Builder()
+            .url("$baseUrl/api/admin/server-config")
+            .header("Authorization", "Bearer ${authToken ?: ""}")
+            .get()
+            .build()
+        executeExpectingText(request, client)
+    }
+
+    /** Changes access options of the server (PUT /api/admin/server-config, administrators only); the answer is the options as they are now. */
+    suspend fun putServerConfigBody(json: String): String = withContext(Dispatchers.IO) {
+        val request = Request.Builder()
+            .url("$baseUrl/api/admin/server-config")
+            .header("Authorization", "Bearer ${authToken ?: ""}")
+            .put(json.toRequestBody(JSON_MEDIA_TYPE))
+            .build()
+        executeExpectingText(request, client)
+    }
+
     /**
      * The global STOP: one call that stops every robot, whoever reserved it.
      * Short timeouts like any stop; the caller decides what to do when it fails.

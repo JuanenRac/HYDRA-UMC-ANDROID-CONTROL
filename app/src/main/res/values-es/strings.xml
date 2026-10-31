@@ -347,4 +347,38 @@
     <string name="safe_mode_enable_message">%1$s volverá a aceptar comandos. Comprueba que la zona a su alrededor está despejada.</string>
     <string name="safe_mode_enable_button">ACTIVAR</string>
     <string name="error_robot_disabled">El robot está en modo seguro (desactivado): el comando %1$s no se ha aplicado. Solo funciona STOP hasta que un administrador lo active.</string>
+
+    <!-- Access options of the server (administrators only) -->
+    <string name="server_options_title">Opciones de acceso del servidor</string>
+    <string name="server_options_intro">Interruptores del servidor que solo puede cambiar un administrador. Cada uno indica de dónde viene su valor; un valor fijado por el entorno del servidor está bloqueado.</string>
+    <string name="server_options_save">Guardar opciones del servidor</string>
+    <string name="server_options_saved">Opciones del servidor guardadas.</string>
+    <string name="server_options_none">Este servidor aún no ofrece estas opciones.</string>
+    <string name="server_options_failure_unavailable">Este servidor aún no ofrece las opciones de acceso.</string>
+    <string name="server_options_failure_session">Tu sesión terminó. Inicia sesión de nuevo.</string>
+    <string name="server_options_failure_forbidden">Solo un administrador puede leer o cambiar estas opciones.</string>
+    <string name="server_options_failure_network">No se pudo contactar con el servidor.</string>
+    <string name="server_options_failure_other">El servidor no aceptó la petición.</string>
+    <string name="server_options_confirm_title">¿Reducir la protección del servidor?</string>
+    <string name="server_options_confirm_yes">Guardar igualmente</string>
+    <string name="server_options_confirm_camera">Las imágenes de las cámaras se abrirán a toda la red sin ticket ni inicio de sesión.</string>
+    <string name="server_options_confirm_ws">Se aceptará un token en la dirección del WebSocket; los proxies y servidores pueden registrarlo.</string>
+    <string name="server_options_confirm_log">Los secretos dejarán de tacharse en el registro.</string>
+    <string name="server_options_confirm_voice">Una petición hablada confirmada dejará de exigir una firma verificada.</string>
+    <string name="server_options_source_env">Definido en el entorno del servidor (bloqueado)</string>
+    <string name="server_options_source_config">Guardado desde esta pantalla</string>
+    <string name="server_options_source_default">Por defecto</string>
+    <string name="server_options_health_label">Permitir que cualquiera en la red lea GET /health sin iniciar sesión</string>
+    <string name="server_options_health_help">Desactivado por defecto: la ruta responde como si no existiera. Activado, solo muestra un informe de salud mínimo, para un supervisor o balanceador.</string>
+    <string name="server_options_health_confirm">GET /health responderá sin iniciar sesión. ¿Abrirla?</string>
+    <string name="server_options_stop_label">Anunciar una parada global en el puente MQTT (SAFE_STOP retenido)</string>
+    <string name="server_options_stop_help">Desactivado por defecto. Requiere el puente MQTT activo. El estado permanece hasta que un administrador lo libere.</string>
+    <string name="server_options_address_label">Guardar la dirección y el agente de usuario de cada cliente en el historial de conexiones</string>
+    <string name="server_options_address_help">Desactivado por defecto: el historial funciona sin ellos. Si se activa, solo los administradores los ven.</string>
+    <string name="server_options_address_confirm">La dirección y el agente de usuario son datos personales. ¿Guardarlos en el historial de conexiones?</string>
+    <string name="server_options_camera_label">Dejar las imágenes de las cámaras abiertas sin ticket ni inicio de sesión</string>
+    <string name="server_options_ws_label">Aceptar un token en la dirección del WebSocket (/ws?token=)</string>
+    <string name="server_options_log_label">Tachar los secretos en el registro</string>
+    <string name="server_options_voice_label">Exigir una firma verificada en una petición hablada confirmada</string>
+    <string name="server_options_exposure_help">Valores seguros: las imágenes piden ticket, sin token en la dirección, secretos tachados, firma no exigida (actívala cuando el servicio de voz comparta su clave). Un valor fijado por el entorno del servidor no se puede cambiar aquí.</string>
 </resources>

@@ -347,4 +347,38 @@
     <string name="safe_mode_enable_message">%1$s accetterà di nuovo i comandi. Assicurati che l\'area intorno sia libera.</string>
     <string name="safe_mode_enable_button">ATTIVA</string>
     <string name="error_robot_disabled">Il robot è in modalità sicura (disattivato): il comando %1$s non è stato applicato. Funziona solo STOP finché un amministratore non lo attiva.</string>
+
+    <!-- Access options of the server (administrators only) -->
+    <string name="server_options_title">Opzioni di accesso del server</string>
+    <string name="server_options_intro">Interruttori del server che solo un amministratore può modificare. Ciascuno indica l\'origine del suo valore; un valore fissato dall\'ambiente del server è bloccato.</string>
+    <string name="server_options_save">Salva le opzioni del server</string>
+    <string name="server_options_saved">Opzioni del server salvate.</string>
+    <string name="server_options_none">Questo server non offre ancora queste opzioni.</string>
+    <string name="server_options_failure_unavailable">Questo server non offre ancora le opzioni di accesso.</string>
+    <string name="server_options_failure_session">La sessione è terminata. Accedi di nuovo.</string>
+    <string name="server_options_failure_forbidden">Solo un amministratore può leggere o modificare queste opzioni.</string>
+    <string name="server_options_failure_network">Impossibile raggiungere il server.</string>
+    <string name="server_options_failure_other">Il server non ha accettato la richiesta.</string>
+    <string name="server_options_confirm_title">Ridurre la protezione del server?</string>
+    <string name="server_options_confirm_yes">Salva comunque</string>
+    <string name="server_options_confirm_camera">Le immagini delle telecamere saranno aperte a tutta la rete senza ticket né accesso.</string>
+    <string name="server_options_confirm_ws">Verrà accettato un token nell\'indirizzo del WebSocket; proxy e server potrebbero registrarlo.</string>
+    <string name="server_options_confirm_log">I segreti non saranno più oscurati nel registro.</string>
+    <string name="server_options_confirm_voice">Una richiesta vocale confermata non richiederà più una firma verificata.</string>
+    <string name="server_options_source_env">Impostato nell\'ambiente del server (bloccato)</string>
+    <string name="server_options_source_config">Salvato da questa schermata</string>
+    <string name="server_options_source_default">Predefinito</string>
+    <string name="server_options_health_label">Consentire a chiunque sulla rete di leggere GET /health senza accedere</string>
+    <string name="server_options_health_help">Disattivato per impostazione predefinita: il percorso risponde come se non esistesse. Attivo, mostra solo un rapporto di salute minimo, per un supervisore o un bilanciatore.</string>
+    <string name="server_options_health_confirm">GET /health risponderà senza accesso. Aprirlo?</string>
+    <string name="server_options_stop_label">Annunciare un arresto globale sul bridge MQTT (SAFE_STOP trattenuto)</string>
+    <string name="server_options_stop_help">Disattivato per impostazione predefinita. Richiede il bridge MQTT attivo. Lo stato resta finché un amministratore lo rilascia.</string>
+    <string name="server_options_address_label">Conserva l\'indirizzo e lo user agent di ogni client nella cronologia delle connessioni</string>
+    <string name="server_options_address_help">Disattivato per impostazione predefinita: la cronologia funziona senza. Se attivo, solo gli amministratori li vedono.</string>
+    <string name="server_options_address_confirm">L\'indirizzo e lo user agent sono dati personali. Conservarli nella cronologia delle connessioni?</string>
+    <string name="server_options_camera_label">Lasciare le immagini delle telecamere aperte senza ticket né accesso</string>
+    <string name="server_options_ws_label">Accettare un token nell\'indirizzo del WebSocket (/ws?token=)</string>
+    <string name="server_options_log_label">Oscurare i segreti nel registro</string>
+    <string name="server_options_voice_label">Richiedere una firma verificata su una richiesta vocale confermata</string>
+    <string name="server_options_exposure_help">Valori sicuri: le immagini richiedono un ticket, nessun token nell\'indirizzo, segreti oscurati, firma non richiesta (attivala quando il servizio vocale condivide la sua chiave). Un valore fissato dall\'ambiente del server non può essere cambiato qui.</string>
 </resources>

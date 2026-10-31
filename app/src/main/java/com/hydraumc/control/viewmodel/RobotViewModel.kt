@@ -30,6 +30,10 @@ import com.hydraumc.control.network.ConnectionClient
 import com.hydraumc.control.network.ConnectionEvent
 import com.hydraumc.control.network.ConnectionHistory
 import com.hydraumc.control.network.ConnectionsFailure
+import com.hydraumc.control.network.ServerOptionsFailure
+import com.hydraumc.control.network.ServerSecurity
+import com.hydraumc.control.network.ServerSecurityOptions
+import com.hydraumc.control.network.ServerSecurityValues
 import com.hydraumc.control.network.RevisionTracker
 import com.hydraumc.control.network.isUnknownCommand
 import com.hydraumc.control.network.revisionOf
@@ -317,6 +321,12 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
     val connectionEvents = mutableStateOf<List<ConnectionEvent>?>(null)
     val connectionsBusy = mutableStateOf(false)
     val connectionsFailure = mutableStateOf<ConnectionsFailure?>(null)
+
+    // The access options of the server (administrators only).
+    val serverOptions = mutableStateOf<ServerSecurityOptions?>(null)
+    val serverOptionsBusy = mutableStateOf(false)
+    val serverOptionsFailure = mutableStateOf<ServerOptionsFailure?>(null)
+    val serverOptionsSaved = mutableStateOf(false)
     val controllerId: String get() = SessionController.id
 
     val ipAddress = mutableStateOf("192.168.1.100")
@@ -1890,6 +1900,63 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                 connectionsFailure.value = ConnectionsFailure.NETWORK
             } finally {
                 connectionsBusy.value = false
+            }
+        }
+    }
+
+    private fun serverOptionsFailureOf(e: HydraApiException): ServerOptionsFailure = when {
+        e.isSessionProblem -> ServerOptionsFailure.SESSION
+        e.isPermissionDenied -> ServerOptionsFailure.FORBIDDEN
+        e.isNotFound -> ServerOptionsFailure.UNAVAILABLE
+        e.httpCode == null -> ServerOptionsFailure.NETWORK
+        else -> ServerOptionsFailure.OTHER
+    }
+
+    /** Reads the access options of the server; the reason it could not is left in [serverOptionsFailure], never raised on the screen. */
+    fun refreshServerOptions() {
+        val client = apiClient ?: run {
+            serverOptionsFailure.value = ServerOptionsFailure.NETWORK
+            return
+        }
+        serverOptionsBusy.value = true
+        viewModelScope.launch {
+            try {
+                val options = ServerSecurity.parse(client.getServerConfigBody())
+                serverOptions.value = options
+                serverOptionsFailure.value = if (options == null) ServerOptionsFailure.OTHER else null
+            } catch (e: HydraApiException) {
+                serverOptions.value = null
+                serverOptionsFailure.value = serverOptionsFailureOf(e)
+                if (e.isSessionProblem) renewSessionOrLogout()
+            } catch (_: Exception) {
+                serverOptions.value = null
+                serverOptionsFailure.value = ServerOptionsFailure.NETWORK
+            } finally {
+                serverOptionsBusy.value = false
+            }
+        }
+    }
+
+    /** Saves what changed in [values] (the screen has already asked about every change that lowers the protection) and shows the options as the server now holds them. */
+    fun saveServerOptions(values: ServerSecurityValues) {
+        val client = apiClient ?: return
+        val current = serverOptions.value ?: return
+        val body = ServerSecurity.patch(current, values) ?: return
+        serverOptionsBusy.value = true
+        serverOptionsSaved.value = false
+        viewModelScope.launch {
+            try {
+                val answer = client.putServerConfigBody(body.toString())
+                serverOptions.value = ServerSecurity.parse(answer) ?: current
+                serverOptionsFailure.value = null
+                serverOptionsSaved.value = true
+            } catch (e: HydraApiException) {
+                serverOptionsFailure.value = serverOptionsFailureOf(e)
+                if (e.isSessionProblem) renewSessionOrLogout()
+            } catch (_: Exception) {
+                serverOptionsFailure.value = ServerOptionsFailure.NETWORK
+            } finally {
+                serverOptionsBusy.value = false
             }
         }
     }

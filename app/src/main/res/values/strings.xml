@@ -347,4 +347,38 @@
     <string name="safe_mode_enable_message">%1$s will accept commands again. Make sure the area around it is clear.</string>
     <string name="safe_mode_enable_button">ENABLE</string>
     <string name="error_robot_disabled">The robot is in safe mode (disabled): the %1$s command was not applied. Only STOP works until an administrator enables it.</string>
+
+    <!-- Access options of the server (administrators only) -->
+    <string name="server_options_title">Server access options</string>
+    <string name="server_options_intro">Switches of the server that only an administrator can change. Each shows where its value comes from; a value fixed by the environment of the server is locked.</string>
+    <string name="server_options_save">Save server options</string>
+    <string name="server_options_saved">Server options saved.</string>
+    <string name="server_options_none">This server does not offer these options yet.</string>
+    <string name="server_options_failure_unavailable">This server does not offer the access options yet.</string>
+    <string name="server_options_failure_session">Your session ended. Sign in again.</string>
+    <string name="server_options_failure_forbidden">Only an administrator can read or change these options.</string>
+    <string name="server_options_failure_network">The server could not be reached.</string>
+    <string name="server_options_failure_other">The server did not accept the request.</string>
+    <string name="server_options_confirm_title">Lower the protection of the server?</string>
+    <string name="server_options_confirm_yes">Save anyway</string>
+    <string name="server_options_confirm_camera">The camera pictures will open to the whole network without a ticket or a sign-in.</string>
+    <string name="server_options_confirm_ws">A token in the WebSocket address will be accepted; proxies and servers may record it.</string>
+    <string name="server_options_confirm_log">Secrets will no longer be blanked out of the log.</string>
+    <string name="server_options_confirm_voice">A confirmed spoken request will no longer need a verified signature.</string>
+    <string name="server_options_source_env">Set in the environment of the server (locked)</string>
+    <string name="server_options_source_config">Saved from this screen</string>
+    <string name="server_options_source_default">Default</string>
+    <string name="server_options_health_label">Let anyone on the network read GET /health without signing in</string>
+    <string name="server_options_health_help">Off by default: the route then answers as if it did not exist. When on, it shows only a bare health report, for a supervisor or load balancer.</string>
+    <string name="server_options_health_confirm">GET /health will answer without a sign-in. Open it?</string>
+    <string name="server_options_stop_label">Announce a global stop on the MQTT bridge (retained SAFE_STOP)</string>
+    <string name="server_options_stop_help">Off by default. Needs the MQTT bridge on. The state stays until an administrator releases it.</string>
+    <string name="server_options_address_label">Keep the address and user agent of each client in the connection history</string>
+    <string name="server_options_address_help">Off by default: the history works without them. When on, only administrators are shown them.</string>
+    <string name="server_options_address_confirm">The address and user agent are personal data. Keep them in the connection history?</string>
+    <string name="server_options_camera_label">Let the camera pictures open without a ticket or a sign-in</string>
+    <string name="server_options_ws_label">Accept a token in the WebSocket address (/ws?token=)</string>
+    <string name="server_options_log_label">Blank out secrets in the log</string>
+    <string name="server_options_voice_label">Require a verified signature on a confirmed spoken request</string>
+    <string name="server_options_exposure_help">Safe defaults: pictures ask for a ticket, no token in the address, secrets blanked out, signature not required (turn it on once the voice service shares its key). A value fixed by the server environment cannot be changed here.</string>
 </resources>
