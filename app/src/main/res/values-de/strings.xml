@@ -381,4 +381,9 @@
     <string name="server_options_log_label">Geheimnisse im Protokoll schwärzen</string>
     <string name="server_options_voice_label">Eine geprüfte Signatur bei einer bestätigten gesprochenen Anfrage verlangen</string>
     <string name="server_options_exposure_help">Sichere Voreinstellungen: Bilder verlangen ein Ticket, kein Token in der Adresse, Geheimnisse geschwärzt, Signatur nicht verlangt (einschalten, sobald der Sprachdienst seinen Schlüssel teilt). Ein von der Umgebung des Servers festgelegter Wert lässt sich hier nicht ändern.</string>
+    <string name="server_options_camera_credentials_label">Das Passwort einer IP-Kamera über die Umgebung an ihren Prozess übergeben (nicht in der Befehlszeile)</string>
+    <string name="server_options_install_tls_label">Eine neue Installation TLS selbst einschalten lassen</string>
+    <string name="server_options_install_help">Sichere Vorgaben: beide an. Die Kameraoption gilt beim nächsten Start eines Kameraprozesses; die TLS-Option wird nur beim ersten Start einer Installation gelesen. Ein von der Serverumgebung festgelegter Wert kann hier nicht geändert werden.</string>
+    <string name="server_options_confirm_camera_credentials">Das Passwort einer IP-Kamera steht dann in der Befehlszeile ihres Prozesses, wo andere Benutzer des Rechners es lesen können.</string>
+    <string name="server_options_confirm_install_tls">Eine neue Installation schaltet TLS nicht mehr selbst ein.</string>
 </resources>

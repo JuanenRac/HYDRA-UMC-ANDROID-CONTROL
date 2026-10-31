@@ -95,7 +95,7 @@ class RobotViewModelSendVoiceTurnTest {
         // its own value - postVoiceTurn() deliberately doesn't, unlike
         // postWatchVoiceTurn()'s explicit "watch", so this call is gated by
         // Config > Remote Access > Android, never the separate Watch toggle.
-        assertEquals("android", request.getHeader("X-Hydra-Client"))
+        assertEquals("android/${com.hydraumc.control.BuildConfig.VERSION_NAME}", request.getHeader("X-Hydra-Client"))
     }
 
     @Test

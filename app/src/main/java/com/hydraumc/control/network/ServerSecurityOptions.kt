@@ -3,9 +3,10 @@
 // Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
 // GPL-3.0-or-later - see LICENSE
 // =============================================================================
-// Seven switches of the server (GET/PUT /api/admin/server-config): the health route without a sign-in, the announcement of the
+// Nine switches of the server (GET/PUT /api/admin/server-config): the health route without a sign-in, the announcement of the
 // global stop, the address kept in the history of connections, the camera pictures without a ticket, a token in the WebSocket
-// address, the blanking of secrets in the log and the signature of a spoken confirmation. The reading is tolerant: a server that
+// address, the blanking of secrets in the log, the signature of a spoken confirmation, the password of an IP camera handed over through
+// the environment of its process and TLS switched on by a new installation. The reading is tolerant: a server that
 // predates an option answers without it and the screen does not show that switch. A value fixed by the environment of the server
 // cannot be changed from here, and every change that lowers the protection is asked about first.
 package com.hydraumc.control.network
@@ -29,10 +30,12 @@ data class ServerSecurityOptions(
     val wsQueryToken: ServerOption?,
     val logRedaction: ServerOption?,
     val voiceSignature: ServerOption?,
+    val cameraCredentialsViaEnv: ServerOption? = null,
+    val newInstallTls: ServerOption? = null,
 ) {
     /** True when the server reports none of them (a server that predates all of these options). */
     val isEmpty: Boolean
-        get() = listOf(healthOpen, publishGlobalStop, recordAddress, cameraOpen, wsQueryToken, logRedaction, voiceSignature).all { it == null }
+        get() = listOf(healthOpen, publishGlobalStop, recordAddress, cameraOpen, wsQueryToken, logRedaction, voiceSignature, cameraCredentialsViaEnv, newInstallTls).all { it == null }
 
     /** The values as the screen starts with them; an option the server does not report keeps its safe value. */
     fun toValues(): ServerSecurityValues = ServerSecurityValues(
@@ -43,6 +46,8 @@ data class ServerSecurityOptions(
         wsQueryToken = wsQueryToken?.value ?: false,
         logRedaction = logRedaction?.value ?: true,
         voiceSignature = voiceSignature?.value ?: false,
+        cameraCredentialsViaEnv = cameraCredentialsViaEnv?.value ?: true,
+        newInstallTls = newInstallTls?.value ?: true,
     )
 }
 
@@ -55,10 +60,12 @@ data class ServerSecurityValues(
     val wsQueryToken: Boolean,
     val logRedaction: Boolean,
     val voiceSignature: Boolean,
+    val cameraCredentialsViaEnv: Boolean = true,
+    val newInstallTls: Boolean = true,
 )
 
 /** The changes that lower the protection of the server; the screen has a sentence for each. */
-enum class ProtectionLowering { HEALTH_OPEN, RECORD_ADDRESS, CAMERA_OPEN, WS_QUERY_TOKEN, LOG_REDACTION_OFF, VOICE_SIGNATURE_OFF }
+enum class ProtectionLowering { HEALTH_OPEN, RECORD_ADDRESS, CAMERA_OPEN, WS_QUERY_TOKEN, LOG_REDACTION_OFF, VOICE_SIGNATURE_OFF, CAMERA_CREDENTIALS_IN_ARGUMENTS, NEW_INSTALL_TLS_OFF }
 
 /** Why the options could not be read or saved, for the sentence the screen shows. */
 enum class ServerOptionsFailure { UNAVAILABLE, SESSION, FORBIDDEN, NETWORK, OTHER }
@@ -91,6 +98,8 @@ object ServerSecurity {
             wsQueryToken = option(root.optJSONObject("websocket")?.optJSONObject("allowQueryToken")),
             logRedaction = option(root.optJSONObject("logging")?.optJSONObject("redactSecrets")),
             voiceSignature = option(root.optJSONObject("voice")?.optJSONObject("requireSignature")),
+            cameraCredentialsViaEnv = option(root.optJSONObject("camera")?.optJSONObject("credentialsViaEnv")),
+            newInstallTls = option(root.optJSONObject("install")?.optJSONObject("newInstallTls")),
         )
     }
 
@@ -112,6 +121,8 @@ object ServerSecurity {
         put("websocket", "allowQueryToken", current.wsQueryToken, next.wsQueryToken)
         put("logging", "redactSecrets", current.logRedaction, next.logRedaction)
         put("voice", "requireSignature", current.voiceSignature, next.voiceSignature)
+        put("camera", "credentialsViaEnv", current.cameraCredentialsViaEnv, next.cameraCredentialsViaEnv)
+        put("install", "newInstallTls", current.newInstallTls, next.newInstallTls)
         return if (body.length() == 0) null else body
     }
 
@@ -129,6 +140,8 @@ object ServerSecurity {
             if (rises(current.wsQueryToken, next.wsQueryToken)) add(ProtectionLowering.WS_QUERY_TOKEN)
             if (falls(current.logRedaction, next.logRedaction)) add(ProtectionLowering.LOG_REDACTION_OFF)
             if (falls(current.voiceSignature, next.voiceSignature)) add(ProtectionLowering.VOICE_SIGNATURE_OFF)
+            if (falls(current.cameraCredentialsViaEnv, next.cameraCredentialsViaEnv)) add(ProtectionLowering.CAMERA_CREDENTIALS_IN_ARGUMENTS)
+            if (falls(current.newInstallTls, next.newInstallTls)) add(ProtectionLowering.NEW_INSTALL_TLS_OFF)
         }
     }
 }

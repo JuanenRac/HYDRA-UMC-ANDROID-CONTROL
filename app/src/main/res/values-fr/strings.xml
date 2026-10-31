@@ -381,4 +381,9 @@
     <string name="server_options_log_label">Masquer les secrets dans le journal</string>
     <string name="server_options_voice_label">Exiger une signature vérifiée sur une demande vocale confirmée</string>
     <string name="server_options_exposure_help">Valeurs sûres : les images demandent un ticket, pas de jeton dans l\'adresse, secrets masqués, signature non exigée (à activer quand le service vocal partage sa clé). Une valeur fixée par l\'environnement du serveur ne peut pas être modifiée ici.</string>
+    <string name="server_options_camera_credentials_label">Transmettre le mot de passe d\'une caméra IP à son processus par l\'environnement (et non sur sa ligne de commande)</string>
+    <string name="server_options_install_tls_label">Laisser une nouvelle installation activer TLS d\'elle-même</string>
+    <string name="server_options_install_help">Valeurs sûres : les deux activées. L\'option de la caméra s\'applique au prochain démarrage d\'un processus de caméra ; celle de TLS n\'est lue qu\'au premier démarrage d\'une installation. Une valeur fixée par l\'environnement du serveur ne peut pas être modifiée ici.</string>
+    <string name="server_options_confirm_camera_credentials">Le mot de passe d\'une caméra IP figurera sur la ligne de commande de son processus, où les autres utilisateurs de la machine peuvent le lire.</string>
+    <string name="server_options_confirm_install_tls">Une nouvelle installation n\'activera plus TLS d\'elle-même.</string>
 </resources>

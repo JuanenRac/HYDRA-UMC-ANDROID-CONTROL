@@ -22,10 +22,11 @@ class ServerSecurityOptionsTest {
         "health":{"open":{"value":false,"source":"default"}},
         "safety":{"publishGlobalStop":{"value":false,"source":"config"}},
         "connections":{"recordAddress":{"value":false,"source":"default"}},
-        "camera":{"open":{"value":false,"source":"default"}},
+        "camera":{"open":{"value":false,"source":"default"},"credentialsViaEnv":{"value":true,"source":"default"}},
         "websocket":{"allowQueryToken":{"value":false,"source":"default"}},
         "logging":{"redactSecrets":{"value":true,"source":"default"}},
-        "voice":{"includeHeardText":{"value":false,"source":"default"},"requireSignature":{"value":false,"source":"env"}}}"""
+        "voice":{"includeHeardText":{"value":false,"source":"default"},"requireSignature":{"value":false,"source":"env"}},
+        "install":{"newInstallTls":{"value":true,"source":"default"}}}"""
 
     private fun options() = ServerSecurity.parse(full)!!
 
@@ -125,5 +126,53 @@ class ServerSecurityOptionsTest {
             listOf(ProtectionLowering.HEALTH_OPEN, ProtectionLowering.RECORD_ADDRESS, ProtectionLowering.CAMERA_OPEN,
                 ProtectionLowering.WS_QUERY_TOKEN, ProtectionLowering.LOG_REDACTION_OFF),
             ServerSecurity.lowerings(o, all))
+    }
+
+    @Test
+    fun `the camera password and the TLS of a new installation are read and kept apart from the camera pictures`() {
+        val o = options()
+        assertEquals(ServerOption(true, OptionSource.DEFAULT), o.cameraCredentialsViaEnv)
+        assertEquals(ServerOption(true, OptionSource.DEFAULT), o.newInstallTls)
+        assertEquals(ServerOption(false, OptionSource.DEFAULT), o.cameraOpen)
+        val old = ServerSecurity.parse("""{"camera":{"open":{"value":true,"source":"config"}}}""")!!
+        assertNull(old.cameraCredentialsViaEnv)
+        assertNull(old.newInstallTls)
+        assertTrue(old.toValues().cameraCredentialsViaEnv)
+        assertTrue(old.toValues().newInstallTls)
+        assertNull(ServerSecurity.patch(old, old.toValues().copy(cameraCredentialsViaEnv = false, newInstallTls = false)))
+    }
+
+    @Test
+    fun `the two options go under the groups the server reads them from, and only when they changed`() {
+        val o = options()
+        assertNull(ServerSecurity.patch(o, o.toValues()))
+        val body = ServerSecurity.patch(o, o.toValues().copy(cameraCredentialsViaEnv = false, newInstallTls = false))!!
+        assertFalse(body.getJSONObject("camera").getBoolean("credentialsViaEnv"))
+        assertFalse(body.getJSONObject("camera").has("open"))
+        assertFalse(body.getJSONObject("install").getBoolean("newInstallTls"))
+        assertEquals(setOf("camera", "install"), body.keys().asSequence().toSet())
+    }
+
+    @Test
+    fun `taking either away asks, putting it back or a value fixed by the environment does not`() {
+        val o = options()
+        assertEquals(listOf(ProtectionLowering.CAMERA_CREDENTIALS_IN_ARGUMENTS), ServerSecurity.lowerings(o, o.toValues().copy(cameraCredentialsViaEnv = false)))
+        assertEquals(listOf(ProtectionLowering.NEW_INSTALL_TLS_OFF), ServerSecurity.lowerings(o, o.toValues().copy(newInstallTls = false)))
+        val loose = ServerSecurity.parse("""{"camera":{"credentialsViaEnv":{"value":false,"source":"config"}},"install":{"newInstallTls":{"value":false,"source":"config"}}}""")!!
+        assertTrue(ServerSecurity.lowerings(loose, loose.toValues().copy(cameraCredentialsViaEnv = true, newInstallTls = true)).isEmpty())
+        val fixed = ServerSecurity.parse("""{"camera":{"credentialsViaEnv":{"value":false,"source":"env"}},"install":{"newInstallTls":{"value":false,"source":"env"}}}""")!!
+        assertTrue(fixed.cameraCredentialsViaEnv!!.locked)
+        assertTrue(ServerSecurity.lowerings(fixed, fixed.toValues().copy(cameraCredentialsViaEnv = true)).isEmpty())
+        assertNull(ServerSecurity.patch(fixed, fixed.toValues().copy(cameraCredentialsViaEnv = true, newInstallTls = true)))
+    }
+
+    @Test
+    fun `the client header carries the type and the version, and a strange version is left out`() {
+        assertEquals("android/0.7.5", HydraApiClient.clientHeaderValue("0.7.5"))
+        assertEquals("android/0.8.0.5", HydraApiClient.clientHeaderValue("0.8.0.5"))
+        for (bad in listOf(null, "", "a b", "0.7.5/x", "0.7.5\r\nx: 1", "9".repeat(25), "ü")) {
+            assertEquals("android", HydraApiClient.clientHeaderValue(bad))
+        }
+        assertEquals("android/" + "9".repeat(24), HydraApiClient.clientHeaderValue("9".repeat(24)))
     }
 }

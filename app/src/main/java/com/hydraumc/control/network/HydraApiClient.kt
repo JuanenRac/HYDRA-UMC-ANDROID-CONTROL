@@ -33,6 +33,7 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
+import com.hydraumc.control.BuildConfig
 import com.hydraumc.control.wear.WatchAssistantReply
 import com.hydraumc.control.wear.WatchSystemStatus
 import com.hydraumc.control.wear.WatchVoiceTurn
@@ -546,6 +547,14 @@ class HydraApiClient(
         /** Required TLS means the very first request already goes to https. */
         internal fun startsWithTls(mode: TlsMode): Boolean = mode == TlsMode.REQUIRED
 
+        /**
+         * What this app puts in `X-Hydra-Client`: its type and, after a slash, its version (`android/0.7.5`). The server compares the
+         * type only (the version goes to its history of connections), so the version never opens or closes access. A version that is
+         * not a plain version string is left out and the header is just `android`.
+         */
+        internal fun clientHeaderValue(version: String?): String =
+            if (version != null && Regex("[0-9A-Za-z._-]{1,24}").matches(version)) "android/$version" else "android"
+
         /** Only the automatic mode tries https after a plain probe found nothing. */
         internal fun mayFallBackToHttps(mode: TlsMode): Boolean = mode == TlsMode.AUTO
 
@@ -560,7 +569,7 @@ class HydraApiClient(
          * it on every request is simpler than special-casing just that one
          * call, and harmless everywhere else.
          *
-         * Defaults to "android", but never overrides a value the request
+         * Defaults to "android/<version>", but never overrides a value the request
          * itself already set - postWatchVoiceTurn()/getWatchSystemStatus()
          * below set "watch" explicitly, since those 2 calls relay a
          * request on the paired Watch's behalf rather than this app's own
@@ -574,7 +583,7 @@ class HydraApiClient(
             .addInterceptor(PlainRemoteGuard())
             .addInterceptor { chain ->
                 val original = chain.request()
-                val clientType = original.header("X-Hydra-Client") ?: "android"
+                val clientType = original.header("X-Hydra-Client") ?: clientHeaderValue(BuildConfig.VERSION_NAME)
                 chain.proceed(original.newBuilder().header("X-Hydra-Client", clientType).build())
             }
             .build()

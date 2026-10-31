@@ -381,4 +381,9 @@
     <string name="server_options_log_label">Blank out secrets in the log</string>
     <string name="server_options_voice_label">Require a verified signature on a confirmed spoken request</string>
     <string name="server_options_exposure_help">Safe defaults: pictures ask for a ticket, no token in the address, secrets blanked out, signature not required (turn it on once the voice service shares its key). A value fixed by the server environment cannot be changed here.</string>
+    <string name="server_options_camera_credentials_label">Hand the password of an IP camera to its process through the environment (not on its command line)</string>
+    <string name="server_options_install_tls_label">Let a new installation switch TLS on by itself</string>
+    <string name="server_options_install_help">Safe defaults: both on. The camera option applies the next time a camera process starts; the TLS option is only read at the first start of an installation. A value fixed by the server environment cannot be changed here.</string>
+    <string name="server_options_confirm_camera_credentials">The password of an IP camera will be on the command line of its process, where other users of the machine can read it.</string>
+    <string name="server_options_confirm_install_tls">A new installation will no longer switch TLS on by itself.</string>
 </resources>

@@ -3,7 +3,7 @@
 // Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
 // GPL-3.0-or-later - see LICENSE
 // =============================================================================
-// Seven switches of the server with where each value comes from. A value fixed by the environment of the server is locked, a
+// Nine switches of the server with where each value comes from. A value fixed by the environment of the server is locked, a
 // change that lowers the protection is asked about first, and a server that predates an option simply does not show it.
 package com.hydraumc.control.ui
 
@@ -58,6 +58,8 @@ internal fun loweringRes(lowering: ProtectionLowering): Int = when (lowering) {
     ProtectionLowering.WS_QUERY_TOKEN -> R.string.server_options_confirm_ws
     ProtectionLowering.LOG_REDACTION_OFF -> R.string.server_options_confirm_log
     ProtectionLowering.VOICE_SIGNATURE_OFF -> R.string.server_options_confirm_voice
+    ProtectionLowering.CAMERA_CREDENTIALS_IN_ARGUMENTS -> R.string.server_options_confirm_camera_credentials
+    ProtectionLowering.NEW_INSTALL_TLS_OFF -> R.string.server_options_confirm_install_tls
 }
 
 @StringRes
@@ -116,6 +118,8 @@ fun ServerOptionsSection(viewModel: RobotViewModel) {
         OptionRow(current.wsQueryToken, shown.wsQueryToken, R.string.server_options_ws_label, null) { values = shown.copy(wsQueryToken = it) }
         OptionRow(current.logRedaction, shown.logRedaction, R.string.server_options_log_label, null) { values = shown.copy(logRedaction = it) }
         OptionRow(current.voiceSignature, shown.voiceSignature, R.string.server_options_voice_label, null) { values = shown.copy(voiceSignature = it) }
+        OptionRow(current.cameraCredentialsViaEnv, shown.cameraCredentialsViaEnv, R.string.server_options_camera_credentials_label, R.string.server_options_install_help) { values = shown.copy(cameraCredentialsViaEnv = it) }
+        OptionRow(current.newInstallTls, shown.newInstallTls, R.string.server_options_install_tls_label, null) { values = shown.copy(newInstallTls = it) }
 
         Spacer(modifier = Modifier.height(16.dp))
         HydraButton(

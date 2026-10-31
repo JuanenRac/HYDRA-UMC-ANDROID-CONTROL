@@ -381,4 +381,9 @@
     <string name="server_options_log_label">ログ内の秘密情報を伏せ字にする</string>
     <string name="server_options_voice_label">確認済みの音声リクエストに検証済みの署名を必須にする</string>
     <string name="server_options_exposure_help">安全な既定値: 画像はチケットが必要、アドレスにトークンなし、秘密情報は伏せ字、署名は必須ではない（音声サービスが鍵を共有したら有効にしてください）。サーバーの環境で固定された値はここでは変更できません。</string>
+    <string name="server_options_camera_credentials_label">IP カメラのパスワードを、コマンドラインではなく環境経由でそのプロセスに渡す</string>
+    <string name="server_options_install_tls_label">新規インストールが自動的に TLS を有効にする</string>
+    <string name="server_options_install_help">安全な既定値：どちらもオン。カメラの設定は次にカメラのプロセスが起動するときに適用され、TLS の設定はインストールの初回起動時にのみ読み込まれます。サーバーの環境で固定された値はここでは変更できません。</string>
+    <string name="server_options_confirm_camera_credentials">IP カメラのパスワードが、同じマシンの他のユーザーが読めるプロセスのコマンドラインに載ります。</string>
+    <string name="server_options_confirm_install_tls">新規インストールは自動的に TLS を有効にしなくなります。</string>
 </resources>

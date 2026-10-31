@@ -381,4 +381,9 @@
     <string name="server_options_log_label">Tachar los secretos en el registro</string>
     <string name="server_options_voice_label">Exigir una firma verificada en una petición hablada confirmada</string>
     <string name="server_options_exposure_help">Valores seguros: las imágenes piden ticket, sin token en la dirección, secretos tachados, firma no exigida (actívala cuando el servicio de voz comparta su clave). Un valor fijado por el entorno del servidor no se puede cambiar aquí.</string>
+    <string name="server_options_camera_credentials_label">Entregar la contraseña de una cámara IP a su proceso por el entorno (no en su línea de órdenes)</string>
+    <string name="server_options_install_tls_label">Dejar que una instalación nueva active TLS por sí sola</string>
+    <string name="server_options_install_help">Valores seguros: ambas activadas. La opción de la cámara se aplica la próxima vez que arranque un proceso de cámara; la de TLS solo se lee en el primer arranque de una instalación. Un valor fijado por el entorno del servidor no se puede cambiar aquí.</string>
+    <string name="server_options_confirm_camera_credentials">La contraseña de una cámara IP quedará en la línea de órdenes de su proceso, donde otros usuarios de la máquina pueden leerla.</string>
+    <string name="server_options_confirm_install_tls">Una instalación nueva ya no activará TLS por sí sola.</string>
 </resources>

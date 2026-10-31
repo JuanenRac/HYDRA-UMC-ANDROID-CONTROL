@@ -114,7 +114,7 @@ class HydraApiClientAnswersTest {
         assertEquals("/api/robot/7/command", command.path)
         for (request in listOf(settings, command)) {
             assertEquals("Bearer tok.en", request.getHeader("Authorization"))
-            assertEquals("android", request.getHeader("X-Hydra-Client"))
+            assertEquals("android/${com.hydraumc.control.BuildConfig.VERSION_NAME}", request.getHeader("X-Hydra-Client"))
             assertFalse(request.path.orEmpty().contains("tok.en"))
         }
         assertEquals("play", JSONObject(command.body.readUtf8()).getString("command"))
@@ -127,7 +127,7 @@ class HydraApiClientAnswersTest {
         val request = server.takeRequest()
         assertEquals("/api/login", request.path)
         assertNull(request.getHeader("Authorization"))
-        assertEquals("android", request.getHeader("X-Hydra-Client"))
+        assertEquals("android/${com.hydraumc.control.BuildConfig.VERSION_NAME}", request.getHeader("X-Hydra-Client"))
         val body = JSONObject(request.body.readUtf8())
         assertEquals("alice", body.getString("username"))
         assertEquals("secret", body.getString("password"))

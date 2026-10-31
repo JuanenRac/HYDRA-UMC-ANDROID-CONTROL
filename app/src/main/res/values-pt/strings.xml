@@ -381,4 +381,9 @@
     <string name="server_options_log_label">Ocultar os segredos no registo</string>
     <string name="server_options_voice_label">Exigir uma assinatura verificada num pedido falado confirmado</string>
     <string name="server_options_exposure_help">Valores seguros: as imagens pedem um bilhete, sem token no endereço, segredos ocultados, assinatura não exigida (ative-a quando o serviço de voz partilhar a sua chave). Um valor fixado pelo ambiente do servidor não pode ser alterado aqui.</string>
+    <string name="server_options_camera_credentials_label">Entregar a palavra-passe de uma câmara IP ao seu processo através do ambiente (não na sua linha de comandos)</string>
+    <string name="server_options_install_tls_label">Deixar uma instalação nova ativar o TLS por si própria</string>
+    <string name="server_options_install_help">Valores seguros: ambas ativas. A opção da câmara aplica-se da próxima vez que um processo de câmara arrancar; a do TLS só é lida no primeiro arranque de uma instalação. Um valor fixado pelo ambiente do servidor não pode ser alterado aqui.</string>
+    <string name="server_options_confirm_camera_credentials">A palavra-passe de uma câmara IP ficará na linha de comandos do seu processo, onde os outros utilizadores da máquina a podem ler.</string>
+    <string name="server_options_confirm_install_tls">Uma instalação nova deixa de ativar o TLS por si própria.</string>
 </resources>
