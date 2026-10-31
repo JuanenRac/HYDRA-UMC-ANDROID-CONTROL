@@ -103,6 +103,11 @@ Chaque ligne est une partie de ce dépôt et le feu dit où elle en est aujourd'
 
 **État : Wi-Fi, Bluetooth, biométrie et notifications implémentés.** L'application est une console industrielle d'opérateur ; le Bluetooth reste expérimental et aucun écran ne remplace un arrêt d'urgence physique.
 
+### Qui se connecte et options d'accès du serveur
+
+- **Qui se connecte au serveur :** un bouton Connexions du panneau d'accès ouvre une liste simple des applications que le serveur a vues (type, utilisateur, version, réseau local ou extérieur, sessions ouvertes en ce moment, connexions réussies ou refusées, il y a combien de temps) et des dernières connexions, connexions refusées, déconnexions et sessions terminées, lues dans les routes de connexions du serveur. Un administrateur voit toutes les entrées, tout autre compte seulement les siennes ; aucune liste ne contient de mot de passe ni de jeton, et une adresse n'apparaît que si le serveur a reçu l'ordre de la conserver. L'application le dit clairement quand le serveur est trop ancien pour les offrir.
+- **Options d'accès du serveur dans l'écran de sécurité (administrateurs seulement) :** sous la sécurité de connexion de l'application, sept interrupteurs lus dans la configuration du serveur : la route de santé sans connexion, l'annonce de l'arrêt global, la conservation de l'adresse de chaque client dans l'historique des connexions, les images de caméra sans ticket, un jeton dans l'adresse du WebSocket, le masquage des secrets dans le journal et la signature d'une confirmation vocale. Chacun montre d'où vient sa valeur (par défaut, enregistrée depuis un écran ou imposée par l'environnement du serveur, ce qui la verrouille), seul ce qui a changé est envoyé, tout changement qui abaisse la protection demande d'abord confirmation, et un serveur qui n'offre pas une option ne la montre pas.
+
 ## 🔒 Sécurité et protection
 
 | Menace | Défense | Où |

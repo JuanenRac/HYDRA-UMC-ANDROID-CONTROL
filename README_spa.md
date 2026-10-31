@@ -103,6 +103,11 @@ Pantallas de la aplicación: **acceso** (dirección del servidor, contraseña, h
 
 **Estado: Wi-Fi, Bluetooth, Biometría y Notificaciones implementados.** La app es una consola industrial de operador; el Bluetooth sigue siendo experimental y ninguna pantalla sustituye a una seta de emergencia física.
 
+### Quién se conecta y opciones de acceso del servidor
+
+- **Quién se conecta al servidor:** un botón Conexiones del panel de acceso abre una lista sencilla de las apps que el servidor ha visto (tipo, usuario, versión, red local o desde fuera, las sesiones abiertas ahora, las entradas que funcionaron o fueron rechazadas, hace cuánto) y las últimas entradas, entradas rechazadas, salidas y sesiones terminadas, leídas de las rutas de conexiones del servidor. Un administrador ve todas las entradas y cualquier otra cuenta solo las suyas; ninguna lista lleva contraseñas ni tokens y una dirección solo aparece si se indicó al servidor que la guardara. Lo dice con claridad cuando el servidor es demasiado antiguo para ofrecerlas.
+- **Opciones de acceso del servidor en la pantalla de seguridad (solo administradores):** bajo la seguridad de conexión de la app, siete interruptores leídos de la configuración del servidor: la ruta de salud sin iniciar sesión, el anuncio de la parada global, guardar la dirección de cada cliente en el historial de conexiones, las imágenes de cámara sin ticket, un token en la dirección del WebSocket, el ocultado de secretos en el registro y la firma de una confirmación hablada. Cada uno muestra de dónde viene su valor (por defecto, guardado desde una pantalla o fijado por el entorno del servidor, que lo bloquea), solo se envía lo que cambió, todo cambio que baja la protección pregunta antes y un servidor que no ofrece una opción no la muestra.
+
 ## 🔒 Seguridad y protección
 
 | Amenaza | Defensa | Dónde |

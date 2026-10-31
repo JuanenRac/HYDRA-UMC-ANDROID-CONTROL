@@ -104,6 +104,11 @@ A **HYDRA-UMC-ANDROID-CONTROL** é a consola nativa de operador Android do HYDRA
 
 **Estado: Wi-Fi, Bluetooth, biometria e notificações implementados.** A aplicação é uma consola industrial de operador; o Bluetooth ainda é experimental e nenhum ecrã substitui uma paragem de emergência física.
 
+### Quem se liga e opções de acesso do servidor
+
+- **Quem se liga ao servidor:** um botão Ligações do painel de acesso abre uma lista simples das aplicações que o servidor viu (tipo, utilizador, versão, rede local ou de fora, as sessões abertas agora, as entradas que correram bem ou foram recusadas, há quanto tempo) e das últimas entradas, entradas recusadas, saídas e sessões terminadas, lidas das rotas de ligações do servidor. Um administrador vê todas as entradas e qualquer outra conta só as suas; nenhuma lista tem palavras-passe nem tokens e um endereço só aparece se o servidor foi mandado guardá-lo. A aplicação di-lo com clareza quando o servidor é demasiado antigo para as oferecer.
+- **Opções de acesso do servidor no ecrã de segurança (só administradores):** por baixo da segurança de ligação da aplicação, sete interruptores lidos da configuração do servidor: a rota de saúde sem iniciar sessão, o anúncio da paragem global, guardar o endereço de cada cliente no histórico de ligações, as imagens da câmara sem bilhete, um token no endereço do WebSocket, o ocultar de segredos no registo e a assinatura de uma confirmação falada. Cada um mostra de onde vem o seu valor (por omissão, guardado a partir de um ecrã ou fixado pelo ambiente do servidor, que o bloqueia), só se envia o que mudou, qualquer alteração que baixe a proteção pergunta primeiro e um servidor que não oferece uma opção não a mostra.
+
 ## 🔒 Segurança e proteção
 
 | Ameaça | Defesa | Onde |
