@@ -53,6 +53,7 @@ fun AccessPanel(viewModel: RobotViewModel, robotId: Int, nowMs: Long) {
     var showList by remember { mutableStateOf(false) }
     var confirmTakeOver by remember { mutableStateOf(false) }
     var showAudit by remember { mutableStateOf(false) }
+    var showConnections by remember { mutableStateOf(false) }
     val canTakeOver = viewModel.canTakeOver(robotId)
 
     Card(
@@ -103,6 +104,10 @@ fun AccessPanel(viewModel: RobotViewModel, robotId: Int, nowMs: Long) {
                     Text(stringResource(R.string.access_take_over))
                 }
             }
+
+            // Who connects to the server: every signed-in account sees its own entries, an administrator sees all of them.
+            Spacer(modifier = Modifier.height(4.dp))
+            OutlinedButton(onClick = { showConnections = true }) { Text(stringResource(R.string.connections_open)) }
 
             // The audit record is for administrators only (the server refuses it to anyone else).
             if (viewModel.isAdmin()) {
@@ -175,6 +180,10 @@ fun AccessPanel(viewModel: RobotViewModel, robotId: Int, nowMs: Long) {
 
     if (showAudit) {
         AuditDialog(viewModel = viewModel, onDismiss = { showAudit = false })
+    }
+
+    if (showConnections) {
+        ConnectionsDialog(viewModel = viewModel, onDismiss = { showConnections = false })
     }
 
     if (confirmTakeOver && canTakeOver) {

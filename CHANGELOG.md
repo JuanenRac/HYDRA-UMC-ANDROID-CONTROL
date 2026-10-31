@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **Who connects to the server:** a Connections button in the access panel opens a simple list of the apps the server has seen (kind, user, version, local network or from outside, the sessions open now, the sign-ins that worked or were refused, how long ago) and the latest sign-ins, refused sign-ins, sign-outs and ended sessions, read from the connection routes of the server. An administrator sees every entry and any other account only its own; no password or token is in either list, and an address appears only if the server was told to keep it. It says so plainly when the server is too old to offer them. Texts in the eight languages.
+
 ## [0.7.4] - Safe mode of a robot, the connection state as an enum, a rebuild of only the robot that changed, the update checked against the digest of the release and a quick settings tile for the global stop
 
 - **Safe mode of a robot (disable and enable):** the playback bar of the Control screen has a button that disables the selected robot, after asking; a disabled robot stops and the server refuses every command but STOP until it is enabled again. The same button enables it again, offered only to an administrator (the server answers 403 to anyone else) and also after asking. The app reads the `enabled` flag of the robot and shows a clear message when the server answers 423 `robot-disabled`. The texts are in the eight languages.

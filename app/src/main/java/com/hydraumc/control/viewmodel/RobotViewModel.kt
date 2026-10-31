@@ -26,6 +26,10 @@ import com.hydraumc.control.network.AuditRead
 import com.hydraumc.control.network.AuditRecord
 import com.hydraumc.control.network.ChainCheck
 import com.hydraumc.control.network.ConditionalMode
+import com.hydraumc.control.network.ConnectionClient
+import com.hydraumc.control.network.ConnectionEvent
+import com.hydraumc.control.network.ConnectionHistory
+import com.hydraumc.control.network.ConnectionsFailure
 import com.hydraumc.control.network.RevisionTracker
 import com.hydraumc.control.network.isUnknownCommand
 import com.hydraumc.control.network.revisionOf
@@ -254,6 +258,9 @@ private fun RobotView.toDisplay(): RobotState = RobotState(
     jogStep = raw.optDouble("jogStep", 1.0)
 )
 
+/** How many lines of the history of sign-ins the screen asks for. */
+private const val CONNECTION_EVENTS_SHOWN = 30
+
 /** Why the audit record could not be read, for the sentence the screen shows. */
 enum class AuditFailure { FORBIDDEN, UNAVAILABLE, SESSION, NETWORK, OTHER }
 
@@ -304,6 +311,12 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
     val auditChain = mutableStateOf<ChainCheck?>(null)
     val auditBusy = mutableStateOf(false)
     val auditFailure = mutableStateOf<AuditFailure?>(null)
+
+    // Who connects to the server (the list of clients and the latest sign-ins), for every signed-in account.
+    val connectionClients = mutableStateOf<List<ConnectionClient>?>(null)
+    val connectionEvents = mutableStateOf<List<ConnectionEvent>?>(null)
+    val connectionsBusy = mutableStateOf(false)
+    val connectionsFailure = mutableStateOf<ConnectionsFailure?>(null)
     val controllerId: String get() = SessionController.id
 
     val ipAddress = mutableStateOf("192.168.1.100")
@@ -1843,6 +1856,40 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                 auditFailure.value = AuditFailure.NETWORK
             } finally {
                 auditBusy.value = false
+            }
+        }
+    }
+
+    /** Reads the list of clients and the latest sign-ins; never raises an error on the screen: the reason is left in [connectionsFailure]. */
+    fun refreshConnections() {
+        val client = apiClient ?: run {
+            connectionsFailure.value = ConnectionsFailure.NETWORK
+            return
+        }
+        connectionsBusy.value = true
+        viewModelScope.launch {
+            try {
+                val clients = ConnectionHistory.parseClients(client.getConnectionClientsBody())
+                val events = ConnectionHistory.parseEvents(client.getConnectionEventsBody(CONNECTION_EVENTS_SHOWN))
+                connectionClients.value = clients
+                connectionEvents.value = events
+                connectionsFailure.value = null
+            } catch (e: HydraApiException) {
+                connectionClients.value = null
+                connectionEvents.value = null
+                connectionsFailure.value = when {
+                    e.isSessionProblem -> ConnectionsFailure.SESSION
+                    e.isNotFound -> ConnectionsFailure.UNAVAILABLE
+                    e.httpCode == null -> ConnectionsFailure.NETWORK
+                    else -> ConnectionsFailure.OTHER
+                }
+                if (e.isSessionProblem) renewSessionOrLogout()
+            } catch (_: Exception) {
+                connectionClients.value = null
+                connectionEvents.value = null
+                connectionsFailure.value = ConnectionsFailure.NETWORK
+            } finally {
+                connectionsBusy.value = false
             }
         }
     }

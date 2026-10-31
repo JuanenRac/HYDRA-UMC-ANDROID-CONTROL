@@ -345,6 +345,29 @@ class HydraApiClient(
     }
 
     /**
+     * The clients the server has seen (GET /api/connections/clients) as text, for [ConnectionHistory.parseClients]. An account that is not
+     * an administrator is given only its own entries.
+     */
+    suspend fun getConnectionClientsBody(): String = withContext(Dispatchers.IO) {
+        val request = Request.Builder()
+            .url("$baseUrl/api/connections/clients")
+            .header("Authorization", "Bearer ${authToken ?: ""}")
+            .get()
+            .build()
+        executeExpectingText(request, client)
+    }
+
+    /** The latest lines of the history of sign-ins (GET /api/connections/events), newest first, as text for [ConnectionHistory.parseEvents]. */
+    suspend fun getConnectionEventsBody(limit: Int): String = withContext(Dispatchers.IO) {
+        val request = Request.Builder()
+            .url("$baseUrl/api/connections/events?limit=${limit.coerceIn(1, 500)}")
+            .header("Authorization", "Bearer ${authToken ?: ""}")
+            .get()
+            .build()
+        executeExpectingText(request, client)
+    }
+
+    /**
      * The global STOP: one call that stops every robot, whoever reserved it.
      * Short timeouts like any stop; the caller decides what to do when it fails.
      */
