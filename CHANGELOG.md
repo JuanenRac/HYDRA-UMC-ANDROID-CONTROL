@@ -4,10 +4,14 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+## [0.7.5] - The app says its version to the server, the access options of the server in the security screen and the history of connections
+
 - **The app says which version it is in `X-Hydra-Client` (`android/<version>`) and offers two more server options:** the server compares only the type, so the version changes no access and goes to the history of connections apart from the type (a version that is not a plain version string is left out). The administrator's section of the security screen now also shows the password of an IP camera handed over through the environment of its process and TLS switched on by a new installation, each with where its value comes from, locked when the server environment fixes it, and asking before the protection is lowered. Texts in the eight languages.
 - **Access options of the server in the security screen (administrators only):** below the connection security of the app, the screen shows seven switches of the server read from its configuration: the health route without a sign-in, the announcement of the global stop, keeping the address of each client in the history of connections, the camera pictures without a ticket, a token in the WebSocket address, the blanking of secrets in the log and the signature of a spoken confirmation. Each shows where its value comes from (default, saved from a screen, or fixed by the environment of the server, which locks it); only what changed is sent; and every change that lowers the protection asks first, listing what it opens. A server that does not offer an option does not show it, and an account that is not an administrator does not see the section. Texts in the eight languages.
 
 - **Who connects to the server:** a Connections button in the access panel opens a simple list of the apps the server has seen (kind, user, version, local network or from outside, the sessions open now, the sign-ins that worked or were refused, how long ago) and the latest sign-ins, refused sign-ins, sign-outs and ended sessions, read from the connection routes of the server. An administrator sees every entry and any other account only its own; no password or token is in either list, and an address appears only if the server was told to keep it. It says so plainly when the server is too old to offer them. Texts in the eight languages.
+
+- Build version synchronized with `hydra-umc.project.json` and the repository-native version source.
 
 ## [0.7.4] - Safe mode of a robot, the connection state as an enum, a rebuild of only the robot that changed, the update checked against the digest of the release and a quick settings tile for the global stop
 
