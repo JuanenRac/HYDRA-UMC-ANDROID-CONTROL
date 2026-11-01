@@ -2,7 +2,7 @@
 
 All notable changes to this project are documented here.
 
-## [Unreleased]
+## [0.7.6] - The phone answers the security status that the watch asks for, read only, and an administrator is told when the server has the remaining-useful-life card closed
 
 - **The phone answers the security status that the watch asks for, read only:** the new path `/hydra-umc/server-security-request/v1` makes the phone read the access options of the server and its history of connections with the session of the signed-in administrator, and answer a `server_security_status` (the options on a value that lowers the protection, how many the environment fixes, the active clients, the failed sign-ins) on `/hydra-umc/server-security/v1`. It writes nothing to the server, and an account that cannot read them, or a server that does not answer, gets the watch the same "offline" card as a failed status. The shared `watch_relay_contract.json` gains the vectors of the message in both repositories.
 
