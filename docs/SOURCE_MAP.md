@@ -30,6 +30,9 @@ Every file of the repository with a line on what it does: the annotated tree tha
 │   │   │   │   ├── HydraWebSocket.kt      # Live state-delta push over WS, reconnect handling
 │   │   │   │   ├── StateCache.kt          # Last-known-state cache (DataStore) for offline dashboard viewing
 │   │   │   │   ├── StopAllResult.kt       # Result of the global STOP (per-robot answer, status)
+│   │   │   │   ├── StopAllRunner.kt       # The global STOP without the screen: retry, renewal of the session, per-robot fallback
+│   │   │   │   ├── RobotCommandRepository.kt # Every robot write: revisions, retry of a stop, table fallback, jogs on the wire, debounce, timings
+│   │   │   │   ├── RobotCommandContract.kt   # Command names and limits, generated from docs/robot_command_contract.json (tools/gen_command_contract.py)
 │   │   │   │   ├── ContractV2.kt          # The server's second contract as pure rules: conditional writes by robot revision, the atomic table move and the audit record
 │   │   │   │   ├── BleCommands.kt         # One robot command to send over Bluetooth LE and its acknowledgement (see docs/BLE_CONTRACT.md)
 │   │   │   │   └── BlePermissions.kt      # The runtime permissions Bluetooth LE needs on each Android version
@@ -72,7 +75,9 @@ Every file of the repository with a line on what it does: the annotated tree tha
 │   │   │   │   └── ViewerUrl.kt            # The address of the embedded 3D viewer: the access token goes in the fragment, which is never sent to the server
 │   │   │   ├── viewmodel/
 │   │   │   │   ├── AppUpdateViewModel.kt   # Lifecycle-aware application update state
-│   │   │   │   └── RobotViewModel.kt   # Shared ViewModel - networking, auth, discovery, atomic command dispatch, all UI state
+│   │   │   │   ├── RobotViewModel.kt   # Shared ViewModel - networking, auth, discovery, atomic command dispatch, all UI state
+│   │   │   │   ├── CommandErrorText.kt # The texts of a failed command, in the language of the phone
+│   │   │   │   └── BleScanController.kt # The Bluetooth LE scan: checks, filter, stop after a few seconds
 │   │   │   ├── wear/
 │   │   │   │   ├── BoundedRequestScope.kt     # Per-requestId in-flight job scope; a superseded attempt is cancelled, cancelAll() on service destroy
 │   │   │   │   ├── WatchCompanionProtocol.kt    # Watch companion version-status wire contract

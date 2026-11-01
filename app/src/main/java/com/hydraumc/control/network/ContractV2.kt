@@ -35,7 +35,7 @@ enum class ConditionalMode(val key: String) {
 }
 
 /** Commands sent many times a second while a control is held: a revision can not follow them. */
-val CONTINUOUS_COMMANDS: Set<String> = setOf("jog", "speed", "jogStep")
+val CONTINUOUS_COMMANDS: Set<String> = RobotCommandContract.CONTINUOUS
 
 /** Whether a command carries If-Match in a mode. Reservations are "claim" and "release". STOP never does. */
 fun isConditional(mode: ConditionalMode, command: String): Boolean = when {

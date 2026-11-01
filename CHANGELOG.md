@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented here.
 
+## [Unreleased]
+
+- **Every robot write goes through one command repository:** `network/RobotCommandRepository.kt` keeps the revision (If-Match) of each robot, retries a stop when nobody answers, plays a `table` move as jogs on a server that predates it, counts the jogs on the wire, debounces a continuous command under its own name and measures how long each answer took; the view model no longer holds that code, and the global stop moved to `network/StopAllRunner.kt` the texts of the command errors to `viewmodel/CommandErrorText.kt` and the Bluetooth LE scan to `viewmodel/BleScanController.kt`. The first parts of the split of the view model are tested on the JVM against a fake server.
+- **The command names and their limits come from a contract file:** `docs/robot_command_contract.json` (identical in HYDRA-UMC-IOS-CONTROL) lists the commands, which ones are numbered or continuous and the limits (speed 10 to 500, jog and jog step up to 1000); `tools/gen_command_contract.py` writes `network/RobotCommandContract.kt` from it and the validation fails when the two differ.
+- **More tests:** the repository, the global stop runner and the contract constants are checked on a plain JVM; against a local HTTP server, a stop goes out while a jog is still on the wire and a second jog does not, the number of a stop is above that of the jog before it, a refused disable or enable goes back, and the time of an answered command is kept; on screen, the emergency stop button is shown and one tap starts the global stop.
+
 ## [0.7.6] - The phone answers the security status that the watch asks for, read only, and an administrator is told when the server has the remaining-useful-life card closed
 
 - **The phone answers the security status that the watch asks for, read only:** the new path `/hydra-umc/server-security-request/v1` makes the phone read the access options of the server and its history of connections with the session of the signed-in administrator, and answer a `server_security_status` (the options on a value that lowers the protection, how many the environment fixes, the active clients, the failed sign-ins) on `/hydra-umc/server-security/v1`. It writes nothing to the server, and an account that cannot read them, or a server that does not answer, gets the watch the same "offline" card as a failed status. The shared `watch_relay_contract.json` gains the vectors of the message in both repositories.

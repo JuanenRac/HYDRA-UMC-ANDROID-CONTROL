@@ -100,6 +100,7 @@ GPL-3.0-or-later - see LICENSE
 - **配对的 Wear OS 伴侣应用与语音中继**（`wear/WatchVoiceRelayService.kt`、`wear/WatchCompanionProtocol.kt`）—— 将来自配对的 [HYDRA-UMC-WATCH](https://github.com/JuanenRac/HYDRA-UMC-WATCH) 应用、已识别且由用户发起的语音回合,通过本应用自身经过认证的 Server 会话中继到 `HYDRA-UMC-VOICE-UI`,并向手表返回类型化的回复;无论是此中继还是手表的系统状态卡片,都从不发出机器人指令或直接操作 `HydraState` —— 与运动相关的回复会被明确标记为 `requiresConfirmation`,必须通过主控制 UI 进行确认。完整契约:[`docs/WATCH_VOICE_RELAY.md`](docs/WATCH_VOICE_RELAY.md)。 它还会以只读方式响应手表请求的服务器安全状态（取值降低防护的选项、由环境固定的选项、活跃客户端和登录失败），并以已登录管理员的身份读取这些信息。
 - **应用内语音助手**(`ui/VoiceAssistantDialog.kt`)—— 顶部栏中的麦克风图标会打开一个对话框,可输入问题/指令,或使用本手机自带的语音识别(`RecognizerIntent`,与手表语音按钮已使用的真实模式相同)。识别出的文字会通过与手表中继相同的 `POST /api/voice/turn` 路由发送,但作为本手机自身的普通流量(`HydraApiClient.postVoiceTurn()`)而非中继 —— 因此“配置 > 远程访问”可以独立于配对的手表来允许/阻止此按钮。绝不上传音频,回复也绝不会直接发出机器人指令。
 - **工具链与项目质量** —— AGP 9.3.1、Kotlin 2.2.10、Gradle 9.7.0、compileSdk 36、**JDK 21**（`compileOptions`、`gradle-daemon-jvm.properties`,以及 `.idea/`/`.vscode/` 项目文件都实际以此为目标,而不仅仅是这行文档）。构建输出干净,零警告,经过优化的 R8 生产变体,以及高级的 **Roborazzi** 截图测试。
+- **命令通道**（`network/RobotCommandRepository.kt`、`network/StopAllRunner.kt`、`network/RobotCommandContract.kt`）- 所有对机器人的写入都经过同一个仓库：保存每台机器人的修订号（If-Match），无人应答时重发停止命令，对不认识 `table` 的旧服务器把该移动改为点动发送，统计仍在传输中的点动，按命令名对连续命令去抖，并测量每次应答的耗时；全局停止有自己的执行器。命令名称及其上限（速度 10 到 500，点动和点动步长最大 1000）由 `tools/gen_command_contract.py` 从 `docs/robot_command_contract.json` 生成（HYDRA-UMC-IOS-CONTROL 保存同一个文件），生成文件不一致时校验失败。已在 JVM 上针对模拟服务器和本地 HTTP 服务器测试，急停按钮在屏幕上检查。
 
 **状态：Wi-Fi、蓝牙、生物识别和通知均已实现。** 本应用是一款工业操作员控制台；蓝牙仍处于实验阶段，任何屏幕都不能取代物理急停。
 

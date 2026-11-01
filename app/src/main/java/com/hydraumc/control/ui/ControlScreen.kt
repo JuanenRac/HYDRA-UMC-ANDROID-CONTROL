@@ -39,6 +39,7 @@ import android.annotation.SuppressLint
 import com.hydraumc.control.viewmodel.RobotViewModel
 import com.hydraumc.control.viewmodel.RobotState
 import com.hydraumc.control.R
+import com.hydraumc.control.network.RobotCommandContract
 import com.hydraumc.control.network.WsStatus
 import com.hydraumc.control.ui.theme.metallicIndustrial
 import com.hydraumc.control.ui.theme.StatusLed
@@ -425,7 +426,7 @@ fun ControlScreen(viewModel: RobotViewModel) {
                         value = speedState,
                         onValueChange = { speedState = it },
                         onValueChangeFinished = { viewModel.setSpeed(speedState.toDouble(), accelState.toDouble()) },
-                        valueRange = 10f..500f,
+                        valueRange = RobotCommandContract.SPEED_MIN.toFloat()..RobotCommandContract.SPEED_MAX.toFloat(),
                     )
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                         Text(stringResource(R.string.acceleration_ramp), style = MaterialTheme.typography.bodySmall, color = Color.White)
@@ -435,7 +436,7 @@ fun ControlScreen(viewModel: RobotViewModel) {
                         value = accelState,
                         onValueChange = { accelState = it },
                         onValueChangeFinished = { viewModel.setSpeed(speedState.toDouble(), accelState.toDouble()) },
-                        valueRange = 10f..500f, // the range the server applies (it ignores values outside 10..500)
+                        valueRange = RobotCommandContract.SPEED_MIN.toFloat()..RobotCommandContract.SPEED_MAX.toFloat(), // the range the server applies (it ignores values outside 10..500)
                     )
 
                     Spacer(modifier = Modifier.height(24.dp))

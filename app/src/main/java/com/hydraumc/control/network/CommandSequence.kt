@@ -13,7 +13,7 @@ package com.hydraumc.control.network
  */
 object CommandSequence {
     /** The commands the server orders by number: the motion commands and the stop that must overtake them. */
-    private val NUMBERED = setOf("jog", "table", "joints", "stop")
+    private val NUMBERED = RobotCommandContract.NUMBERED + "joints"
 
     private var last = 0L
 

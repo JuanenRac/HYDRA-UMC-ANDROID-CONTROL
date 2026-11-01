@@ -38,6 +38,8 @@ no code shared between the three clients.
 - **Connection settings** (`ConnectionPrefs.kt`): DataStore-backed persistence of the manually entered IP/port, used
   by `SettingsScreen.kt` as a fallback when discovery doesn't find a server.
 
+- **Command pipeline** (`RobotCommandRepository.kt`, `StopAllRunner.kt`, `RobotCommandContract.kt`): the view model decides what a button means and shows the result; everything between that and the server answering lives in the repository, which has no Android class. It keeps the revision (If-Match) of each robot, retries a stop when nobody answers, plays a `table` move as jogs on a server that predates it, counts the jogs on the wire, debounces a continuous command under its own name and measures each answer. The global STOP has its own runner. The command names and limits are generated from `docs/robot_command_contract.json`, the file HYDRA-UMC-IOS-CONTROL also keeps.
+
 ## 3. Bluetooth transport (implemented, tested against a simulated GATT, not usable end-to-end yet)
 
 The contract (service and characteristic UUIDs, message framing, connection sequence, permissions) is in

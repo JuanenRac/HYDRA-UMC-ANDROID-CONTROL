@@ -21,6 +21,11 @@ import com.hydraumc.control.kinematics.parol6CartesianToJointsOrNull
 import com.hydraumc.control.R
 import com.hydraumc.control.network.AuthPrefs
 import com.hydraumc.control.network.ClaimInfo
+import com.hydraumc.control.network.RobotCommandContract
+import com.hydraumc.control.network.RobotCommandRepository
+import com.hydraumc.control.network.StopAllEndpoint
+import com.hydraumc.control.network.StopAllRunner
+import com.hydraumc.control.network.StopAllTexts
 import com.hydraumc.control.network.ClaimStanding
 import com.hydraumc.control.network.AuditRead
 import com.hydraumc.control.network.AuditRecord
@@ -34,7 +39,6 @@ import com.hydraumc.control.network.ServerOptionsFailure
 import com.hydraumc.control.network.ServerSecurity
 import com.hydraumc.control.network.ServerSecurityOptions
 import com.hydraumc.control.network.ServerSecurityValues
-import com.hydraumc.control.network.RevisionTracker
 import com.hydraumc.control.network.isUnknownCommand
 import com.hydraumc.control.network.revisionOf
 import com.hydraumc.control.network.tableAsJogs
@@ -49,8 +53,6 @@ import com.hydraumc.control.network.ConnectionPrefs
 import com.hydraumc.control.network.HydraApiClient
 import com.hydraumc.control.network.HydraApiException
 import com.hydraumc.control.network.HydraWebSocket
-import com.hydraumc.control.network.BleContract
-import com.hydraumc.control.network.BleDeviceList
 import com.hydraumc.control.network.BleError
 import com.hydraumc.control.network.BleErrorKind
 import com.hydraumc.control.network.BlePermissions
@@ -77,19 +79,10 @@ import com.hydraumc.control.util.reuseUnchangedRows
 import kotlinx.coroutines.launch
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
-import android.bluetooth.le.ScanCallback
-import android.bluetooth.le.ScanFilter
-import android.bluetooth.le.ScanSettings
-import android.content.pm.PackageManager
-import android.os.ParcelUuid
-import androidx.core.content.ContextCompat
-import android.bluetooth.le.ScanResult
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.annotation.SuppressLint
-import android.location.LocationManager
 import android.os.Build
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -301,10 +294,10 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
     /** Whether PLAY asks first (see [com.hydraumc.control.util.PlayConfirmation]); on until the person turns it off. */
     val confirmPlay = mutableStateOf(true)
     @Volatile private var confirmPlayTouched = false
+    /** Sends every robot command: revisions, retry of a stop, `table` fallback, jogs on the wire, debounce and timings. */
+    val commands = RobotCommandRepository(conditionalMode = { conditionalMode.value })
     /** The last revision seen of each robot. */
-    val revisions = RevisionTracker { conditionalMode.value }
-    /** Whether the server was last seen to understand the `table` command (true until it says otherwise). */
-    @Volatile private var tableCommandSupported = true
+    val revisions get() = commands.revisions
     /** When the server last pushed the reservations (this phone clock, epoch ms); 0 before the first push. */
     @Volatile var claimsPushedAtMs: Long = 0L
         private set
@@ -346,7 +339,6 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
     val telemetryLogs = mutableStateOf<List<String>>(emptyList())
     val isBtScanning = mutableStateOf(value = false)
     val isBtEnabled = mutableStateOf(value = false)
-    private var bleScanCallback: ScanCallback? = null
 
     var state = HydraState.empty()
     /** True once a state from the server (not the offline cache) has been applied in this process. */
@@ -405,7 +397,6 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
     // every 150 ms; on a slow link the POSTs used to pile up and arrive after
     // the button was released (or after a stop). While one is in flight the
     // next tick is dropped instead of queued.
-    private val jogsInFlight = mutableMapOf<Int, Int>()
 
     val isLoggedIn = mutableStateOf(value = false)
     // Real, live-reproduced bug this exists to fix: MainActivity's splash
@@ -1218,7 +1209,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
             // is already superseded by a full REST sync on the next
             // connect() anyway. A short quiet-period debounce (same
             // cancel-and-relaunch Job pattern as metricsJob/connectJob/
-            // atomicSyncJobs elsewhere in this file) coalesces a burst of
+            // commands.debounce) coalesces a burst of
             // rapid state changes into one write instead of one per change.
             stateCacheJob?.cancel()
             stateCacheJob = viewModelScope.launch {
@@ -1372,8 +1363,6 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
     // shows the new speed (the local mutation below is synchronous), so
     // nothing about the screen indicates the robot is still running at
     // the OLD speed.
-    private val atomicSyncJobs = mutableMapOf<String, kotlinx.coroutines.Job?>()
-
     /**
      * Applies [command]/[params] to [robotId] (defaults to the globally
      * selected control robot; the Camera screen passes an explicit id since
@@ -1415,7 +1404,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
 
         // A jog above the limit the server holds for this robot model is not sent at all (the
         // server checks it again). Checked before the optimistic change, like the client above.
-        if (command == "jog" || command == "table") {
+        if (command == RobotCommandContract.JOG || command == RobotCommandContract.TABLE) {
             if (jogNeedsArming(robotId)) {
                 lastError.value = getApplication<Application>().getString(R.string.error_jog_not_armed)
                 return
@@ -1432,7 +1421,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                 )
             }
             if (exceeded != null) {
-                lastError.value = getApplication<Application>().getString(R.string.error_jog_over_limit, formatLimit(exceeded))
+                lastError.value = getApplication<Application>().getString(R.string.error_jog_over_limit, CommandErrorText.formatLimit(exceeded))
                 return
             }
         }
@@ -1471,13 +1460,13 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
             applyState(state, changedRobotIds = edits.map { it.first }.toSet())
         }
 
-        val isJog = command == "jog" || command == "table"
+        val isJog = command == RobotCommandContract.JOG || command == RobotCommandContract.TABLE
         val send: () -> Unit = {
-            if (isJog) jogsInFlight[robotId] = (jogsInFlight[robotId] ?: 0) + 1
+            if (isJog) commands.jogStarted(robotId)
             viewModelScope.launch {
                 try {
-                    val answer = postCommandConditionally(client, robotId, command, payload)
-                    val warnings = commandWarnings(answer)
+                    val answer = commands.send(robotId, command, payload) { id, body, urgent, ifMatch -> client.postRobotCommand(id, body, urgent, ifMatch) }
+                    val warnings = RobotCommandRepository.warningsOf(answer)
                     if (warnings != null) {
                         // The server answered 200 but applied nothing (a speed
                         // outside its range, a malformed jog): same as a failure.
@@ -1499,11 +1488,11 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                     // logcat needed for that first split.
                     logTelemetry("TX OK [$command] -> robot $robotId")
                     // The server disarms the jog on a stop.
-                    if (command == "stop") jogArmedUntilMs.value = jogArmedUntilMs.value - robotId
+                    if (command == RobotCommandContract.STOP) jogArmedUntilMs.value = jogArmedUntilMs.value - robotId
                     lastError.value = null
                 } catch (e: HydraApiException) {
                     logTelemetry("TX Error [$command]: ${e.message}")
-                    lastError.value = describeCommandError(command, e)
+                    lastError.value = CommandErrorText.describe(getApplication(), command, e)
                     // The robot changed since this app read it: read it again so the screen shows what it is now.
                     if (e.isRevisionMismatch) refreshRobot(robotId)
                     // The arming ended (it times out, or a stop cleared it): the screen offers to arm again.
@@ -1524,93 +1513,12 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                     )
                     rollback()
                 } finally {
-                    if (isJog) jogsInFlight[robotId] = ((jogsInFlight[robotId] ?: 1) - 1).coerceAtLeast(0)
+                    if (isJog) commands.jogEnded(robotId)
                 }
             }
         }
 
-        atomicSyncJobs[command]?.cancel()
-        if (debounceMs > 0) {
-            atomicSyncJobs[command] = viewModelScope.launch {
-                kotlinx.coroutines.delay(debounceMs)
-                send()
-            }
-        } else {
-            send()
-        }
-    }
-
-    /**
-     * A stop is worth retrying: it is posted with short timeouts, and a
-     * network failure (no answer at all) is tried again up to 3 times in
-     * about a second. An answer from the server, of any kind, is final.
-     */
-    private suspend fun postCommandWithRetry(
-        client: HydraApiClient,
-        robotId: Int,
-        payload: JSONObject,
-        urgent: Boolean,
-        ifMatch: String? = null,
-    ): JSONObject {
-        var attempt = 0
-        while (true) {
-            try {
-                return client.postRobotCommand(robotId, payload, urgent, ifMatch)
-            } catch (e: HydraApiException) {
-                if (!urgent || e.httpCode != null || attempt >= 2) throw e
-            } catch (e: java.io.IOException) {
-                if (!urgent || attempt >= 2) throw e
-            }
-            attempt++
-            // Waited on a real dispatcher (not the caller's), so the pause is real
-            // time even where the main dispatcher is a virtual-time test one.
-            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) { kotlinx.coroutines.delay(250) }
-        }
-    }
-
-    /**
-     * Runs one write with the revision this app last saw of the robot as If-Match (never for STOP, and only when the mode
-     * and the tracker allow it), keeps the revision of the answer for the next write, and on a 412 keeps the one the
-     * server says the robot is at now. The failure is rethrown for the caller to report.
-     */
-    private suspend fun withRevision(robotId: Int, command: String, call: suspend (String?) -> JSONObject): JSONObject {
-        val ticket = revisions.begin(robotId, command)
-        try {
-            val answer = call(ticket.ifMatch)
-            revisions.finish(robotId, ticket.seq, revisionOf(answer))
-            return answer
-        } catch (e: HydraApiException) {
-            revisions.finish(robotId, ticket.seq, null)
-            if (e.isRevisionMismatch) revisions.learn(robotId, e.revision)
-            throw e
-        } catch (e: Exception) {
-            revisions.finish(robotId, ticket.seq, null)
-            throw e
-        }
-    }
-
-    /** Posts a command conditionally; a `table` move goes out as the jogs that did the same on a server that has no such command. */
-    private suspend fun postCommandConditionally(client: HydraApiClient, robotId: Int, command: String, payload: JSONObject): JSONObject {
-        val params = payload.optJSONObject("params")
-        if (command == "table" && !tableCommandSupported && params != null) return postTableAsJogs(client, robotId, params)
-        return try {
-            withRevision(robotId, command) { ifMatch -> postCommandWithRetry(client, robotId, payload, urgent = command == "stop", ifMatch = ifMatch) }
-        } catch (e: HydraApiException) {
-            if (command == "table" && params != null && isUnknownCommand(e)) {
-                tableCommandSupported = false
-                postTableAsJogs(client, robotId, params)
-            } else {
-                throw e
-            }
-        }
-    }
-
-    private suspend fun postTableAsJogs(client: HydraApiClient, robotId: Int, params: JSONObject): JSONObject {
-        var last = JSONObject().put("success", true)
-        for (jog in tableAsJogs(params)) {
-            last = postCommandWithRetry(client, robotId, JSONObject().put("command", "jog").put("params", jog), urgent = false)
-        }
-        return last
+        commands.debounce(viewModelScope, command, debounceMs, send)
     }
 
     /** The id of the controller that holds [robotId] in the settings tree, or null. */
@@ -1683,37 +1591,6 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     /** The server's `warnings` of a 200 answer (it applied nothing), joined; null when there are none. */
-    private fun commandWarnings(answer: JSONObject): String? {
-        val warnings = answer.optJSONArray("warnings") ?: return null
-        if (warnings.length() == 0) return null
-        return (0 until warnings.length()).joinToString("; ") { i ->
-            val item = warnings.opt(i)
-            if (item is JSONObject) item.optString("message", item.toString()) else item.toString()
-        }
-    }
-
-    /** The message for a command the server answered with an error, by what the answer says. */
-    private fun describeCommandError(command: String, e: HydraApiException): String {
-        val app = getApplication<Application>()
-        return when {
-            e.isSessionProblem -> app.getString(R.string.error_session_expired)
-            e.isRobotDisabled -> app.getString(R.string.error_robot_disabled, command)
-            e.isRevisionMismatch -> app.getString(R.string.error_revision_changed, command)
-            e.isJogNotArmed -> app.getString(R.string.error_jog_not_armed)
-            e.isStaleSequence -> app.getString(R.string.error_stale_sequence, command)
-            e.isOtherController -> app.getString(R.string.error_claim_other_controller, e.serverMessage ?: "")
-            e.isControllerIdRequired -> app.getString(R.string.error_claim_controller_required, e.serverMessage ?: "")
-            e.isReservedByAnother -> app.getString(R.string.error_robot_reserved, e.serverMessage ?: "")
-            e.isPermissionDenied -> app.getString(R.string.error_permission_denied)
-            e.isRejectedCommand -> app.getString(R.string.error_command_rejected, command, e.serverMessage ?: "")
-            command == "stop" -> app.getString(R.string.error_stop_not_confirmed)
-            else -> app.getString(R.string.error_command_failed, command)
-        }
-    }
-
-    /** `1000.0` is shown as `1000`, `12.5` as `12.5`. */
-    private fun formatLimit(limit: Double): String = limit.toString().removeSuffix(".0")
-
     /** Where [robotId] stands for this installation, from the last list of reservations. */
     fun claimStandingOf(robotId: Int?): ClaimStanding =
         claimStanding(claims.value.firstOrNull { it.robotId == robotId }, loginUsername.value, SessionController.id)
@@ -1768,7 +1645,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
 
     /** Reserves the selected robot for this account on this installation. */
     fun claimSelectedRobot() = runAccessRequest("claim") { client, robotId ->
-        withRevision(robotId, "claim") { ifMatch -> client.postClaim(robotId, ifMatch = ifMatch) }
+        commands.withRevision(robotId, "claim") { ifMatch -> client.postClaim(robotId, ifMatch = ifMatch) }
     }
 
     /** Whether this session is an administrator's (the role in its token; the server checks it again). */
@@ -1788,7 +1665,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
 
     /** Releases the selected robot reservation. Also ends the arming of its jog, as the server does. */
     fun releaseSelectedRobot() = runAccessRequest("release") { client, robotId ->
-        withRevision(robotId, "release") { ifMatch -> client.postRelease(robotId, ifMatch = ifMatch) }
+        commands.withRevision(robotId, "release") { ifMatch -> client.postRelease(robotId, ifMatch = ifMatch) }
             .also { jogArmedUntilMs.value = jogArmedUntilMs.value - robotId }
     }
 
@@ -1819,7 +1696,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                 lastError.value = null
             } catch (e: HydraApiException) {
                 logTelemetry("TX Error [$what]: ${e.message}")
-                lastError.value = describeCommandError(what, e)
+                lastError.value = CommandErrorText.describe(getApplication(), what, e)
                 if (e.isRevisionMismatch) refreshRobot(robotId)
                 if (e.isSessionProblem) renewSessionOrLogout()
             } catch (e: Exception) {
@@ -1980,7 +1857,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
     /** True while a jog of [robotId] is still on the wire, or the robot is running a trajectory (two writers on one setpoint). */
     private fun jogBlocked(robotId: Int?): Boolean {
         if (robotId == null) return true
-        if ((jogsInFlight[robotId] ?: 0) > 0) return true
+        if (commands.hasJogInFlight(robotId)) return true
         val robot = state.robotById(robotId) ?: return true
         return robot.isPlaying && !robot.isPaused
     }
@@ -2005,7 +1882,13 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         }
         stopAllStatus.value = StopAllStatus.Sending
         viewModelScope.launch {
-            val outcome = runStopAll(first)
+            val outcome = stopAllRunner.run(
+                start = first.asStopAllEndpoint(),
+                knownRobots = { state.allRobots.map { it.id to it.name } },
+                relogin = { attemptSilentRelogin() },
+                currentEndpoint = { apiClient?.asStopAllEndpoint() },
+                onSessionLost = { renewSessionOrLogout() },
+            )
             stopAllStatus.value = outcome
             if (outcome is StopAllStatus.Done) {
                 // Show the stop at once; the next state broadcast confirms or corrects it.
@@ -2021,71 +1904,23 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    private val stopAllRunner by lazy {
+        val app = getApplication<Application>()
+        StopAllRunner(commands, StopAllTexts(app.getString(R.string.error_session_expired), app.getString(R.string.error_robot_not_found)))
+    }
+
+    private fun HydraApiClient.asStopAllEndpoint(): StopAllEndpoint {
+        val client = this
+        return object : StopAllEndpoint {
+            override suspend fun stopAll() = client.postStopAll()
+            override suspend fun stopRobot(robotId: Int, payload: JSONObject, urgent: Boolean, ifMatch: String?) =
+                client.postRobotCommand(robotId, payload, urgent, ifMatch)
+        }
+    }
+
     /** Hides the result banner of the global STOP; a STOP that is not confirmed cannot be hidden. */
     fun dismissStopAllStatus() {
         if (stopAllStatus.value is StopAllStatus.Done) stopAllStatus.value = null
-    }
-
-    private suspend fun runStopAll(start: HydraApiClient): StopAllStatus {
-        var client = start
-        var networkRetried = false
-        var sessionRenewed = false
-        while (true) {
-            try {
-                return StopAllStatus.Done(client.postStopAll())
-            } catch (e: HydraApiException) {
-                when {
-                    // 429: over the server's rate limit. 404: a server that does not have the route yet.
-                    e.isRateLimited || e.isNotFound -> return stopRobotsOneByOne(client)
-                    e.isSessionProblem && !sessionRenewed -> {
-                        sessionRenewed = true
-                        if (!attemptSilentRelogin()) {
-                            renewSessionOrLogout()
-                            return StopAllStatus.NotConfirmed(getApplication<Application>().getString(R.string.error_session_expired))
-                        }
-                        client = apiClient ?: return StopAllStatus.NotConfirmed(null)
-                    }
-                    e.httpCode == null && !networkRetried -> {
-                        networkRetried = true
-                        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) { kotlinx.coroutines.delay(300) }
-                    }
-                    else -> return StopAllStatus.NotConfirmed(e.serverMessage ?: e.message)
-                }
-            } catch (e: java.io.IOException) {
-                if (networkRetried) return StopAllStatus.NotConfirmed(e.message)
-                networkRetried = true
-                kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) { kotlinx.coroutines.delay(300) }
-            } catch (e: Exception) {
-                return StopAllStatus.NotConfirmed(e.message)
-            }
-        }
-    }
-
-    /** The fallback when the global call is rate limited: the per-robot stop for every known robot. */
-    private suspend fun stopRobotsOneByOne(client: HydraApiClient): StopAllStatus {
-        val known = state.allRobots
-        if (known.isEmpty()) return StopAllStatus.NotConfirmed(getApplication<Application>().getString(R.string.error_robot_not_found))
-        val payload = { JSONObject().put("command", "stop") }
-        val entries = known.map { robot ->
-            val error = try {
-                postCommandWithRetry(client, robot.id, payload(), urgent = true)
-                null
-            } catch (e: Exception) {
-                (e as? HydraApiException)?.serverMessage ?: e.message ?: "error"
-            }
-            StopAllRobot(
-                robotId = robot.id, controllerId = "", name = robot.name,
-                stopped = error == null, valvesOff = false, pumpsOff = false,
-                reservedBy = null, error = error,
-            )
-        }
-        val failed = entries.count { !it.stopped }
-        return StopAllStatus.Done(
-            StopAllResult(
-                success = failed == 0, stoppedCount = entries.size - failed, failedCount = failed,
-                persisted = true, robots = entries, viaFallback = true,
-            ),
-        )
     }
 
     fun sendCommand(command: String) {
@@ -2122,11 +1957,11 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
             // One atomic "table" move relative to where the table is now: the server checks the whole move against
             // the limits of the model and applies all of it or none of it.
             val move = tableParams(if (axis == "x") amount else 0.0, if (axis == "y") amount else 0.0, "relative") ?: return
-            sendAtomicCommand("table", move) { r -> r.setXyTableAxis(axis, r.xyTablePos.optDouble(axis, 0.0) + amount) }
+            sendAtomicCommand(RobotCommandContract.TABLE, move) { r -> r.setXyTableAxis(axis, r.xyTablePos.optDouble(axis, 0.0) + amount) }
             return
         }
         val params = JSONObject().put("axis", axis).put("amount", amount).put("target", target)
-        sendAtomicCommand("jog", params) { r ->
+        sendAtomicCommand(RobotCommandContract.JOG, params) { r ->
             if (target == "robot") {
                 r.setPosAxis(axis, r.posAxis(axis) + amount)
             } else if (target == "xytable") {
@@ -2180,7 +2015,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                 val jointsParam = JSONObject()
                 JOINT_NAMES.forEachIndexed { i, name -> jointsParam.put(name, newJoints[i]) }
                 val params = JSONObject().put("axis", axis).put("amount", amount).put("target", target).put("joints", jointsParam)
-                sendAtomicCommand("jog", params) { r ->
+                sendAtomicCommand(RobotCommandContract.JOG, params) { r ->
                     r.setPosAxis(axis, value)
                     JOINT_NAMES.forEachIndexed { i, name -> r.setJoint(name, newJoints[i]) }
                 }
@@ -2233,7 +2068,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         // the real desired state is the `joints` override, same sanctioned
         // mechanism jogXYZ() already uses above.
         val params = JSONObject().put("axis", "x").put("amount", 0.0).put("target", "robot").put("joints", jointsParam)
-        sendAtomicCommand("jog", params) { r -> r.setJoint("j1", newJ1) }
+        sendAtomicCommand(RobotCommandContract.JOG, params) { r -> r.setJoint("j1", newJ1) }
     }
 
     /**
@@ -2248,27 +2083,27 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
      */
     fun setJogStep(value: Double) {
         val params = JSONObject().put("value", value)
-        sendAtomicCommand("jogStep", params) { r -> r.setJogStep(value) }
+        sendAtomicCommand(RobotCommandContract.JOG_STEP, params) { r -> r.setJogStep(value) }
     }
 
     fun toggleValve(index: Int) {
         val targetRobot = selectedRobotId.value?.let { state.robotById(it) } ?: return
         val newState = !targetRobot.valves.optBoolean(index, false)
         val params = JSONObject().put("index", index).put("state", newState)
-        sendAtomicCommand("valve", params) { it.setValve(index, newState) }
+        sendAtomicCommand(RobotCommandContract.VALVE, params) { it.setValve(index, newState) }
     }
 
     fun togglePump(index: Int) {
         val targetRobot = selectedRobotId.value?.let { state.robotById(it) } ?: return
         val newState = !targetRobot.pumps.optBoolean(index, false)
         val params = JSONObject().put("index", index).put("state", newState)
-        sendAtomicCommand("pump", params) { it.setPump(index, newState) }
+        sendAtomicCommand(RobotCommandContract.PUMP, params) { it.setPump(index, newState) }
     }
 
     /** Debounced (300ms) - a dragged slider fires this many times a second. */
     fun setSpeed(speed: Double, acceleration: Double) {
         val params = JSONObject().put("speed", speed).put("acceleration", acceleration)
-        sendAtomicCommand("speed", params, debounceMs = 300) { r ->
+        sendAtomicCommand(RobotCommandContract.SPEED, params, debounceMs = 300) { r ->
             r.setSpeed(speed)
             r.setAcceleration(acceleration)
         }
@@ -2277,7 +2112,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
     /** Toggles a robot's vision system on/off from the Camera screen (server.ts's own "vision" command). Takes an explicit robotId since the camera being browsed isn't necessarily the globally selected control robot. */
     fun setVisionEnabled(robotId: Int, enabled: Boolean) {
         val params = JSONObject().put("enabled", enabled)
-        sendAtomicCommand("vision", params, explicitRobotId = robotId) { r ->
+        sendAtomicCommand(RobotCommandContract.VISION, params, explicitRobotId = robotId) { r ->
             r.raw.put("visionEnabled", enabled)
             // Keep the legacy embedded camera mirror aligned with the
             // authoritative robot value. A1/A2 used to retain connected=true
@@ -2294,7 +2129,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
 
     fun mutateSelectedTool(toolName: String) {
         val params = JSONObject().put("tool", toolName)
-        sendAtomicCommand("tool", params) { it.setTool(toolName) }
+        sendAtomicCommand(RobotCommandContract.TOOL, params) { it.setTool(toolName) }
     }
 
     fun scanNetwork() {
@@ -2337,113 +2172,25 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         logTelemetry("BLE error: ${error.kind}${error.status?.let { " ($it)" } ?: ""}")
     }
 
-    private fun missingBlePermissions(needed: List<String>): List<String> {
-        val app = getApplication<Application>()
-        return BlePermissions.missing(needed) { ContextCompat.checkSelfPermission(app, it) == PackageManager.PERMISSION_GRANTED }
-    }
-
-    @SuppressLint("MissingPermission")
-    fun scanBluetooth() {
-        if (isBtScanning.value) return
-
-        val app = getApplication<Application>()
-        val adapter = (app.getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager)?.adapter
-        if (adapter == null) {
-            isBtEnabled.value = false
-            reportBleError(BleError(BleErrorKind.BLUETOOTH_UNAVAILABLE))
-            return
-        }
-        if (!adapter.isEnabled) {
-            isBtEnabled.value = false
-            return
-        }
-        isBtEnabled.value = true
-
-        if (missingBlePermissions(BlePermissions.scanPermissions(Build.VERSION.SDK_INT)).isNotEmpty()) {
-            reportBleError(BleError(BleErrorKind.PERMISSION_DENIED))
-            return
-        }
-
-        // On API 24-30, BLE scan results are silently withheld system-wide
-        // if Location Services (GPS) is off at the OS level, even with the
-        // runtime permission already granted - startScan() itself reports
-        // no error, it just never calls onScanResult(). API 31+ (S) dropped
-        // this requirement once BLUETOOTH_SCAN(neverForLocation) replaced
-        // the old location-permission-based BLE scan model.
-        if (BlePermissions.needsLocationServices(Build.VERSION.SDK_INT)) {
-            val locationManager = app.getSystemService(Context.LOCATION_SERVICE) as? LocationManager
-            if (locationManager == null || !androidx.core.location.LocationManagerCompat.isLocationEnabled(locationManager)) {
-                reportBleError(BleError(BleErrorKind.LOCATION_OFF))
-                return
-            }
-        }
-
-        val scanner = adapter.bluetoothLeScanner
-        if (scanner == null) {
-            reportBleError(BleError(BleErrorKind.SCANNER_UNAVAILABLE))
-            return
-        }
-
-        lastBtError.value = null
-        isBtScanning.value = true
-        discoveredBtDevices.value = emptyList()
-
-        val callback = object : ScanCallback() {
-            override fun onScanResult(callbackType: Int, result: ScanResult) {
-                // The advertised name needs no permission; the cached device name needs
-                // BLUETOOTH_CONNECT on Android 12+ and may have been revoked meanwhile.
-                val name = result.scanRecord?.deviceName ?: try { result.device.name } catch (_: SecurityException) { null }
-                discoveredBtDevices.value = BleDeviceList.upsert(
-                    discoveredBtDevices.value,
-                    BleDevice(name, result.device.address, result.rssi),
-                )
-            }
-
-            override fun onScanFailed(errorCode: Int) {
-                bleScanCallback = null
-                isBtScanning.value = false
-                reportBleError(BleError(BleErrorKind.SCAN_FAILED, errorCode))
-            }
-        }
-        bleScanCallback = callback
-
-        // Only devices advertising the HYDRA service, unless the user asked for everything.
-        val filters = if (bleShowAllDevices.value) emptyList() else listOf(
-            ScanFilter.Builder().setServiceUuid(ParcelUuid(BleContract.SERVICE_UUID)).build(),
+    private val bleScan by lazy {
+        BleScanController(
+            context = getApplication(),
+            scope = viewModelScope,
+            devices = discoveredBtDevices,
+            scanning = isBtScanning,
+            bluetoothEnabled = isBtEnabled,
+            showAllDevices = { bleShowAllDevices.value },
+            onError = { reportBleError(it) },
+            onScanStarted = { lastBtError.value = null },
         )
-        val settings = ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY).build()
-
-        viewModelScope.launch {
-            try {
-                scanner.startScan(filters, settings, callback)
-            } catch (e: SecurityException) {
-                // BLUETOOTH_SCAN was revoked from Settings after the screen checked it.
-                bleScanCallback = null
-                isBtScanning.value = false
-                reportBleError(BleError(BleErrorKind.PERMISSION_DENIED))
-                return@launch
-            }
-            kotlinx.coroutines.delay(5_000L)
-            stopBtScan()
-        }
     }
 
-    @SuppressLint("MissingPermission")
-    private fun stopBtScan() {
-        if (!isBtScanning.value) return
-        val bluetoothManager = getApplication<Application>().getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager
-        val scanner = bluetoothManager?.adapter?.bluetoothLeScanner
-        try {
-            bleScanCallback?.let { scanner?.stopScan(it) }
-        } catch (_: SecurityException) {
-            // Permission revoked while scanning: the scan stops with the app anyway.
-        }
-        bleScanCallback = null
-        isBtScanning.value = false
-    }
+    fun scanBluetooth() = bleScan.start()
+
+    private fun stopBtScan() = bleScan.stop()
 
     fun connectBle(device: BleDevice) {
-        if (missingBlePermissions(BlePermissions.connectPermissions(Build.VERSION.SDK_INT)).isNotEmpty()) {
+        if (bleScan.missingPermissions(BlePermissions.connectPermissions(Build.VERSION.SDK_INT)).isNotEmpty()) {
             reportBleError(BleError(BleErrorKind.PERMISSION_DENIED))
             return
         }
