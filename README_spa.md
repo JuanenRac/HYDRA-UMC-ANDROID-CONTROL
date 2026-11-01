@@ -58,6 +58,13 @@ Cada línea es una parte de este repositorio y la luz dice hasta dónde llega ho
 | Software | 🟡 | Funciona para su propósito principal; la comprobación de honestidad de arriba lista lo que aún falta |
 | Pruebas | 🟢 | 356 pruebas automáticas, ejecutadas en cada cambio |
 | Hardware real | 🔴 | Todavía no: no consta ninguna ejecución en hardware real para esta versión |
+| Interfaz y protocolos | 🟡 | Las rutas o los mensajes que ofrece están documentados y probados con un cliente; aún no los han usado todos los clientes |
+| Integración | 🟠 | Sus mensajes y rutas se comprueban contra los contratos compartidos del SDK; no ha funcionado junto con el equipo real |
+| Seguridad | 🟡 | El control de acceso, los límites de entrada o las firmas están implementados y probados en un ordenador; nadie ajeno al proyecto los ha revisado |
+| Despliegue | 🟠 | Con cada release se publica un APK firmado; no consta ninguna instalación en un móvil o reloj para esta versión |
+| Actualizaciones | 🟠 | Se actualiza instalando el APK firmado de la release; la actualización de una app instalada no consta en un dispositivo |
+| Parada y seguridad | 🟠 | El camino de parada y sus límites están implementados y probados con simuladores; nunca han funcionado en una máquina real, y esto no es un sistema de seguridad certificado |
+| Idiomas y accesibilidad | 🟡 | La interfaz y su ayuda están en ocho idiomas; el uso con teclado y lector de pantalla no se ha probado |
 | Documentación | 🟢 | README en ocho idiomas, comprobado contra el manifiesto en cada cambio |
 
 ## 🎯 Resumen
@@ -108,6 +115,7 @@ Pantallas de la aplicación: **acceso** (dirección del servidor, contraseña, h
 
 - **Quién se conecta al servidor:** un botón Conexiones del panel de acceso abre una lista sencilla de las apps que el servidor ha visto (tipo, usuario, versión, red local o desde fuera, las sesiones abiertas ahora, las entradas que funcionaron o fueron rechazadas, hace cuánto) y las últimas entradas, entradas rechazadas, salidas y sesiones terminadas, leídas de las rutas de conexiones del servidor. Un administrador ve todas las entradas y cualquier otra cuenta solo las suyas; ninguna lista lleva contraseñas ni tokens y una dirección solo aparece si se indicó al servidor que la guardara. Lo dice con claridad cuando el servidor es demasiado antiguo para ofrecerlas.
 - **Opciones de acceso del servidor en la pantalla de seguridad (solo administradores):** bajo la seguridad de conexión de la app, nueve interruptores leídos de la configuración del servidor: la ruta de salud sin iniciar sesión, el anuncio de la parada global, guardar la dirección de cada cliente en el historial de conexiones, las imágenes de cámara sin ticket, un token en la dirección del WebSocket, el ocultado de secretos en el registro, la firma de una confirmación hablada, la contraseña de una cámara IP entregada por el entorno de su proceso y TLS activado por una instalación nueva. Cada uno muestra de dónde viene su valor (por defecto, guardado desde una pantalla o fijado por el entorno del servidor, que lo bloquea), solo se envía lo que cambió, todo cambio que baja la protección pregunta antes y un servidor que no ofrece una opción no la muestra.
+- **HOME/RESET** (`ui/HomeResetControl.kt`, `util/HomeReset.kt`, `viewmodel/RobotViewModel.kt`) - un botón que lleva el robot seleccionado a su posición cero mediante el comando `reset` del servidor. Viene apagado: un interruptor en el panel de Acceso lo activa y la elección se conserva. Pide confirmación dos veces, en orden y dentro de un plazo, antes de enviar nada. Se rechaza, con una frase propia, cuando el robot está reproduciendo, en modo seguro, sin conexión o sin posición, mientras se envía un STOP o no se confirmó, mientras hay un jog en el cable, cuando el jog debe armarse y no lo está, y para una sesión que no es de operador ni de administrador (el servidor vuelve a decidir el rol). El comando lleva un número creciente como el jog, y un servidor que no conoce `reset` se distingue y se recuerda. El valor por defecto, el número de pasos y el plazo se leen de `docs/robot_command_contract.json`. Probado contra un servidor falso local: no interviene ningún robot.
 
 ## 🔒 Seguridad y protección
 

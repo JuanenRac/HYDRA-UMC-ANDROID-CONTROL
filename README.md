@@ -58,6 +58,13 @@ Each line is one part of this repository and the light says how far it is today.
 | Software | 🟡 | Works for its main purpose; the honesty check above lists what is still missing |
 | Tests | 🟢 | 356 automated tests, run on every change |
 | Real hardware | 🔴 | Not yet: no run on real hardware is recorded for this version |
+| Interface and protocols | 🟡 | The routes or messages it offers are documented and tested with a client; not every client has used them yet |
+| Integration | 🟠 | Its messages and routes are checked against the shared contracts of the SDK; it has not run together with the real equipment |
+| Security | 🟡 | Access control, input limits or signatures are implemented and tested on a computer; nobody outside the project has reviewed them |
+| Deployment | 🟠 | A signed APK is published with each release; no installation on a phone or watch is recorded for this version |
+| Updates | 🟠 | Updated by installing the signed APK of the release; the update of an installed app is not recorded on a device |
+| Stop and safety | 🟠 | The stop path and its limits are implemented and tested against simulators; they have never run on a real machine, and this is not a certified safety system |
+| Languages and accessibility | 🟡 | The interface and its help are in eight languages; keyboard and screen-reader use has not been tested |
 | Documentation | 🟢 | README in eight languages, checked against the manifest on every change |
 
 ## 🎯 Overview
@@ -108,6 +115,7 @@ Screens of the app: **login** (server address, password, fingerprint or face), *
 
 - **Who connects to the server:** a Connections button in the access panel opens a simple list of the apps the server has seen (kind, user, version, local network or from outside, the sessions open now, the sign-ins that worked or were refused, how long ago) and the latest sign-ins, refused sign-ins, sign-outs and ended sessions, read from the connection routes of the server. An administrator sees every entry and any other account only its own; no password or token is in either list, and an address appears only if the server was told to keep it. It says so plainly when the server is too old to offer them.
 - **Access options of the server in the security screen (administrators only):** below the connection security of the app, nine switches read from the server configuration: the health route without a sign-in, the announcement of the global stop, keeping the address of each client in the history of connections, the camera pictures without a ticket, a token in the WebSocket address, the blanking of secrets in the log, the signature of a spoken confirmation, the password of an IP camera handed over through the environment of its process and TLS switched on by a new installation. Each shows where its value comes from (default, saved from a screen, or fixed by the environment of the server, which locks it), only what changed is sent, every change that lowers the protection asks first, and a server that does not offer an option does not show it.
+- **HOME/RESET** (`ui/HomeResetControl.kt`, `util/HomeReset.kt`, `viewmodel/RobotViewModel.kt`) - a button that takes the selected robot to its zero position through the `reset` command of the server. It is off by default: a switch in the Access panel turns it on and the choice is kept. It asks twice, in order and within a time limit, before anything is sent. It is refused, with a sentence of its own, when the robot is playing, in safe mode, offline or without a position, while a STOP is being sent or was not confirmed, while a jog is on the wire, when the jog must be armed and is not, and for a session that is neither operator nor administrator (the server decides the role again). The command carries a rising number like the jog, and a server that does not know `reset` is told apart and remembered. The default, the number of steps and the time limit are read from `docs/robot_command_contract.json`. Tested against a local fake server: no robot is involved.
 
 ## 🔒 Security & Safety
 

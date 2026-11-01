@@ -58,6 +58,13 @@ Cada linha é uma parte deste repositório e a luz diz até onde chega hoje. É 
 | Software | 🟡 | Funciona para o seu propósito principal; a verificação de honestidade acima lista o que ainda falta |
 | Testes | 🟢 | 356 testes automáticos, executados a cada alteração |
 | Hardware real | 🔴 | Ainda não: não há registo de execução em hardware real para esta versão |
+| Interface e protocolos | 🟡 | As rotas ou mensagens que oferece estão documentadas e testadas com um cliente; ainda nem todos os clientes as usaram |
+| Integração | 🟠 | As suas mensagens e rotas são verificadas contra os contratos partilhados do SDK; ainda não funcionou em conjunto com o equipamento real |
+| Segurança | 🟡 | O controlo de acesso, os limites de entrada ou as assinaturas estão implementados e testados num computador; ninguém fora do projeto os reviu |
+| Implantação | 🟠 | É publicado um APK assinado com cada release; não há registo de instalação num telemóvel ou relógio para esta versão |
+| Atualizações | 🟠 | Atualiza-se instalando o APK assinado da release; a atualização de uma app instalada não está registada num dispositivo |
+| Paragem e segurança | 🟠 | O caminho de paragem e os seus limites estão implementados e testados com simuladores; nunca funcionaram numa máquina real, e isto não é um sistema de segurança certificado |
+| Idiomas e acessibilidade | 🟡 | A interface e a sua ajuda estão em oito idiomas; a utilização com teclado e leitor de ecrã não foi testada |
 | Documentação | 🟢 | README em oito idiomas, verificado contra o manifesto a cada alteração |
 
 ## 🎯 Visão geral
@@ -109,6 +116,7 @@ A **HYDRA-UMC-ANDROID-CONTROL** é a consola nativa de operador Android do HYDRA
 
 - **Quem se liga ao servidor:** um botão Ligações do painel de acesso abre uma lista simples das aplicações que o servidor viu (tipo, utilizador, versão, rede local ou de fora, as sessões abertas agora, as entradas que correram bem ou foram recusadas, há quanto tempo) e das últimas entradas, entradas recusadas, saídas e sessões terminadas, lidas das rotas de ligações do servidor. Um administrador vê todas as entradas e qualquer outra conta só as suas; nenhuma lista tem palavras-passe nem tokens e um endereço só aparece se o servidor foi mandado guardá-lo. A aplicação di-lo com clareza quando o servidor é demasiado antigo para as oferecer.
 - **Opções de acesso do servidor no ecrã de segurança (só administradores):** por baixo da segurança de ligação da aplicação, nove interruptores lidos da configuração do servidor: a rota de saúde sem iniciar sessão, o anúncio da paragem global, guardar o endereço de cada cliente no histórico de ligações, as imagens da câmara sem bilhete, um token no endereço do WebSocket, o ocultar de segredos no registo, a assinatura de uma confirmação falada, a palavra-passe de uma câmara IP entregue através do ambiente do seu processo e o TLS ativado por uma instalação nova. Cada um mostra de onde vem o seu valor (por omissão, guardado a partir de um ecrã ou fixado pelo ambiente do servidor, que o bloqueia), só se envia o que mudou, qualquer alteração que baixe a proteção pergunta primeiro e um servidor que não oferece uma opção não a mostra.
+- **HOME/REPOR** (`ui/HomeResetControl.kt`, `util/HomeReset.kt`, `viewmodel/RobotViewModel.kt`) - um botão que leva o robô selecionado à posição zero através do comando `reset` do servidor. Vem desativado por predefinição: um interruptor em o painel de Acesso ativa-o e a escolha fica guardada. Pede confirmação duas vezes, por ordem e dentro de um prazo, antes de enviar o que quer que seja. É recusado, com uma frase própria, quando o robô está a executar uma trajetória, em modo seguro, offline ou sem posição, enquanto um STOP está a ser enviado ou não foi confirmado, enquanto um jog está a caminho, quando o jog tem de ser armado e não está, e para uma sessão que não é de operador nem de administrador (o servidor volta a decidir a função). O comando leva um número crescente como o jog, e um servidor que não conhece `reset` é reconhecido e fica registado. O valor predefinido, o número de passos e o prazo são lidos de `docs/robot_command_contract.json`. Testado contra um servidor falso local: nenhum robô intervém.
 
 ## 🔒 Segurança e proteção
 
