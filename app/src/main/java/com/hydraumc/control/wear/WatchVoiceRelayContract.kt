@@ -87,6 +87,54 @@ data class WatchAssistantReply(
 }
 
 /**
+ * Read-only security status of the server for the watch: which options are on a value that lowers the protection, how many the
+ * environment of the server fixes, the clients with an active session and the failed sign-ins. Nothing in it can change anything on
+ * the server, and the watch has no message that writes. Same rules as the watch applies when it receives it
+ * (docs/watch_relay_contract.json, "server_security_status").
+ */
+data class WatchServerSecurityStatus(
+    val loweredSwitches: List<String>,
+    val lockedSwitches: Int,
+    val activeClients: Int,
+    val failedLogins: Int,
+    val protocolVersion: Int = PROTOCOL_VERSION,
+) {
+    init {
+        require(protocolVersion == PROTOCOL_VERSION) { "unsupported security status protocol version" }
+        require(loweredSwitches.size <= MAX_SWITCHES && loweredSwitches.toSet().size == loweredSwitches.size) { "at most $MAX_SWITCHES different switches" }
+        require(loweredSwitches.all { SWITCH_ID.matches(it) }) { "a switch id is section.key" }
+        require(listOf(lockedSwitches, activeClients, failedLogins).all { it in 0..MAX_COUNT }) { "counts must be from 0 to $MAX_COUNT" }
+    }
+
+    fun toJson(): JSONObject = JSONObject()
+        .put("type", "server_security_status")
+        .put("protocolVersion", protocolVersion)
+        .put("loweredSwitches", org.json.JSONArray(loweredSwitches))
+        .put("lockedSwitches", lockedSwitches)
+        .put("activeClients", activeClients)
+        .put("failedLogins", failedLogins)
+
+    companion object {
+        const val PROTOCOL_VERSION = 1
+        const val MAX_SWITCHES = 16
+        const val MAX_COUNT = 100_000
+        private val SWITCH_ID = Regex("^[A-Za-z]{1,24}\\.[A-Za-z]{1,32}$")
+
+        fun fromJson(json: JSONObject): WatchServerSecurityStatus {
+            require(json.getString("type") == "server_security_status") { "unexpected security status type" }
+            val list = json.optJSONArray("loweredSwitches")
+            return WatchServerSecurityStatus(
+                loweredSwitches = if (list == null) emptyList() else (0 until list.length()).map { list.getString(it) },
+                lockedSwitches = json.optInt("lockedSwitches", 0),
+                activeClients = json.optInt("activeClients", 0),
+                failedLogins = json.optInt("failedLogins", 0),
+                protocolVersion = json.getInt("protocolVersion"),
+            )
+        }
+    }
+}
+
+/**
  * Read-only system-health card that can later be forwarded to the watch.
  * [errorCode] is the same mechanism as [WatchAssistantReply]'s own -
  * see that field's header comment.

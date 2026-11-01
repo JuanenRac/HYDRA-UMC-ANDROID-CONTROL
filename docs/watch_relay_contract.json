@@ -18,7 +18,9 @@
     {"type": "assistant_reply", "requestId": "watch-voice-001", "text": "Robot 3 is online and idle.", "level": "NOMINAL", "speak": true, "requiresConfirmation": false},
     {"type": "assistant_reply", "requestId": "r-2", "text": "Connection lost.", "level": "OFFLINE", "speak": false, "requiresConfirmation": false, "errorCode": "offline"},
     {"type": "system_status", "headline": "Server unreachable", "detail": "Retrying", "level": "WARNING", "speak": false, "errorCode": "connection_unavailable"},
-    {"type": "system_status", "headline": "All good", "detail": "", "level": "NOMINAL", "speak": false}
+    {"type": "system_status", "headline": "All good", "detail": "", "level": "NOMINAL", "speak": false},
+    {"type": "server_security_status", "protocolVersion": 1, "loweredSwitches": ["health.open", "camera.open"], "lockedSwitches": 2, "activeClients": 3, "failedLogins": 1},
+    {"type": "server_security_status", "protocolVersion": 1, "loweredSwitches": [], "lockedSwitches": 0, "activeClients": 0, "failedLogins": 0}
   ],
   "invalid": [
     {"why": "request id with a space", "type": "voice_turn", "requestId": "a b", "transcript": "hello", "locale": "en"},
@@ -29,6 +31,13 @@
     {"why": "blank assistant text", "type": "assistant_reply", "requestId": "r1", "text": " ", "level": "NOMINAL", "speak": true, "requiresConfirmation": false},
     {"why": "blank status headline", "type": "system_status", "headline": "", "detail": "d", "level": "NOMINAL", "speak": false},
     {"why": "status headline over 80 characters", "type": "system_status", "headline": {"repeat": "h", "count": 81}, "detail": "d", "level": "NOMINAL", "speak": false},
-    {"why": "status detail over 280 characters", "type": "system_status", "headline": "h", "detail": {"repeat": "d", "count": 281}, "level": "NOMINAL", "speak": false}
+    {"why": "status detail over 280 characters", "type": "system_status", "headline": "h", "detail": {"repeat": "d", "count": 281}, "level": "NOMINAL", "speak": false},
+    {"why": "security status of another protocol version", "type": "server_security_status", "protocolVersion": 2, "loweredSwitches": [], "lockedSwitches": 0, "activeClients": 0, "failedLogins": 0},
+    {"why": "security status switch id without a section", "type": "server_security_status", "protocolVersion": 1, "loweredSwitches": ["health"], "lockedSwitches": 0, "activeClients": 0, "failedLogins": 0},
+    {"why": "security status switch id with a space", "type": "server_security_status", "protocolVersion": 1, "loweredSwitches": ["health. open"], "lockedSwitches": 0, "activeClients": 0, "failedLogins": 0},
+    {"why": "security status with a repeated switch", "type": "server_security_status", "protocolVersion": 1, "loweredSwitches": ["health.open", "health.open"], "lockedSwitches": 0, "activeClients": 0, "failedLogins": 0},
+    {"why": "security status with more than 16 switches", "type": "server_security_status", "protocolVersion": 1, "loweredSwitches": ["s.a", "s.b", "s.c", "s.d", "s.e", "s.f", "s.g", "s.h", "s.i", "s.j", "s.k", "s.l", "s.m", "s.n", "s.o", "s.p", "s.q"], "lockedSwitches": 0, "activeClients": 0, "failedLogins": 0},
+    {"why": "security status with a negative count", "type": "server_security_status", "protocolVersion": 1, "loweredSwitches": [], "lockedSwitches": 0, "activeClients": -1, "failedLogins": 0},
+    {"why": "security status with a count over 100000", "type": "server_security_status", "protocolVersion": 1, "loweredSwitches": [], "lockedSwitches": 0, "activeClients": 0, "failedLogins": 100001}
   ]
 }

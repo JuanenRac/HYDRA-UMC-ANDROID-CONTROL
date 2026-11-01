@@ -4,6 +4,9 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The phone answers the security status that the watch asks for, read only:** the new path `/hydra-umc/server-security-request/v1` makes the phone read the access options of the server and its history of connections with the session of the signed-in administrator, and answer a `server_security_status` (the options on a value that lowers the protection, how many the environment fixes, the active clients, the failed sign-ins) on `/hydra-umc/server-security/v1`. It writes nothing to the server, and an account that cannot read them, or a server that does not answer, gets the watch the same "offline" card as a failed status. The shared `watch_relay_contract.json` gains the vectors of the message in both repositories.
+
+
 ## [0.7.5] - The app says its version to the server, the access options of the server in the security screen and the history of connections
 
 - **The app says which version it is in `X-Hydra-Client` (`android/<version>`) and offers two more server options:** the server compares only the type, so the version changes no access and goes to the history of connections apart from the type (a version that is not a plain version string is left out). The administrator's section of the security screen now also shows the password of an IP camera handed over through the environment of its process and TLS switched on by a new installation, each with where its value comes from, locked when the server environment fixes it, and asking before the protection is lowered. Texts in the eight languages.

@@ -64,6 +64,29 @@ class RelayContractTest {
     }
 
     @Test
+    fun `valid security statuses are written back as the file writes them`() {
+        for (vector in vectors("valid").filter { it.getString("type") == "server_security_status" }) {
+            val written = WatchServerSecurityStatus.fromJson(vector).toJson()
+            assertEquals(vector.keys().asSequence().toSet(), written.keys().asSequence().toSet())
+            for (key in vector.keys()) assertEquals(key, vector.get(key).toString(), written.get(key).toString())
+        }
+    }
+
+    @Test
+    fun `invalid security statuses are refused`() {
+        val invalid = vectors("invalid").filter { it.getString("type") == "server_security_status" }
+        assertEquals(true, invalid.size >= 5)
+        for (vector in invalid) {
+            try {
+                WatchServerSecurityStatus.fromJson(expanded(vector))
+                fail("accepted an invalid security status (${vector.getString("why")})")
+            } catch (_: IllegalArgumentException) {
+                // refused, as the contract says
+            }
+        }
+    }
+
+    @Test
     fun `valid replies and statuses are written with the same fields and values`() {
         for (vector in vectors("valid")) {
             val written = when (vector.getString("type")) {

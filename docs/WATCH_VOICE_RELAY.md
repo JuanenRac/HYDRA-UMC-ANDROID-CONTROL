@@ -24,6 +24,23 @@ Wear microphone -> system STT -> paired Android transport
 modifies `HydraState`; a motion-related assistant reply is explicitly marked
 `requiresConfirmation` and must be confirmed through a primary control UI.
 
+## The security status of the server, read only
+
+The watch can ask for what the server's security options and its history of connections say (`/hydra-umc/server-security-request/v1`). The phone reads
+`GET /api/admin/server-config` and `GET /api/connections/clients` with the session of the person who signed in (an administrator; the server refuses anybody
+else), builds a `WatchServerSecurityStatus` (`wear/WatchServerSecurity.kt`) and answers on `/hydra-umc/server-security/v1`:
+
+```json
+{"type": "server_security_status", "protocolVersion": 1, "loweredSwitches": ["health.open"], "lockedSwitches": 2, "activeClients": 3, "failedLogins": 1}
+```
+
+`loweredSwitches` lists, by the `section.key` id the server uses, the options that are on the value that lowers the protection (`health.open`,
+`connections.recordAddress`, `camera.open`, `websocket.allowQueryToken`, `logging.redactSecrets`, `camera.credentialsViaEnv`, `install.newInstallTls`); an option
+the server does not report is not counted. `lockedSwitches` counts the options the environment of the server fixes; `activeClients` and `failedLogins` come from
+the history of connections. The phone writes nothing to the server and the watch has no message that writes. When the options cannot be read (the account is not
+an administrator, the server does not answer, a server that predates the options) the watch gets the same "offline" status card as for a failed status request.
+The rules and the vectors are in `docs/watch_relay_contract.json`, which this repository keeps identical to the one of HYDRA-UMC-WATCH.
+
 The Data Layer is the official paired Android/Wear transport, not a custom
 Bluetooth socket. Google Play services accepts messages only when the Watch
 and Android Control APKs have the same `applicationId`

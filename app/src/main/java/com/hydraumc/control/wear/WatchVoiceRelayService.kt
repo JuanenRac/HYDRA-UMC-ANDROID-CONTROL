@@ -39,6 +39,10 @@ object WatchRelayPaths {
     const val STATUS_REQUEST = "/hydra-umc/system-status/v1"
     const val ASSISTANT_REPLY = "/hydra-umc/assistant-reply/v1"
     const val SYSTEM_STATUS = "/hydra-umc/system-status-reply/v1"
+    /** Watch -> phone: asks for the read-only security status of the server. */
+    const val SERVER_SECURITY_REQUEST = "/hydra-umc/server-security-request/v1"
+    /** Phone -> watch: the answer. */
+    const val SERVER_SECURITY = "/hydra-umc/server-security/v1"
 }
 
 private const val TAG = "WatchVoiceRelay"
@@ -65,6 +69,7 @@ class WatchVoiceRelayService : WearableListenerService() {
         when (event.path) {
             WatchRelayPaths.VOICE_TURN -> relayVoiceTurn(event)
             WatchRelayPaths.STATUS_REQUEST -> relaySystemStatus(event)
+            WatchRelayPaths.SERVER_SECURITY_REQUEST -> relayServerSecurity(event)
             else -> Unit
         }
     }
@@ -117,6 +122,32 @@ class WatchVoiceRelayService : WearableListenerService() {
                 )
             }
             send(event.sourceNodeId, WatchRelayPaths.SYSTEM_STATUS, status.toJson().toString())
+        }
+    }
+
+    private fun relayServerSecurity(event: MessageEvent) {
+        // Keyed by source node like the status: a burst of taps has one request in flight. Read only: the phone reads the options and the
+        // history as the administrator that is signed in, and the watch gets a summary; an account that may not read them (the server
+        // answers 403), or a server that does not answer, gets the same "offline" card as a failed status.
+        requests.launch("security:${event.sourceNodeId}") {
+            val status = runCatching {
+                withTimeoutOrNull(REQUEST_TIMEOUT_MS) {
+                    val client = authenticatedClient()
+                    WatchServerSecurity.fromAnswers(client.getServerConfigBody(), client.getConnectionClientsBody())
+                } ?: error("security status request failed or timed out")
+            }.getOrNull()
+            if (status != null) {
+                send(event.sourceNodeId, WatchRelayPaths.SERVER_SECURITY, status.toJson().toString())
+            } else {
+                val offline = WatchSystemStatus(
+                    headline = getString(R.string.watch_status_offline_headline),
+                    detail = getString(R.string.watch_status_offline_detail),
+                    level = "OFFLINE",
+                    speak = false,
+                    errorCode = "offline",
+                )
+                send(event.sourceNodeId, WatchRelayPaths.SYSTEM_STATUS, offline.toJson().toString())
+            }
         }
     }
 
