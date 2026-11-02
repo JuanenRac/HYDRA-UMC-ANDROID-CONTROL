@@ -14,7 +14,11 @@ object RobotCommandContract {
     const val PLAY = "play"
     const val PAUSE = "pause"
     const val JOG = "jog"
+    const val JOG_START = "jogStart"
+    const val JOG_HEARTBEAT = "jogHeartbeat"
+    const val JOG_STOP = "jogStop"
     const val TABLE = "table"
+    const val TRAJECTORY = "trajectory"
     const val RESET = "reset"
     const val JOG_STEP = "jogStep"
     const val TOOL = "tool"
@@ -25,13 +29,13 @@ object RobotCommandContract {
     const val DISABLE = "disable"
     const val ENABLE = "enable"
 
-    val ALL: Set<String> = setOf(STOP, PLAY, PAUSE, JOG, TABLE, RESET, JOG_STEP, TOOL, VALVE, PUMP, SPEED, VISION, DISABLE, ENABLE)
+    val ALL: Set<String> = setOf(STOP, PLAY, PAUSE, JOG, JOG_START, JOG_HEARTBEAT, JOG_STOP, TABLE, TRAJECTORY, RESET, JOG_STEP, TOOL, VALVE, PUMP, SPEED, VISION, DISABLE, ENABLE)
 
     /** The commands the server orders by number (`seq`). */
-    val NUMBERED: Set<String> = setOf(STOP, JOG, TABLE, RESET)
+    val NUMBERED: Set<String> = setOf(STOP, JOG, JOG_START, JOG_STOP, TABLE, RESET)
 
     /** The commands sent over and over while a control is held; they carry no If-Match in the standard mode. */
-    val CONTINUOUS: Set<String> = setOf(JOG, JOG_STEP, SPEED)
+    val CONTINUOUS: Set<String> = setOf(JOG, JOG_HEARTBEAT, JOG_STEP, SPEED)
 
     const val SPEED_MIN = 10.0
     const val SPEED_MAX = 500.0
@@ -43,4 +47,65 @@ object RobotCommandContract {
     const val HOME_RESET_ENABLED_BY_DEFAULT = false
     const val HOME_RESET_CONFIRM_STEPS = 2
     const val HOME_RESET_CONFIRM_WINDOW_MS = 20000L
+
+    /** Continuous jog held by a dead-man: off until the person turns it on; the heartbeat, the time limits and the speed. */
+    const val DEAD_MAN_JOG_ENABLED_BY_DEFAULT = false
+    const val DEAD_MAN_JOG_HEARTBEAT_MS = 100L
+    const val DEAD_MAN_JOG_SERVER_TIMEOUT_MS = 300L
+    const val DEAD_MAN_JOG_MAX_MISSED_HEARTBEATS = 2
+    const val DEAD_MAN_JOG_MAX_HOLD_MS = 30000L
+    const val DEAD_MAN_JOG_STOP_ATTEMPTS = 3
+    const val DEAD_MAN_JOG_STOP_RETRY_PAUSE_MS = 100L
+    const val DEAD_MAN_JOG_STOP_TIMEOUT_MS = 2000L
+    const val DEAD_MAN_JOG_VELOCITY_DEFAULT = 20
+    const val DEAD_MAN_JOG_VELOCITY_MIN = 1
+    const val DEAD_MAN_JOG_VELOCITY_MAX = 100
+
+    /** Health of the link to the server: how it is probed and the round-trip times that make it good, poor or bad. */
+    const val LINK_HEALTH_INDICATOR_ENABLED_BY_DEFAULT = true
+    const val LINK_HEALTH_BLOCK_JOG_ON_BAD_LINK_DEFAULT = true
+    const val LINK_HEALTH_PROBE_INTERVAL_MS = 2000L
+    const val LINK_HEALTH_PROBE_TIMEOUT_MS = 1500L
+    const val LINK_HEALTH_SAMPLE_WINDOW = 8
+    const val LINK_HEALTH_GOOD_RTT_MS = 100L
+    const val LINK_HEALTH_POOR_RTT_MS = 250L
+    const val LINK_HEALTH_BLOCK_RTT_MS = 500L
+    const val LINK_HEALTH_LOST_AFTER_MS = 4000L
+
+    /** Pairing by QR code or link: off until the person turns it on, and the limits of what is accepted. */
+    const val PAIRING_ENABLED_BY_DEFAULT = false
+    const val PAIRING_SCHEME = "hydra-umc"
+    const val PAIRING_HOST = "pair"
+    const val PAIRING_MAX_PAYLOAD_CHARS = 600
+    const val PAIRING_NAME_MAX = 64
+    const val PAIRING_PORT_MIN = 1
+    const val PAIRING_PORT_MAX = 65535
+
+    /** Alerts pushed to the watch and how they are rationed. */
+    const val WATCH_ALERTS_ENABLED_BY_DEFAULT = true
+    const val WATCH_ALERTS_MESSAGE_MAX = 280
+    const val WATCH_ALERTS_DEDUPE_WINDOW_MS = 30000L
+    const val WATCH_ALERTS_MIN_GAP_MS = 2000L
+    const val WATCH_ALERTS_MAX_PER_MINUTE = 6
+    const val WATCH_ALERTS_CONNECTION_LOST_AFTER_MS = 10000L
+    const val WATCH_ALERTS_SEND_TIMEOUT_MS = 3000L
+
+    /** Relay of the presence heartbeat of the watch to the server. */
+    const val PRESENCE_RELAY_ENABLED_BY_DEFAULT = false
+    const val PRESENCE_RELAY_PATH = "/api/operator/presence"
+    const val PRESENCE_RELAY_TIMEOUT_MS = 1500L
+    const val PRESENCE_RELAY_GAP_INTERVALS = 3
+
+    /** Relay of the two-step confirmation of a spoken order. */
+    const val VOICE_CONFIRM_ENABLED_BY_DEFAULT = false
+    const val VOICE_CONFIRM_PATH = "/api/voice/confirm"
+    const val VOICE_CONFIRM_TIMEOUT_MS = 15000L
+    const val VOICE_CONFIRM_TOKEN_MAX = 1024
+    const val VOICE_CONFIRM_VALIDITY_MAX_SECONDS = 300
+
+    /** Work files (trajectories) the server lists and serves. */
+    const val WORKS_MAX_POINTS = 10000
+    const val WORKS_FILE_MAX_BYTES = 2000000
+    const val WORKS_FILE_NAME_MAX = 128
+    const val WORKS_FOLDER_MAX = 200
 }

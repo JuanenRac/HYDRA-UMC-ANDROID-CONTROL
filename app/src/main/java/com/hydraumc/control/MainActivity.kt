@@ -31,6 +31,8 @@ import com.hydraumc.control.ui.theme.HydraTheme
 import com.hydraumc.control.viewmodel.RobotViewModel
 import com.hydraumc.control.viewmodel.AppUpdateViewModel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import androidx.lifecycle.lifecycleScope
 
 // A widget or notification STOP that arrives on a cold start has no server
 // connection yet (the saved session is still being restored). It waits this
@@ -248,6 +250,8 @@ class MainActivity : FragmentActivity() {
                             onStartVoiceRecognition = ::startVoiceRecognition,
                         )
                     }
+                    // Over any screen, also the sign-in: what a pairing link says, before anything is kept.
+                    com.hydraumc.control.ui.PairingDialog(robotViewModel)
                 }
             }
         }
@@ -268,6 +272,14 @@ class MainActivity : FragmentActivity() {
     }
 
     private fun handleIntent(intent: Intent?) {
+        // A pairing link (the phone camera read the QR code of the admin page and opened it with this app). It is only shown;
+        // nothing is kept before the person confirms, and nothing is read while the pairing switch is off.
+        if (intent?.action == Intent.ACTION_VIEW) {
+            val link = intent.dataString
+            if (link != null && com.hydraumc.control.util.PairingLink.looksLikePairing(link)) {
+                lifecycleScope.launch { robotViewModel.receivePairing(link) }
+            }
+        }
         if (intent?.action == "ACTION_GLOBAL_ESTOP") {
             // Just flag it - the LaunchedEffect in setContent{} above sends the
             // global STOP once the connection exists. See pendingGlobalEstop's

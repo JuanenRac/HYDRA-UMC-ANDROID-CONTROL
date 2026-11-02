@@ -62,3 +62,20 @@ Config > Remote Access gates them independently (the `android` and
 `watch` toggles) - turning off Watch's voice access can never silently
 take this button away too, and vice versa. See `RobotViewModel.
 sendVoiceTurn()`'s own comment.
+
+## Alerts, presence and two-step confirmation
+
+Three more messages travel between the phone and the watch. Their limits come from `docs/robot_command_contract.json` (`watchAlerts`,
+`presenceRelay`, `voiceConfirmRelay`), not from the code.
+
+| Path | Direction | What the phone does |
+| --- | --- | --- |
+| `/hydra-umc/alert/v1` | phone to watch | `{"type":"alert","severity":"CRITICAL\|WARNING\|INFO","message":"<1-280 characters>"}` for a lost connection (and its return), a robot offline or in safe mode and a STOP the server did not confirm (and the one it did), in the language of the phone (`wear/WatchAlerts.kt`, `wear/WearAlertSink.kt`). The same event is not repeated within thirty seconds and the others are spaced and capped at six a minute; a critical alert is never held back. A switch in the Access panel turns it off. |
+| `/hydra-umc/presence/v1` | watch to phone | The heartbeat of the operator is read (`wear/WatchBridge.kt`), the heartbeats that never arrived are counted from the gaps in `sequence` and it is passed to `POST /api/operator/presence` with `missed`. It never retries and what a lost heartbeat means is the server's to decide. Off by default (a switch in the Access panel). A server that answers 404 is remembered until the service starts again. |
+| `/hydra-umc/voice-confirm/v1` | watch to phone | The second tap of a spoken order is passed to `POST /api/voice/confirm` and the assistant reply for the new request id goes back to the watch. Off by default; with it off, or when the call fails, the watch gets a sentence instead. The one-use token is never logged or printed; the server still requires the session and the reservation of the robot. |
+
+The reply to a voice turn may carry `confirmationToken` (16 to 1024 characters of `A-Za-z0-9._~+/=-`) and `confirmationValiditySeconds` (1 to 300);
+a value the watch would refuse is dropped and the reply itself still arrives. The status for the watch carries `robotsRunning` (robots playing and
+not paused) and `alarmActive` (a robot that is online in safe mode) for the complication.
+
+The endpoints `POST /api/operator/presence` and `POST /api/voice/confirm` are not in the server yet.

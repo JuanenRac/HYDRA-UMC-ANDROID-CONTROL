@@ -297,6 +297,65 @@ class HydraApiClient(
         executeExpectingJson(controlRequest("/api/robot/$robotId/jog-arm", body))
     }
 
+    /**
+     * One small request to the server and how long it took, in milliseconds: the sample of the link health. It uses the
+     * route every server answers without a session; nothing is read from the body. A failure (no answer, an error
+     * status or the time limit) is thrown as a [HydraApiException].
+     */
+    suspend fun pingRoundTripMs(timeoutMs: Long): Long = withContext(Dispatchers.IO) {
+        val request = Request.Builder().url("$baseUrl/api/hydra-info").get().build()
+        val started = System.nanoTime()
+        try {
+            client.newBuilder().callTimeout(timeoutMs, java.util.concurrent.TimeUnit.MILLISECONDS).build().newCall(request).execute().use { response ->
+                response.body?.close()
+                if (!response.isSuccessful) throw HydraApiException("HTTP ${response.code} from $baseUrl/api/hydra-info", httpCode = response.code)
+            }
+        } catch (e: IOException) {
+            throw HydraApiException("Could not reach $baseUrl: ${e.message}", e)
+        }
+        (System.nanoTime() - started) / 1_000_000L
+    }
+
+    /** The names of the work files (trajectories) a folder of the server lists in its index.json; the folder is checked by [com.hydraumc.control.util.WorkFiles]. */
+    suspend fun getWorkIndexBody(folder: String): String = withContext(Dispatchers.IO) {
+        executeExpectingText(Request.Builder().url("$baseUrl/$folder/index.json").header("Authorization", "Bearer ${authToken ?: ""}").get().build())
+    }
+
+    /** The content of one work file of a folder (a JSON list of points). */
+    suspend fun getWorkFileBody(folder: String, file: String): String = withContext(Dispatchers.IO) {
+        executeExpectingText(Request.Builder().url("$baseUrl/$folder/$file").header("Authorization", "Bearer ${authToken ?: ""}").get().build())
+    }
+
+    /**
+     * Passes the presence heartbeat of the watch to the server ([RobotCommandContract.PRESENCE_RELAY_PATH]); the server
+     * decides what a lost heartbeat means. A server that has no such route answers 404, and the caller remembers it.
+     */
+    suspend fun postPresence(body: JSONObject): JSONObject = withContext(Dispatchers.IO) {
+        executeExpectingJson(
+            Request.Builder().url("$baseUrl${RobotCommandContract.PRESENCE_RELAY_PATH}")
+                .header("Authorization", "Bearer ${authToken ?: ""}").header("X-Controller-Id", SessionController.id)
+                .header("X-Hydra-Client", "watch")
+                .post(body.put("controllerId", SessionController.id).toString().toRequestBody(JSON_MEDIA_TYPE)).build(),
+            client.newBuilder().callTimeout(RobotCommandContract.PRESENCE_RELAY_TIMEOUT_MS, java.util.concurrent.TimeUnit.MILLISECONDS).build(),
+        )
+    }
+
+    /**
+     * Passes the two-step confirmation of a spoken order from the watch to the server ([RobotCommandContract.VOICE_CONFIRM_PATH]);
+     * the answer is an assistant reply for the new request id. The server still requires the reservation of the robot.
+     */
+    suspend fun postVoiceConfirm(confirm: com.hydraumc.control.wear.WatchVoiceConfirm): WatchAssistantReply = withContext(Dispatchers.IO) {
+        WatchAssistantReply.fromJson(
+            executeExpectingJson(
+                Request.Builder().url("$baseUrl${RobotCommandContract.VOICE_CONFIRM_PATH}")
+                    .header("Authorization", "Bearer ${authToken ?: ""}").header("X-Controller-Id", SessionController.id)
+                    .header("X-Hydra-Client", "watch")
+                    .post(confirm.toServerJson().put("controllerId", SessionController.id).toString().toRequestBody(JSON_MEDIA_TYPE)).build(),
+                client.newBuilder().callTimeout(RobotCommandContract.VOICE_CONFIRM_TIMEOUT_MS, java.util.concurrent.TimeUnit.MILLISECONDS).build(),
+            ),
+        )
+    }
+
     /** The safety limits the server holds for one robot's model (GET /api/safety-limits?robotId=); null from an older server without the route. */
     suspend fun getRobotSafety(robotId: Int): RobotSafety? = withContext(Dispatchers.IO) {
         val request = Request.Builder()

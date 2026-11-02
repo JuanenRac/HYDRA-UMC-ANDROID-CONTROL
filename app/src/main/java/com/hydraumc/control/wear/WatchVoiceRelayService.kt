@@ -24,7 +24,10 @@ import com.google.android.gms.wearable.WearableListenerService
 import com.hydraumc.control.R
 import com.hydraumc.control.network.AuthPrefs
 import com.hydraumc.control.network.ConnectionPrefs
+import com.hydraumc.control.model.HydraState
 import com.hydraumc.control.network.HydraApiClient
+import com.hydraumc.control.network.HydraApiException
+import com.hydraumc.control.network.RobotCommandContract
 import com.hydraumc.control.network.TlsPrefs
 import com.hydraumc.control.network.TlsSettingsStore
 import kotlinx.coroutines.CoroutineScope
@@ -55,6 +58,8 @@ private const val REQUEST_TIMEOUT_MS = 15_000L
 class WatchVoiceRelayService : WearableListenerService() {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val requests = BoundedRequestScope(scope)
+    private val presenceTracker = WatchPresenceTracker()
+    @Volatile private var presenceUnsupported = false
 
     override fun onDestroy() {
         // The real fix: previously nothing here at all, so every
@@ -70,6 +75,8 @@ class WatchVoiceRelayService : WearableListenerService() {
             WatchRelayPaths.VOICE_TURN -> relayVoiceTurn(event)
             WatchRelayPaths.STATUS_REQUEST -> relaySystemStatus(event)
             WatchRelayPaths.SERVER_SECURITY_REQUEST -> relayServerSecurity(event)
+            WatchBridgePaths.PRESENCE -> relayPresence(event)
+            WatchBridgePaths.VOICE_CONFIRM -> relayVoiceConfirm(event)
             else -> Unit
         }
     }
@@ -106,8 +113,14 @@ class WatchVoiceRelayService : WearableListenerService() {
         // only ever has one real request in flight at a time.
         requests.launch("status:${event.sourceNodeId}") {
             val status = runCatching {
-                withTimeoutOrNull(REQUEST_TIMEOUT_MS) { authenticatedClient().getWatchSystemStatus() }
-                    ?: error("system status request timed out after ${REQUEST_TIMEOUT_MS}ms")
+                withTimeoutOrNull(REQUEST_TIMEOUT_MS) {
+                    val client = authenticatedClient()
+                    val reply = client.getWatchSystemStatus()
+                    // The complication of the watch shows the robots running and the alarm; they come from the settings the
+                    // phone reads (a failure only leaves them out, the status itself still arrives).
+                    val plant = runCatching { HydraState(client.getSettings()) }.getOrNull()
+                    if (plant == null) reply else reply.copy(robotsRunning = WatchPlantSummary.robotsRunning(plant), alarmActive = WatchPlantSummary.alarmActive(plant))
+                } ?: error("system status request timed out after ${REQUEST_TIMEOUT_MS}ms")
             }.getOrElse {
                 // same mechanism as relayVoiceTurn's own fallback
                 // above - headline/detail stay as an honest fallback for
@@ -148,6 +161,58 @@ class WatchVoiceRelayService : WearableListenerService() {
                 )
                 send(event.sourceNodeId, WatchRelayPaths.SYSTEM_STATUS, offline.toJson().toString())
             }
+        }
+    }
+
+    /**
+     * Passes the presence heartbeat of the watch to the server, only while the operator switched the relay on in the app. A heartbeat
+     * is never retried (the next one is the retry) and the server decides what a lost one means. A server without the route answers
+     * 404: the relay then stays quiet until the service is created again.
+     */
+    private fun relayPresence(event: MessageEvent) {
+        val beat = runCatching { WatchPresenceHeartbeat.fromJson(JSONObject(event.data.decodeToString())) }.getOrNull() ?: return
+        requests.launch("presence") {
+            if (!ConnectionPrefs(applicationContext).loadFlag(ConnectionPrefs.Flags.PRESENCE_RELAY, RobotCommandContract.PRESENCE_RELAY_ENABLED_BY_DEFAULT)) return@launch
+            val missed = presenceTracker.onHeartbeat(beat)
+            if (presenceUnsupported) return@launch
+            try {
+                withTimeoutOrNull(RobotCommandContract.PRESENCE_RELAY_TIMEOUT_MS) { authenticatedClient().postPresence(beat.toServerJson(missed)) }
+            } catch (e: HydraApiException) {
+                if (e.isNotFound) presenceUnsupported = true
+                Log.w(TAG, "presence relay refused: HTTP ${e.httpCode}")
+            } catch (e: Exception) {
+                Log.w(TAG, "presence relay failed", e)
+            }
+        }
+    }
+
+    /**
+     * The second tap of a spoken order. Only when the operator switched the relay on in the app, with a session; the server answers
+     * with an assistant reply for the new request id, which goes back to the watch. Nothing else can come out of the watch.
+     */
+    private fun relayVoiceConfirm(event: MessageEvent) {
+        val confirm = runCatching { WatchVoiceConfirm.fromJson(JSONObject(event.data.decodeToString())) }.getOrNull() ?: return
+        requests.launch(confirm.requestId) {
+            val on = ConnectionPrefs(applicationContext).loadFlag(ConnectionPrefs.Flags.VOICE_CONFIRM_RELAY, RobotCommandContract.VOICE_CONFIRM_ENABLED_BY_DEFAULT)
+            val reply = if (!on) {
+                WatchAssistantReply(confirm.requestId, getString(R.string.watch_confirm_relay_off), "ATTENTION", speak = false, requiresConfirmation = false)
+            } else {
+                runCatching {
+                    withTimeoutOrNull(RobotCommandContract.VOICE_CONFIRM_TIMEOUT_MS) { authenticatedClient().postVoiceConfirm(confirm) }
+                        ?: error("voice confirmation timed out")
+                }.getOrElse { e ->
+                    Log.w(TAG, "voice confirmation relay failed (${e.javaClass.simpleName})")
+                    WatchAssistantReply(
+                        requestId = confirm.requestId,
+                        text = getString(R.string.watch_relay_connection_unavailable),
+                        level = "ATTENTION",
+                        speak = true,
+                        requiresConfirmation = false,
+                        errorCode = "connection_unavailable",
+                    )
+                }
+            }
+            send(event.sourceNodeId, WatchRelayPaths.ASSISTANT_REPLY, reply.toJson().toString())
         }
     }
 

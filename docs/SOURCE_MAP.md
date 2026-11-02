@@ -32,12 +32,16 @@ Every file of the repository with a line on what it does: the annotated tree tha
 │   │   │   │   ├── StopAllResult.kt       # Result of the global STOP (per-robot answer, status)
 │   │   │   │   ├── StopAllRunner.kt       # The global STOP without the screen: retry, renewal of the session, per-robot fallback
 │   │   │   │   ├── RobotCommandRepository.kt # Every robot write: revisions, retry of a stop, table fallback, jogs on the wire, debounce, timings
+│   │   │   │   ├── DeadManJogRunner.kt    # The continuous jog: jogStart, the heartbeat, jogStop, and every way a session ends
 │   │   │   │   ├── RobotCommandContract.kt   # Command names and limits, generated from docs/robot_command_contract.json (tools/gen_command_contract.py)
 │   │   │   │   ├── ContractV2.kt          # The server's second contract as pure rules: conditional writes by robot revision, the atomic table move and the audit record
 │   │   │   │   ├── BleCommands.kt         # One robot command to send over Bluetooth LE and its acknowledgement (see docs/BLE_CONTRACT.md)
 │   │   │   │   └── BlePermissions.kt      # The runtime permissions Bluetooth LE needs on each Android version
 │   │   │   ├── ui/
 │   │   │   │   ├── AboutDialog.kt          # App/version info dialog
+│   │   │   │   ├── DeadManJogControl.kt    # Hold-to-move buttons of the continuous jog and the link indicator
+│   │   │   │   ├── LinkAndWatchSettings.kt # Switches of the continuous jog, the link, the watch and the pairing; the pairing dialog
+│   │   │   │   ├── WorkSelector.kt         # The Work loaded in the robot and the list to pick another from
 │   │   │   │   ├── AccessPanel.kt          # Reservation and jog-arming panel of the Control screen
 │   │   │   │   ├── AuditDialog.kt           # Audit record of the server (administrators), with the chain check
 │   │   │   │   ├── CameraScreen.kt         # Per-robot MJPEG camera feed + vision on/off switch
@@ -69,6 +73,10 @@ Every file of the repository with a line on what it does: the annotated tree tha
 │   │   │   │   ├── BleErrorText.kt         # The text of the Bluetooth errors, in the language of the phone
 │   │   │   │   ├── JsonText.kt             # Reads a text field the way the UI means it (a JSON null is not the word "null")
 │   │   │   │   ├── OptimisticRollback.kt   # Field-level undo for an optimistic edit
+│   │   │   │   ├── DeadManJog.kt           # Continuous jog: when it is refused, the speed bounds and the watchdog of the heartbeat
+│   │   │   │   ├── LinkHealth.kt           # Round-trip times towards the server and the level of the link (good, slow, bad, lost)
+│   │   │   │   ├── PairingLink.kt          # Reads and checks a pairing link (address, port, certificate fingerprint, name)
+│   │   │   │   ├── WorkFiles.kt            # Work files: the folder, the list, the points checked like the server does, when one may be loaded
 │   │   │   │   ├── HomeReset.kt            # HOME/RESET: when it is refused and the confirmation in steps
 │   │   │   │   ├── PlayConfirmation.kt     # When PLAY asks first: the rules of the confirmation before a trajectory starts
 │   │   │   │   ├── RenewalBudget.kt        # How often the app may renew the session by itself (a minimum gap and a maximum per window)
@@ -78,9 +86,13 @@ Every file of the repository with a line on what it does: the annotated tree tha
 │   │   │   │   ├── AppUpdateViewModel.kt   # Lifecycle-aware application update state
 │   │   │   │   ├── RobotViewModel.kt   # Shared ViewModel - networking, auth, discovery, atomic command dispatch, all UI state
 │   │   │   │   ├── CommandErrorText.kt # The texts of a failed command, in the language of the phone
+│   │   │   │   ├── DeadManJogController.kt # What the screen sees of the continuous jog and of the link: switches, held controls, level
 │   │   │   │   └── BleScanController.kt # The Bluetooth LE scan: checks, filter, stop after a few seconds
 │   │   │   ├── wear/
 │   │   │   │   ├── BoundedRequestScope.kt     # Per-requestId in-flight job scope; a superseded attempt is cancelled, cancelAll() on service destroy
+│   │   │   │   ├── WatchAlerts.kt              # Which changes of the plant earn an alert on the wrist, and how a burst is rationed
+│   │   │   │   ├── WatchBridge.kt              # Presence heartbeat and two-step confirmation from the watch; robots running and alarm for its complication
+│   │   │   │   ├── WearAlertSink.kt            # Sends an alert to the paired watch through the Wear Data Layer
 │   │   │   │   ├── WatchCompanionProtocol.kt    # Watch companion version-status wire contract
 │   │   │   │   ├── WatchVoiceRelayContract.kt   # Authenticated Watch voice relay wire contract
 │   │   │   │   └── WatchVoiceRelayService.kt    # Wear OS voice relay service

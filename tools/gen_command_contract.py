@@ -20,10 +20,42 @@ CONTRACT = ROOT / "docs" / "robot_command_contract.json"
 TARGET = ROOT / "app" / "src" / "main" / "java" / "com" / "hydraumc" / "control" / "network" / "RobotCommandContract.kt"
 
 
+# The sections of the contract that become constants: (key, prefix of the constant names, one line of documentation).
+SECTIONS = [
+    ("homeReset", "HOME_RESET", "HOME/RESET: off until the person turns it on; how many confirmations it asks and how long they stay valid."),
+    ("deadManJog", "DEAD_MAN_JOG", "Continuous jog held by a dead-man: off until the person turns it on; the heartbeat, the time limits and the speed."),
+    ("linkHealth", "LINK_HEALTH", "Health of the link to the server: how it is probed and the round-trip times that make it good, poor or bad."),
+    ("pairing", "PAIRING", "Pairing by QR code or link: off until the person turns it on, and the limits of what is accepted."),
+    ("watchAlerts", "WATCH_ALERTS", "Alerts pushed to the watch and how they are rationed."),
+    ("presenceRelay", "PRESENCE_RELAY", "Relay of the presence heartbeat of the watch to the server."),
+    ("voiceConfirmRelay", "VOICE_CONFIRM", "Relay of the two-step confirmation of a spoken order."),
+    ("works", "WORKS", "Work files (trajectories) the server lists and serves."),
+]
+
+
+def constants(section: dict, prefix: str) -> list[str]:
+    """One Kotlin constant per setting of a section: Boolean, Long for a time in ms, Int, Double or String."""
+    lines = []
+    for key, value in section.items():
+        if key == "note":
+            continue
+        name = prefix + "_" + "".join("_" + ch if ch.isupper() else ch.upper() for ch in key)
+        if isinstance(value, bool):
+            lines.append(f"    const val {name} = {'true' if value else 'false'}")
+        elif isinstance(value, int) and key.endswith("Ms"):
+            lines.append(f"    const val {name} = {value}L")
+        elif isinstance(value, int):
+            lines.append(f"    const val {name} = {value}")
+        elif isinstance(value, float):
+            lines.append(f"    const val {name} = {value}")
+        else:
+            lines.append(f'    const val {name} = "{value}"')
+    return lines
+
+
 def render(contract: dict) -> str:
     commands = contract["commands"]
     limits = contract["limits"]
-    home = contract["homeReset"]
     lines = [
         "// =============================================================================",
         "// HYDRA-UMC-ANDROID-CONTROL - network/RobotCommandContract.kt",
@@ -55,11 +87,10 @@ def render(contract: dict) -> str:
         f"    const val JOG_MAX_AMOUNT = {float(limits['jogMaxAmount'])}",
         f"    const val JOG_STEP_MAX = {float(limits['jogStepMax'])}",
         f"    const val OUTPUT_INDEX_MAX = {int(limits['outputIndexMax'])}",
-        "",
-        "    /** HOME/RESET: off until the person turns it on; how many confirmations it asks and how long they stay valid. */",
-        f"    const val HOME_RESET_ENABLED_BY_DEFAULT = {'true' if home['enabledByDefault'] else 'false'}",
-        f"    const val HOME_RESET_CONFIRM_STEPS = {int(home['confirmSteps'])}",
-        f"    const val HOME_RESET_CONFIRM_WINDOW_MS = {int(home['confirmWindowMs'])}L",
+    ]
+    for section, prefix, doc in SECTIONS:
+        lines += ["", f"    /** {doc} */"] + constants(contract[section], prefix)
+    lines += [
         "}",
         "",
     ]

@@ -376,6 +376,15 @@ fun ControlScreen(viewModel: RobotViewModel) {
                 Spacer(modifier = Modifier.height(8.dp))
                 HomeResetControl(viewModel, selectedRobot, nowMs)
 
+                // The link to the server and the continuous jog held by a dead-man (both off or hidden until switched on in the Access panel).
+                Spacer(modifier = Modifier.height(8.dp))
+                LinkHealthChip(viewModel)
+                DeadManJogControl(viewModel, selectedRobot, activeTarget)
+
+                // The Work (trajectory file) loaded in the robot, and the list to pick another from.
+                Spacer(modifier = Modifier.height(8.dp))
+                WorkSelector(viewModel, selectedRobot)
+
                 // I/O SECTION
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(stringResource(R.string.industrial_io_hub), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, color = Color.Gray)

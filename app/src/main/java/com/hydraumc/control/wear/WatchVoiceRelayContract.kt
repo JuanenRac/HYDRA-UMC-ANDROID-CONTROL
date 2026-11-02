@@ -61,7 +61,20 @@ data class WatchAssistantReply(
     val speak: Boolean,
     val requiresConfirmation: Boolean,
     val errorCode: String? = null,
+    /**
+     * The one-use token that completes a reply with [requiresConfirmation] (two taps on the watch), when the server sends one.
+     * It is passed on as it came and never logged; the watch holds it in memory for [confirmationValiditySeconds] at most.
+     */
+    val confirmationToken: String? = null,
+    val confirmationValiditySeconds: Int? = null,
 ) {
+    init {
+        require(confirmationToken == null || WatchVoiceConfirm.isValidToken(confirmationToken)) { "invalid confirmation token" }
+        require(confirmationValiditySeconds == null || confirmationValiditySeconds in 1..com.hydraumc.control.network.RobotCommandContract.VOICE_CONFIRM_VALIDITY_MAX_SECONDS) {
+            "confirmation validity must be from 1 to ${com.hydraumc.control.network.RobotCommandContract.VOICE_CONFIRM_VALIDITY_MAX_SECONDS} seconds"
+        }
+    }
+
     fun toJson(): JSONObject = JSONObject()
         .put("type", "assistant_reply")
         .put("requestId", requestId)
@@ -70,6 +83,8 @@ data class WatchAssistantReply(
         .put("speak", speak)
         .put("requiresConfirmation", requiresConfirmation)
         .apply { errorCode?.let { put("errorCode", it) } }
+        .apply { confirmationToken?.let { put("confirmationToken", it) } }
+        .apply { confirmationValiditySeconds?.let { put("confirmationValiditySeconds", it) } }
 
     companion object {
         fun fromJson(json: JSONObject): WatchAssistantReply {
@@ -81,6 +96,13 @@ data class WatchAssistantReply(
                 speak = json.getBoolean("speak"),
                 requiresConfirmation = json.getBoolean("requiresConfirmation"),
                 errorCode = if (json.has("errorCode")) json.getString("errorCode") else null,
+                // A token or validity the watch would refuse is dropped, not passed on: the reply itself still arrives.
+                confirmationToken = json.optString("confirmationToken", "").takeIf { it.isNotEmpty() && WatchVoiceConfirm.isValidToken(it) },
+                confirmationValiditySeconds = if (json.has("confirmationValiditySeconds")) {
+                    json.optInt("confirmationValiditySeconds", 0).takeIf { it in 1..com.hydraumc.control.network.RobotCommandContract.VOICE_CONFIRM_VALIDITY_MAX_SECONDS }
+                } else {
+                    null
+                },
             )
         }
     }
@@ -145,7 +167,15 @@ data class WatchSystemStatus(
     val level: String,
     val speak: Boolean,
     val errorCode: String? = null,
+    /** How many robots the phone sees running (0 to 10000), or null when it does not say: the complication of the watch shows it. */
+    val robotsRunning: Int? = null,
+    /** Whether the phone sees an alarm on the plant, or null when it does not say. */
+    val alarmActive: Boolean? = null,
 ) {
+    init {
+        require(robotsRunning == null || robotsRunning in 0..10000) { "robotsRunning must be from 0 to 10000" }
+    }
+
     fun toJson(): JSONObject = JSONObject()
         .put("type", "system_status")
         .put("headline", headline)
@@ -153,6 +183,8 @@ data class WatchSystemStatus(
         .put("level", level)
         .put("speak", speak)
         .apply { errorCode?.let { put("errorCode", it) } }
+        .apply { robotsRunning?.let { put("robotsRunning", it) } }
+        .apply { alarmActive?.let { put("alarmActive", it) } }
 
     companion object {
         fun fromJson(json: JSONObject): WatchSystemStatus {
@@ -163,6 +195,8 @@ data class WatchSystemStatus(
                 level = json.getString("level"),
                 speak = json.getBoolean("speak"),
                 errorCode = if (json.has("errorCode")) json.getString("errorCode") else null,
+                robotsRunning = if (json.has("robotsRunning")) json.getInt("robotsRunning") else null,
+                alarmActive = if (json.has("alarmActive")) json.getBoolean("alarmActive") else null,
             )
         }
     }

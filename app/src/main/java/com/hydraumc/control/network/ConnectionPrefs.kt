@@ -73,6 +73,28 @@ class ConnectionPrefs(private val context: Context) {
     /** Whether HOME/RESET is switched on; [default] (off in the contract) before any choice. */
     suspend fun loadHomeReset(default: Boolean): Boolean = context.connectionDataStore.data.first()[KEY_HOME_RESET] ?: default
 
+    /**
+     * A switch of this app by its [name] (one of [Flags]); [default] before any choice. The defaults live in the
+     * command contract, so none is decided here.
+     */
+    suspend fun loadFlag(name: String, default: Boolean): Boolean =
+        context.connectionDataStore.data.first()[booleanPreferencesKey("flag_$name")] ?: default
+
+    suspend fun saveFlag(name: String, on: Boolean) {
+        context.connectionDataStore.edit { prefs -> prefs[booleanPreferencesKey("flag_$name")] = on }
+    }
+
+    /** The names of the switches kept with [loadFlag] and [saveFlag]. */
+    object Flags {
+        const val DEAD_MAN_JOG = "dead_man_jog"
+        const val LINK_BLOCK_JOG = "link_block_jog"
+        const val LINK_INDICATOR = "link_indicator"
+        const val PAIRING = "pairing_links"
+        const val WATCH_ALERTS = "watch_alerts"
+        const val PRESENCE_RELAY = "presence_relay"
+        const val VOICE_CONFIRM_RELAY = "voice_confirm_relay"
+    }
+
     suspend fun saveHomeReset(on: Boolean) {
         context.connectionDataStore.edit { prefs -> prefs[KEY_HOME_RESET] = on }
     }

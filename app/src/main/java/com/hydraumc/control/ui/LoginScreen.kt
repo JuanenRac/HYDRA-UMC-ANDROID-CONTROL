@@ -64,6 +64,11 @@ fun LoginScreen(viewModel: RobotViewModel) {
     // defaults if this is a first run).
     var ipAddress by remember { mutableStateOf(viewModel.ipAddress.value) }
     var port by remember { mutableStateOf(viewModel.port.value) }
+    // A pairing the person confirmed (or the saved address loading) changes the address in the view model: show it here.
+    androidx.compose.runtime.LaunchedEffect(viewModel.ipAddress.value, viewModel.port.value) {
+        ipAddress = viewModel.ipAddress.value
+        port = viewModel.port.value
+    }
     val isBiometricEnabled = viewModel.isBiometricEnabled.value
     val lastError = viewModel.lastError.value
 
@@ -225,6 +230,9 @@ fun LoginScreen(viewModel: RobotViewModel) {
                             color = IndustrialSteel,
                         )
                     }
+
+                    // Pairing by the QR code of the admin page of the server: off until switched on, asks before it keeps anything.
+                    PairingSection(viewModel)
 
                     lastError?.let { error ->
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {

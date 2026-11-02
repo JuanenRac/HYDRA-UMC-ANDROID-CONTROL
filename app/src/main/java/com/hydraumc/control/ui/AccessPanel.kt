@@ -164,6 +164,8 @@ fun AccessPanel(viewModel: RobotViewModel, robotId: Int, nowMs: Long) {
                     Text(stringResource(R.string.home_reset_switch_label), color = Color.White, style = MaterialTheme.typography.bodyMedium)
                 }
                 Text(stringResource(R.string.home_reset_switch_hint), color = Color.Gray, style = MaterialTheme.typography.bodySmall)
+                // The continuous jog, the link, the watch and the pairing switches.
+                LinkAndWatchSettings(viewModel)
             }
 
             // The jog arming exists only when the administrator turned it on in the server.

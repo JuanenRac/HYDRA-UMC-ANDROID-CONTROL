@@ -73,6 +73,20 @@ import com.hydraumc.control.wear.WatchAssistantReply
 import com.hydraumc.control.wear.WatchSystemStatus
 import com.hydraumc.control.wear.WatchVoiceTurn
 import com.hydraumc.control.util.HomeReset
+import com.hydraumc.control.util.DeadManJog
+import com.hydraumc.control.util.PairingLink
+import com.hydraumc.control.util.WorkFiles
+import com.hydraumc.control.network.CommandPoster
+import com.hydraumc.control.network.TlsMode
+import com.hydraumc.control.wear.WatchAlert
+import com.hydraumc.control.wear.WatchAlertEvent
+import com.hydraumc.control.wear.WatchAlertInput
+import com.hydraumc.control.wear.WatchAlertKind
+import com.hydraumc.control.wear.WatchAlertRobot
+import com.hydraumc.control.wear.WatchAlertRules
+import com.hydraumc.control.wear.WatchAlertSink
+import com.hydraumc.control.wear.WatchAlertStop
+import com.hydraumc.control.wear.WearAlertSink
 import com.hydraumc.control.util.NotificationHelper
 import com.hydraumc.control.util.OptimisticRollback
 import com.hydraumc.control.util.StaleData
@@ -303,6 +317,64 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
     val homeResetServerSupports = mutableStateOf(true)
     /** The confirmation in steps of the reset; shared so the second step must follow the first. */
     val homeResetConfirmation = HomeReset.Confirmation(RobotCommandContract.HOME_RESET_CONFIRM_STEPS, RobotCommandContract.HOME_RESET_CONFIRM_WINDOW_MS)
+    /**
+     * The continuous jog held by a dead-man and the health of the link to the server (see [DeadManJogController]).
+     * Both start from the contract: the jog off, the link indicator on, a bad link blocking the jog.
+     */
+    val deadMan = DeadManJogController(
+        scope = viewModelScope,
+        poster = CommandPoster { id, body, urgent, ifMatch ->
+            (apiClient ?: throw HydraApiException("not connected")).postRobotCommand(id, body, urgent, ifMatch)
+        },
+        pinger = { (apiClient ?: throw HydraApiException("not connected")).pingRoundTripMs(RobotCommandContract.LINK_HEALTH_PROBE_TIMEOUT_MS) },
+        situation = { robotId, switchedOn, running, linkBlocks, supports ->
+            val robot = state.robotById(robotId)
+            val stopStatus = stopAllStatus.value
+            DeadManJog.Situation(
+                switchedOn = switchedOn,
+                connected = apiClient != null,
+                robotOnline = robot?.online == true,
+                robotEnabled = robot?.isEnabled != false,
+                robotPlaying = robot?.isPlaying == true,
+                stopInProgress = stopStatus is StopAllStatus.Sending || stopStatus is StopAllStatus.NotConfirmed,
+                needsArming = jogNeedsArming(robotId),
+                role = jwtRole(authTokenState.value),
+                linkBlocks = linkBlocks,
+                alreadyRunning = running,
+                serverSupports = supports,
+            )
+        },
+        say = { lastError.value = it },
+        blockText = { deadManBlockText(it) },
+        endText = { reason, confirmed -> deadManEndText(reason, confirmed) },
+        errorText = { e ->
+            val app = getApplication<Application>()
+            if (e is HydraApiException) CommandErrorText.describe(app, RobotCommandContract.JOG_START, e)
+            else app.getString(R.string.error_command_failed, RobotCommandContract.JOG_START)
+        },
+    )
+
+    /** Pairing by QR code or link: off until the person turns it on (see [PairingLink]); [pairingOffer] waits for the person's answer. */
+    val pairingEnabled = mutableStateOf(RobotCommandContract.PAIRING_ENABLED_BY_DEFAULT)
+    val pairingOffer = mutableStateOf<PairingLink.Offer?>(null)
+    @Volatile private var pairingFlagsLoaded = false
+    private var pairingTextWaiting: String? = null
+
+    /** Alerts pushed to the paired watch (on by default, rationed); the relays of presence and confirmation are off by default. */
+    val watchAlertsEnabled = mutableStateOf(RobotCommandContract.WATCH_ALERTS_ENABLED_BY_DEFAULT)
+    val presenceRelayEnabled = mutableStateOf(RobotCommandContract.PRESENCE_RELAY_ENABLED_BY_DEFAULT)
+    val voiceConfirmRelayEnabled = mutableStateOf(RobotCommandContract.VOICE_CONFIRM_ENABLED_BY_DEFAULT)
+    /** Where the alerts go; the Wear Data Layer in the app, replaced by a fake in the tests. */
+    var watchAlertSink: WatchAlertSink = WearAlertSink(application)
+    private val watchAlertRules = WatchAlertRules()
+    private var watchAlertJob: kotlinx.coroutines.Job? = null
+
+    /** The work files (trajectories) of the selected robot's folder; null before the list was read. */
+    val workFiles = mutableStateOf<List<String>?>(null)
+    val workBusy = mutableStateOf(false)
+    /** False once the server answered that it does not know `trajectory`. */
+    val workServerSupports = mutableStateOf(true)
+
     /** Sends every robot command: revisions, retry of a stop, `table` fallback, jogs on the wire, debounce and timings. */
     val commands = RobotCommandRepository(conditionalMode = { conditionalMode.value })
     /** The last revision seen of each robot. */
@@ -463,9 +535,12 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                 ) {
                     startMetricsLoop(client)
                 }
+                deadMan.ensureProbe { linkProbeActive() }
             }
             Lifecycle.Event.ON_STOP -> {
                 isAppInForeground = false
+                // Leaving the screen ends a held continuous jog.
+                deadMan.interrupt()
             }
             else -> {}
         }
@@ -513,6 +588,18 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
             if (!confirmPlayTouched) confirmPlay.value = askBeforePlay
             val homeResetSaved = prefs.loadHomeReset(RobotCommandContract.HOME_RESET_ENABLED_BY_DEFAULT)
             if (!homeResetTouched) homeResetEnabled.value = homeResetSaved
+            deadMan.enabled.value = prefs.loadFlag(ConnectionPrefs.Flags.DEAD_MAN_JOG, RobotCommandContract.DEAD_MAN_JOG_ENABLED_BY_DEFAULT)
+            deadMan.blockOnBadLink.value = prefs.loadFlag(ConnectionPrefs.Flags.LINK_BLOCK_JOG, RobotCommandContract.LINK_HEALTH_BLOCK_JOG_ON_BAD_LINK_DEFAULT)
+            deadMan.indicator.value = prefs.loadFlag(ConnectionPrefs.Flags.LINK_INDICATOR, RobotCommandContract.LINK_HEALTH_INDICATOR_ENABLED_BY_DEFAULT)
+            pairingEnabled.value = prefs.loadFlag(ConnectionPrefs.Flags.PAIRING, RobotCommandContract.PAIRING_ENABLED_BY_DEFAULT)
+            watchAlertsEnabled.value = prefs.loadFlag(ConnectionPrefs.Flags.WATCH_ALERTS, RobotCommandContract.WATCH_ALERTS_ENABLED_BY_DEFAULT)
+            presenceRelayEnabled.value = prefs.loadFlag(ConnectionPrefs.Flags.PRESENCE_RELAY, RobotCommandContract.PRESENCE_RELAY_ENABLED_BY_DEFAULT)
+            voiceConfirmRelayEnabled.value = prefs.loadFlag(ConnectionPrefs.Flags.VOICE_CONFIRM_RELAY, RobotCommandContract.VOICE_CONFIRM_ENABLED_BY_DEFAULT)
+            pairingFlagsLoaded = true
+            pairingTextWaiting?.let { waiting ->
+                pairingTextWaiting = null
+                viewModelScope.launch { receivePairing(waiting) }
+            }
         }
 
         viewModelScope.launch {
@@ -1143,6 +1230,12 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                         // it after the REST sync (before the socket opened) made it
                         // end on its first check, so CPU/MEM/TEMP never appeared.
                         apiClient?.let { startMetricsLoop(it) }
+                        deadMan.ensureProbe { linkProbeActive() }
+                        ensureWatchAlertLoop()
+                    } else if (status == WsStatus.DISCONNECTED) {
+                        // A held jog must not outlive the connection: its axis is stopped (the server also stops it by itself).
+                        deadMan.interrupt()
+                        deadMan.stopProbe()
                     }
                 },
                 onSettings = { payload ->
@@ -1412,6 +1505,8 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
             lastError.value = getApplication<Application>().getString(R.string.error_not_connected)
             return
         }
+        // A stop (or safe mode) of the robot ends a continuous jog that is held.
+        if (command == RobotCommandContract.STOP || command == RobotCommandContract.DISABLE) deadMan.interrupt()
 
         // A jog above the limit the server holds for this robot model is not sent at all (the
         // server checks it again). Checked before the optimistic change, like the client above.
@@ -1508,6 +1603,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                     if (e.isRevisionMismatch) refreshRobot(robotId)
                     // An older server does not have `reset`: remember it, so the button explains instead of sending again.
                     if (command == RobotCommandContract.RESET && isUnknownCommand(e)) homeResetServerSupports.value = false
+                    if (command == RobotCommandContract.TRAJECTORY && isUnknownCommand(e)) workServerSupports.value = false
                     // The arming ended (it times out, or a stop cleared it): the screen offers to arm again.
                     if (e.isJogNotArmed) jogArmedUntilMs.value = jogArmedUntilMs.value - robotId
                     // An expired session is renewed (once, whoever notices first);
@@ -1609,6 +1705,296 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         homeResetEnabled.value = on
         if (!on) homeResetConfirmation.cancel()
         viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) { prefs.saveHomeReset(on) }
+    }
+
+    private fun linkProbeActive(): Boolean = connectionState.value == WsStatus.CONNECTED && isAppInForeground
+
+    fun setDeadManEnabled(on: Boolean) {
+        deadMan.enabled.value = on
+        if (!on) deadMan.interrupt()
+        deadMan.ensureProbe { linkProbeActive() }
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) { prefs.saveFlag(ConnectionPrefs.Flags.DEAD_MAN_JOG, on) }
+    }
+
+    fun setLinkBlockOnBadLink(on: Boolean) {
+        deadMan.blockOnBadLink.value = on
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) { prefs.saveFlag(ConnectionPrefs.Flags.LINK_BLOCK_JOG, on) }
+    }
+
+    fun setLinkIndicator(on: Boolean) {
+        deadMan.indicator.value = on
+        deadMan.ensureProbe { linkProbeActive() }
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) { prefs.saveFlag(ConnectionPrefs.Flags.LINK_INDICATOR, on) }
+    }
+
+    /** The phrase for a reason the continuous jog does not start, in the language of the phone. */
+    fun deadManBlockText(block: DeadManJog.Block): String = getApplication<Application>().getString(
+        when (block) {
+            DeadManJog.Block.NONE -> R.string.home_reset_blocked_none
+            DeadManJog.Block.OFF -> R.string.dead_man_blocked_off
+            DeadManJog.Block.NOT_CONNECTED -> R.string.error_not_connected
+            DeadManJog.Block.OFFLINE -> R.string.dead_man_blocked_offline
+            DeadManJog.Block.SAFE_MODE -> R.string.dead_man_blocked_safe_mode
+            DeadManJog.Block.MOVING -> R.string.dead_man_blocked_moving
+            DeadManJog.Block.STOP_PENDING -> R.string.dead_man_blocked_stop
+            DeadManJog.Block.NOT_ARMED -> R.string.error_jog_not_armed
+            DeadManJog.Block.ROLE -> R.string.dead_man_blocked_role
+            DeadManJog.Block.BAD_LINK -> R.string.dead_man_blocked_bad_link
+            DeadManJog.Block.ALREADY_RUNNING -> R.string.dead_man_blocked_already
+            DeadManJog.Block.NOT_SUPPORTED -> R.string.dead_man_blocked_not_supported
+        },
+    )
+
+    /** What to tell the person when a continuous jog ended on its own; null when nothing needs saying. */
+    fun deadManEndText(reason: DeadManJog.EndReason, stopConfirmed: Boolean): String? {
+        val app = getApplication<Application>()
+        if (!stopConfirmed) return app.getString(R.string.dead_man_stop_not_confirmed)
+        return when (reason) {
+            DeadManJog.EndReason.RELEASED, DeadManJog.EndReason.INTERRUPTED -> null
+            DeadManJog.EndReason.LINK_LOST -> app.getString(R.string.dead_man_ended_link_lost)
+            DeadManJog.EndReason.TOO_LONG -> app.getString(R.string.dead_man_ended_too_long)
+            DeadManJog.EndReason.BAD_LINK -> app.getString(R.string.dead_man_ended_bad_link)
+            DeadManJog.EndReason.SERVER_REFUSED -> app.getString(R.string.dead_man_ended_refused)
+        }
+    }
+
+    // ---- pairing by QR code or link ----------------------------------------------------------------------------
+
+    fun setPairingEnabled(on: Boolean) {
+        pairingEnabled.value = on
+        if (!on) pairingOffer.value = null
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) { prefs.saveFlag(ConnectionPrefs.Flags.PAIRING, on) }
+    }
+
+    /**
+     * A text that may be a pairing link (the phone camera opened one, or the person pasted it). Returns false when the text is not a
+     * pairing link at all. While pairing is off nothing is read: the person is told. A valid offer is only SHOWN ([pairingOffer]);
+     * nothing is kept before [confirmPairing].
+     */
+    suspend fun receivePairing(text: String?): Boolean {
+        if (!PairingLink.looksLikePairing(text)) return false
+        val app = getApplication<Application>()
+        if (!pairingFlagsLoaded) {
+            // The switch is still being read from storage: look again when it is.
+            pairingTextWaiting = text
+            return true
+        }
+        if (!pairingEnabled.value) {
+            lastError.value = app.getString(R.string.pairing_off)
+            return true
+        }
+        when (val result = PairingLink.parse(text)) {
+            is PairingLink.Result.Ok -> pairingOffer.value = result.offer
+            is PairingLink.Result.Refused -> lastError.value = app.getString(
+                when (result.problem) {
+                    PairingLink.Problem.BAD_HOST, PairingLink.Problem.MISSING_HOST -> R.string.pairing_problem_host
+                    PairingLink.Problem.BAD_PORT -> R.string.pairing_problem_port
+                    PairingLink.Problem.BAD_FINGERPRINT -> R.string.pairing_problem_fingerprint
+                    PairingLink.Problem.BAD_NAME -> R.string.pairing_problem_name
+                    PairingLink.Problem.NOT_A_PAIRING_LINK, PairingLink.Problem.EMPTY -> R.string.pairing_problem_not_link
+                    else -> R.string.pairing_problem_generic
+                },
+            )
+        }
+        return true
+    }
+
+    /** The person accepted the offer on screen: the address is set, the certificate fingerprint (if any) is pinned and the app connects. */
+    fun confirmPairing() {
+        val offer = pairingOffer.value ?: return
+        pairingOffer.value = null
+        ipAddress.value = offer.host
+        port.value = offer.port.toString()
+        if (offer.fingerprint != null) {
+            saveTlsSettings(tlsSettings.value.copy(mode = TlsMode.REQUIRED, pinnedFingerprint = offer.fingerprint))
+        }
+        connect()
+    }
+
+    fun dismissPairing() {
+        pairingOffer.value = null
+    }
+
+    // ---- the watch ---------------------------------------------------------------------------------------------
+
+    fun setWatchAlertsEnabled(on: Boolean) {
+        watchAlertsEnabled.value = on
+        if (on) ensureWatchAlertLoop()
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) { prefs.saveFlag(ConnectionPrefs.Flags.WATCH_ALERTS, on) }
+    }
+
+    fun setPresenceRelayEnabled(on: Boolean) {
+        presenceRelayEnabled.value = on
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) { prefs.saveFlag(ConnectionPrefs.Flags.PRESENCE_RELAY, on) }
+    }
+
+    fun setVoiceConfirmRelayEnabled(on: Boolean) {
+        voiceConfirmRelayEnabled.value = on
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) { prefs.saveFlag(ConnectionPrefs.Flags.VOICE_CONFIRM_RELAY, on) }
+    }
+
+    /** The sentence of an alert, in the language of the phone. */
+    fun watchAlertText(event: WatchAlertEvent): String {
+        val app = getApplication<Application>()
+        val name = event.robotName ?: ""
+        return when (event.kind) {
+            WatchAlertKind.CONNECTION_LOST -> app.getString(R.string.watch_alert_connection_lost)
+            WatchAlertKind.CONNECTION_RESTORED -> app.getString(R.string.watch_alert_connection_restored)
+            WatchAlertKind.ROBOT_OFFLINE -> app.getString(R.string.watch_alert_robot_offline, name)
+            WatchAlertKind.ROBOT_SAFE_MODE -> app.getString(R.string.watch_alert_robot_safe_mode, name)
+            WatchAlertKind.STOP_NOT_CONFIRMED -> app.getString(R.string.watch_alert_stop_not_confirmed)
+            WatchAlertKind.STOP_CONFIRMED -> app.getString(R.string.watch_alert_stop_confirmed)
+        }
+    }
+
+    /** What the alert rules see of the plant right now. */
+    fun watchAlertInput(): WatchAlertInput = WatchAlertInput(
+        connected = connectionState.value == WsStatus.CONNECTED,
+        robots = state.allRobots.map { WatchAlertRobot(it.id, it.name, it.online, it.isEnabled, it.isPlaying && !it.isPaused) },
+        stop = when (stopAllStatus.value) {
+            is StopAllStatus.Sending -> WatchAlertStop.SENDING
+            is StopAllStatus.NotConfirmed -> WatchAlertStop.NOT_CONFIRMED
+            is StopAllStatus.Done -> WatchAlertStop.DONE
+            else -> WatchAlertStop.NONE
+        },
+    )
+
+    /** One look at the plant: the alerts that deserve the wrist are sent. A failure to deliver is not an error of the app. */
+    suspend fun watchAlertsTick() {
+        if (!watchAlertsEnabled.value) return
+        for (event in watchAlertRules.observe(watchAlertInput())) {
+            watchAlertSink.send(WatchAlert.of(event.severity, watchAlertText(event)))
+        }
+    }
+
+    private fun ensureWatchAlertLoop() {
+        if (watchAlertJob?.isActive == true || !watchAlertsEnabled.value) return
+        watchAlertJob = viewModelScope.launch {
+            while (true) {
+                try {
+                    watchAlertsTick()
+                } catch (e: kotlinx.coroutines.CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    logTelemetry("Watch alert failed: ${e.javaClass.simpleName}")
+                }
+                kotlinx.coroutines.delay(1000)
+            }
+        }
+    }
+
+    // ---- work files (trajectories) -----------------------------------------------------------------------------
+
+    /** The folder of [robotId]'s work files on the server, or null when the configured folder is not a plain relative path. */
+    fun workFolderOf(robotId: Int): String? {
+        val robot = state.robotById(robotId) ?: return null
+        return WorkFiles.folderFor(state.raw.optJSONObject("worksPaths"), robotId, robot.name)
+    }
+
+    fun workBlock(robotId: Int?, tableMissing: Boolean = false): WorkFiles.Block {
+        val robot = robotId?.let { state.robotById(it) }
+        val stopStatus = stopAllStatus.value
+        return WorkFiles.blockOf(
+            WorkFiles.Situation(
+                connected = apiClient != null,
+                robotOnline = robot?.online == true,
+                robotEnabled = robot?.isEnabled != false,
+                robotPlaying = robot?.isPlaying == true,
+                stopInProgress = stopStatus is StopAllStatus.Sending || stopStatus is StopAllStatus.NotConfirmed,
+                role = jwtRole(authTokenState.value),
+                tableMissing = tableMissing,
+                serverSupports = workServerSupports.value,
+            ),
+        )
+    }
+
+    fun workBlockText(block: WorkFiles.Block): String = getApplication<Application>().getString(
+        when (block) {
+            WorkFiles.Block.NONE -> R.string.work_blocked_none
+            WorkFiles.Block.NOT_CONNECTED -> R.string.error_not_connected
+            WorkFiles.Block.OFFLINE -> R.string.work_blocked_offline
+            WorkFiles.Block.SAFE_MODE -> R.string.work_blocked_safe_mode
+            WorkFiles.Block.PLAYING -> R.string.work_blocked_playing
+            WorkFiles.Block.STOP_PENDING -> R.string.work_blocked_stop
+            WorkFiles.Block.ROLE -> R.string.work_blocked_role
+            WorkFiles.Block.NO_TABLE -> R.string.work_blocked_no_table
+            WorkFiles.Block.NOT_SUPPORTED -> R.string.work_not_supported
+        },
+    )
+
+    /** Reads the names of the work files of [robotId]'s folder. */
+    fun loadWorkList(robotId: Int) {
+        val client = apiClient ?: run {
+            lastError.value = getApplication<Application>().getString(R.string.error_not_connected)
+            return
+        }
+        val folder = workFolderOf(robotId) ?: run {
+            lastError.value = getApplication<Application>().getString(R.string.work_load_failed)
+            return
+        }
+        workBusy.value = true
+        workFiles.value = null
+        viewModelScope.launch {
+            try {
+                workFiles.value = WorkFiles.parseIndex(client.getWorkIndexBody(folder)) ?: emptyList()
+            } catch (e: HydraApiException) {
+                // A folder that does not exist yet is an empty list, not an error.
+                if (e.isNotFound) workFiles.value = emptyList() else lastError.value = getApplication<Application>().getString(R.string.work_load_failed)
+                if (e.isSessionProblem) renewSessionOrLogout()
+            } catch (e: Exception) {
+                lastError.value = getApplication<Application>().getString(R.string.work_load_failed)
+            } finally {
+                workBusy.value = false
+            }
+        }
+    }
+
+    /**
+     * Loads the work file [file] into [robotId] with the `trajectory` command. Nothing is read or sent when a rule refuses (the robot
+     * is playing, in safe mode...); the file is checked here the way the server will check it, so a bad file never goes out.
+     */
+    fun selectWork(robotId: Int, file: String) {
+        val app = getApplication<Application>()
+        val client = apiClient ?: run {
+            lastError.value = app.getString(R.string.error_not_connected)
+            return
+        }
+        val folder = workFolderOf(robotId)
+        if (folder == null || !WorkFiles.isSafeFileName(file)) {
+            lastError.value = app.getString(R.string.work_load_failed)
+            return
+        }
+        val early = workBlock(robotId)
+        if (early != WorkFiles.Block.NONE) {
+            lastError.value = workBlockText(early)
+            return
+        }
+        workBusy.value = true
+        viewModelScope.launch {
+            try {
+                when (val loaded = WorkFiles.parsePoints(client.getWorkFileBody(folder, file))) {
+                    is WorkFiles.Loaded.Refused -> lastError.value = app.getString(R.string.work_invalid_file, file)
+                    is WorkFiles.Loaded.Ok -> {
+                        val block = workBlock(robotId, tableMissing = loaded.usesTable && state.robotById(robotId)?.hasXYTable != true)
+                        if (block != WorkFiles.Block.NONE) {
+                            lastError.value = workBlockText(block)
+                        } else {
+                            sendAtomicCommand(RobotCommandContract.TRAJECTORY, WorkFiles.trajectoryParams(loaded.points, file), explicitRobotId = robotId) { r ->
+                                r.raw.put("selectedWorkFile", file)
+                            }
+                            lastError.value = null
+                        }
+                    }
+                }
+            } catch (e: HydraApiException) {
+                lastError.value = if (e.isSessionProblem) app.getString(R.string.error_session_expired) else app.getString(R.string.work_load_failed)
+                if (e.isSessionProblem) renewSessionOrLogout()
+            } catch (e: Exception) {
+                lastError.value = app.getString(R.string.work_load_failed)
+            } finally {
+                workBusy.value = false
+            }
+        }
     }
 
     /** What stops HOME/RESET of [robotId] right now, from this app's view; [HomeReset.Block.NONE] when it may go on. */
@@ -1938,6 +2324,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
     /** True while a jog of [robotId] is still on the wire, or the robot is running a trajectory (two writers on one setpoint). */
     private fun jogBlocked(robotId: Int?): Boolean {
         if (robotId == null) return true
+        if (deadMan.held.value.contains(robotId)) return true
         if (commands.hasJogInFlight(robotId)) return true
         val robot = state.robotById(robotId) ?: return true
         return robot.isPlaying && !robot.isPaused
@@ -1954,6 +2341,8 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
      */
     fun globalStop() {
         val app = getApplication<Application>()
+        // First of all: a held continuous jog ends and its axis is stopped.
+        deadMan.interrupt()
         val first = apiClient
         if (first == null) {
             val reason = app.getString(R.string.error_not_connected)
