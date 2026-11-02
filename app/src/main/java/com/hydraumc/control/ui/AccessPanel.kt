@@ -156,6 +156,14 @@ fun AccessPanel(viewModel: RobotViewModel, robotId: Int, nowMs: Long) {
                     Text(stringResource(R.string.access_confirm_play_label), color = Color.White, style = MaterialTheme.typography.bodyMedium)
                 }
                 Text(stringResource(R.string.access_confirm_play_hint), color = Color.Gray, style = MaterialTheme.typography.bodySmall)
+                // Whether the HOME/RESET button is offered (off by default).
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Switch(checked = viewModel.homeResetEnabled.value, onCheckedChange = { viewModel.setHomeResetEnabled(it) })
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(stringResource(R.string.home_reset_switch_label), color = Color.White, style = MaterialTheme.typography.bodyMedium)
+                }
+                Text(stringResource(R.string.home_reset_switch_hint), color = Color.Gray, style = MaterialTheme.typography.bodySmall)
             }
 
             // The jog arming exists only when the administrator turned it on in the server.

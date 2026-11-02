@@ -386,4 +386,23 @@
     <string name="server_options_install_help">Safe defaults: both on. The camera option applies the next time a camera process starts; the TLS option is only read at the first start of an installation. A value fixed by the server environment cannot be changed here.</string>
     <string name="server_options_confirm_camera_credentials">The password of an IP camera will be on the command line of its process, where other users of the machine can read it.</string>
     <string name="server_options_confirm_install_tls">A new installation will no longer switch TLS on by itself.</string>
+    <string name="home_reset_button">HOME / RESET</string>
+    <string name="home_reset_switch_label">Allow HOME/RESET</string>
+    <string name="home_reset_switch_hint">Shows a button that takes the selected robot to its zero position. It moves the real robot, so it asks twice, only works for operators and administrators, and is off by default.</string>
+    <string name="home_reset_step1_title">Take %1$s to zero? (1 of 2)</string>
+    <string name="home_reset_step1_message">The robot will go to its zero position. Check that nothing is in its way.</string>
+    <string name="home_reset_step1_button">Continue</string>
+    <string name="home_reset_step2_title">Last check (2 of 2)</string>
+    <string name="home_reset_step2_message">%1$s will move now. The STOP button stays available. Move to zero?</string>
+    <string name="home_reset_step2_button">Move to zero</string>
+    <string name="home_reset_blocked_none">HOME/RESET is available.</string>
+    <string name="home_reset_blocked_off">HOME/RESET is switched off. Turn it on in the Access panel.</string>
+    <string name="home_reset_blocked_offline">The robot is offline: it cannot be taken to zero.</string>
+    <string name="home_reset_blocked_safe_mode">The robot is in safe mode: enable it first.</string>
+    <string name="home_reset_blocked_moving">The robot is running a trajectory: press STOP first.</string>
+    <string name="home_reset_blocked_jog">A jog is still being sent: wait a moment.</string>
+    <string name="home_reset_blocked_stop">A STOP is being sent or was not confirmed: HOME/RESET waits until it is.</string>
+    <string name="home_reset_blocked_role">Only operators and administrators can take a robot to zero.</string>
+    <string name="home_reset_blocked_no_pose">This robot reports no position, so it has no zero to go to.</string>
+    <string name="home_reset_not_supported">This server does not support HOME/RESET.</string>
 </resources>

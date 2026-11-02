@@ -386,4 +386,23 @@
     <string name="server_options_install_help">安全な既定値：どちらもオン。カメラの設定は次にカメラのプロセスが起動するときに適用され、TLS の設定はインストールの初回起動時にのみ読み込まれます。サーバーの環境で固定された値はここでは変更できません。</string>
     <string name="server_options_confirm_camera_credentials">IP カメラのパスワードが、同じマシンの他のユーザーが読めるプロセスのコマンドラインに載ります。</string>
     <string name="server_options_confirm_install_tls">新規インストールは自動的に TLS を有効にしなくなります。</string>
+    <string name="home_reset_button">HOME / リセット</string>
+    <string name="home_reset_switch_label">HOME/リセットを許可</string>
+    <string name="home_reset_switch_hint">選択したロボットをゼロ位置へ移動するボタンを表示します。実機が動くため確認を2回求め、オペレーターと管理者のみが使え、初期設定ではオフです。</string>
+    <string name="home_reset_step1_title">%1$s をゼロ位置へ移動しますか？(1/2)</string>
+    <string name="home_reset_step1_message">ロボットはゼロ位置へ移動します。進路に障害物がないか確認してください。</string>
+    <string name="home_reset_step1_button">続ける</string>
+    <string name="home_reset_step2_title">最終確認(2/2)</string>
+    <string name="home_reset_step2_message">%1$s がこれから動きます。STOPボタンは使えます。ゼロ位置へ移動しますか？</string>
+    <string name="home_reset_step2_button">ゼロ位置へ移動</string>
+    <string name="home_reset_blocked_none">HOME/リセットは利用できます。</string>
+    <string name="home_reset_blocked_off">HOME/リセットはオフです。アクセスパネルでオンにしてください。</string>
+    <string name="home_reset_blocked_offline">ロボットがオフラインのため、ゼロ位置へ移動できません。</string>
+    <string name="home_reset_blocked_safe_mode">ロボットはセーフモードです。先に有効にしてください。</string>
+    <string name="home_reset_blocked_moving">ロボットは軌道を実行中です。先にSTOPを押してください。</string>
+    <string name="home_reset_blocked_jog">ジョグを送信中です。少しお待ちください。</string>
+    <string name="home_reset_blocked_stop">STOPの送信中、または未確認です。確認されるまでHOME/リセットは待機します。</string>
+    <string name="home_reset_blocked_role">ロボットをゼロ位置へ移動できるのはオペレーターと管理者だけです。</string>
+    <string name="home_reset_blocked_no_pose">このロボットは位置を報告しないため、移動先のゼロ位置がありません。</string>
+    <string name="home_reset_not_supported">このサーバーはHOME/リセットに対応していません。</string>
 </resources>

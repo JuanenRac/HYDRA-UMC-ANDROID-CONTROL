@@ -386,4 +386,23 @@
     <string name="server_options_install_help">Valeurs sûres : les deux activées. L\'option de la caméra s\'applique au prochain démarrage d\'un processus de caméra ; celle de TLS n\'est lue qu\'au premier démarrage d\'une installation. Une valeur fixée par l\'environnement du serveur ne peut pas être modifiée ici.</string>
     <string name="server_options_confirm_camera_credentials">Le mot de passe d\'une caméra IP figurera sur la ligne de commande de son processus, où les autres utilisateurs de la machine peuvent le lire.</string>
     <string name="server_options_confirm_install_tls">Une nouvelle installation n\'activera plus TLS d\'elle-même.</string>
+    <string name="home_reset_button">HOME / RESET</string>
+    <string name="home_reset_switch_label">Autoriser HOME/RESET</string>
+    <string name="home_reset_switch_hint">Affiche un bouton qui amène le robot sélectionné à sa position zéro. Il déplace le vrai robot : il demande donc deux confirmations, ne fonctionne que pour les opérateurs et les administrateurs, et est désactivé par défaut.</string>
+    <string name="home_reset_step1_title">Amener %1$s à zéro ? (1 sur 2)</string>
+    <string name="home_reset_step1_message">Le robot ira à sa position zéro. Vérifie que rien ne le gêne sur son chemin.</string>
+    <string name="home_reset_step1_button">Continuer</string>
+    <string name="home_reset_step2_title">Dernière vérification (2 sur 2)</string>
+    <string name="home_reset_step2_message">%1$s va bouger maintenant. Le bouton STOP reste disponible. Aller à zéro ?</string>
+    <string name="home_reset_step2_button">Aller à zéro</string>
+    <string name="home_reset_blocked_none">HOME/RESET est disponible.</string>
+    <string name="home_reset_blocked_off">HOME/RESET est désactivé. Active-le dans le panneau Accès.</string>
+    <string name="home_reset_blocked_offline">Le robot est hors ligne : impossible de l\'amener à zéro.</string>
+    <string name="home_reset_blocked_safe_mode">Le robot est en mode sécurisé : active-le d\'abord.</string>
+    <string name="home_reset_blocked_moving">Le robot exécute une trajectoire : appuie d\'abord sur STOP.</string>
+    <string name="home_reset_blocked_jog">Un jog est encore en cours d\'envoi : attends un instant.</string>
+    <string name="home_reset_blocked_stop">Un STOP est en cours d\'envoi ou n\'a pas été confirmé : HOME/RESET attend sa confirmation.</string>
+    <string name="home_reset_blocked_role">Seuls les opérateurs et les administrateurs peuvent amener un robot à zéro.</string>
+    <string name="home_reset_blocked_no_pose">Ce robot ne signale aucune position : il n\'a pas de zéro à rejoindre.</string>
+    <string name="home_reset_not_supported">Ce serveur ne prend pas en charge HOME/RESET.</string>
 </resources>

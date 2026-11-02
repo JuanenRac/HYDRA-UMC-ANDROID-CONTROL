@@ -69,6 +69,7 @@ Every file of the repository with a line on what it does: the annotated tree tha
 │   │   │   │   ├── BleErrorText.kt         # The text of the Bluetooth errors, in the language of the phone
 │   │   │   │   ├── JsonText.kt             # Reads a text field the way the UI means it (a JSON null is not the word "null")
 │   │   │   │   ├── OptimisticRollback.kt   # Field-level undo for an optimistic edit
+│   │   │   │   ├── HomeReset.kt            # HOME/RESET: when it is refused and the confirmation in steps
 │   │   │   │   ├── PlayConfirmation.kt     # When PLAY asks first: the rules of the confirmation before a trajectory starts
 │   │   │   │   ├── RenewalBudget.kt        # How often the app may renew the session by itself (a minimum gap and a maximum per window)
 │   │   │   │   ├── StaleData.kt            # When the robot data on screen is a remembered copy and not a live reading

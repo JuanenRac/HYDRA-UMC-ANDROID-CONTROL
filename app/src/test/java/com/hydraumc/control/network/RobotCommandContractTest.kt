@@ -46,6 +46,16 @@ class RobotCommandContractTest {
     }
 
     @Test
+    fun theHomeResetSettingsFollowTheContract() {
+        val home = contract.getJSONObject("homeReset")
+        assertEquals(home.getBoolean("enabledByDefault"), RobotCommandContract.HOME_RESET_ENABLED_BY_DEFAULT)
+        assertEquals(home.getInt("confirmSteps"), RobotCommandContract.HOME_RESET_CONFIRM_STEPS)
+        assertEquals(home.getLong("confirmWindowMs"), RobotCommandContract.HOME_RESET_CONFIRM_WINDOW_MS)
+        // The reset is a movement: it is numbered like the jog.
+        assertEquals(true, CommandSequence.isNumbered(RobotCommandContract.RESET))
+    }
+
+    @Test
     fun theRetriesAndTheOrderingUseTheContractSets() {
         assertEquals(RobotCommandContract.CONTINUOUS, CONTINUOUS_COMMANDS)
         for (command in RobotCommandContract.NUMBERED) assertEquals(true, CommandSequence.isNumbered(command))

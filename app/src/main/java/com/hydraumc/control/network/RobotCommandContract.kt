@@ -28,7 +28,7 @@ object RobotCommandContract {
     val ALL: Set<String> = setOf(STOP, PLAY, PAUSE, JOG, TABLE, RESET, JOG_STEP, TOOL, VALVE, PUMP, SPEED, VISION, DISABLE, ENABLE)
 
     /** The commands the server orders by number (`seq`). */
-    val NUMBERED: Set<String> = setOf(STOP, JOG, TABLE)
+    val NUMBERED: Set<String> = setOf(STOP, JOG, TABLE, RESET)
 
     /** The commands sent over and over while a control is held; they carry no If-Match in the standard mode. */
     val CONTINUOUS: Set<String> = setOf(JOG, JOG_STEP, SPEED)
@@ -38,4 +38,9 @@ object RobotCommandContract {
     const val JOG_MAX_AMOUNT = 1000.0
     const val JOG_STEP_MAX = 1000.0
     const val OUTPUT_INDEX_MAX = 7
+
+    /** HOME/RESET: off until the person turns it on; how many confirmations it asks and how long they stay valid. */
+    const val HOME_RESET_ENABLED_BY_DEFAULT = false
+    const val HOME_RESET_CONFIRM_STEPS = 2
+    const val HOME_RESET_CONFIRM_WINDOW_MS = 20000L
 }

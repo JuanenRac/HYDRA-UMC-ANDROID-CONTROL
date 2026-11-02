@@ -372,6 +372,10 @@ fun ControlScreen(viewModel: RobotViewModel) {
                     }
                 }
 
+                // HOME/RESET: drawn only when the person switched it on in the Access panel; two confirmations.
+                Spacer(modifier = Modifier.height(8.dp))
+                HomeResetControl(viewModel, selectedRobot, nowMs)
+
                 // I/O SECTION
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(stringResource(R.string.industrial_io_hub), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, color = Color.Gray)

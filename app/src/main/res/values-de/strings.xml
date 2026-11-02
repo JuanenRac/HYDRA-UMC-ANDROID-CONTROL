@@ -386,4 +386,23 @@
     <string name="server_options_install_help">Sichere Vorgaben: beide an. Die Kameraoption gilt beim nächsten Start eines Kameraprozesses; die TLS-Option wird nur beim ersten Start einer Installation gelesen. Ein von der Serverumgebung festgelegter Wert kann hier nicht geändert werden.</string>
     <string name="server_options_confirm_camera_credentials">Das Passwort einer IP-Kamera steht dann in der Befehlszeile ihres Prozesses, wo andere Benutzer des Rechners es lesen können.</string>
     <string name="server_options_confirm_install_tls">Eine neue Installation schaltet TLS nicht mehr selbst ein.</string>
+    <string name="home_reset_button">HOME / RESET</string>
+    <string name="home_reset_switch_label">HOME/RESET erlauben</string>
+    <string name="home_reset_switch_hint">Zeigt eine Schaltfläche, die den gewählten Roboter in seine Nullstellung fährt. Sie bewegt den echten Roboter, fragt deshalb zweimal nach, wirkt nur für Bediener und Administratoren und ist standardmäßig aus.</string>
+    <string name="home_reset_step1_title">%1$s auf Null fahren? (1 von 2)</string>
+    <string name="home_reset_step1_message">Der Roboter fährt in seine Nullstellung. Prüfe, dass nichts im Weg ist.</string>
+    <string name="home_reset_step1_button">Weiter</string>
+    <string name="home_reset_step2_title">Letzte Prüfung (2 von 2)</string>
+    <string name="home_reset_step2_message">%1$s bewegt sich jetzt. Die STOP-Taste bleibt verfügbar. Auf Null fahren?</string>
+    <string name="home_reset_step2_button">Auf Null fahren</string>
+    <string name="home_reset_blocked_none">HOME/RESET ist verfügbar.</string>
+    <string name="home_reset_blocked_off">HOME/RESET ist ausgeschaltet. Schalte es im Zugriffsbereich ein.</string>
+    <string name="home_reset_blocked_offline">Der Roboter ist offline: Er kann nicht auf Null gefahren werden.</string>
+    <string name="home_reset_blocked_safe_mode">Der Roboter ist im sicheren Modus: Aktiviere ihn zuerst.</string>
+    <string name="home_reset_blocked_moving">Der Roboter fährt gerade eine Bahn: Drücke zuerst STOP.</string>
+    <string name="home_reset_blocked_jog">Eine Jog-Bewegung wird noch gesendet: Warte einen Moment.</string>
+    <string name="home_reset_blocked_stop">Ein STOP wird gesendet oder wurde nicht bestätigt: HOME/RESET wartet darauf.</string>
+    <string name="home_reset_blocked_role">Nur Bediener und Administratoren können einen Roboter auf Null fahren.</string>
+    <string name="home_reset_blocked_no_pose">Dieser Roboter meldet keine Position, daher gibt es keine Nullstellung.</string>
+    <string name="home_reset_not_supported">Dieser Server unterstützt HOME/RESET nicht.</string>
 </resources>

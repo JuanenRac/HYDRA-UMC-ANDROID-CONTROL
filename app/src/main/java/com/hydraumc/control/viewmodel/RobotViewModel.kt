@@ -72,6 +72,7 @@ import com.hydraumc.control.network.scanSubnets
 import com.hydraumc.control.wear.WatchAssistantReply
 import com.hydraumc.control.wear.WatchSystemStatus
 import com.hydraumc.control.wear.WatchVoiceTurn
+import com.hydraumc.control.util.HomeReset
 import com.hydraumc.control.util.NotificationHelper
 import com.hydraumc.control.util.OptimisticRollback
 import com.hydraumc.control.util.StaleData
@@ -294,6 +295,14 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
     /** Whether PLAY asks first (see [com.hydraumc.control.util.PlayConfirmation]); on until the person turns it off. */
     val confirmPlay = mutableStateOf(true)
     @Volatile private var confirmPlayTouched = false
+
+    /** HOME/RESET switch (see [HomeReset]); off until the person turns it on, the default comes from the contract. */
+    val homeResetEnabled = mutableStateOf(RobotCommandContract.HOME_RESET_ENABLED_BY_DEFAULT)
+    @Volatile private var homeResetTouched = false
+    /** False once the server answered that it does not know `reset`; the button then explains instead of sending. */
+    val homeResetServerSupports = mutableStateOf(true)
+    /** The confirmation in steps of the reset; shared so the second step must follow the first. */
+    val homeResetConfirmation = HomeReset.Confirmation(RobotCommandContract.HOME_RESET_CONFIRM_STEPS, RobotCommandContract.HOME_RESET_CONFIRM_WINDOW_MS)
     /** Sends every robot command: revisions, retry of a stop, `table` fallback, jogs on the wire, debounce and timings. */
     val commands = RobotCommandRepository(conditionalMode = { conditionalMode.value })
     /** The last revision seen of each robot. */
@@ -502,6 +511,8 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
             if (!conditionalModeTouched) conditionalMode.value = saved
             val askBeforePlay = prefs.loadConfirmPlay()
             if (!confirmPlayTouched) confirmPlay.value = askBeforePlay
+            val homeResetSaved = prefs.loadHomeReset(RobotCommandContract.HOME_RESET_ENABLED_BY_DEFAULT)
+            if (!homeResetTouched) homeResetEnabled.value = homeResetSaved
         }
 
         viewModelScope.launch {
@@ -1495,6 +1506,8 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                     lastError.value = CommandErrorText.describe(getApplication(), command, e)
                     // The robot changed since this app read it: read it again so the screen shows what it is now.
                     if (e.isRevisionMismatch) refreshRobot(robotId)
+                    // An older server does not have `reset`: remember it, so the button explains instead of sending again.
+                    if (command == RobotCommandContract.RESET && isUnknownCommand(e)) homeResetServerSupports.value = false
                     // The arming ended (it times out, or a stop cleared it): the screen offers to arm again.
                     if (e.isJogNotArmed) jogArmedUntilMs.value = jogArmedUntilMs.value - robotId
                     // An expired session is renewed (once, whoever notices first);
@@ -1588,6 +1601,74 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         confirmPlayTouched = true
         confirmPlay.value = ask
         viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) { prefs.saveConfirmPlay(ask) }
+    }
+
+    /** Chooses whether HOME/RESET is offered, and keeps the choice. Switching it off also drops a confirmation under way. */
+    fun setHomeResetEnabled(on: Boolean) {
+        homeResetTouched = true
+        homeResetEnabled.value = on
+        if (!on) homeResetConfirmation.cancel()
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) { prefs.saveHomeReset(on) }
+    }
+
+    /** What stops HOME/RESET of [robotId] right now, from this app's view; [HomeReset.Block.NONE] when it may go on. */
+    fun homeResetBlock(robotId: Int?, nowMs: Long = System.currentTimeMillis()): HomeReset.Block {
+        val robot = robotId?.let { state.robotById(it) }
+        val stopStatus = stopAllStatus.value
+        return HomeReset.blockOf(
+            HomeReset.Situation(
+                switchedOn = homeResetEnabled.value,
+                connected = apiClient != null,
+                robotOnline = robot?.online == true,
+                robotEnabled = robot?.isEnabled != false,
+                robotPlaying = robot?.isPlaying == true,
+                jogInFlight = robotId != null && commands.hasJogInFlight(robotId),
+                stopInProgress = stopStatus is StopAllStatus.Sending || stopStatus is StopAllStatus.NotConfirmed,
+                needsArming = jogNeedsArming(robotId, nowMs),
+                role = jwtRole(authTokenState.value),
+                hasPose = robot?.raw?.optJSONObject("pos") != null,
+                serverSupports = homeResetServerSupports.value,
+            ),
+        )
+    }
+
+    /** The phrase for a [HomeReset.Block], in the language of the phone. */
+    fun homeResetBlockText(block: HomeReset.Block): String {
+        val app = getApplication<Application>()
+        return app.getString(
+            when (block) {
+                HomeReset.Block.NONE -> R.string.home_reset_blocked_none
+                HomeReset.Block.OFF -> R.string.home_reset_blocked_off
+                HomeReset.Block.NOT_CONNECTED -> R.string.error_not_connected
+                HomeReset.Block.OFFLINE -> R.string.home_reset_blocked_offline
+                HomeReset.Block.SAFE_MODE -> R.string.home_reset_blocked_safe_mode
+                HomeReset.Block.MOVING -> R.string.home_reset_blocked_moving
+                HomeReset.Block.JOG_BUSY -> R.string.home_reset_blocked_jog
+                HomeReset.Block.STOP_PENDING -> R.string.home_reset_blocked_stop
+                HomeReset.Block.NOT_ARMED -> R.string.error_jog_not_armed
+                HomeReset.Block.ROLE -> R.string.home_reset_blocked_role
+                HomeReset.Block.NO_POSE -> R.string.home_reset_blocked_no_pose
+                HomeReset.Block.NOT_SUPPORTED -> R.string.home_reset_not_supported
+            },
+        )
+    }
+
+    /**
+     * Sends the reset (the selected robot to its zero position) once the confirmation in steps is complete. The
+     * screen calls it only after the last step; the checks run again here, so a robot that started moving
+     * between the steps is not reset. A refusal shows its own phrase and nothing goes out.
+     */
+    fun homeReset() {
+        val robotId = selectedRobotId.value ?: return
+        val block = homeResetBlock(robotId)
+        if (block != HomeReset.Block.NONE) {
+            lastError.value = homeResetBlockText(block)
+            return
+        }
+        // The pose is shown at zero at once; the server's answer (or a failure, which restores it) settles it.
+        sendAtomicCommand(RobotCommandContract.RESET, JSONObject().put("target", "robot")) { r ->
+            for (axis in listOf("x", "y", "z", "a", "b", "c")) r.setPosAxis(axis, 0.0)
+        }
     }
 
     /** The server's `warnings` of a 200 answer (it applied nothing), joined; null when there are none. */

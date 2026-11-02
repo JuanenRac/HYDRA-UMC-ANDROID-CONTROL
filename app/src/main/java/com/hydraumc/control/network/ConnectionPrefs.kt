@@ -24,6 +24,8 @@ private val KEY_CONTROLLER_ID = stringPreferencesKey("controller_id")
 private val KEY_CONDITIONAL_MODE = stringPreferencesKey("conditional_mode")
 /** Preference key for asking before PLAY starts a trajectory. */
 private val KEY_CONFIRM_PLAY = booleanPreferencesKey("confirm_play")
+/** Preference key for the HOME/RESET switch (off until the person turns it on). */
+private val KEY_HOME_RESET = booleanPreferencesKey("home_reset_enabled")
 
 /**
  * Helper class to manage loading and saving network connection settings.
@@ -66,6 +68,13 @@ class ConnectionPrefs(private val context: Context) {
 
     suspend fun saveConfirmPlay(ask: Boolean) {
         context.connectionDataStore.edit { prefs -> prefs[KEY_CONFIRM_PLAY] = ask }
+    }
+
+    /** Whether HOME/RESET is switched on; [default] (off in the contract) before any choice. */
+    suspend fun loadHomeReset(default: Boolean): Boolean = context.connectionDataStore.data.first()[KEY_HOME_RESET] ?: default
+
+    suspend fun saveHomeReset(on: Boolean) {
+        context.connectionDataStore.edit { prefs -> prefs[KEY_HOME_RESET] = on }
     }
 
     /** The controller id kept for this installation, or null before the first one was saved. */

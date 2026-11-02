@@ -23,6 +23,7 @@ TARGET = ROOT / "app" / "src" / "main" / "java" / "com" / "hydraumc" / "control"
 def render(contract: dict) -> str:
     commands = contract["commands"]
     limits = contract["limits"]
+    home = contract["homeReset"]
     lines = [
         "// =============================================================================",
         "// HYDRA-UMC-ANDROID-CONTROL - network/RobotCommandContract.kt",
@@ -54,6 +55,11 @@ def render(contract: dict) -> str:
         f"    const val JOG_MAX_AMOUNT = {float(limits['jogMaxAmount'])}",
         f"    const val JOG_STEP_MAX = {float(limits['jogStepMax'])}",
         f"    const val OUTPUT_INDEX_MAX = {int(limits['outputIndexMax'])}",
+        "",
+        "    /** HOME/RESET: off until the person turns it on; how many confirmations it asks and how long they stay valid. */",
+        f"    const val HOME_RESET_ENABLED_BY_DEFAULT = {'true' if home['enabledByDefault'] else 'false'}",
+        f"    const val HOME_RESET_CONFIRM_STEPS = {int(home['confirmSteps'])}",
+        f"    const val HOME_RESET_CONFIRM_WINDOW_MS = {int(home['confirmWindowMs'])}L",
         "}",
         "",
     ]

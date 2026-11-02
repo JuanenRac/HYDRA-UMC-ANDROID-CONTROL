@@ -386,4 +386,23 @@
     <string name="server_options_install_help">安全默认值：两项均开启。摄像头选项在下次启动摄像头进程时生效；TLS 选项仅在安装首次启动时读取。由服务器环境固定的值无法在此更改。</string>
     <string name="server_options_confirm_camera_credentials">IP 摄像头的密码将出现在其进程的命令行中，本机的其他用户可以读取。</string>
     <string name="server_options_confirm_install_tls">新安装将不再自行开启 TLS。</string>
+    <string name="home_reset_button">回零 / 复位</string>
+    <string name="home_reset_switch_label">允许回零/复位</string>
+    <string name="home_reset_switch_hint">显示一个按钮，将所选机器人移到零位。它会移动真实机器人，因此需要两次确认，仅操作员和管理员可用，默认关闭。</string>
+    <string name="home_reset_step1_title">将 %1$s 移到零位？（第 1 步，共 2 步）</string>
+    <string name="home_reset_step1_message">机器人将移到零位。请确认其路径上没有障碍物。</string>
+    <string name="home_reset_step1_button">继续</string>
+    <string name="home_reset_step2_title">最后确认（第 2 步，共 2 步）</string>
+    <string name="home_reset_step2_message">%1$s 现在将会移动。STOP 按钮仍可使用。移到零位吗？</string>
+    <string name="home_reset_step2_button">移到零位</string>
+    <string name="home_reset_blocked_none">回零/复位可用。</string>
+    <string name="home_reset_blocked_off">回零/复位已关闭。请在“访问”面板中开启。</string>
+    <string name="home_reset_blocked_offline">机器人离线，无法移到零位。</string>
+    <string name="home_reset_blocked_safe_mode">机器人处于安全模式，请先启用。</string>
+    <string name="home_reset_blocked_moving">机器人正在运行轨迹，请先按 STOP。</string>
+    <string name="home_reset_blocked_jog">仍在发送点动指令，请稍候。</string>
+    <string name="home_reset_blocked_stop">STOP 正在发送或尚未确认：回零/复位将等待确认。</string>
+    <string name="home_reset_blocked_role">只有操作员和管理员可以将机器人移到零位。</string>
+    <string name="home_reset_blocked_no_pose">该机器人未报告位置，因此没有可回的零位。</string>
+    <string name="home_reset_not_supported">此服务器不支持回零/复位。</string>
 </resources>

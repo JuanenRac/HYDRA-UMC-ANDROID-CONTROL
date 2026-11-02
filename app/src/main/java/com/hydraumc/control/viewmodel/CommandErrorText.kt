@@ -9,12 +9,15 @@ import android.content.Context
 import com.hydraumc.control.R
 import com.hydraumc.control.network.HydraApiException
 import com.hydraumc.control.network.RobotCommandContract
+import com.hydraumc.control.network.isUnknownCommand
 
 /** The texts the screen shows when a command fails, in the language of the phone. */
 object CommandErrorText {
     /** The message for a command the server answered with an error, by what the answer says. */
     fun describe(context: Context, command: String, e: HydraApiException): String = when {
         e.isSessionProblem -> context.getString(R.string.error_session_expired)
+        command == RobotCommandContract.RESET && isUnknownCommand(e) -> context.getString(R.string.home_reset_not_supported)
+        command == RobotCommandContract.RESET && e.isPermissionDenied -> context.getString(R.string.home_reset_blocked_role)
         e.isRobotDisabled -> context.getString(R.string.error_robot_disabled, command)
         e.isRevisionMismatch -> context.getString(R.string.error_revision_changed, command)
         e.isJogNotArmed -> context.getString(R.string.error_jog_not_armed)

@@ -386,4 +386,23 @@
     <string name="server_options_install_help">Valores seguros: ambas ativas. A opção da câmara aplica-se da próxima vez que um processo de câmara arrancar; a do TLS só é lida no primeiro arranque de uma instalação. Um valor fixado pelo ambiente do servidor não pode ser alterado aqui.</string>
     <string name="server_options_confirm_camera_credentials">A palavra-passe de uma câmara IP ficará na linha de comandos do seu processo, onde os outros utilizadores da máquina a podem ler.</string>
     <string name="server_options_confirm_install_tls">Uma instalação nova deixa de ativar o TLS por si própria.</string>
+    <string name="home_reset_button">HOME / REPOR</string>
+    <string name="home_reset_switch_label">Permitir HOME/REPOR</string>
+    <string name="home_reset_switch_hint">Mostra um botão que leva o robô selecionado à posição zero. Move o robô real, por isso pede confirmação duas vezes, só funciona para operadores e administradores e vem desativado por predefinição.</string>
+    <string name="home_reset_step1_title">Levar %1$s a zero? (1 de 2)</string>
+    <string name="home_reset_step1_message">O robô vai para a posição zero. Verifique que nada está no caminho.</string>
+    <string name="home_reset_step1_button">Continuar</string>
+    <string name="home_reset_step2_title">Última verificação (2 de 2)</string>
+    <string name="home_reset_step2_message">%1$s vai mover-se agora. O botão STOP continua disponível. Mover para zero?</string>
+    <string name="home_reset_step2_button">Mover para zero</string>
+    <string name="home_reset_blocked_none">HOME/REPOR está disponível.</string>
+    <string name="home_reset_blocked_off">HOME/REPOR está desativado. Ative-o no painel de Acesso.</string>
+    <string name="home_reset_blocked_offline">O robô está offline: não pode ser levado a zero.</string>
+    <string name="home_reset_blocked_safe_mode">O robô está em modo seguro: ative-o primeiro.</string>
+    <string name="home_reset_blocked_moving">O robô está a executar uma trajetória: prima primeiro STOP.</string>
+    <string name="home_reset_blocked_jog">Um jog ainda está a ser enviado: aguarde um momento.</string>
+    <string name="home_reset_blocked_stop">Um STOP está a ser enviado ou não foi confirmado: HOME/REPOR aguarda a confirmação.</string>
+    <string name="home_reset_blocked_role">Só operadores e administradores podem levar um robô a zero.</string>
+    <string name="home_reset_blocked_no_pose">Este robô não comunica a posição, por isso não tem um zero para onde ir.</string>
+    <string name="home_reset_not_supported">Este servidor não suporta HOME/REPOR.</string>
 </resources>
