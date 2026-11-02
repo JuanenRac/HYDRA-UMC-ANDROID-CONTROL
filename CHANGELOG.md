@@ -4,6 +4,10 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **A refused HOME / RESET says so:** when the server will not send the robot home (the pose is not the home pose of its model, or a joint would leave its range) the app says the robot did not move, in the eight languages.
+
+- **Wording aligned with STUDIO:** eight texts that read differently from STUDIO although they mean the same (arm the jog, the reservations, the unreachable server, the ended session and others) now use the words of STUDIO in every language.
+
 ## [0.7.7] - HOME/RESET with a two-step confirmation, every robot write goes through one command repository and the command names and their limits come from a contract file
 
 - **HOME/RESET:** a button on the Control screen that takes the selected robot to its zero position through the `reset` command of the server. It is off by default (a switch in the Access panel turns it on and the choice is kept) and it asks twice, in order and within a time limit, before anything is sent. It is refused with a sentence of its own, in the eight languages, when the robot is playing, in safe mode, offline or without a position, while a STOP is being sent or was not confirmed, while a jog is on the wire, when the jog must be armed and is not, and for a session that is neither operator nor administrator (the server decides the role again); a server that does not know `reset` is told apart and remembered. The command carries a rising number like the jog. The default, the number of confirmations and their time limit live in `docs/robot_command_contract.json` (identical in HYDRA-UMC-IOS-CONTROL) and reach the app through the generated constants. Tested against a local fake server: no robot is involved.

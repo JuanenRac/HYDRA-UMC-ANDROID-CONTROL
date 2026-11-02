@@ -60,6 +60,7 @@
     <string name="error_session_expired">Session expired: signing in again</string>
     <string name="error_robot_reserved">The robot is reserved by another account: %1$s</string>
     <string name="error_stale_sequence">A newer motion command from this phone had already reached the robot, so the %1$s command was NOT applied because it arrived out of order. Repeat it if you still want it.</string>
+    <string name="error_home_rejected">The server refused the %1$s command and the robot did not move: the pose is not the home pose of its model, or a joint would leave its range.</string>
     <string name="error_jog_out_of_reach">That move is outside the robot\'s reach: nothing was sent.</string>
     <string name="stale_data_banner">No connection - showing data from %1$s. Robot states may be out of date.</string>
     <string name="stale_data_banner_unknown">No connection - showing saved data. Robot states may be out of date.</string>

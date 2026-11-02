@@ -60,6 +60,7 @@
     <string name="error_session_expired">会话已过期：正在重新登录</string>
     <string name="error_robot_reserved">该机器人已被其他账户预留：%1$s</string>
     <string name="error_stale_sequence">此手机较新的运动指令已先到达机器人，因此乱序到达的 %1$s 指令未被执行。如仍需要，请重新发送。</string>
+    <string name="error_home_rejected">服务器拒绝了 %1$s 指令，机器人没有移动：该姿态不是此型号的原点姿态，或某个关节会超出其范围。</string>
     <string name="error_jog_out_of_reach">该动作超出机器人的工作范围：未发送任何指令。</string>
     <string name="stale_data_banner">无连接 - 显示 %1$s 的数据。机器人状态可能已过时。</string>
     <string name="stale_data_banner_unknown">无连接 - 显示已保存的数据。机器人状态可能已过时。</string>
@@ -169,7 +170,7 @@
     <string name="voice_prompt">说出你的请求</string>
     <string name="voice_unavailable">此设备不支持语音识别。</string>
     <string name="voice_permission_denied">语音输入需要麦克风权限。</string>
-    <string name="access_title">预留</string>
+    <string name="access_title">预约</string>
     <string name="access_free">未预留</string>
     <string name="access_mine_here">你已在此设备上预留</string>
     <string name="access_mine_elsewhere">你已在另一台设备上预留</string>
@@ -177,13 +178,13 @@
     <string name="access_reserve">预留</string>
     <string name="access_release">释放</string>
     <string name="access_list_show">预留列表</string>
-    <string name="access_list_empty">没有机器人被预留。</string>
+    <string name="access_list_empty">没有被预留的机器人。</string>
     <string name="access_list_item">%1$s：%2$s</string>
     <string name="access_take_over">接管控制</string>
     <string name="access_take_over_title">接管该机器人的控制？</string>
     <string name="access_take_over_message">%1$s 持有该机器人。接管控制将结束其预约，并为您预约该机器人。</string>
     <string name="access_take_over_confirm">接管控制</string>
-    <string name="jog_arm">解锁点动</string>
+    <string name="jog_arm">启用点动</string>
     <string name="jog_disarm">锁定点动</string>
     <string name="jog_armed">点动已解锁：剩余 %1$d 秒</string>
     <string name="jog_not_armed">点动未解锁</string>
@@ -299,7 +300,7 @@
     <string name="connections_action_session_ended">会话已结束</string>
     <string name="connections_action_session_expired">会话已过期</string>
     <string name="connections_failure_unavailable">此服务器暂不提供连接历史。</string>
-    <string name="connections_failure_session">您的会话已结束,请重新登录。</string>
+    <string name="connections_failure_session">会话已结束。请重新登录。</string>
     <string name="connections_failure_network">无法连接到服务器。</string>
     <string name="connections_failure_other">服务器没有提供连接历史。</string>
     <string name="audit_locked_off">审计记录被服务器环境锁定为关闭:不会写入新内容。</string>
@@ -355,7 +356,7 @@
     <string name="server_options_saved">服务器选项已保存。</string>
     <string name="server_options_none">此服务器暂不提供这些选项。</string>
     <string name="server_options_failure_unavailable">此服务器暂不提供访问选项。</string>
-    <string name="server_options_failure_session">会话已结束，请重新登录。</string>
+    <string name="server_options_failure_session">会话已结束。请重新登录。</string>
     <string name="server_options_failure_forbidden">只有管理员才能查看或更改这些选项。</string>
     <string name="server_options_failure_network">无法连接到服务器。</string>
     <string name="server_options_failure_other">服务器未接受该请求。</string>

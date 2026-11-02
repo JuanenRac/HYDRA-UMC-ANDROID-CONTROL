@@ -60,6 +60,7 @@
     <string name="error_session_expired">セッションの期限が切れました：再ログインします</string>
     <string name="error_robot_reserved">このロボットは別のアカウントが予約しています：%1$s</string>
     <string name="error_stale_sequence">このスマートフォンのより新しい動作コマンドがすでにロボットに届いていたため、順序が逆になった %1$s コマンドは適用されませんでした。まだ必要な場合は、もう一度実行してください。</string>
+    <string name="error_home_rejected">サーバーが %1$s コマンドを拒否し、ロボットは動いていません。指定の姿勢がこの機種のホーム姿勢ではないか、関節が可動範囲を超えます。</string>
     <string name="error_jog_out_of_reach">この動きはロボットの可動範囲外です。何も送信されていません。</string>
     <string name="stale_data_banner">接続なし - %1$s 時点のデータを表示中。ロボットの状態は古い可能性があります。</string>
     <string name="stale_data_banner_unknown">接続なし - 保存済みのデータを表示中。ロボットの状態は古い可能性があります。</string>
@@ -170,11 +171,11 @@
     <string name="voice_unavailable">この端末では音声認識を利用できません。</string>
     <string name="voice_permission_denied">音声入力にはマイクの権限が必要です。</string>
     <string name="access_title">予約</string>
-    <string name="access_free">未予約</string>
+    <string name="access_free">予約なし</string>
     <string name="access_mine_here">この端末であなたが予約中</string>
     <string name="access_mine_elsewhere">別の端末であなたが予約中</string>
     <string name="access_other">%1$s が予約中</string>
-    <string name="access_reserve">予約する</string>
+    <string name="access_reserve">予約</string>
     <string name="access_release">解放する</string>
     <string name="access_list_show">予約一覧</string>
     <string name="access_list_empty">予約されているロボットはありません。</string>
@@ -183,7 +184,7 @@
     <string name="access_take_over_title">このロボットの制御を引き継ぎますか?</string>
     <string name="access_take_over_message">このロボットは %1$s が予約しています。制御を引き継ぐとその予約は終了し、ロボットはあなたのために予約されます。</string>
     <string name="access_take_over_confirm">制御を引き継ぐ</string>
-    <string name="jog_arm">ジョグをアームする</string>
+    <string name="jog_arm">ジョグをアーム</string>
     <string name="jog_disarm">ジョグのアームを解除</string>
     <string name="jog_armed">ジョグ アーム中：残り %1$d 秒</string>
     <string name="jog_not_armed">ジョグ未アーム</string>

@@ -60,6 +60,7 @@
     <string name="error_session_expired">Sesión caducada: iniciando sesión de nuevo</string>
     <string name="error_robot_reserved">El robot está reservado por otra cuenta: %1$s</string>
     <string name="error_stale_sequence">Un comando de movimiento más reciente de este teléfono ya había llegado al robot, así que el comando %1$s NO se aplicó porque llegó fuera de orden. Repítelo si aún lo quieres.</string>
+    <string name="error_home_rejected">El servidor rechazó el comando %1$s y el robot no se movió: la pose no es la pose de casa de su modelo, o una articulación saldría de su rango.</string>
     <string name="error_jog_out_of_reach">Ese movimiento queda fuera del alcance del robot: no se ha enviado nada.</string>
     <string name="stale_data_banner">Sin conexión - datos de las %1$s. Los estados de los robots pueden estar desactualizados.</string>
     <string name="stale_data_banner_unknown">Sin conexión - datos guardados. Los estados de los robots pueden estar desactualizados.</string>
@@ -170,7 +171,7 @@
     <string name="voice_unavailable">El reconocimiento de voz no está disponible en este dispositivo.</string>
     <string name="voice_permission_denied">Se requiere permiso de micrófono para la entrada de voz.</string>
     <string name="access_title">Reserva</string>
-    <string name="access_free">Sin reservar</string>
+    <string name="access_free">Sin reserva</string>
     <string name="access_mine_here">Reservado por ti en este dispositivo</string>
     <string name="access_mine_elsewhere">Reservado por ti en otro dispositivo</string>
     <string name="access_other">Reservado por %1$s</string>
@@ -299,8 +300,8 @@
     <string name="connections_action_session_ended">Sesión terminada</string>
     <string name="connections_action_session_expired">Sesión caducada</string>
     <string name="connections_failure_unavailable">Este servidor todavía no ofrece el historial de conexiones.</string>
-    <string name="connections_failure_session">Tu sesión terminó. Vuelve a entrar.</string>
-    <string name="connections_failure_network">No se pudo contactar con el servidor.</string>
+    <string name="connections_failure_session">Tu sesión terminó. Inicia sesión de nuevo.</string>
+    <string name="connections_failure_network">No se pudo llegar al servidor.</string>
     <string name="connections_failure_other">El servidor no dio el historial de conexiones.</string>
     <string name="audit_locked_off">El registro de auditoría está bloqueado como apagado por el entorno del servidor: no se anota nada nuevo.</string>
     <string name="audit_switched_off">El registro de auditoría está apagado en los límites de seguridad: no se anota nada nuevo.</string>
@@ -357,7 +358,7 @@
     <string name="server_options_failure_unavailable">Este servidor aún no ofrece las opciones de acceso.</string>
     <string name="server_options_failure_session">Tu sesión terminó. Inicia sesión de nuevo.</string>
     <string name="server_options_failure_forbidden">Solo un administrador puede leer o cambiar estas opciones.</string>
-    <string name="server_options_failure_network">No se pudo contactar con el servidor.</string>
+    <string name="server_options_failure_network">No se pudo llegar al servidor.</string>
     <string name="server_options_failure_other">El servidor no aceptó la petición.</string>
     <string name="server_options_confirm_title">¿Reducir la protección del servidor?</string>
     <string name="server_options_confirm_yes">Guardar igualmente</string>

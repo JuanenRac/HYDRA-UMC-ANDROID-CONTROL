@@ -60,6 +60,7 @@
     <string name="error_session_expired">Sitzung abgelaufen: Anmeldung wird erneuert</string>
     <string name="error_robot_reserved">Der Roboter ist von einem anderen Konto reserviert: %1$s</string>
     <string name="error_stale_sequence">Ein neuerer Bewegungsbefehl dieses Telefons hatte den Roboter bereits erreicht, daher wurde der Befehl %1$s NICHT angewendet, weil er außer der Reihe eintraf. Wiederholen Sie ihn, wenn Sie ihn noch möchten.</string>
+    <string name="error_home_rejected">Der Server hat den Befehl %1$s abgelehnt und der Roboter hat sich nicht bewegt: Die Stellung ist nicht die Grundstellung seines Modells, oder ein Gelenk würde seinen Bereich verlassen.</string>
     <string name="error_jog_out_of_reach">Diese Bewegung liegt außerhalb der Reichweite des Roboters: Es wurde nichts gesendet.</string>
     <string name="stale_data_banner">Keine Verbindung - Daten von %1$s. Die Roboterzustände können veraltet sein.</string>
     <string name="stale_data_banner_unknown">Keine Verbindung - gespeicherte Daten. Die Roboterzustände können veraltet sein.</string>
@@ -299,7 +300,7 @@
     <string name="connections_action_session_ended">Sitzung beendet</string>
     <string name="connections_action_session_expired">Sitzung abgelaufen</string>
     <string name="connections_failure_unavailable">Dieser Server bietet den Verbindungsverlauf noch nicht an.</string>
-    <string name="connections_failure_session">Ihre Sitzung ist beendet. Bitte melden Sie sich neu an.</string>
+    <string name="connections_failure_session">Ihre Sitzung ist beendet. Melden Sie sich erneut an.</string>
     <string name="connections_failure_network">Der Server ist nicht erreichbar.</string>
     <string name="connections_failure_other">Der Server hat den Verbindungsverlauf nicht geliefert.</string>
     <string name="audit_locked_off">Das Audit-Protokoll ist durch die Umgebung des Servers ausgeschaltet: es wird nichts Neues geschrieben.</string>

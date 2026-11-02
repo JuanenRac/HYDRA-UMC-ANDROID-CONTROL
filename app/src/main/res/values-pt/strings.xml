@@ -29,7 +29,7 @@
     <string name="status_disconnected">Desligado</string>
     <string name="status_label">Estado: </string>
     <string name="play">REPRODUZIR</string>
-    <string name="pause">PAUSAR</string>
+    <string name="pause">PAUSA</string>
     <string name="stop">PARAR</string>
     <string name="connection_settings">Definições de ligação</string>
     <string name="auto_discovery">Descoberta automática</string>
@@ -60,6 +60,7 @@
     <string name="error_session_expired">Sessão expirada: a iniciar sessão de novo</string>
     <string name="error_robot_reserved">O robô está reservado por outra conta: %1$s</string>
     <string name="error_stale_sequence">Um comando de movimento mais recente deste telemóvel já tinha chegado ao robô, por isso o comando %1$s NÃO foi aplicado, porque chegou fora de ordem. Repita-o se ainda o quiser.</string>
+    <string name="error_home_rejected">O servidor recusou o comando %1$s e o robô não se moveu: a pose não é a pose de casa do seu modelo, ou uma articulação sairia do seu intervalo.</string>
     <string name="error_jog_out_of_reach">Este movimento está fora do alcance do robô: não foi enviado nada.</string>
     <string name="stale_data_banner">Sem ligação - dados das %1$s. Os estados dos robôs podem estar desatualizados.</string>
     <string name="stale_data_banner_unknown">Sem ligação - dados guardados. Os estados dos robôs podem estar desatualizados.</string>
@@ -183,7 +184,7 @@
     <string name="access_take_over_title">Assumir o controlo do robô?</string>
     <string name="access_take_over_message">%1$s tem este robô. Assumir o controlo termina a reserva dele e reserva o robô para si.</string>
     <string name="access_take_over_confirm">Assumir o controlo</string>
-    <string name="jog_arm">Armar o jog</string>
+    <string name="jog_arm">Armar jog</string>
     <string name="jog_disarm">Desarmar o jog</string>
     <string name="jog_armed">Jog armado: faltam %1$d s</string>
     <string name="jog_not_armed">Jog não armado</string>
@@ -355,7 +356,7 @@
     <string name="server_options_saved">Opções do servidor guardadas.</string>
     <string name="server_options_none">Este servidor ainda não oferece estas opções.</string>
     <string name="server_options_failure_unavailable">Este servidor ainda não oferece as opções de acesso.</string>
-    <string name="server_options_failure_session">A sua sessão terminou. Inicie sessão novamente.</string>
+    <string name="server_options_failure_session">A sua sessão terminou. Inicie sessão de novo.</string>
     <string name="server_options_failure_forbidden">Só um administrador pode ler ou alterar estas opções.</string>
     <string name="server_options_failure_network">Não foi possível contactar o servidor.</string>
     <string name="server_options_failure_other">O servidor não aceitou o pedido.</string>

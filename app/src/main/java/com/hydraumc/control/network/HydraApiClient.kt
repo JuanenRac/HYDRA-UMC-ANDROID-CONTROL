@@ -90,6 +90,9 @@ class HydraApiException(
     /** 409 `stale-sequence`: a later numbered motion command of this controller already reached the robot, so this one arrived out of order and was not applied. */
     val isStaleSequence: Boolean get() = httpCode == 409 && serverCode == "stale-sequence"
 
+    /** 400 `home-pose-mismatch` or 422 `home-out-of-limits`: the server refused to send the robot home (the pose is not the home pose of its model, or a joint would leave its range); the robot did not move. */
+    val isHomeRejected: Boolean get() = (httpCode == 400 && serverCode == "home-pose-mismatch") || (httpCode == 422 && serverCode == "home-out-of-limits")
+
     /** 423 `robot-disabled`: the robot is in safe mode and refuses every command but STOP until an administrator enables it. */
     val isRobotDisabled: Boolean get() = httpCode == 423 || serverCode == "robot-disabled"
 

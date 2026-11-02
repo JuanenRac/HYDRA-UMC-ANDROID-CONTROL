@@ -22,6 +22,7 @@ object CommandErrorText {
         e.isRevisionMismatch -> context.getString(R.string.error_revision_changed, command)
         e.isJogNotArmed -> context.getString(R.string.error_jog_not_armed)
         e.isStaleSequence -> context.getString(R.string.error_stale_sequence, command)
+        e.isHomeRejected -> context.getString(R.string.error_home_rejected, command)
         e.isOtherController -> context.getString(R.string.error_claim_other_controller, e.serverMessage ?: "")
         e.isControllerIdRequired -> context.getString(R.string.error_claim_controller_required, e.serverMessage ?: "")
         e.isReservedByAnother -> context.getString(R.string.error_robot_reserved, e.serverMessage ?: "")

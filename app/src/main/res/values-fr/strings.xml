@@ -60,6 +60,7 @@
     <string name="error_session_expired">Session expirée : nouvelle connexion en cours</string>
     <string name="error_robot_reserved">Le robot est réservé par un autre compte : %1$s</string>
     <string name="error_stale_sequence">Une commande de mouvement plus récente de ce téléphone avait déjà atteint le robot : la commande %1$s n’a PAS été appliquée, car elle est arrivée dans le désordre. Répétez-la si vous la voulez toujours.</string>
+    <string name="error_home_rejected">Le serveur a refusé la commande %1$s et le robot n’a pas bougé : la pose n’est pas la pose d’origine de son modèle, ou une articulation sortirait de sa plage.</string>
     <string name="error_jog_out_of_reach">Ce mouvement est hors de portée du robot : rien n\'a été envoyé.</string>
     <string name="stale_data_banner">Pas de connexion - données de %1$s. L\'état des robots peut être obsolète.</string>
     <string name="stale_data_banner_unknown">Pas de connexion - données enregistrées. L\'état des robots peut être obsolète.</string>
@@ -355,7 +356,7 @@
     <string name="server_options_saved">Options du serveur enregistrées.</string>
     <string name="server_options_none">Ce serveur ne propose pas encore ces options.</string>
     <string name="server_options_failure_unavailable">Ce serveur ne propose pas encore les options d\'accès.</string>
-    <string name="server_options_failure_session">Votre session a pris fin. Reconnectez-vous.</string>
+    <string name="server_options_failure_session">Votre session est terminée. Reconnectez-vous.</string>
     <string name="server_options_failure_forbidden">Seul un administrateur peut lire ou modifier ces options.</string>
     <string name="server_options_failure_network">Le serveur est injoignable.</string>
     <string name="server_options_failure_other">Le serveur n\'a pas accepté la requête.</string>

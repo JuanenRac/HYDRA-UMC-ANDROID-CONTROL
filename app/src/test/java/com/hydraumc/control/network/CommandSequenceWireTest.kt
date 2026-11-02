@@ -60,4 +60,17 @@ class CommandSequenceWireTest {
             assertEquals(409, e.httpCode)
         }
     }
+
+    @Test
+    fun `a refused home is its own answer, not a plain rejection`() {
+        for ((status, code) in listOf(400 to "home-pose-mismatch", 422 to "home-out-of-limits")) {
+            server.enqueue(MockResponse().setResponseCode(status).setBody("""{"error":"not the home pose","code":"$code"}"""))
+            try {
+                runBlocking { client.postRobotCommand(1, JSONObject().put("command", "reset")) }
+                fail("expected a HydraApiException")
+            } catch (e: HydraApiException) {
+                assertTrue(code, e.isHomeRejected)
+            }
+        }
+    }
 }
