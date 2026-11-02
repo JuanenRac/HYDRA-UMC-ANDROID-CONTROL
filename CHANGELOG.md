@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **A script for the bench:** `docs/BENCH_TESTS.md` lists the steps, the setup and the expected result of the tests that need a real phone; every step is marked as not executed.
+
 ## [0.7.8] - Continuous jog with a dead-man, a link health indicator, pairing by link, a Work selector and alerts for the watch
 
 - **Continuous jog held by a dead-man:** hold-to-move buttons on the Control screen send `jogStart`, then a `jogHeartbeat` every 100 ms while the button is held, then `jogStop` on release. It is off by default (a switch in the Access panel) and the speed is a slider inside the range of the contract. The axis is stopped, with the stop sent as urgently as a STOP and tried again, when the button is released or slides off, on a STOP, when the screen is left, when the connection drops, after two failed heartbeats, after a hold longer than the limit, when the server refuses a heartbeat and when the link becomes bad; a stop the server did not confirm is told to the person. It is refused with a sentence of its own, in the eight languages, when the robot is playing, in safe mode or offline, while a STOP is pending, when the jog must be armed and is not, and for a role that cannot move a robot. The heartbeat period, the time the server waits, the missed heartbeats, the longest hold and the speed range live in `docs/robot_command_contract.json` (identical in HYDRA-UMC-IOS-CONTROL) and reach the app through the generated constants. The three commands are not in the server yet: everything is tested against a local fake server, and a server that does not know them is told apart and remembered.
