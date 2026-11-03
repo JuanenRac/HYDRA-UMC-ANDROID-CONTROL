@@ -182,7 +182,7 @@ app/src/main/java/com/hydraumc/control/
 
 ## 6. Build tooling
 
-The project targets **Android 16 (API 36.1 compile) / Android 15 (API 35 target)** - `targetSdk` intentionally trails `compileSdk`
+The project targets **Android 17 (API 37 compile) / Android 15 (API 35 target)** - `targetSdk` intentionally trails `compileSdk`
 per its own comment ("for stable runtime behavior"); confirm with the owner if that should change. It builds with
 **Gradle 9.8.2** and **JDK/toolchain 21** (`sourceCompatibility`/`targetCompatibility` = `VERSION_21`,
 `gradle-daemon-jvm.properties` toolchainVersion = 21 - this is now actually applied, not just claimed).

@@ -91,12 +91,8 @@ val appVersionName = "$appVersionMajor.$appVersionMinor.$appVersionPatch" +
 
 android {
     namespace = "com.hydraumc.control"
-    // 36.1 required by androidx.core 1.19 and the other current androidx releases
-    compileSdk {
-        version = release(36) {
-            minorApiLevel = 1
-        }
-    }
+    // 37 required by androidx.core 1.19 and the other current androidx releases
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.hydraumc.control"
