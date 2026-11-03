@@ -118,7 +118,7 @@ class HydraApiClient(
     private val client: OkHttpClient = HydraHttp.client(),
     /** How to reach the server (see [TlsMode]); the user's setting at the time the client is made. */
     private val tlsMode: TlsMode = TlsSettingsStore.current.mode,
-) {
+) : SessionEndpoint {
 
     /** Base URL of the target HYDRA-UMC server - starts as plain HTTP, and
      * getHydraInfo() below switches it to HTTPS the first time a plain-HTTP
@@ -134,13 +134,13 @@ class HydraApiClient(
     val usesTls: Boolean get() = baseUrl.startsWith("https://")
 
     /** Current authentication token. */
-    var authToken: String? = null
+    override var authToken: String? = null
 
     /** Opaque refresh token from the last login, exchanged at /api/refresh for a new access token. */
-    var refreshToken: String? = null
+    override var refreshToken: String? = null
 
     /** Exchanges [refreshToken] for a new access token (and a rotated refresh token). */
-    suspend fun refresh(token: String): JSONObject = withContext(Dispatchers.IO) {
+    override suspend fun refresh(token: String): JSONObject = withContext(Dispatchers.IO) {
         val body = JSONObject().put("refreshToken", token).toString().toRequestBody(JSON_MEDIA_TYPE)
         executeExpectingJson(Request.Builder().url("$baseUrl/api/refresh").post(body).build())
     }
@@ -176,7 +176,7 @@ class HydraApiClient(
         }
     }
 
-    suspend fun login(username: String, password: String): JSONObject = withContext(Dispatchers.IO) {
+    override suspend fun login(username: String, password: String): JSONObject = withContext(Dispatchers.IO) {
         val payload = JSONObject().put("username", username).put("password", password)
         val body = payload.toString().toRequestBody(JSON_MEDIA_TYPE)
         val request = Request.Builder().url("$baseUrl/api/login").post(body).build()

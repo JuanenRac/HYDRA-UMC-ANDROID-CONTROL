@@ -20,6 +20,7 @@ import com.hydraumc.control.kinematics.PAROL6_JOINT_LIMITS_DEG
 import com.hydraumc.control.kinematics.parol6CartesianToJointsOrNull
 import com.hydraumc.control.R
 import com.hydraumc.control.network.AuthPrefs
+import com.hydraumc.control.network.SessionRenewer
 import com.hydraumc.control.network.UserProfile
 import com.hydraumc.control.network.ClaimInfo
 import com.hydraumc.control.network.RobotCommandContract
@@ -472,8 +473,12 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
     // Renewals the app may do by itself are rationed (see RenewalBudget): past that it goes back to the sign-in instead of looping.
     private val renewalBudget = com.hydraumc.control.util.RenewalBudget()
 
-    // The password saved with "remember me" was refused by the server once: it is not tried again until the person signs in by hand.
-    private var savedCredentialsRefused = false
+    // Gets a new token by refresh token or by the saved "remember me" login; a password the server refused once is not tried again until the person signs in by hand.
+    private val sessionRenewer = SessionRenewer(
+        store = authPrefs,
+        onToken = { authTokenState.value = it },
+        log = { logTelemetry(it) },
+    )
 
     // Jog commands currently on the wire, per robot. A press-and-hold repeats
     // every 150 ms; on a slow link the POSTs used to pile up and arrive after
@@ -733,7 +738,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                     authTokenState.value = token
                     isLoggedIn.value = true
                     renewalBudget.reset()
-                    savedCredentialsRefused = false
+                    sessionRenewer.forgetRefusal()
                     loginUsername.value = user
                     loginPassword.value = pass
                     loginRememberMe.value = remember
@@ -903,7 +908,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
             val host = ipAddress.value.trim()
             val portInt = port.value.trim().toIntOrNull() ?: return false
             val client = HydraApiClient(host, portInt)
-            if (!renewTokens(client)) return false
+            if (!sessionRenewer.renew(client)) return false
             apiClient = client
             logTelemetry("Session silently renewed after token expiry")
             // Reuses the exact same reconnect path a manual "Retry" would.
@@ -911,49 +916,6 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
             true
         } catch (e: Exception) {
             logTelemetry("Silent re-login failed: ${e.message}")
-            false
-        }
-    }
-
-    /**
-     * Gets a new access token into [client]: the refresh token first (no
-     * password needed), the stored "remember me" credentials as a fallback.
-     * Stores the result. Returns false when neither works, which is the
-     * caller's cue to send the user back to the login screen.
-     */
-    private suspend fun renewTokens(client: HydraApiClient): Boolean {
-        return try {
-            val profile = authPrefs.loadAuth()
-            val refresh = client.refreshToken ?: profile.refreshToken.ifEmpty { null }
-            var response: JSONObject? = null
-            if (refresh != null) {
-                response = try {
-                    client.refresh(refresh).takeIf { it.optBoolean("success") }
-                } catch (_: Exception) {
-                    null
-                }
-            }
-            if (response == null) {
-                if (savedCredentialsRefused || !profile.rememberMe || profile.username.isBlank() || profile.password.isBlank()) return false
-                val login = try {
-                    client.login(profile.username, profile.password)
-                } catch (e: Exception) {
-                    // A 401/403/429 answer: do not insist with the same password.
-                    if ((e as? HydraApiException)?.httpCode != null) savedCredentialsRefused = true
-                    throw e
-                }
-                if (!login.optBoolean("success")) { savedCredentialsRefused = true; return false }
-                response = login
-            }
-            val token = response.optStr("token")
-            if (token.isEmpty()) return false
-            client.authToken = token
-            client.refreshToken = response.optStr("refreshToken").ifEmpty { null }
-            authTokenState.value = token
-            authPrefs.saveAuth(profile.copy(token = token, refreshToken = client.refreshToken ?: "", isLoggedIn = true))
-            true
-        } catch (e: Exception) {
-            logTelemetry("Session renewal failed: ${e.message}")
             false
         }
     }
@@ -1138,7 +1100,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                 } catch (e: HydraApiException) {
                     // An expired token at start-up: renew it once and read again
                     // instead of bouncing the user to the login screen.
-                    if (e.isSessionProblem && renewTokens(client)) client.getSettings() else throw e
+                    if (e.isSessionProblem && sessionRenewer.renew(client)) client.getSettings() else throw e
                 }
                 logTelemetry("Initial state synchronized via REST")
                 applyState(HydraState(settings))

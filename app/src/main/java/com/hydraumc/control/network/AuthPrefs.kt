@@ -52,7 +52,7 @@ private const val KEY_REFRESH_TOKEN = "refresh_token"
 /**
  * Manages user authentication and profile persistence, encrypted at rest.
  */
-class AuthPrefs(private val context: Context) {
+class AuthPrefs(private val context: Context) : AuthStore {
 
     init {
         // Best-effort cleanup: an unencrypted DataStore Preferences file at
@@ -172,7 +172,7 @@ class AuthPrefs(private val context: Context) {
         }
     }
 
-    suspend fun loadAuth(): UserProfile = withContext(authPrefsDispatcher) {
+    override suspend fun loadAuth(): UserProfile = withContext(authPrefsDispatcher) {
         val prefs = openEncryptedPrefs()
         UserProfile(
             username = prefs.getString(KEY_USERNAME, "") ?: "",
@@ -186,7 +186,7 @@ class AuthPrefs(private val context: Context) {
         )
     }
 
-    suspend fun saveAuth(profile: UserProfile) = withContext(authPrefsDispatcher) {
+    override suspend fun saveAuth(profile: UserProfile) = withContext(authPrefsDispatcher) {
         openEncryptedPrefs().edit()
             .putString(KEY_USERNAME, profile.username)
             .putString(KEY_PASSWORD, profile.password)

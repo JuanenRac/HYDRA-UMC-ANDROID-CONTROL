@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **Session renewal moved out of the screen state:** the renewal of an expired session (refresh token first, the saved login as the fallback, a password the server refused once not repeated) now lives in its own class that takes the stored login and the server client as interfaces, so it is tested on the JVM with seven new tests; the behaviour is unchanged.
+
 - **Compile SDK 37 and current libraries:** the project now compiles against API level 37 (the target stays at 35) with Android Gradle Plugin 9.5.0, Kotlin 2.4.21 and Gradle 9.8.2, and the androidx, Compose, Room, OkHttp 5, Retrofit 3, Firebase and test libraries moved to their current releases. The automatic updater no longer skips androidx and OkHttp updates.
 
 - **A script for the bench:** `docs/BENCH_TESTS.md` lists the steps, the setup and the expected result of the tests that need a real phone; every step is marked as not executed.
