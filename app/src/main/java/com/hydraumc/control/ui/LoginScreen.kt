@@ -72,6 +72,8 @@ fun LoginScreen(viewModel: RobotViewModel) {
     val isBiometricEnabled = viewModel.isBiometricEnabled.value
     val lastError = viewModel.lastError.value
 
+    val biometricPromptTitle = stringResource(R.string.biometric_prompt_title)
+    val biometricPromptSubtitle = stringResource(R.string.biometric_prompt_subtitle)
     val showBiometric = isBiometricEnabled && BiometricHelper.isBiometricAvailable(context)
     val biometricSupportedButDisabled = !isBiometricEnabled && BiometricHelper.isBiometricAvailable(context)
 
@@ -198,8 +200,8 @@ fun LoginScreen(viewModel: RobotViewModel) {
                             onClick = {
                                 BiometricHelper.showBiometricPrompt(
                                     activity = activity,
-                                    title = context.getString(R.string.biometric_prompt_title),
-                                    subtitle = context.getString(R.string.biometric_prompt_subtitle),
+                                    title = biometricPromptTitle,
+                                    subtitle = biometricPromptSubtitle,
                                     onSuccess = {
                                         // Use stored credentials for biometric login, but still
                                         // honor whatever IP/port this screen currently shows.
