@@ -20,6 +20,7 @@ import com.hydraumc.control.kinematics.PAROL6_JOINT_LIMITS_DEG
 import com.hydraumc.control.kinematics.parol6CartesianToJointsOrNull
 import com.hydraumc.control.R
 import com.hydraumc.control.network.AuthPrefs
+import com.hydraumc.control.network.UserProfile
 import com.hydraumc.control.network.ClaimInfo
 import com.hydraumc.control.network.RobotCommandContract
 import com.hydraumc.control.network.RobotCommandRepository
@@ -613,7 +614,15 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                 port.value = savedPort
             }
 
-            val profile = authPrefs.loadAuth()
+            // A stored login that cannot be read (no usable keystore) starts the app logged out instead of failing the start-up.
+            val profile = try {
+                authPrefs.loadAuth()
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                logTelemetry("Stored login unreadable: ${e.javaClass.simpleName}")
+                UserProfile(username = "", password = "", email = "", rememberMe = false, isLoggedIn = false)
+            }
             loginUsername.value = profile.username
             loginPassword.value = profile.password
             loginEmail.value = profile.email
