@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **Compile SDK 36.1 and current libraries:** the project now compiles against API level 36.1 (the target stays at 35) with Android Gradle Plugin 9.5.0, Kotlin 2.4.21 and Gradle 9.8.2, and the androidx, Compose, Room, OkHttp 5, Retrofit 3, Firebase and test libraries moved to their current releases. The automatic updater no longer skips androidx and OkHttp updates.
+
 - **A script for the bench:** `docs/BENCH_TESTS.md` lists the steps, the setup and the expected result of the tests that need a real phone; every step is marked as not executed.
 
 ## [0.7.8] - Continuous jog with a dead-man, a link health indicator, pairing by link, a Work selector and alerts for the watch
