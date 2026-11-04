@@ -539,7 +539,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
             Lifecycle.Event.ON_START -> {
                 isAppInForeground = true
                 val client = apiClient
-                if ((client != null) && (metricsJob?.isActive != true) &&
+                if ((client != null) && !connection.isPolling &&
                     (connectionState.value == WsStatus.CONNECTED)
                 ) {
                     startMetricsLoop(client)
@@ -822,7 +822,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         // that the widget or the notification could still send commands with.
         reloginJob?.cancel()
         connectJob?.cancel()
-        metricsJob?.cancel()
+        connection.stopMetrics()
         ws?.disconnect()
         ws = null
         NotificationHelper.hideSafetyNotification(getApplication())
@@ -1093,46 +1093,19 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    // Tracked so a reconnect (server switch, manual reconnect) can cancel
-    // the PREVIOUS loop before starting a new one - without this, every
-    // connect() -> startMetricsLoop() call left the old loop running
-    // indefinitely: its own `while` condition only exits once
-    // connectionStatus stops reading "Connected", but after a server
-    // switch that string becomes true again for the NEW server almost
-    // immediately, so the old loop (still closing over the OLD client)
-    // never actually saw a false condition - it just kept polling a
-    // server that's no longer the active one, racing the new loop to
-    // overwrite the same shared `metrics` value.
-    private var metricsJob: kotlinx.coroutines.Job? = null
+    // The metrics poll lives in ConnectionManager: starting it again cancels the previous loop, so a reconnect (server
+    // switch, manual reconnect) never leaves an old loop polling a server that is no longer the active one.
+    private val connection = ConnectionManager(
+        scope = viewModelScope,
+        shouldPoll = { connectionState.value == WsStatus.CONNECTED && isAppInForeground },
+        onMetrics = { metrics.value = it },
+    )
 
     // Debounce job for the offline-viewing disk cache write in applyState()
     // below - see that call site's own comment for why this exists.
     private var stateCacheJob: kotlinx.coroutines.Job? = null
 
-    private fun startMetricsLoop(client: HydraApiClient) {
-        metricsJob?.cancel()
-        metricsJob = viewModelScope.launch {
-            // isAppInForeground gates this too, not just connectionStatus -
-            // without it, backgrounding the app (Home button, app switcher)
-            // left this loop polling /api/system/metrics every 5s
-            // indefinitely, since the WebSocket connection (and therefore
-            // connectionStatus == "Connected") deliberately stays alive while
-            // backgrounded. The appLifecycleObserver relaunches this loop via
-            // ON_START once the app returns to the foreground.
-            while(connectionState.value == WsStatus.CONNECTED && isAppInForeground) {
-                try {
-                    val m = client.getSystemMetrics()
-                    metrics.value = SystemMetrics(
-                        cpuLoad = m.optInt("cpu_load"),
-                        memoryUsage = m.optInt("memory_usage"),
-                        temp = m.optDouble("temp"),
-                        uptime = m.optInt("uptime")
-                    )
-                } catch (_: Exception) { }
-                kotlinx.coroutines.delay(5000)
-            }
-        }
-    }
+    private fun startMetricsLoop(client: HydraApiClient) = connection.startMetrics { client.getSystemMetrics() }
 
     private fun setupWebSocket(host: String, port: Int, useTls: Boolean = false) {
         // Runs inside connect()'s own job, with the token that job just
@@ -2666,7 +2639,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
     override fun onCleared() {
         super.onCleared()
         connectJob?.cancel()
-        metricsJob?.cancel()
+        connection.stopMetrics()
         stateCacheJob?.cancel()
         ws?.disconnect()
         bleClient?.disconnect()
