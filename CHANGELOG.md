@@ -4,6 +4,7 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The server routes the app calls are fixed and checked:** `tools/check_rest_routes.py` lists the `/api/...` routes found in the sources, compares them with `docs/rest_routes.json` (a route can only be added or dropped on purpose) and, when the shared contracts are next to the repository, fails if a route is not in the server contract. The CI validator runs it.
 - **Compile SDK 36.1 and current libraries:** the project now compiles against API level 36.1 (the target stays at 35) with Android Gradle Plugin 9.5.0, Kotlin 2.4.21 and Gradle 9.8.2, and the androidx, Compose, Room, OkHttp 5, Retrofit 3, Firebase and test libraries moved to their current releases. The automatic updater no longer skips androidx and OkHttp updates.
 
 - **A script for the bench:** `docs/BENCH_TESTS.md` lists the steps, the setup and the expected result of the tests that need a real phone; every step is marked as not executed.
