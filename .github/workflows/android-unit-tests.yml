@@ -1,0 +1,41 @@
+# =============================================================================
+# HYDRA-UMC-ANDROID-CONTROL - Unit tests
+# Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
+# GPL-3.0 - see LICENSE
+# =============================================================================
+# Runs the JVM unit tests of the app (the view model and its helpers) on GitHub Actions, so they never have to be compiled on a developer's PC.
+# Nothing is built for release, nothing is signed and no version changes (HYDRA_UMC_CI=1).
+name: Android unit tests
+
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  unit-tests:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+
+      - name: Set up Java
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Run the unit tests
+        env:
+          HYDRA_UMC_CI: "1"
+        shell: bash
+        run: |
+          set -euo pipefail
+          chmod +x gradlew
+          ./gradlew --no-daemon testDebugUnitTest

@@ -71,9 +71,6 @@ import com.hydraumc.control.network.StopAllRobot
 import com.hydraumc.control.network.StopAllStatus
 import com.hydraumc.control.network.WsStatus
 import com.hydraumc.control.network.scanSubnets
-import com.hydraumc.control.wear.WatchAssistantReply
-import com.hydraumc.control.wear.WatchSystemStatus
-import com.hydraumc.control.wear.WatchVoiceTurn
 import com.hydraumc.control.util.HomeReset
 import com.hydraumc.control.util.DeadManJog
 import com.hydraumc.control.util.PairingLink
@@ -517,9 +514,15 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
     // voice reply must never be mistaken for a physical command or applied
     // optimistically. Also serves refreshWatchSystemStatus() below, kept
     // for the real Wear Data Layer relay (WatchVoiceRelayService).
-    val latestVoiceAssistantReply = mutableStateOf<WatchAssistantReply?>(null)
-    val voiceAssistantBusy = mutableStateOf(false)
-    val latestWatchSystemStatus = mutableStateOf<WatchSystemStatus?>(null)
+    private val voice = VoiceManager(
+        scope = viewModelScope,
+        client = { apiClient },
+        reportError = { lastError.value = it },
+        log = { logTelemetry(it) },
+    )
+    val latestVoiceAssistantReply get() = voice.latestReply
+    val voiceAssistantBusy get() = voice.busy
+    val latestWatchSystemStatus get() = voice.latestWatchSystemStatus
 
     // Whether the app process is currently in the foreground. viewModelScope
     // (and the WebSocket it owns) deliberately keeps running while
@@ -805,44 +808,13 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
      * must stay independent). A reply only ever carries text/status; it
      * never invokes sendAtomicCommand or changes robot state directly.
      */
-    fun sendVoiceTurn(transcript: String) {
-        val client = apiClient ?: run {
-            lastError.value = "Connect to HYDRA-UMC-SERVER before using the voice assistant."
-            return
-        }
-        val requestId = "android-${System.currentTimeMillis()}"
-        val locale = java.util.Locale.getDefault().toLanguageTag()
-        voiceAssistantBusy.value = true
-        viewModelScope.launch {
-            try {
-                val reply = client.postVoiceTurn(WatchVoiceTurn(requestId, transcript, locale))
-                latestVoiceAssistantReply.value = reply
-                logTelemetry("Voice assistant reply received: ${reply.level}; confirmation=${reply.requiresConfirmation}")
-            } catch (error: Exception) {
-                lastError.value = "Voice assistant request failed: ${error.message}"
-                logTelemetry("Voice assistant request failed")
-            } finally {
-                voiceAssistantBusy.value = false
-            }
-        }
-    }
+    fun sendVoiceTurn(transcript: String) = voice.sendTurn(transcript)
 
     /** Clears the last assistant reply - called when VoiceAssistantDialog closes. */
-    fun clearVoiceAssistantReply() {
-        latestVoiceAssistantReply.value = null
-    }
+    fun clearVoiceAssistantReply() = voice.clearReply()
 
     /** Retrieves the safe health-card shape for the paired Wear transport. */
-    fun refreshWatchSystemStatus() {
-        val client = apiClient ?: return
-        viewModelScope.launch {
-            try {
-                latestWatchSystemStatus.value = client.getWatchSystemStatus()
-            } catch (error: Exception) {
-                logTelemetry("Watch system-status refresh failed")
-            }
-        }
-    }
+    fun refreshWatchSystemStatus() = voice.refreshWatchSystemStatus()
 
     fun logout() {
         isLoggedIn.value = false

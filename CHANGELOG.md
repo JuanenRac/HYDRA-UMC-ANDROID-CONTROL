@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The voice assistant moved out of the screen state:** the voice turn, the reply, the busy flag and the health card for the watch are in their own `VoiceManager`; the screens and the tests read the same properties as before. A workflow now runs the JVM unit tests on every push.
+
 - **The server routes the app calls are fixed and checked:** `tools/check_rest_routes.py` lists the `/api/...` routes found in the sources, compares them with `docs/rest_routes.json` (a route can only be added or dropped on purpose) and, when the shared contracts are next to the repository, fails if a route is not in the server contract. The CI validator runs it.
 - **Session renewal moved out of the screen state:** the renewal of an expired session (refresh token first, the saved login as the fallback, a password the server refused once not repeated) now lives in its own class that takes the stored login and the server client as interfaces, so it is tested on the JVM with seven new tests; the behaviour is unchanged.
 
