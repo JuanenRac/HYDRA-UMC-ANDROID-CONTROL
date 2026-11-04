@@ -4,6 +4,7 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The server routes the app calls are fixed and checked:** `tools/check_rest_routes.py` lists the `/api/...` routes found in the sources, compares them with `docs/rest_routes.json` (a route can only be added or dropped on purpose) and, when the shared contracts are next to the repository, fails if a route is not in the server contract. The CI validator runs it.
 - **Session renewal moved out of the screen state:** the renewal of an expired session (refresh token first, the saved login as the fallback, a password the server refused once not repeated) now lives in its own class that takes the stored login and the server client as interfaces, so it is tested on the JVM with seven new tests; the behaviour is unchanged.
 
 - **Compile SDK 37 and current libraries:** the project now compiles against API level 37 (the target stays at 35) with Android Gradle Plugin 9.5.0, Kotlin 2.4.21 and Gradle 9.8.2, and the androidx, Compose, Room, OkHttp 5, Retrofit 3, Firebase and test libraries moved to their current releases. The automatic updater no longer skips androidx and OkHttp updates.
