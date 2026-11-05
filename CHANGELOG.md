@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The build test of the repository compiles only on CI or when allowed:** for the stacks that compile (`rust`, `go`, `android`, `flutter`, `firmware-c`), `tools/build_test.py` prints `BUILD_TEST=SKIPPED` with exit status 2 on a plain PC, never a pass; `ALLOW_LOCAL_BUILD=1` allows it and a CI runner always may. The `python` and `node` stacks are not locked.
+
 - **The metrics poll moved out of the screen state:** the poll of CPU, memory, temperature and uptime is in its own `ConnectionManager` (it runs while connected and in the foreground, a restart cancels the previous loop, a failed read is skipped); four tests cover it.
 
 - **The voice assistant moved out of the screen state:** the voice turn, the reply, the busy flag and the health card for the watch are in their own `VoiceManager`; the screens and the tests read the same properties as before. A workflow now runs the JVM unit tests on every push.
