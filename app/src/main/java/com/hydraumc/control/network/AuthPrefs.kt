@@ -200,7 +200,7 @@ class AuthPrefs(private val context: Context) : AuthStore {
         Unit
     }
 
-    suspend fun clearAuth(wipePassword: Boolean = true) = withContext(authPrefsDispatcher) {
+    override suspend fun clearAuth(wipePassword: Boolean) = withContext(authPrefsDispatcher) {
         // Clears the bearer token too, not just the "logged in" flag - without
         // this, connect()/setupWebSocket() (which read loadAuth().token
         // directly as a fallback, not gated on isLoggedIn) would keep

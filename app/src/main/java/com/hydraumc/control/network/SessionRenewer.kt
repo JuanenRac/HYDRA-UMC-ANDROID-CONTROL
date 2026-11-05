@@ -20,6 +20,9 @@ interface SessionEndpoint {
 interface AuthStore {
     suspend fun loadAuth(): UserProfile
     suspend fun saveAuth(profile: UserProfile)
+
+    /** Forgets the stored session; the password too when [wipePassword]. */
+    suspend fun clearAuth(wipePassword: Boolean = true) {}
 }
 
 /**

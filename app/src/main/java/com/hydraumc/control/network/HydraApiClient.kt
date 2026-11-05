@@ -118,7 +118,7 @@ class HydraApiClient(
     private val client: OkHttpClient = HydraHttp.client(),
     /** How to reach the server (see [TlsMode]); the user's setting at the time the client is made. */
     private val tlsMode: TlsMode = TlsSettingsStore.current.mode,
-) : SessionEndpoint {
+) : LoginEndpoint {
 
     /** Base URL of the target HYDRA-UMC server - starts as plain HTTP, and
      * getHydraInfo() below switches it to HTTPS the first time a plain-HTTP
@@ -146,7 +146,7 @@ class HydraApiClient(
     }
 
     /** Revokes [token] on the server; best effort, never throws. */
-    suspend fun logout(token: String) = withContext(Dispatchers.IO) {
+    override suspend fun logout(token: String) = withContext(Dispatchers.IO) {
         try {
             val body = JSONObject().put("refreshToken", token).toString().toRequestBody(JSON_MEDIA_TYPE)
             executeExpectingJson(Request.Builder().url("$baseUrl/api/logout").post(body).build())

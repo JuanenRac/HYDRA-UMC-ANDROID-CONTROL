@@ -19,7 +19,10 @@ import com.hydraumc.control.model.ServerInfo
 import com.hydraumc.control.kinematics.PAROL6_JOINT_LIMITS_DEG
 import com.hydraumc.control.kinematics.parol6CartesianToJointsOrNull
 import com.hydraumc.control.R
+import com.hydraumc.control.network.AuthManager
 import com.hydraumc.control.network.AuthPrefs
+import com.hydraumc.control.network.LoginCheck
+import com.hydraumc.control.network.SignInResult
 import com.hydraumc.control.network.SessionRenewer
 import com.hydraumc.control.network.UserProfile
 import com.hydraumc.control.network.ClaimInfo
@@ -470,6 +473,9 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
     // Renewals the app may do by itself are rationed (see RenewalBudget): past that it goes back to the sign-in instead of looping.
     private val renewalBudget = com.hydraumc.control.util.RenewalBudget()
 
+    // Sign-in, stored profile and sign-out (see AuthManager); the store is injected, so it is tested without a keystore.
+    private val authManager = AuthManager(authPrefs)
+
     // Gets a new token by refresh token or by the saved "remember me" login; a password the server refused once is not tried again until the person signs in by hand.
     private val sessionRenewer = SessionRenewer(
         store = authPrefs,
@@ -708,67 +714,41 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun login(user: String, pass: String, remember: Boolean) {
-        val host = ipAddress.value.trim()
-        val portValue = port.value.trim()
-        // Same validation connect() already applies - without it, an empty
-        // host/port here fell through silently (port defaulting to 3000
-        // rather than telling the user their input was missing), and an
-        // invalid port never surfaced error_invalid_port the way connect()'s
-        // own path does. Username/password are checked too: an empty
-        // credential otherwise goes straight to the server as an empty
-        // string instead of being caught client-side first.
-        if (host.isEmpty() || portValue.isEmpty() || user.isBlank() || pass.isBlank()) {
+        // The same validation connect() applies: without it an empty host/port fell through silently, an invalid port
+        // never surfaced error_invalid_port, and an empty credential went to the server as an empty string.
+        val check = authManager.check(ipAddress.value, port.value, user, pass)
+        if (check is LoginCheck.Missing) {
             lastError.value = getApplication<Application>().getString(R.string.error_enter_ip_port)
             return
         }
-        val portInt = portValue.toIntOrNull()
-        if (portInt == null) {
-            lastError.value = getApplication<Application>().getString(R.string.error_invalid_port, portValue)
+        if (check is LoginCheck.BadPort) {
+            lastError.value = getApplication<Application>().getString(R.string.error_invalid_port, check.text)
             return
         }
+        check as LoginCheck.Valid
 
-        val client = HydraApiClient(host, portInt)
+        val client = HydraApiClient(check.host, check.port)
         apiClient = client
-        
+
         viewModelScope.launch {
-            try {
-                logTelemetry("Logging in to $host:$portInt...")
-                val response = client.login(user, pass)
-                if (response.optBoolean("success")) {
-                    val token = response.optStr("token")
-                    client.authToken = token
-                    client.refreshToken = response.optStr("refreshToken").ifEmpty { null }
-                    authTokenState.value = token
+            logTelemetry("Logging in to ${check.host}:${check.port}...")
+            when (val result = authManager.signIn(client, user, pass, remember, loginEmail.value, isBiometricEnabled.value)) {
+                is SignInResult.Success -> {
+                    authTokenState.value = result.token
                     isLoggedIn.value = true
                     renewalBudget.reset()
                     sessionRenewer.forgetRefusal()
                     loginUsername.value = user
                     loginPassword.value = pass
                     loginRememberMe.value = remember
-                    
-                    // The password is kept on the device only when the user asked
-                    // for it ("remember me", or the fingerprint sign-in, which
-                    // needs it); the refresh token renews the session without it.
-                    authPrefs.saveAuth(
-                        com.hydraumc.control.network.UserProfile(
-                            username = user,
-                            password = if (remember || isBiometricEnabled.value) pass else "",
-                            email = loginEmail.value,
-                            rememberMe = remember,
-                            isLoggedIn = true,
-                            isBiometricEnabled = isBiometricEnabled.value,
-                            token = token,
-                            refreshToken = client.refreshToken ?: "",
-                        ),
-                    )
                     logTelemetry("Login successful")
                     connect() // Proceed to full sync
-                } else {
-                    lastError.value = "Login failed: Server rejected credentials"
                 }
-            } catch (e: Exception) {
-                logTelemetry("Login error: ${e.message}")
-                lastError.value = (e as? HydraApiException)?.serverMessage ?: e.message
+                SignInResult.Rejected -> lastError.value = "Login failed: Server rejected credentials"
+                is SignInResult.Failed -> {
+                    logTelemetry("Login error: ${result.log}")
+                    lastError.value = result.message
+                }
             }
         }
     }
@@ -779,18 +759,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         loginEmail.value = email
         isBiometricEnabled.value = biometric
         viewModelScope.launch {
-            // Starts from what is stored: saving the profile used to write an
-            // empty token, which ended the session at the next reconnect.
-            authPrefs.saveAuth(
-                authPrefs.loadAuth().copy(
-                    username = user,
-                    password = if (loginRememberMe.value || biometric) pass else "",
-                    email = email,
-                    rememberMe = loginRememberMe.value,
-                    isLoggedIn = isLoggedIn.value,
-                    isBiometricEnabled = biometric,
-                ),
-            )
+            authManager.saveProfile(user, pass, email, biometric, loginRememberMe.value, isLoggedIn.value)
         }
     }
 
@@ -833,10 +802,8 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         val keepPassword = isBiometricEnabled.value
         if (!keepPassword) loginPassword.value = ""
         viewModelScope.launch {
-            // Revoke the refresh token on the server too (best effort).
-            val refresh = client?.refreshToken ?: authPrefs.loadAuth().refreshToken.ifEmpty { null }
-            if (client != null && refresh != null) client.logout(refresh)
-            authPrefs.clearAuth(wipePassword = !keepPassword)
+            // Revokes the refresh token on the server too (best effort) and wipes the stored login.
+            authManager.signOut(client, keepPassword)
         }
     }
 

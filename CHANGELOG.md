@@ -4,6 +4,10 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **Sign-in, stored profile and sign-out moved out of the screen state:** the checks of the sign-in form, the call, the storing of the profile (the password is kept only when "remember me" or the fingerprint sign-in asks for it), the saving of the edited profile and the sign-out (revoking the refresh token, wiping the stored login) are in their own `AuthManager` that takes the stored login through an interface, so seven JVM tests cover them without a keystore.
+
+- **The answers of the server are replayed against the client:** `app/src/test/resources/server-answers.json` is the file the SDK generates from the server inventory (97 routes, a minimal and a full body each), kept identical by `tools/sync_sdk_answers.py --check` in the CI validator; `ServerAnswersTest` replays the routes the app reads (server information, global STOP, ecosystem status, metrics, sign-in and its refusal) through the real client.
+
 - **The build test of the repository compiles only on CI or when allowed:** for the stacks that compile (`rust`, `go`, `android`, `flutter`, `firmware-c`), `tools/build_test.py` prints `BUILD_TEST=SKIPPED` with exit status 2 on a plain PC, never a pass; `ALLOW_LOCAL_BUILD=1` allows it and a CI runner always may. The `python` and `node` stacks are not locked.
 
 - **The metrics poll moved out of the screen state:** the poll of CPU, memory, temperature and uptime is in its own `ConnectionManager` (it runs while connected and in the foreground, a restart cancels the previous loop, a failed read is skipped); four tests cover it.
