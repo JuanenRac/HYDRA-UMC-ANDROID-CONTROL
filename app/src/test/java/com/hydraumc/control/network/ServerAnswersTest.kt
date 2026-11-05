@@ -72,7 +72,7 @@ class ServerAnswersTest {
 
     @Test
     fun `every route the app calls is in the inventory`() {
-        val inventory = routes().keys().asSequence().map { it.substringAfter(' ').replace(Regex("\{[^}]+\}"), "{p}") }.toSet()
+        val inventory = routes().keys().asSequence().map { it.substringAfter(' ').replace(Regex("""\{[^}]+\}"""), "{p}") }.toSet()
         // The full list of the app lives in docs/ and is checked against the contract by tools/check_rest_routes.py;
         // here only the routes this test replays must be in the inventory.
         for (route in listOf("/api/hydra-info", "/api/stop-all", "/api/ecosystem/status", "/api/login", "/api/refresh", "/api/system/metrics")) {
