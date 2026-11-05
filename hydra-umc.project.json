@@ -26,5 +26,8 @@
       "patch": "^versionPatch\\s*=\\s*(\\d+)",
       "build": "^versionBuild\\s*=\\s*(\\d+)"
     }
-  }
+  },
+  "depends_on": [
+    "HYDRA-UMC-SERVER"
+  ]
 }
