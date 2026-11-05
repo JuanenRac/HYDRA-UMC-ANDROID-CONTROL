@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The first Kotlin code shared through the SDK:** `SemanticVersion` (the stable release tag the update check compares) now lives in `clients/kotlin_app_common` of the SDK with its test; this app compiles a pinned copy (`app/src/main/java/com/hydraumc/common`) and `tools/sync_sdk_kotlin.py --check` (in the CI validator) fails when a copy differs from `docs/sdk_kotlin_common.lock.json` or, when the SDK is at hand, from the SDK.
+
 - **Sign-in, stored profile and sign-out moved out of the screen state:** the checks of the sign-in form, the call, the storing of the profile (the password is kept only when "remember me" or the fingerprint sign-in asks for it), the saving of the edited profile and the sign-out (revoking the refresh token, wiping the stored login) are in their own `AuthManager` that takes the stored login through an interface, so seven JVM tests cover them without a keystore.
 
 - **The answers of the server are replayed against the client:** `app/src/test/resources/server-answers.json` is the file the SDK generates from the server inventory (97 routes, a minimal and a full body each), kept identical by `tools/sync_sdk_answers.py --check` in the CI validator; `ServerAnswersTest` replays the routes the app reads (server information, global STOP, ecosystem status, metrics, sign-in and its refusal) through the real client.

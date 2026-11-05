@@ -1,0 +1,6 @@
+{
+  "files": {
+    "main/kotlin/com/hydraumc/common/SemanticVersion.kt": "aed6a3fa1d650796309609992239ea5288e7e6d0e834f3c8b04e975f3a1b9762",
+    "test/kotlin/com/hydraumc/common/SemanticVersionTest.kt": "c303dbaa3f578affab7a2b39005983b72b41914451dff8b26134439e64e6e4eb"
+  }
+}

@@ -5,6 +5,7 @@
 // =============================================================================
 package com.hydraumc.control.update
 
+import com.hydraumc.common.SemanticVersion
 import com.hydraumc.control.util.optStr
 import org.json.JSONObject
 

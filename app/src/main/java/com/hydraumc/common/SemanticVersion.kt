@@ -1,9 +1,9 @@
 // =============================================================================
-// HYDRA-UMC-ANDROID-CONTROL - Strict semantic version parser for updates
+// HYDRA-UMC Kotlin app common - src/main/kotlin/com/hydraumc/common/SemanticVersion.kt
 // Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
 // GPL-3.0-or-later - see LICENSE
 // =============================================================================
-package com.hydraumc.control.update
+package com.hydraumc.common
 
 /**
  * A release version accepted by the HYDRA-UMC Android distribution channel.

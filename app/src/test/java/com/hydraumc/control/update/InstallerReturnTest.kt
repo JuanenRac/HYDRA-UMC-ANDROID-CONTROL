@@ -5,6 +5,7 @@
 // =============================================================================
 package com.hydraumc.control.update
 
+import com.hydraumc.common.SemanticVersion
 import com.hydraumc.control.viewmodel.AppUpdateState
 import com.hydraumc.control.viewmodel.stateAfterInstallerReturn
 import org.junit.Assert.assertEquals

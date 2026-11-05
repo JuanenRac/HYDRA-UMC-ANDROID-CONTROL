@@ -5,6 +5,7 @@
 // =============================================================================
 package com.hydraumc.control.update
 
+import com.hydraumc.common.SemanticVersion
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageInfo

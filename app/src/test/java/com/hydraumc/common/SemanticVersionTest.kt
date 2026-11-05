@@ -1,9 +1,9 @@
 // =============================================================================
-// HYDRA-UMC-ANDROID-CONTROL - Stable update-version parser unit tests
+// HYDRA-UMC Kotlin app common - src/test/kotlin/com/hydraumc/common/SemanticVersionTest.kt
 // Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
 // GPL-3.0-or-later - see LICENSE
 // =============================================================================
-package com.hydraumc.control.update
+package com.hydraumc.common
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull

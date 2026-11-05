@@ -18,6 +18,7 @@
 // (getPackageArchiveInfo) and the installed-app version lookup.
 package com.hydraumc.control.update
 
+import com.hydraumc.common.SemanticVersion
 import android.content.pm.PackageInfo
 import androidx.test.core.app.ApplicationProvider
 import kotlinx.coroutines.runBlocking
