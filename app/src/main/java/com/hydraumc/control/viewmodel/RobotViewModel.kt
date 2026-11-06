@@ -58,7 +58,6 @@ import com.hydraumc.control.network.jogLimitExceeded
 import com.hydraumc.control.network.ConnectionPrefs
 import com.hydraumc.control.network.HydraApiClient
 import com.hydraumc.control.network.HydraApiException
-import com.hydraumc.control.network.HydraWebSocket
 import com.hydraumc.control.network.BleError
 import com.hydraumc.control.network.BleErrorKind
 import com.hydraumc.control.network.BlePermissions
@@ -453,7 +452,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
     // Compose state, keep working fine) must read THIS instead of
     // reaching into apiClient?.authToken directly.
     val authTokenState = mutableStateOf<String?>(null)
-    private var ws: HydraWebSocket? = null
+    private val liveSocket = LiveSocket(isSwitching = { connection.isSwitching })
     private var bleClient: HydraBleClient? = null
     private val prefs = ConnectionPrefs(application)
     private val tlsPrefs = TlsPrefs(application)
@@ -806,8 +805,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         connection.cancelConnect()
         commandQueue.cancelAllWaiting()
         connection.stopMetrics()
-        ws?.disconnect()
-        ws = null
+        liveSocket.close()
         NotificationHelper.hideSafetyNotification(getApplication())
         connectionState.value = WsStatus.DISCONNECTED
         val client = apiClient
@@ -885,14 +883,14 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
             isLoggedIn.value = false
             connectionState.value = WsStatus.DISCONNECTED
             lastError.value = "The server keeps rejecting the session right after renewing it. Sign in again; if it repeats, check the server."
-            ws?.disconnect()
+            liveSocket.close()
             return
         }
         reloginJob = viewModelScope.launch {
             if (!attemptSilentRelogin()) {
                 isLoggedIn.value = false
                 connectionState.value = WsStatus.DISCONNECTED
-                ws?.disconnect()
+                liveSocket.close()
             }
         }
     }
@@ -1008,7 +1006,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         // Set before the old socket closes: its close callback reads the flag.
         connection.isSwitching = true
 
-        ws?.disconnect()
+        liveSocket.close()
         bleClient?.disconnect()
         bleClient = null
 
@@ -1074,89 +1072,73 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
     private fun startMetricsLoop(client: HydraApiClient) = connection.startMetrics { client.getSystemMetrics() }
 
     private fun setupWebSocket(host: String, port: Int, useTls: Boolean = false) {
-        // Runs inside connect()'s own job, with the token that job just
-        // confirmed against the REST sync: it used to be a separate coroutine
-        // that read the token from disk, so two quick connects could leave an
-        // orphan socket that kept reconnecting on its own.
-        ws?.disconnect()
-        run {
-            val token = apiClient?.authToken.orEmpty()
-            ws = HydraWebSocket(
-                host = host,
-                port = port,
-                useTls = useTls,
-                token = if (token.isNotEmpty()) token else null,
-                onStatus = { status ->
-                    connectionState.value = status
-                    when (status) {
-                        WsStatus.CONNECTING -> {
-                            logTelemetry("WebSocket connecting...")
-                        }
-                        WsStatus.CONNECTED -> {
-                            logTelemetry("WebSocket CONNECTED")
-                            if (notificationsEnabled.value) {
-                                NotificationHelper.showSafetyNotification(getApplication())
-                            }
-                        }
-                        WsStatus.DISCONNECTED -> {
-                            logTelemetry("WebSocket DISCONNECTED")
-                            NotificationHelper.hideSafetyNotification(getApplication())
-                            if (!connection.isSwitching) {
-                                discoveredServers.value = emptyList()
-                            }
-                        }
-                    }
-                    if (status == WsStatus.CONNECTED) {
-                        // Started here, after the status string above is set: the
-                        // loop only runs while it reads "connected", and starting
-                        // it after the REST sync (before the socket opened) made it
-                        // end on its first check, so CPU/MEM/TEMP never appeared.
-                        apiClient?.let { startMetricsLoop(it) }
-                        deadMan.ensureProbe { linkProbeActive() }
-                        ensureWatchAlertLoop()
-                    } else if (status == WsStatus.DISCONNECTED) {
-                        // A held jog must not outlive the connection: its axis is stopped (the server also stops it by itself).
-                        deadMan.interrupt()
-                        deadMan.stopProbe()
-                    }
-                },
-                onSettings = { payload ->
-                    // Full replace, not a merge - reaches this callback for
-                    // "settings" (the first message on connect, and any full
-                    // POST /api/settings write) and for a schema-1 "delta"
-                    // (a client that hasn't declared schema 2 - not this
-                    // app's own connection, see the ?remoteApiVersion=2 in
-                    // HydraWebSocket's own openSocket()). A REAL schema-2
-                    // delta (server.ts's own broadcastRobotDelta(), a real
-                    // partial patch) is routed to onDelta below instead, not
-                    // here - HydraWebSocket.handleMessage() splits the two
-                    // apart before either callback fires. A prior version of
-                    // THIS callback called state.merge(payload) instead,
-                    // under the wrong assumption that "delta" always meant a
-                    // partial diff, back when it never did -
-                    // HydraState.mergeArrays() only ever APPENDED
-                    // primitive-array fields (valves/pumps/combinedWith) as
-                    // a result, so a robot removed from a combinedWith group
-                    // kept receiving that group's play/pause/stop/enable/
-                    // disable indefinitely, since its old id never actually
-                    // left the merged array. Matches connectBle()'s own
-                    // onSettings handling below, which was always a full
-                    // replace (BLE has no delta path).
-                    applyState(HydraState(payload))
-                },
-                onDelta = { msg -> applyRobotDelta(msg) },
-                onClaims = { msg -> applyClaimsPush(msg) },
-                onUnauthorized = {
-                    // The server closed the socket with 1008 (expired or invalid
-                    // token). One renewal, however many signals arrive; only a
-                    // failed renewal sends the user back to the login screen.
-                    if (!connection.isSwitching) renewSessionOrLogout()
-                },
-            ) { message ->
-                if (!connection.isSwitching) {
-                    lastError.value = message
+        // Runs inside connect()'s own job, with the token that job just confirmed against the REST sync: it used to be a
+        // separate coroutine that read the token from disk, so two quick connects could leave an orphan socket that kept
+        // reconnecting on its own. LiveSocket closes the previous socket before it opens this one.
+        val token = apiClient?.authToken.orEmpty()
+        liveSocket.open(SocketTarget(host, port, useTls, if (token.isNotEmpty()) token else null), socketListener)
+    }
+
+    private val socketListener = object : SocketListener {
+        override fun onStatus(status: WsStatus) {
+            connectionState.value = status
+            when (status) {
+                WsStatus.CONNECTING -> {
+                    logTelemetry("WebSocket connecting...")
                 }
-            }.also { it.connect() }
+                WsStatus.CONNECTED -> {
+                    logTelemetry("WebSocket CONNECTED")
+                    if (notificationsEnabled.value) {
+                        NotificationHelper.showSafetyNotification(getApplication())
+                    }
+                }
+                WsStatus.DISCONNECTED -> {
+                    logTelemetry("WebSocket DISCONNECTED")
+                    NotificationHelper.hideSafetyNotification(getApplication())
+                }
+            }
+            if (status == WsStatus.CONNECTED) {
+                // Started here, after the status string above is set: the loop only runs while it reads "connected",
+                // and starting it after the REST sync (before the socket opened) made it end on its first check, so
+                // CPU/MEM/TEMP never appeared.
+                apiClient?.let { startMetricsLoop(it) }
+                deadMan.ensureProbe { linkProbeActive() }
+                ensureWatchAlertLoop()
+            } else if (status == WsStatus.DISCONNECTED) {
+                // A held jog must not outlive the connection: its axis is stopped (the server also stops it by itself).
+                deadMan.interrupt()
+                deadMan.stopProbe()
+            }
+        }
+
+        override fun onClosedIdle() {
+            discoveredServers.value = emptyList()
+        }
+
+        // Full replace, not a merge: it reaches here for "settings" (the first message on connect and any full POST
+        // /api/settings write) and for a schema-1 "delta" (a client that has not declared schema 2). A real schema-2
+        // delta goes to onDelta instead. A merge would only ever append primitive-array fields (valves/pumps/
+        // combinedWith), so a robot removed from a combinedWith group would keep receiving that group's commands.
+        override fun onSettings(payload: JSONObject) {
+            applyState(HydraState(payload))
+        }
+
+        override fun onDelta(message: JSONObject) {
+            applyRobotDelta(message)
+        }
+
+        override fun onClaims(message: JSONObject) {
+            applyClaimsPush(message)
+        }
+
+        // The server closed the socket with 1008 (expired or invalid token). One renewal, however many signals arrive;
+        // only a failed renewal sends the user back to the login screen.
+        override fun onUnauthorized() {
+            renewSessionOrLogout()
+        }
+
+        override fun onError(message: String) {
+            lastError.value = message
         }
     }
 
@@ -2553,7 +2535,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
             return
         }
         stopBtScan()
-        ws?.disconnect()
+        liveSocket.close()
         bleClient?.disconnect()
         apiClient = null
         authTokenState.value = null
@@ -2613,7 +2595,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         connection.cancelConnect()
         connection.stopMetrics()
         stateCacheJob?.cancel()
-        ws?.disconnect()
+        liveSocket.close()
         bleClient?.disconnect()
         stopBtScan()
         ProcessLifecycleOwner.get().lifecycle.removeObserver(appLifecycleObserver)

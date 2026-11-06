@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The live socket is owned by its own class:** opening the socket, closing the previous one first and ignoring the close, error and expired-token signals of the server being left during a server switch moved out of the view model into `LiveSocket` (with a stand-in socket in the tests), and the callbacks of the view model became one listener; no change in behaviour.
+
 - **A pairing link without a certificate fingerprint is refused:** the link must carry a valid SHA-256 fingerprint of the server certificate; one without it (or with an empty one) is rejected with its own message in the eight languages, as the iOS and DSI apps already do, and accepting a valid link always makes the connection require TLS and pins that certificate. The "pair anyway on a trusted network" warning of the dialog is gone. The tests of the link check every way a missing fingerprint can be spelled.
 
 ## [0.8.0.1] - The connect sequence moved out of the screen state: the first synchronisation with a server (identity answer, one renewal of an expired session, the settings, then the live socket) and the "switching server" flag now live in... (and 1 more changes)
