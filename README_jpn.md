@@ -20,7 +20,7 @@ GPL-3.0-or-later - see LICENSE
   <img src="https://img.shields.io/badge/UI-Jetpack%20Compose-4285F4.svg" alt="UI">
   <img src="https://img.shields.io/badge/Platform-Android-3DDC84.svg" alt="Platform">
   <img src="https://img.shields.io/badge/Tests-356%20passing-2ea44f.svg" alt="Tests">
-  <img src="https://img.shields.io/badge/Version-0.7.9-0f6cbd.svg" alt="Version">
+  <img src="https://img.shields.io/badge/Version-0.8.0.0-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-functional-0F6CBD.svg" alt="Maturity">
 </p>
 
@@ -38,7 +38,7 @@ Wi-Fi または Bluetooth 経由で [HYDRA-UMC](https://github.com/JuanenRac/HYD
 
 | | |
 |---|---|
-| バージョン | `0.7.9` |
+| バージョン | `0.8.0.0` |
 | 成熟度 | 機能する |
 | テスト | 356 (`./gradlew testDebugUnitTest`) |
 | 技術 | Kotlin / Jetpack / biometric auth / WebSocket client |
@@ -100,7 +100,7 @@ Wi-Fi または Bluetooth 経由で [HYDRA-UMC](https://github.com/JuanenRac/HYD
 - **原子的な指令同期**（`viewmodel/RobotViewModel.kt` 自身の `sendAtomicCommand()`）—— すべての書き込み（再生/一時停止/停止/ジョグ/ジョグ幅/バルブ/ポンプ/速度/ビジョン/ツール）は、設定ツリー全体ではなく、小さな単一ロボットの原子的な指令を送信します——サーバーは、他にどの統合ロボットが影響を受けるかを自ら計算し、ディスクに永続化し、他のすべての接続中クライアントへブロードキャストします。有効化/無効化は、再生/一時停止/停止と同じ方法でロボット自身の `combinedWith` 兄弟へ伝播します。これらはすべて同じ影響を受けるロボットの計算ロジックを共有しているためです。
 - **グローバル STOP ウィジェット**（`widget/GlobalStopWidget.kt`）—— 素早くアクセスするための専用の**ホーム画面ウィジェット**。視認性が高く、すぐに使える**グローバル STOP** ボタンを提供します——上記と同じ呼び出しです：タップするとアプリが前面に出て、サーバー接続ができ次第すぐに停止を送信します（プロセスがまだ起動していない完全なコールドスタートでも同様）。サーバーに届かない場合は STOP 未確認を表示します。通知のアクションも同じ動作です。これはサーバーのソフトウェア停止であり、ハードウェアの E-STOP ではなく、何の電源も遮断しません。
 - **触覚フィードバック**（`ui/ControlScreen.kt`）—— 高度な感覚フィードバックシステム。グローバル STOP はタップに即座の 2 連続振動で応えます。各ロボットの停止ボタンは**長押し保護**を維持します（素早いタップは短い振動とヒントのみで、本当に長押ししたときだけコマンドを送信）。区別された触覚シグネチャ（成功、エラー、緊急パルス）が、騒がしい環境でオペレーターに物理的な確認を提供します。
-- **アプリ内アップデートチャンネル**（`update/GitHubReleaseUpdater.kt`、`common/ReleaseMetadataParser.kt`、`common/SemanticVersion.kt`）—— 起動時および「設定 → アップデート」から最新の安定版 GitHub Release を確認します。下書きでもプレリリースでもないタグの、正確な `HYDRA-UMC-ANDROID-CONTROL-release.apk` アセットのみをダウンロードし、自動インストールは一切行いません —— 最終的な同意は Android 自体のパッケージインストーラーが求めます。完全なリリース契約: [`docs/GITHUB_RELEASE_UPDATES.md`](docs/GITHUB_RELEASE_UPDATES.md)。
+- **アプリ内アップデートチャンネル**（`update/GitHubReleaseUpdater.kt`、`update/ReleaseMetadataParser.kt`、`update/SemanticVersion.kt`）—— 起動時および「設定 → アップデート」から最新の安定版 GitHub Release を確認します。下書きでもプレリリースでもないタグの、正確な `HYDRA-UMC-ANDROID-CONTROL-release.apk` アセットのみをダウンロードし、自動インストールは一切行いません —— 最終的な同意は Android 自体のパッケージインストーラーが求めます。完全なリリース契約: [`docs/GITHUB_RELEASE_UPDATES.md`](docs/GITHUB_RELEASE_UPDATES.md)。
 - **Bluetooth LE (GATT)**(`network/HydraBleClient.kt`、`network/BleContract.kt`、`network/AndroidBleGatt.kt`)- 文書化された規約([`docs/BLE_CONTRACT.md`](docs/BLE_CONTRACT.md))に従う本物のGATTクライアント。HYDRAサービスで絞り込むスキャン、MTU交渉付きの接続、サービスの確認、通知、双方向のフレーム分割メッセージ、書き込みは一度に1件、待ち時間を延ばしながらの自動再接続、Android 12以降の権限(`BLUETOOTH_SCAN`/`BLUETOOTH_CONNECT`)、失敗ごとにユーザーの言語で表示する明確なメッセージ。**ペリフェラル側を実装したHYDRA-UMCデバイスはまだありません。** クライアントは模擬GATTに対してのみテストされており、Android側の実装はスマートフォンで実行されたことがなく、ロボットへのコマンドはBluetoothでは送信されません。
 - **オプションのTLS**(`network/TlsSettings.kt`、`network/HydraHttp.kt`、`ui/SecuritySettings.kt`)- **設定 → セキュリティ**で「自動」(既定。従来どおりの動作)、「TLSを必須にする」、「暗号化なしのみ」を選べ、サーバー証明書のフィンガープリント(SHA-256)の固定や独自CAの信頼も設定できます。ローカルネットワーク外のホストへの暗号化されていないセッションでは、すべての画面の上に赤い警告が表示されます。埋め込みの3Dビューはまだこの規則に従いません。ローカルサーバーとの本物のハンドシェイクでテスト済みで、TLS付きの実際のHYDRA-UMCサーバーでは未検証です。
 - **ローカルネットワーク外では非暗号化通信なし** (`network/TlsSettings.kt`, `PlainRemoteGuard`) - **設定 → セキュリティ → ローカルネットワーク外の非暗号化通信を許可** がオン(既定ではオフ)でない限り、ローカルネットワーク外のサーバーへの暗号化されていない HTTP/WS を拒否します。埋め込み 3D ビューはセッショントークンをクエリではなくアドレスのフラグメント(`#token=`)で受け取るため、サーバーやプロキシのログには記録されません。アプリデータの自動バックアップは無効です。
@@ -129,7 +129,7 @@ Wi-Fi または Bluetooth 経由で [HYDRA-UMC](https://github.com/JuanenRac/HYD
 | スマートフォンから盗まれたトークン | サインイントークンと更新トークンは EncryptedSharedPreferences（値ごとに AES-256-GCM、マスターキーは Android Keystore）に保存され、アプリデータの自動バックアップは無効です（`allowBackup=false`） | `network/AuthPrefs.kt`, `AndroidManifest.xml` |
 | ローカルネットワーク外のサーバーへの平文通信 | `PlainRemoteGuard` は、設定 > セキュリティ > ローカルネットワーク外での平文通信を許可、がオン（既定ではオフ）でない限り、そのようなサーバーへの暗号化されていない HTTP と WebSocket を拒否します。暗号化されていないセッションでは、すべての画面の上に赤い警告が出ます | `network/TlsSettings.kt`, `ui/SecuritySettings.kt` |
 | 偽のサーバー | 任意の TLS（自動、TLS 必須、平文のみの 3 モード）。SHA-256 フィンガープリントを固定すると、そのフィンガープリントと完全に一致する証明書だけを受け入れ、代わりに独自の CA を信頼することもできます | `network/TlsSettings.kt`, `network/HydraHttp.kt` |
-| 偽の更新 | ドラフトではない最新の安定版リリースにある `HYDRA-UMC-ANDROID-CONTROL-release.apk` という名前のアセットだけを受け入れます。アプリが自分でインストールすることはなく、Android 自身のインストーラーが同意を求めます | `common/ReleaseMetadataParser.kt` |
+| 偽の更新 | ドラフトではない最新の安定版リリースにある `HYDRA-UMC-ANDROID-CONTROL-release.apk` という名前のアセットだけを受け入れます。アプリが自分でインストールすることはなく、Android 自身のインストーラーが同意を求めます | `update/ReleaseMetadataParser.kt` |
 | 二人で動かされるロボット、または届かない停止 | ロボットは動かす前に予約され、画面には保持者が表示されます。全停止は短いタイムアウトで送信され、1 回再試行し、ロボットごとの停止にフォールバックし、届かなかった場合は「停止未確認」の状態を保持し続けます | `ui/GlobalStop.kt`, `network/AccessModels.kt`, `network/StopAllResult.kt` |
 
 **絶対にしないこと：** 物理的な非常停止の代わりになること。停止はサーバーのソフトウェア停止であり、何の電源も切りません。

@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+## [0.8.0.0] - The text helper and the update gate come from the shared Kotlin module: optStr, ReleaseMetadataParser and the result types of the update check moved to the SDK (clients/kotlinappcommon) and this app compiles the pinned copy;... (and 1 more changes)
+
 - **The text helper and the update gate come from the shared Kotlin module:** `optStr`, `ReleaseMetadataParser` and the result types of the update check moved to the SDK (`clients/kotlin_app_common`) and this app compiles the pinned copy; its own `ControlRelease` only names the asset. Nothing changes for the user: the same releases are offered and refused.
 
 - **A test signs in against the one stand-in server of the SDK:** `FakeServerSessionTest` starts the vendored `hydra_fake_server.py` as a process (skipped without Python) and drives the real client through sign-in, a refused password and the global STOP; `tools/sync_sdk_answers.py` keeps the copy identical to the SDK.

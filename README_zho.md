@@ -20,7 +20,7 @@ GPL-3.0-or-later - see LICENSE
   <img src="https://img.shields.io/badge/UI-Jetpack%20Compose-4285F4.svg" alt="UI">
   <img src="https://img.shields.io/badge/Platform-Android-3DDC84.svg" alt="Platform">
   <img src="https://img.shields.io/badge/Tests-356%20passing-2ea44f.svg" alt="Tests">
-  <img src="https://img.shields.io/badge/Version-0.7.9-0f6cbd.svg" alt="Version">
+  <img src="https://img.shields.io/badge/Version-0.8.0.0-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-functional-0F6CBD.svg" alt="Maturity">
 </p>
 
@@ -38,7 +38,7 @@ GPL-3.0-or-later - see LICENSE
 
 | | |
 |---|---|
-| 版本 | `0.7.9` |
+| 版本 | `0.8.0.0` |
 | 成熟度 | 可用 |
 | 测试 | 356 (`./gradlew testDebugUnitTest`) |
 | 技术栈 | Kotlin / Jetpack / biometric auth / WebSocket client |
@@ -100,7 +100,7 @@ GPL-3.0-or-later - see LICENSE
 - **原子化指令同步**（`viewmodel/RobotViewModel.kt` 自身的 `sendAtomicCommand()`）—— 每一次写入（播放/暂停/停止/点动/点动步长/阀门/泵/速度/视觉/工具）都发送一个小型的、单机器人的原子指令,而非整棵设置树——服务器自行计算哪些合并机器人也会受到影响,持久化到磁盘,并向所有其他已连接客户端广播。启用/禁用会以与播放/暂停/停止相同的方式传播到机器人自身的 `combinedWith` 同伴,因为它们都共享相同的受影响机器人计算逻辑。
 - **全局 STOP 小组件**（`widget/GlobalStopWidget.kt`）—— 专用的**主屏幕小组件**,用于快速访问。提供一个高可见度、可立即访问的**全局 STOP** 按钮——与上面相同的调用：轻点后应用回到前台,服务器连接一建立就发送停止,即使是完全冷启动（进程尚未运行）也是如此；如果无法连接服务器,则显示 STOP 未确认。通知中的操作作用相同。这是服务器的软件停止，不是硬件 E-STOP，也不会切断任何设备的电源。
 - **触觉反馈**（`ui/ControlScreen.kt`）—— 高级感官反馈系统。全局 STOP 在轻点时立即以两次短振动回应；每个机器人自己的停止按钮保留**长按保护**（快速轻点只有一次短振动和提示；只有真正长按才会发送命令）。差异化的触觉特征（成功、错误和紧急脉冲）在嘈杂环境中为操作员提供物理确认。
-- **应用内更新渠道**（`update/GitHubReleaseUpdater.kt`、`common/ReleaseMetadataParser.kt`、`common/SemanticVersion.kt`）—— 启动时以及从「设置 → 更新」检查最新的稳定版 GitHub Release;仅下载来自非草稿、非预发布标签的确切 `HYDRA-UMC-ANDROID-CONTROL-release.apk` 资源,从不自动安装 —— 最终同意由 Android 自身的软件包安装程序请求。完整发布契约:[`docs/GITHUB_RELEASE_UPDATES.md`](docs/GITHUB_RELEASE_UPDATES.md)。
+- **应用内更新渠道**（`update/GitHubReleaseUpdater.kt`、`update/ReleaseMetadataParser.kt`、`update/SemanticVersion.kt`）—— 启动时以及从「设置 → 更新」检查最新的稳定版 GitHub Release;仅下载来自非草稿、非预发布标签的确切 `HYDRA-UMC-ANDROID-CONTROL-release.apk` 资源,从不自动安装 —— 最终同意由 Android 自身的软件包安装程序请求。完整发布契约:[`docs/GITHUB_RELEASE_UPDATES.md`](docs/GITHUB_RELEASE_UPDATES.md)。
 - **蓝牙 LE（GATT）**（`network/HydraBleClient.kt`、`network/BleContract.kt`、`network/AndroidBleGatt.kt`）- 遵循有文档约定（[`docs/BLE_CONTRACT.md`](docs/BLE_CONTRACT.md)）的真实 GATT 客户端：按 HYDRA 服务过滤的扫描、协商 MTU 的连接、服务检查、通知、双向分帧消息、一次只写一条、等待时间递增的自动重连、Android 12+ 权限（`BLUETOOTH_SCAN`/`BLUETOOTH_CONNECT`），以及每种失败都用用户语言给出的清晰提示。**目前还没有任何 HYDRA-UMC 设备实现外设一侧：** 客户端只针对模拟的 GATT 做过测试，Android 部分从未在手机上运行过，机器人命令也不通过蓝牙发送。
 - **可选 TLS**（`network/TlsSettings.kt`、`network/HydraHttp.kt`、`ui/SecuritySettings.kt`）- **设置 → 安全** 可选择自动（默认，即一直以来的行为）、强制使用 TLS 或仅明文，并可固定服务器证书指纹（SHA-256）或信任自定义 CA。对本地网络之外主机的未加密会话，会在所有屏幕上方显示红色警告。内嵌的 3D 视图暂不遵循这些规则。已用真实握手对本地服务器测试；从未对启用 TLS 的真实 HYDRA-UMC 服务器测试。
 - **本地网络之外不使用未加密通信** (`network/TlsSettings.kt`, `PlainRemoteGuard`) - 除非开启 **设置 → 安全 → 允许在本地网络之外使用未加密通信**(默认关闭),应用会拒绝向本地网络之外的服务器发送未加密的 HTTP/WS。内嵌的 3D 视图通过地址片段(`#token=`)而不是查询参数接收会话令牌,因此任何服务器或代理日志都不会记录它。应用数据的自动备份已关闭。
@@ -129,7 +129,7 @@ GPL-3.0-or-later - see LICENSE
 | 从手机窃取的令牌 | 登录令牌和刷新令牌使用 EncryptedSharedPreferences 保存（每个值 AES-256-GCM，主密钥在 Android Keystore 中）；应用数据的自动备份已关闭（`allowBackup=false`） | `network/AuthPrefs.kt`, `AndroidManifest.xml` |
 | 向本地网络之外的服务器发送明文流量 | `PlainRemoteGuard` 会拒绝向此类服务器发送未加密的 HTTP 和 WebSocket，除非“设置 > 安全 > 允许在本地网络之外使用明文流量”已开启（默认关闭）；未加密的会话会在每个界面上方显示红色警告 | `network/TlsSettings.kt`, `ui/SecuritySettings.kt` |
 | 伪造的服务器 | 可选的 TLS，有三种模式（自动、要求 TLS、仅明文）；固定 SHA-256 指纹后，只接受指纹完全相同的证书，也可以改为信任自定义 CA | `network/TlsSettings.kt`, `network/HydraHttp.kt` |
-| 伪造的更新 | 只接受最新稳定、非草稿发布中名为 `HYDRA-UMC-ANDROID-CONTROL-release.apk` 的资源；应用从不自行安装，由 Android 自带的安装程序请求同意 | `common/ReleaseMetadataParser.kt` |
+| 伪造的更新 | 只接受最新稳定、非草稿发布中名为 `HYDRA-UMC-ANDROID-CONTROL-release.apk` 的资源；应用从不自行安装，由 Android 自带的安装程序请求同意 | `update/ReleaseMetadataParser.kt` |
 | 被两个人同时移动的机器人，或没有送达的停止 | 机器人在点动前先预约，屏幕会显示谁持有它；全局停止以较短的超时发送，重试一次，回退为逐个机器人停止，若未能送达则保持“停止未确认”状态 | `ui/GlobalStop.kt`, `network/AccessModels.kt`, `network/StopAllResult.kt` |
 
 **它绝不做的事：** 替代物理紧急停止。停止是服务器的软件停止，不会切断任何设备的电源。
