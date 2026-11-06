@@ -2231,7 +2231,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         // First of all: a held continuous jog ends and its axis is stopped.
         deadMan.interrupt()
         // The jogs that still wait their turn behind another write are dropped: they must not move a robot after the stop.
-        state.robots.forEach { commandQueue.cancelWaitingJogs(it.id) }
+        state.allRobots.forEach { commandQueue.cancelWaitingJogs(it.id) }
         val first = apiClient
         if (first == null) {
             val reason = app.getString(R.string.error_not_connected)
