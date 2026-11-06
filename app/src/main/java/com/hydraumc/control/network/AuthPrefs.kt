@@ -40,14 +40,14 @@ private val authPrefsDispatcher = Executors.newSingleThreadExecutor { r ->
 }.asCoroutineDispatcher()
 
 private const val PREFS_FILE_NAME = "auth_prefs_encrypted"
-private const val KEY_USERNAME = "username"
+private const val KEY_USERNAME = SessionKeys.USERNAME
 private const val KEY_PASSWORD = "password"
 private const val KEY_EMAIL = "email"
 private const val KEY_REMEMBER_ME = "remember_me"
 private const val KEY_LOGGED_IN = "is_logged_in"
 private const val KEY_BIOMETRIC_ENABLED = "biometric_enabled"
-private const val KEY_TOKEN = "token"
-private const val KEY_REFRESH_TOKEN = "refresh_token"
+private const val KEY_TOKEN = SessionKeys.TOKEN
+private const val KEY_REFRESH_TOKEN = SessionKeys.REFRESH_TOKEN
 
 /**
  * Manages user authentication and profile persistence, encrypted at rest.
@@ -187,15 +187,21 @@ class AuthPrefs(private val context: Context) : AuthStore {
     }
 
     override suspend fun saveAuth(profile: UserProfile) = withContext(authPrefsDispatcher) {
-        openEncryptedPrefs().edit()
-            .putString(KEY_USERNAME, profile.username)
+        val prefs = openEncryptedPrefs()
+        // The session fields follow the rules shared with the other mobile apps (SessionFields); the profile
+        // always carries the refresh token it wants kept, so an empty one erases it.
+        SessionFields(SharedPreferencesKv(prefs)).saveSession(
+            token = profile.token,
+            username = profile.username,
+            refreshToken = profile.refreshToken.ifEmpty { null },
+            replaceRefreshToken = true,
+        )
+        prefs.edit()
             .putString(KEY_PASSWORD, profile.password)
             .putString(KEY_EMAIL, profile.email)
             .putBoolean(KEY_REMEMBER_ME, profile.rememberMe)
             .putBoolean(KEY_LOGGED_IN, profile.isLoggedIn)
             .putBoolean(KEY_BIOMETRIC_ENABLED, profile.isBiometricEnabled)
-            .putString(KEY_TOKEN, profile.token)
-            .putString(KEY_REFRESH_TOKEN, profile.refreshToken)
             .apply()
         Unit
     }
@@ -211,10 +217,9 @@ class AuthPrefs(private val context: Context) : AuthStore {
         // keeps it for the fingerprint sign-in the user asked for, the saved
         // password: on a shared tablet the next person must not find the
         // previous operator's password in the form.
-        val edit = openEncryptedPrefs().edit()
-            .putBoolean(KEY_LOGGED_IN, false)
-            .putString(KEY_TOKEN, "")
-            .putString(KEY_REFRESH_TOKEN, "")
+        val prefs = openEncryptedPrefs()
+        SessionFields(SharedPreferencesKv(prefs)).clearSession()
+        val edit = prefs.edit().putBoolean(KEY_LOGGED_IN, false)
         if (wipePassword) edit.putString(KEY_PASSWORD, "")
         edit.apply()
         Unit

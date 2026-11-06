@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The stored session follows the rules shared with the other mobile apps:** `SessionFields` holds the rules for the access token, the user name and the refresh token (a sign-in replaces the refresh token, a renewal keeps it, signing out removes the token and the refresh token) over the same encrypted store and the same keys, so nobody is signed out by the update, and a test replays the sequences all the mobile apps share.
+
 - **The live socket is owned by its own class:** opening the socket, closing the previous one first and ignoring the close, error and expired-token signals of the server being left during a server switch moved out of the view model into `LiveSocket` (with a stand-in socket in the tests), and the callbacks of the view model became one listener; no change in behaviour.
 
 - **A pairing link without a certificate fingerprint is refused:** the link must carry a valid SHA-256 fingerprint of the server certificate; one without it (or with an empty one) is rejected with its own message in the eight languages, as the iOS and DSI apps already do, and accepting a valid link always makes the connection require TLS and pins that certificate. The "pair anyway on a trusted network" warning of the dialog is gone. The tests of the link check every way a missing fingerprint can be spelled.

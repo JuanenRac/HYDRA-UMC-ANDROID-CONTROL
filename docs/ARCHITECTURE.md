@@ -34,7 +34,9 @@ no code shared between the three clients.
 - **State cache** (`StateCache.kt`): persists the last known state via DataStore so the dashboard has something to
   show immediately on cold start and while offline.
 - **Credentials** (`AuthPrefs.kt`): username/password/token cache is stored via `androidx.security.crypto`
-  (Keystore-backed AES-256-GCM), not plain DataStore/SharedPreferences.
+  (Keystore-backed AES-256-GCM), not plain DataStore/SharedPreferences. The rules for the token, the user name and
+  the refresh token (`SessionFields.kt`) are the ones of the schema all the mobile apps share, replayed in the tests
+  against the shared vectors.
 - **Connection settings** (`ConnectionPrefs.kt`): DataStore-backed persistence of the manually entered IP/port, used
   by `SettingsScreen.kt` as a fallback when discovery doesn't find a server.
 
@@ -159,6 +161,7 @@ app/src/main/java/com/hydraumc/control/
 │   ├── StateCache.kt            # Persistent DataStore state storage (offline/cold-start view)
 │   ├── StopAllResult.kt         # Global STOP answer (per-robot result) and the status the banner shows
 │   ├── AuthPrefs.kt             # Encrypted (security-crypto) credential + biometric settings persistence
+│   ├── SessionFields.kt         # Rules of the stored session shared with the other mobile apps
 │   └── ConnectionPrefs.kt       # DataStore persistence for manually entered IP/port
 ├── update/
 │   ├── GitHubReleaseUpdater.kt  # Safe GitHub Release update client - see docs/GITHUB_RELEASE_UPDATES.md

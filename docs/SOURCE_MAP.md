@@ -20,6 +20,7 @@ Every file of the repository with a line on what it does: the annotated tree tha
 │   │   │   │   └── HydraState.kt         # settings.json field-by-field mirror (RobotView/ControllerView/JobView) + ServerInfo discovery model
 │   │   │   ├── network/
 │   │   │   │   ├── AuthPrefs.kt           # Encrypted (AES256-GCM) credential/session storage
+│   │   │   │   ├── SessionFields.kt       # Rules of the stored session (token, user name, refresh token) shared with the other mobile apps
 │   │   │   │   ├── ConnectionPrefs.kt     # Persisted server IP/port (DataStore Preferences)
 │   │   │   │   ├── Discovery.kt           # Concurrent /24 subnet scan (primary) + NSD/mDNS listener (secondary) for finding a server on the LAN
 │   │   │   │   ├── AccessModels.kt         # Controller id, reservations, safety limits and the jog check (pure rules)
