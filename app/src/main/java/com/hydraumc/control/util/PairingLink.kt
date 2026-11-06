@@ -20,12 +20,12 @@ import java.net.URLDecoder
  * keeps anything. The limits come from docs/robot_command_contract.json (generated RobotCommandContract).
  */
 object PairingLink {
-    /** What a link offers. [fingerprint] is the canonical (lowercase, no separators) SHA-256 of the certificate, or null for a server without TLS. */
-    data class Offer(val host: String, val port: Int, val fingerprint: String?, val name: String) {
-        val usesPinning: Boolean get() = fingerprint != null
+    /** What a link offers. [fingerprint] is the canonical (lowercase, no separators) SHA-256 of the certificate; a link without one is never accepted. */
+    data class Offer(val host: String, val port: Int, val fingerprint: String, val name: String) {
+        val usesPinning: Boolean get() = true
     }
 
-    enum class Problem { EMPTY, TOO_LONG, NOT_A_PAIRING_LINK, MISSING_HOST, BAD_HOST, BAD_PORT, BAD_FINGERPRINT, BAD_NAME, REPEATED_FIELD, BAD_ENCODING }
+    enum class Problem { EMPTY, TOO_LONG, NOT_A_PAIRING_LINK, MISSING_HOST, BAD_HOST, BAD_PORT, BAD_FINGERPRINT, MISSING_FINGERPRINT, BAD_NAME, REPEATED_FIELD, BAD_ENCODING }
 
     sealed class Result {
         data class Ok(val offer: Offer) : Result()
@@ -68,7 +68,9 @@ object PairingLink {
         val port = fields["port"]?.trim()?.let { p -> if (p.isNotEmpty() && p.all { it.isDigit() } && p.length <= 5) p.toIntOrNull() else null }
         if (port == null || port !in RobotCommandContract.PAIRING_PORT_MIN..RobotCommandContract.PAIRING_PORT_MAX) return Result.Refused(Problem.BAD_PORT)
         val fpText = fields["fp"]?.trim().orEmpty()
-        val fingerprint = if (fpText.isEmpty()) null else TlsFingerprint.normalize(fpText) ?: return Result.Refused(Problem.BAD_FINGERPRINT)
+        // The fingerprint is mandatory: without it the link is refused, there is no "pair anyway" mode.
+        if (fpText.isEmpty()) return Result.Refused(Problem.MISSING_FINGERPRINT)
+        val fingerprint = TlsFingerprint.normalize(fpText) ?: return Result.Refused(Problem.BAD_FINGERPRINT)
         val name = fields["name"]?.trim().orEmpty()
         if (name.length > RobotCommandContract.PAIRING_NAME_MAX || name.any { it.isISOControl() }) return Result.Refused(Problem.BAD_NAME)
         return Result.Ok(Offer(host, port, fingerprint, name.ifEmpty { host }))

@@ -458,12 +458,12 @@
     <string name="pairing_dialog_message">%1$s at %2$s, port %3$d.</string>
     <string name="pairing_dialog_fingerprint">Certificate fingerprint (SHA-256):\n%1$s</string>
     <string name="pairing_dialog_pin_replace">Accepting sets the connection to require TLS and pins this certificate, replacing the fingerprint kept before.</string>
-    <string name="pairing_dialog_no_fingerprint">This link carries no certificate fingerprint: the connection will not be pinned. Pair only on a network you trust.</string>
     <string name="pairing_dialog_confirm">Pair and connect</string>
     <string name="pairing_problem_not_link">That is not a pairing link.</string>
     <string name="pairing_problem_host">The pairing link has no valid server address.</string>
     <string name="pairing_problem_port">The pairing link has no valid port.</string>
     <string name="pairing_problem_fingerprint">The certificate fingerprint of the link is not valid.</string>
+    <string name="pairing_problem_missing_fingerprint">This link carries no certificate fingerprint, so it was refused: pairing always pins the certificate of the server.</string>
     <string name="pairing_problem_name">The name in the pairing link is not valid.</string>
     <string name="pairing_problem_generic">The pairing link is not valid.</string>
     <string name="work_selector_label">Work: %1$s</string>

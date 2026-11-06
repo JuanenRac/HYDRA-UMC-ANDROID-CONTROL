@@ -14,7 +14,7 @@ Every test below is **not executed** on a real phone. The app builds and its uni
 |---|------|-----------------|--------|
 | 1 | Install the new APK over the old one. | It installs as an update and keeps the session. | not executed |
 | 2 | Pair with a link that carries a fingerprint, on a server with TLS. | The app pairs and stores the fingerprint. | not executed |
-| 3 | Pair with a link without a fingerprint, on a server without TLS. | The behaviour documented for that case; note whether it differs from the iOS app. | not executed |
+| 3 | Pair with a link without a fingerprint. | The app refuses it and says the fingerprint is missing; nothing is changed. | not executed |
 | 4 | Open the camera of a robot whose camera id comes from the robot assignment. | The camera shown is the one of that robot; with no match the app says so. | not executed |
 | 5 | Cut the Wi-Fi for 20 s while a camera is open and restore it. | The app reconnects with backoff and sends the credential again. | not executed |
 | 6 | Open the biometric prompt on both phones. | The prompt appears; a cancelled prompt does not unlock; the look of the prompt is acceptable with the current UI libraries. | not executed |

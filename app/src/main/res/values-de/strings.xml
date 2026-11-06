@@ -458,12 +458,12 @@
     <string name="pairing_dialog_message">%1$s unter %2$s, Port %3$d.</string>
     <string name="pairing_dialog_fingerprint">Zertifikat-Fingerabdruck (SHA-256):\n%1$s</string>
     <string name="pairing_dialog_pin_replace">Mit „Koppeln“ verlangt die Verbindung TLS und merkt sich dieses Zertifikat; der bisher gespeicherte Fingerabdruck wird ersetzt.</string>
-    <string name="pairing_dialog_no_fingerprint">Dieser Link enthält keinen Zertifikat-Fingerabdruck: Die Verbindung wird nicht festgelegt. Nur in einem vertrauenswürdigen Netzwerk koppeln.</string>
     <string name="pairing_dialog_confirm">Koppeln und verbinden</string>
     <string name="pairing_problem_not_link">Das ist kein Kopplungslink.</string>
     <string name="pairing_problem_host">Der Kopplungslink enthält keine gültige Serveradresse.</string>
     <string name="pairing_problem_port">Der Kopplungslink enthält keinen gültigen Port.</string>
     <string name="pairing_problem_fingerprint">Der Zertifikat-Fingerabdruck im Link ist ungültig.</string>
+    <string name="pairing_problem_missing_fingerprint">Dieser Link enthält keinen Zertifikat-Fingerabdruck und wurde abgelehnt: Die Kopplung legt immer das Zertifikat des Servers fest.</string>
     <string name="pairing_problem_name">Der Name im Kopplungslink ist ungültig.</string>
     <string name="pairing_problem_generic">Der Kopplungslink ist ungültig.</string>
     <string name="work_selector_label">Arbeit: %1$s</string>

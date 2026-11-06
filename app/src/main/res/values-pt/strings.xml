@@ -458,12 +458,12 @@
     <string name="pairing_dialog_message">%1$s em %2$s, porta %3$d.</string>
     <string name="pairing_dialog_fingerprint">Impressão digital do certificado (SHA-256):\n%1$s</string>
     <string name="pairing_dialog_pin_replace">Ao aceitar, a ligação passa a exigir TLS e fixa este certificado, substituindo a impressão digital guardada antes.</string>
-    <string name="pairing_dialog_no_fingerprint">Esta ligação não inclui a impressão digital do certificado: a ligação não ficará fixada. Emparelhe apenas numa rede de confiança.</string>
     <string name="pairing_dialog_confirm">Emparelhar e ligar</string>
     <string name="pairing_problem_not_link">Isso não é uma ligação de emparelhamento.</string>
     <string name="pairing_problem_host">A ligação de emparelhamento não tem um endereço de servidor válido.</string>
     <string name="pairing_problem_port">A ligação de emparelhamento não tem uma porta válida.</string>
     <string name="pairing_problem_fingerprint">A impressão digital do certificado da ligação não é válida.</string>
+    <string name="pairing_problem_missing_fingerprint">Esta ligação não inclui a impressão digital do certificado e foi rejeitada: o emparelhamento fixa sempre o certificado do servidor.</string>
     <string name="pairing_problem_name">O nome na ligação de emparelhamento não é válido.</string>
     <string name="pairing_problem_generic">A ligação de emparelhamento não é válida.</string>
     <string name="work_selector_label">Trabalho: %1$s</string>

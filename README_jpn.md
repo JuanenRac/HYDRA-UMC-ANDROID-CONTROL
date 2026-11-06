@@ -19,7 +19,7 @@ GPL-3.0-or-later - see LICENSE
   <img src="https://img.shields.io/badge/Language-Kotlin-7F52FF.svg" alt="Language">
   <img src="https://img.shields.io/badge/UI-Jetpack%20Compose-4285F4.svg" alt="UI">
   <img src="https://img.shields.io/badge/Platform-Android-3DDC84.svg" alt="Platform">
-  <img src="https://img.shields.io/badge/Tests-530%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-531%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.8.0.1-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-functional-0F6CBD.svg" alt="Maturity">
 </p>
@@ -40,7 +40,7 @@ Wi-Fi または Bluetooth 経由で [HYDRA-UMC](https://github.com/JuanenRac/HYD
 |---|---|
 | バージョン | `0.8.0.1` |
 | 成熟度 | 機能する |
-| テスト | 530 (`./gradlew testDebugUnitTest`) |
+| テスト | 531 (`./gradlew testDebugUnitTest`) |
 | 技術 | Kotlin / Jetpack / biometric auth / WebSocket client |
 | 対象 | Android のスマートフォンまたはタブレット |
 | 実機での確認 | まだです：このバージョンについて実機での動作記録はありません |
@@ -56,7 +56,7 @@ Wi-Fi または Bluetooth 経由で [HYDRA-UMC](https://github.com/JuanenRac/HYD
 | 領域 | 状態 | ここでの意味 |
 |---|---|---|
 | ソフトウェア | 🟡 | 主な目的では動作します。足りない点は上の正直さの確認に書かれています |
-| テスト | 🟢 | 自動テスト 530 件。変更のたびに実行されます |
+| テスト | 🟢 | 自動テスト 531 件。変更のたびに実行されます |
 | 実機 | 🔴 | まだです：このバージョンについて実機での動作記録はありません |
 | インターフェースとプロトコル | 🟡 | 提供するルートやメッセージは文書化され、クライアントで試験済みです。すべてのクライアントがまだ使ったわけではありません |
 | 連携 | 🟠 | メッセージとルートは SDK の共通契約に照らして検証されていますが、実機と一緒に動かしたことはありません |
@@ -118,7 +118,7 @@ Wi-Fi または Bluetooth 経由で [HYDRA-UMC](https://github.com/JuanenRac/HYD
 - **HOME/RESET**（`ui/HomeResetControl.kt`, `util/HomeReset.kt`, `viewmodel/RobotViewModel.kt`）- サーバーの `reset` コマンドで、選択したロボットをゼロ位置へ移動するボタンです。初期設定ではオフで、アクセスパネルのスイッチでオンにでき、選択は保存されます。何かを送る前に、順番どおり、制限時間内に2回確認します。ロボットが軌道を実行中、セーフモード、オフライン、位置なしの場合、STOPの送信中または未確認の間、ジョグの送信中、ジョグの有効化が必要でされていない場合、およびオペレーターでも管理者でもないセッションの場合は、専用の文言で拒否されます（役割はサーバーが再度判断します）。コマンドにはジョグと同じく増加する番号が付き、`reset` を知らないサーバーは見分けて記憶されます。既定値、確認の回数、制限時間は `docs/robot_command_contract.json` から読み込みます。ローカルの擬似サーバーでテスト済みで、ロボットは関与しません。
 - **デッドマン式の連続ジョグ**（`ui/DeadManJogControl.kt`, `util/DeadManJog.kt`, `network/DeadManJogRunner.kt`, `viewmodel/DeadManJogController.kt`）- 押している間だけ動くボタンです。`jogStart` を送り、押している間は 100 ms ごとに `jogHeartbeat` を送り、離すと `jogStop` を送ります。初期設定ではオフです（アクセスパネルのスイッチ）。ボタンを離す、STOP、画面を離れる、接続が切れる、ハートビートが2回失敗する、押下が制限時間を超える、通信状態が悪いといった場合に終了し、アプリは停止を自分で送って再試行します。サーバーはハートビートが 300 ms 途絶えると軸を自分で停止する想定です。ロボットが軌道を実行中、セーフモード、オフラインの場合、STOPが保留中の場合、ジョグの有効化が必要でされていない場合、ロボットを動かせない役割の場合は、専用の文言で拒否されます。すべての数値は `docs/robot_command_contract.json` から読み込みます。3つのコマンドはまだサーバーにありません。テストは擬似サーバーに対してのみ行い、これらを知らないサーバーは見分けて記憶されます。
 - **通信状態インジケーター**（`ui/DeadManJogControl.kt`, `util/LinkHealth.kt`）- 2秒ごとに送る小さなリクエストの往復時間を、点と言葉と数値で表示します。直近8回の応答のうち最も遅いものでレベルが決まります。通信が遅い（500 ms）または応答がない場合は連続ジョグをブロックし、実行中のものを停止します。これは初期設定でオンの2つ目のスイッチで切り替えられます。サーバー側の専用 ping フィールドは未対応です。
-- **QRコードまたはリンクでのペアリング**（`util/PairingLink.kt`, `ui/LinkAndWatchSettings.kt`）- サーバーの管理ページが `hydra-umc://pair?host=...&port=...&fp=...&name=...` を含むコードを表示する想定です。スマートフォンのカメラでこのアプリを開くか、リンクを貼り付けます。初期設定ではオフです。アプリは名前、アドレス、証明書フィンガープリントを表示し、何かを保存する前に確認します。承諾すると接続はTLSを必須とし、そのフィンガープリントを固定します。コードを描画する管理ページはサーバー側で未対応で、アプリ自体にカメラスキャナーはありません。
+- **QRコードまたはリンクでのペアリング**（`util/PairingLink.kt`, `ui/LinkAndWatchSettings.kt`）- サーバーの管理ページが `hydra-umc://pair?host=...&port=...&fp=...&name=...` を含むコードを表示する想定です。スマートフォンのカメラでこのアプリを開くか、リンクを貼り付けます。初期設定ではオフです。アプリは名前、アドレス、証明書フィンガープリントを表示し、何かを保存する前に確認します。承諾すると接続はTLSを必須とし、そのフィンガープリントを固定します。有効なフィンガープリントのないリンクは拒否されます。コードを描画する管理ページはサーバー側で未対応で、アプリ自体にカメラスキャナーはありません。
 - **ワーク選択**（`ui/WorkSelector.kt`, `util/WorkFiles.kt`）- 選択したロボットのフォルダーにサーバーが保管しているワークファイルを一覧表示し、サーバーと同じ方法でポイントを検査したうえで `trajectory` コマンドで1つ読み込みます。再生は開始せず、ロボットが軌道を実行中、セーフモード、オフライン、またはSTOPが保留中の間は拒否されます。
 - **ウォッチへのアラートと中継**（`wear/WatchAlerts.kt`, `wear/WatchBridge.kt`, `wear/WearAlertSink.kt`）- ペアリング済みのウォッチへアラート（接続切断、ロボットのオフラインまたはセーフモード、STOP未確認）を送ります。連続して手首があふれないよう制限しますが、重大なアラートは決して保留しません。ウォッチに送る状態には、コンプリケーション用の稼働中ロボット数とアラームも含まれます。在席ハートビートと音声コマンドの2段階確認は、初期設定でオフの2つのスイッチの先でのみサーバーへ中継されます。それらのエンドポイントはサーバー側で未対応です。
 
@@ -171,7 +171,7 @@ JDK 21 と Android SDK（Android Studio に両方含まれます）、および 
 
 ## 🧪 テスト
 
-`./gradlew testDebugUnitTest` で自動テスト 530 件を実行します。 ハードウェアも、このマシンの外にあるものも必要ありません。
+`./gradlew testDebugUnitTest` で自動テスト 531 件を実行します。 ハードウェアも、このマシンの外にあるものも必要ありません。
 
 CI は `HYDRA_UMC_CI=1 python tools/ci_validate.py` を実行し、マニフェスト、文書、8 つの README、図を検査します。
 

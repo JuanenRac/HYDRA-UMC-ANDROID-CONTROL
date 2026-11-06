@@ -1677,6 +1677,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                     PairingLink.Problem.BAD_HOST, PairingLink.Problem.MISSING_HOST -> R.string.pairing_problem_host
                     PairingLink.Problem.BAD_PORT -> R.string.pairing_problem_port
                     PairingLink.Problem.BAD_FINGERPRINT -> R.string.pairing_problem_fingerprint
+                    PairingLink.Problem.MISSING_FINGERPRINT -> R.string.pairing_problem_missing_fingerprint
                     PairingLink.Problem.BAD_NAME -> R.string.pairing_problem_name
                     PairingLink.Problem.NOT_A_PAIRING_LINK, PairingLink.Problem.EMPTY -> R.string.pairing_problem_not_link
                     else -> R.string.pairing_problem_generic
@@ -1686,15 +1687,13 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         return true
     }
 
-    /** The person accepted the offer on screen: the address is set, the certificate fingerprint (if any) is pinned and the app connects. */
+    /** The person accepted the offer on screen: the address is set, the certificate fingerprint is pinned with TLS required and the app connects. */
     fun confirmPairing() {
         val offer = pairingOffer.value ?: return
         pairingOffer.value = null
         ipAddress.value = offer.host
         port.value = offer.port.toString()
-        if (offer.fingerprint != null) {
-            saveTlsSettings(tlsSettings.value.copy(mode = TlsMode.REQUIRED, pinnedFingerprint = offer.fingerprint))
-        }
+        saveTlsSettings(tlsSettings.value.copy(mode = TlsMode.REQUIRED, pinnedFingerprint = offer.fingerprint))
         connect()
     }
 

@@ -458,12 +458,12 @@
     <string name="pairing_dialog_message">%1$s a %2$s, porta %3$d.</string>
     <string name="pairing_dialog_fingerprint">Impronta del certificato (SHA-256):\n%1$s</string>
     <string name="pairing_dialog_pin_replace">Accettando, la connessione richiede TLS e fissa questo certificato, sostituendo l\'impronta salvata prima.</string>
-    <string name="pairing_dialog_no_fingerprint">Questo link non contiene l\'impronta del certificato: la connessione non sarà fissata. Abbina solo su una rete fidata.</string>
     <string name="pairing_dialog_confirm">Abbina e connetti</string>
     <string name="pairing_problem_not_link">Questo non è un link di abbinamento.</string>
     <string name="pairing_problem_host">Il link di abbinamento non ha un indirizzo server valido.</string>
     <string name="pairing_problem_port">Il link di abbinamento non ha una porta valida.</string>
     <string name="pairing_problem_fingerprint">L\'impronta del certificato nel link non è valida.</string>
+    <string name="pairing_problem_missing_fingerprint">Questo link non contiene l\'impronta del certificato ed è stato rifiutato: l\'abbinamento fissa sempre il certificato del server.</string>
     <string name="pairing_problem_name">Il nome nel link di abbinamento non è valido.</string>
     <string name="pairing_problem_generic">Il link di abbinamento non è valido.</string>
     <string name="work_selector_label">Lavoro: %1$s</string>

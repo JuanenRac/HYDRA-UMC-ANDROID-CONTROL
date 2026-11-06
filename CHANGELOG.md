@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **A pairing link without a certificate fingerprint is refused:** the link must carry a valid SHA-256 fingerprint of the server certificate; one without it (or with an empty one) is rejected with its own message in the eight languages, as the iOS and DSI apps already do, and accepting a valid link always makes the connection require TLS and pins that certificate. The "pair anyway on a trusted network" warning of the dialog is gone. The tests of the link check every way a missing fingerprint can be spelled.
+
 ## [0.8.0.1] - The connect sequence moved out of the screen state: the first synchronisation with a server (identity answer, one renewal of an expired session, the settings, then the live socket) and the "switching server" flag now live in... (and 1 more changes)
 
 - **The connect sequence moved out of the screen state:** the first synchronisation with a server (identity answer, one renewal of an expired session, the settings, then the live socket) and the "switching server" flag now live in `ConnectionManager`, next to the metrics poll. A second connect cancels the first one, so two taps never interleave their writes; a server that cannot be reached ends without a socket. Six JVM tests cover the order, the renewal, the failures and the cancellation; the behaviour is unchanged.

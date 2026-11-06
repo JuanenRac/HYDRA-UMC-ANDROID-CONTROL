@@ -458,12 +458,12 @@
     <string name="pairing_dialog_message">%1$s(%2$s、ポート %3$d)</string>
     <string name="pairing_dialog_fingerprint">証明書フィンガープリント(SHA-256):\n%1$s</string>
     <string name="pairing_dialog_pin_replace">承諾すると、接続はTLSを必須とし、この証明書を固定します。以前のフィンガープリントは置き換えられます。</string>
-    <string name="pairing_dialog_no_fingerprint">このリンクには証明書フィンガープリントがありません。接続は固定されません。信頼できるネットワークでのみペアリングしてください。</string>
     <string name="pairing_dialog_confirm">ペアリングして接続</string>
     <string name="pairing_problem_not_link">ペアリングリンクではありません。</string>
     <string name="pairing_problem_host">ペアリングリンクに有効なサーバーアドレスがありません。</string>
     <string name="pairing_problem_port">ペアリングリンクに有効なポートがありません。</string>
     <string name="pairing_problem_fingerprint">リンク内の証明書フィンガープリントが無効です。</string>
+    <string name="pairing_problem_missing_fingerprint">このリンクには証明書フィンガープリントがないため拒否されました。ペアリングでは常にサーバーの証明書を固定します。</string>
     <string name="pairing_problem_name">ペアリングリンクの名前が無効です。</string>
     <string name="pairing_problem_generic">ペアリングリンクが無効です。</string>
     <string name="work_selector_label">ワーク: %1$s</string>

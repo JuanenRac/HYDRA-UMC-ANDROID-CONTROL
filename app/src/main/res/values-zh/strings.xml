@@ -458,12 +458,12 @@
     <string name="pairing_dialog_message">%1$s,地址 %2$s,端口 %3$d。</string>
     <string name="pairing_dialog_fingerprint">证书指纹(SHA-256):\n%1$s</string>
     <string name="pairing_dialog_pin_replace">接受后,连接将要求使用 TLS 并固定此证书,取代之前保存的指纹。</string>
-    <string name="pairing_dialog_no_fingerprint">此链接不含证书指纹:连接不会被固定。请仅在可信网络中配对。</string>
     <string name="pairing_dialog_confirm">配对并连接</string>
     <string name="pairing_problem_not_link">这不是配对链接。</string>
     <string name="pairing_problem_host">配对链接中没有有效的服务器地址。</string>
     <string name="pairing_problem_port">配对链接中没有有效的端口。</string>
     <string name="pairing_problem_fingerprint">链接中的证书指纹无效。</string>
+    <string name="pairing_problem_missing_fingerprint">此链接不含证书指纹,已被拒绝:配对始终会固定服务器的证书。</string>
     <string name="pairing_problem_name">配对链接中的名称无效。</string>
     <string name="pairing_problem_generic">配对链接无效。</string>
     <string name="work_selector_label">作业:%1$s</string>

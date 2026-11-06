@@ -458,12 +458,12 @@
     <string name="pairing_dialog_message">%1$s en %2$s, puerto %3$d.</string>
     <string name="pairing_dialog_fingerprint">Huella del certificado (SHA-256):\n%1$s</string>
     <string name="pairing_dialog_pin_replace">Al aceptar, la conexión pasa a exigir TLS y fija este certificado, sustituyendo la huella guardada antes.</string>
-    <string name="pairing_dialog_no_fingerprint">Este enlace no incluye la huella del certificado: la conexión no quedará fijada. Empareja solo en una red de confianza.</string>
     <string name="pairing_dialog_confirm">Emparejar y conectar</string>
     <string name="pairing_problem_not_link">Eso no es un enlace de emparejamiento.</string>
     <string name="pairing_problem_host">El enlace de emparejamiento no tiene una dirección de servidor válida.</string>
     <string name="pairing_problem_port">El enlace de emparejamiento no tiene un puerto válido.</string>
     <string name="pairing_problem_fingerprint">La huella del certificado del enlace no es válida.</string>
+    <string name="pairing_problem_missing_fingerprint">Este enlace no incluye la huella del certificado y se ha rechazado: el emparejamiento siempre fija el certificado del servidor.</string>
     <string name="pairing_problem_name">El nombre del enlace de emparejamiento no es válido.</string>
     <string name="pairing_problem_generic">El enlace de emparejamiento no es válido.</string>
     <string name="work_selector_label">Trabajo: %1$s</string>

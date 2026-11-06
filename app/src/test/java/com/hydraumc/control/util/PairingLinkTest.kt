@@ -8,7 +8,6 @@ package com.hydraumc.control.util
 import com.hydraumc.control.network.RobotCommandContract
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -37,21 +36,27 @@ class PairingLinkTest {
     }
 
     @Test
-    fun aLinkWithoutFingerprintOffersNoPinning() {
-        val offer = ok("hydra-umc://pair?host=hydra.local&port=3000")
-        assertNull(offer.fingerprint)
-        assertFalse(offer.usesPinning)
+    fun aLinkWithoutFingerprintIsRefused() {
+        assertEquals(PairingLink.Problem.MISSING_FINGERPRINT, problem("hydra-umc://pair?host=hydra.local&port=3000"))
+        assertEquals(PairingLink.Problem.MISSING_FINGERPRINT, problem("hydra-umc://pair?host=hydra.local&port=3000&fp="))
+        assertEquals(PairingLink.Problem.MISSING_FINGERPRINT, problem("hydra-umc://pair?host=hydra.local&port=3000&fp=%20%20"))
+    }
+
+    @Test
+    fun theNameDefaultsToTheHostWhenTheLinkHasNone() {
+        val offer = ok("hydra-umc://pair?host=hydra.local&port=3000&fp=$fp")
         assertEquals("hydra.local", offer.name)
+        assertTrue(offer.usesPinning)
     }
 
     @Test
     fun theSchemeAndHostAreNotCaseSensitiveAndSpacesAroundAreIgnored() {
-        assertEquals(3000, ok("  HYDRA-UMC://PAIR?HOST=10.0.0.5&PORT=3000  ").port)
+        assertEquals(3000, ok("  HYDRA-UMC://PAIR?HOST=10.0.0.5&PORT=3000&FP=$fp  ").port)
     }
 
     @Test
     fun anIpv6AddressInBracketsIsRead() {
-        assertEquals("fe80::1", ok("hydra-umc://pair?host=%5Bfe80::1%5D&port=3000").host)
+        assertEquals("fe80::1", ok("hydra-umc://pair?host=%5Bfe80::1%5D&port=3000&fp=$fp").host)
     }
 
     @Test
@@ -80,7 +85,7 @@ class PairingLinkTest {
         assertEquals(PairingLink.Problem.BAD_PORT, problem("hydra-umc://pair?host=a.local&port=65536"))
         assertEquals(PairingLink.Problem.BAD_PORT, problem("hydra-umc://pair?host=a.local&port=-1"))
         assertEquals(PairingLink.Problem.BAD_PORT, problem("hydra-umc://pair?host=a.local&port=80x"))
-        assertEquals(65535, ok("hydra-umc://pair?host=a.local&port=65535").port)
+        assertEquals(65535, ok("hydra-umc://pair?host=a.local&port=65535&fp=$fp").port)
     }
 
     @Test
@@ -96,16 +101,16 @@ class PairingLinkTest {
 
     @Test
     fun unknownFieldsAreIgnoredAndNeverKept() {
-        val offer = ok("hydra-umc://pair?host=a.local&port=1&token=secret&password=x")
+        val offer = ok("hydra-umc://pair?host=a.local&port=1&fp=$fp&token=secret&password=x")
         assertEquals("a.local", offer.host)
         assertFalse(offer.toString().contains("secret"))
     }
 
     @Test
     fun theNameIsBoundedAndHasNoControlCharacters() {
-        assertEquals(PairingLink.Problem.BAD_NAME, problem("hydra-umc://pair?host=a.local&port=1&name=${"n".repeat(RobotCommandContract.PAIRING_NAME_MAX + 1)}"))
-        assertEquals(PairingLink.Problem.BAD_NAME, problem("hydra-umc://pair?host=a.local&port=1&name=a%0Ab"))
-        assertEquals(RobotCommandContract.PAIRING_NAME_MAX, ok("hydra-umc://pair?host=a.local&port=1&name=${"n".repeat(RobotCommandContract.PAIRING_NAME_MAX)}").name.length)
+        assertEquals(PairingLink.Problem.BAD_NAME, problem("hydra-umc://pair?host=a.local&port=1&fp=$fp&name=${"n".repeat(RobotCommandContract.PAIRING_NAME_MAX + 1)}"))
+        assertEquals(PairingLink.Problem.BAD_NAME, problem("hydra-umc://pair?host=a.local&port=1&fp=$fp&name=a%0Ab"))
+        assertEquals(RobotCommandContract.PAIRING_NAME_MAX, ok("hydra-umc://pair?host=a.local&port=1&fp=$fp&name=${"n".repeat(RobotCommandContract.PAIRING_NAME_MAX)}").name.length)
     }
 
     @Test

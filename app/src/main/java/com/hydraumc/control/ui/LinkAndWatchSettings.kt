@@ -103,13 +103,9 @@ fun PairingDialog(viewModel: RobotViewModel) {
             Column {
                 Text(stringResource(R.string.pairing_dialog_message, offer.name, offer.host, offer.port))
                 Spacer(modifier = Modifier.height(8.dp))
-                if (offer.fingerprint != null) {
-                    Text(stringResource(R.string.pairing_dialog_fingerprint, TlsFingerprint.display(offer.fingerprint)), style = MaterialTheme.typography.bodySmall)
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(stringResource(R.string.pairing_dialog_pin_replace), style = MaterialTheme.typography.bodySmall)
-                } else {
-                    Text(stringResource(R.string.pairing_dialog_no_fingerprint), style = MaterialTheme.typography.bodySmall, color = Color(0xFFF59E0B))
-                }
+                Text(stringResource(R.string.pairing_dialog_fingerprint, TlsFingerprint.display(offer.fingerprint)), style = MaterialTheme.typography.bodySmall)
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(stringResource(R.string.pairing_dialog_pin_replace), style = MaterialTheme.typography.bodySmall)
             }
         },
         confirmButton = { Button(onClick = { viewModel.confirmPairing() }) { Text(stringResource(R.string.pairing_dialog_confirm)) } },

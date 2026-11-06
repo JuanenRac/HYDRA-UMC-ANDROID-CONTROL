@@ -458,12 +458,12 @@
     <string name="pairing_dialog_message">%1$s à %2$s, port %3$d.</string>
     <string name="pairing_dialog_fingerprint">Empreinte du certificat (SHA-256) :\n%1$s</string>
     <string name="pairing_dialog_pin_replace">En acceptant, la connexion exige TLS et épingle ce certificat, en remplaçant l\'empreinte conservée auparavant.</string>
-    <string name="pairing_dialog_no_fingerprint">Ce lien ne contient pas d\'empreinte de certificat : la connexion ne sera pas épinglée. N\'associez que sur un réseau de confiance.</string>
     <string name="pairing_dialog_confirm">Associer et se connecter</string>
     <string name="pairing_problem_not_link">Ce n\'est pas un lien d\'association.</string>
     <string name="pairing_problem_host">Le lien d\'association ne contient pas d\'adresse de serveur valide.</string>
     <string name="pairing_problem_port">Le lien d\'association ne contient pas de port valide.</string>
     <string name="pairing_problem_fingerprint">L\'empreinte du certificat du lien n\'est pas valide.</string>
+    <string name="pairing_problem_missing_fingerprint">Ce lien ne contient pas d\'empreinte de certificat et a été refusé : l\'association épingle toujours le certificat du serveur.</string>
     <string name="pairing_problem_name">Le nom du lien d\'association n\'est pas valide.</string>
     <string name="pairing_problem_generic">Le lien d\'association n\'est pas valide.</string>
     <string name="work_selector_label">Travail : %1$s</string>
