@@ -162,8 +162,7 @@ app/src/main/java/com/hydraumc/control/
 │   └── ConnectionPrefs.kt       # DataStore persistence for manually entered IP/port
 ├── update/
 │   ├── GitHubReleaseUpdater.kt  # Safe GitHub Release update client - see docs/GITHUB_RELEASE_UPDATES.md
-│   ├── ReleaseMetadataParser.kt # Safe GitHub Release metadata parser
-│   └── SemanticVersion.kt       # Strict semantic version parser for updates
+│   └── ControlRelease.kt        # Names this app's APK asset; the gate itself is in the shared Kotlin module (common/, copied from the SDK)
 ├── util/
 │   ├── BiometricHelper.kt       # Fingerprint/face authentication manager
 │   ├── NotificationHelper.kt    # High-priority mission alert dispatcher

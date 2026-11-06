@@ -5,7 +5,7 @@
 // =============================================================================
 package com.hydraumc.control.network
 
-import com.hydraumc.control.util.optStr
+import com.hydraumc.common.optStr
 import org.json.JSONObject
 
 /** What the server did to one robot when the global STOP reached it. */

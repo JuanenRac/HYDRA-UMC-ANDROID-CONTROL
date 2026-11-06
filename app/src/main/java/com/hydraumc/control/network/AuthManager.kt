@@ -5,7 +5,7 @@
 // =============================================================================
 package com.hydraumc.control.network
 
-import com.hydraumc.control.util.optStr
+import com.hydraumc.common.optStr
 import kotlin.coroutines.cancellation.CancellationException
 
 /** What signing in and out need from the REST client (the client in the app, a fake in the tests). */

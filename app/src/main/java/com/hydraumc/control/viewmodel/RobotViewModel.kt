@@ -5,7 +5,7 @@
 // =============================================================================
 package com.hydraumc.control.viewmodel
 
-import com.hydraumc.control.util.optStr
+import com.hydraumc.common.optStr
 import android.app.Application
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf

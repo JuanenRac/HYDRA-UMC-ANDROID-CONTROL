@@ -37,7 +37,7 @@ import com.hydraumc.control.BuildConfig
 import com.hydraumc.control.wear.WatchAssistantReply
 import com.hydraumc.control.wear.WatchSystemStatus
 import com.hydraumc.control.wear.WatchVoiceTurn
-import com.hydraumc.control.util.optStr
+import com.hydraumc.common.optStr
 import org.json.JSONObject
 import java.io.IOException
 import java.util.concurrent.TimeUnit

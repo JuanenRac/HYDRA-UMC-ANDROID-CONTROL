@@ -221,7 +221,7 @@ private fun UpdateSettings(state: AppUpdateState, updateViewModel: AppUpdateView
 // button, sized to actually fit real release-notes-length text.
 @Composable
 fun UpdateAvailableContent(
-    update: com.hydraumc.control.update.AvailableUpdate,
+    update: com.hydraumc.common.AvailableUpdate,
     onDownload: () -> Unit,
 ) {
     var showReleaseNotes by remember { mutableStateOf(false) }
@@ -263,7 +263,7 @@ fun UpdateAvailableContent(
  * @param onDismiss Callback to close this dialog.
  */
 @Composable
-private fun ReleaseNotesDialog(update: com.hydraumc.control.update.AvailableUpdate, onDismiss: () -> Unit) {
+private fun ReleaseNotesDialog(update: com.hydraumc.common.AvailableUpdate, onDismiss: () -> Unit) {
     androidx.compose.ui.window.Dialog(onDismissRequest = onDismiss) {
         Surface(
             shape = MaterialTheme.shapes.large,

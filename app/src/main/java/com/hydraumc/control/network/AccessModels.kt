@@ -11,7 +11,7 @@
 //     limit of the robot's model from being sent at all (the server checks it again).
 package com.hydraumc.control.network
 
-import com.hydraumc.control.util.optStr
+import com.hydraumc.common.optStr
 import org.json.JSONObject
 import android.util.Base64
 import java.util.UUID

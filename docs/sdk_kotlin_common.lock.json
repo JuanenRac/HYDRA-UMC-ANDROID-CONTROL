@@ -1,6 +1,9 @@
 {
   "files": {
+    "main/kotlin/com/hydraumc/common/JsonText.kt": "47ea6434929bae9a9ddda06d6f347f7da8131e6e1fe0eccc502528690d05fb04",
+    "main/kotlin/com/hydraumc/common/ReleaseMetadataParser.kt": "a05b17271abb1ae3ea137128a7c5e68a907dcba6ca489c7572e076dc68c34329",
     "main/kotlin/com/hydraumc/common/SemanticVersion.kt": "aed6a3fa1d650796309609992239ea5288e7e6d0e834f3c8b04e975f3a1b9762",
+    "test/kotlin/com/hydraumc/common/ReleaseMetadataParserTest.kt": "61b3087f58a82e9621f71e61167e557b3f16ceedf58779cc556ba0437a4baec6",
     "test/kotlin/com/hydraumc/common/SemanticVersionTest.kt": "c303dbaa3f578affab7a2b39005983b72b41914451dff8b26134439e64e6e4eb"
   }
 }

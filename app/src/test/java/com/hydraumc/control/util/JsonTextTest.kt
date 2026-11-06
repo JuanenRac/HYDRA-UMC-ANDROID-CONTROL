@@ -5,9 +5,10 @@
 // =============================================================================
 package com.hydraumc.control.util
 
+import com.hydraumc.common.optStr
 import com.hydraumc.control.model.RobotView
-import com.hydraumc.control.update.ReleaseMetadataParser
-import com.hydraumc.control.update.UpdateCheckResult
+import com.hydraumc.control.update.ControlRelease
+import com.hydraumc.common.UpdateCheckResult
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -44,10 +45,10 @@ class JsonTextTest {
     @Test fun `release notes that are JSON null are empty and not the word null`() {
         val payload = """
             {"tag_name":"v9.9.9","name":null,"body":null,"assets":[
-              {"name":"${ReleaseMetadataParser.REQUIRED_ASSET_NAME}","browser_download_url":"https://example.invalid/app.apk"}
+              {"name":"${ControlRelease.REQUIRED_ASSET_NAME}","browser_download_url":"https://example.invalid/app.apk"}
             ]}
         """.trimIndent()
-        val result = ReleaseMetadataParser.parseLatestStable(payload, "0.0.1")
+        val result = ControlRelease.parseLatestStable(payload, "0.0.1")
         assertTrue(result is UpdateCheckResult.Available)
         val update = (result as UpdateCheckResult.Available).update
         assertEquals("", update.notes)

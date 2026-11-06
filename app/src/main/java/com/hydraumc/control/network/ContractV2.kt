@@ -14,7 +14,7 @@
 //     [AuditRecord] reads it and checks the chain of the lines it was given.
 package com.hydraumc.control.network
 
-import com.hydraumc.control.util.optStr
+import com.hydraumc.common.optStr
 import org.json.JSONObject
 import java.security.MessageDigest
 

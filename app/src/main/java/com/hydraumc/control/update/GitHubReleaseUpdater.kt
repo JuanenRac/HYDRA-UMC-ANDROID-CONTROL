@@ -5,6 +5,9 @@
 // =============================================================================
 package com.hydraumc.control.update
 
+import com.hydraumc.common.ReleaseMetadataParser
+import com.hydraumc.common.AvailableUpdate
+import com.hydraumc.common.UpdateCheckResult
 import com.hydraumc.common.SemanticVersion
 import android.content.Context
 import android.content.Intent
@@ -20,23 +23,6 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.File
 import java.io.IOException
-
-/** A stable GitHub release and its explicitly named installable APK asset. */
-data class AvailableUpdate(
-    val version: SemanticVersion,
-    val releaseName: String,
-    val notes: String,
-    val assetUrl: String,
-    /** Lowercase hex SHA-256 the release feed publishes for the APK asset, when it does. */
-    val sha256: String? = null,
-)
-
-/** Result of checking the trusted public release endpoint. */
-sealed interface UpdateCheckResult {
-    data object UpToDate : UpdateCheckResult
-    data class Available(val update: AvailableUpdate) : UpdateCheckResult
-    data class Failed(val message: String) : UpdateCheckResult
-}
 
 /** Result of downloading the APK before control is handed to Android's installer. */
 sealed interface UpdateDownloadResult {
@@ -65,7 +51,7 @@ class GitHubReleaseUpdater(private val context: Context) {
                 }
                 val payload = response.body?.string()
                     ?: return@withContext UpdateCheckResult.Failed("GitHub returned an empty release response.")
-                ReleaseMetadataParser.parseLatestStable(payload, BuildConfig.VERSION_NAME)
+                ControlRelease.parseLatestStable(payload, BuildConfig.VERSION_NAME)
             }
         } catch (error: IOException) {
             UpdateCheckResult.Failed("Unable to check GitHub Releases: ${error.message ?: "network error"}")

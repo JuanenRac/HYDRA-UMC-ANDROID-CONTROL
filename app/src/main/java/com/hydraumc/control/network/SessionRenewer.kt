@@ -5,7 +5,7 @@
 // =============================================================================
 package com.hydraumc.control.network
 
-import com.hydraumc.control.util.optStr
+import com.hydraumc.common.optStr
 import org.json.JSONObject
 
 /** What the renewal needs from the REST client (the client in the app, a fake in the tests). */

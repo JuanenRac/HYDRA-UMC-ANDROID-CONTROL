@@ -9,9 +9,9 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.hydraumc.control.BuildConfig
-import com.hydraumc.control.update.AvailableUpdate
+import com.hydraumc.common.AvailableUpdate
 import com.hydraumc.control.update.GitHubReleaseUpdater
-import com.hydraumc.control.update.UpdateCheckResult
+import com.hydraumc.common.UpdateCheckResult
 import com.hydraumc.control.update.UpdateDownloadResult
 import com.hydraumc.control.wear.WatchCompanionVersionStatus
 import kotlinx.coroutines.flow.MutableStateFlow

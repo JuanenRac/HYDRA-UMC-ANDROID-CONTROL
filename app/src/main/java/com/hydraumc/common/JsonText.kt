@@ -1,9 +1,9 @@
 // =============================================================================
-// HYDRA-UMC-ANDROID-CONTROL - JSON text helper
+// HYDRA-UMC Kotlin app common - src/main/kotlin/com/hydraumc/common/JsonText.kt
 // Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
 // GPL-3.0-or-later - see LICENSE
 // =============================================================================
-package com.hydraumc.control.util
+package com.hydraumc.common
 
 import org.json.JSONObject
 

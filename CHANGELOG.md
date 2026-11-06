@@ -4,6 +4,10 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The text helper and the update gate come from the shared Kotlin module:** `optStr`, `ReleaseMetadataParser` and the result types of the update check moved to the SDK (`clients/kotlin_app_common`) and this app compiles the pinned copy; its own `ControlRelease` only names the asset. Nothing changes for the user: the same releases are offered and refused.
+
+- **A test signs in against the one stand-in server of the SDK:** `FakeServerSessionTest` starts the vendored `hydra_fake_server.py` as a process (skipped without Python) and drives the real client through sign-in, a refused password and the global STOP; `tools/sync_sdk_answers.py` keeps the copy identical to the SDK.
+
 ## [0.7.9] - The first Kotlin code shared through the SDK: SemanticVersion (the stable release tag the update check compares) now lives in clients/kotlinappcommon of the SDK with its test; this app compiles a pinned copy... (and 9 more changes)
 
 - **The first Kotlin code shared through the SDK:** `SemanticVersion` (the stable release tag the update check compares) now lives in `clients/kotlin_app_common` of the SDK with its test; this app compiles a pinned copy (`app/src/main/java/com/hydraumc/common`) and `tools/sync_sdk_kotlin.py --check` (in the CI validator) fails when a copy differs from `docs/sdk_kotlin_common.lock.json` or, when the SDK is at hand, from the SDK.

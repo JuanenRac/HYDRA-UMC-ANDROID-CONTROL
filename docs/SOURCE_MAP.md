@@ -64,14 +64,13 @@ Every file of the repository with a line on what it does: the annotated tree tha
 │   │   │   │   └── SecuritySettings.kt                                           # Settings > Security: optional, configurable TLS (mode, pinned fingerprint, CA)
 │   │   │   ├── update/
 │   │   │   │   ├── GitHubReleaseUpdater.kt   # Safe GitHub Release update client
-│   │   │   │   ├── ReleaseMetadataParser.kt  # Safe GitHub Release metadata parser
+│   │   │   │   ├── ControlRelease.kt         # Names this app's APK asset; the gate is in the shared Kotlin module (common/)
 │   │   │   │   └── SemanticVersion.kt        # Strict semantic version parser for updates
 │   │   │   ├── util/
 │   │   │   │   ├── BiometricHelper.kt      # androidx.biometric prompt wrapper
 │   │   │   │   ├── NotificationHelper.kt   # Job-complete/safety push notifications
 │   │   │   │   ├── NotificationPrefs.kt    # Persistent storage for the in-app notifications toggle
 │   │   │   │   ├── BleErrorText.kt         # The text of the Bluetooth errors, in the language of the phone
-│   │   │   │   ├── JsonText.kt             # Reads a text field the way the UI means it (a JSON null is not the word "null")
 │   │   │   │   ├── OptimisticRollback.kt   # Field-level undo for an optimistic edit
 │   │   │   │   ├── DeadManJog.kt           # Continuous jog: when it is refused, the speed bounds and the watchdog of the heartbeat
 │   │   │   │   ├── LinkHealth.kt           # Round-trip times towards the server and the level of the link (good, slow, bad, lost)

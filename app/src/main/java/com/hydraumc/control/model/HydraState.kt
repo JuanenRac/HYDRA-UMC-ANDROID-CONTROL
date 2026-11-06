@@ -24,7 +24,7 @@
 // =============================================================================
 package com.hydraumc.control.model
 
-import com.hydraumc.control.util.optStr
+import com.hydraumc.common.optStr
 import org.json.JSONArray
 import org.json.JSONObject
 
