@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **A test replays the behaviour shared with the Flutter apps:** `ApiClientVectorsTest` reads the SDK's `conformance/api-client/vectors.json` (copied to the test resources) and checks which commands are numbered and how the number grows, and how every refusal of the server (status, code, revision, message and the kind of refusal) is read by `HydraApiException`.
+
 ## [0.8.0.2] - The stored session follows the rules shared with the other mobile apps: SessionFields holds the rules for the access token, the user name and the refresh token (a sign-in replaces the refresh token, a renewal keeps it, signing... (and 2 more changes)
 
 - **The stored session follows the rules shared with the other mobile apps:** `SessionFields` holds the rules for the access token, the user name and the refresh token (a sign-in replaces the refresh token, a renewal keeps it, signing out removes the token and the refresh token) over the same encrypted store and the same keys, so nobody is signed out by the update, and a test replays the sequences all the mobile apps share.
