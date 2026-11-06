@@ -41,6 +41,7 @@ class ApiClientVectorsTest {
 
     @After
     fun tearDown() {
+        CommandSequence.reset()
         server.shutdown()
     }
 
