@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+## [0.8.0.2] - The stored session follows the rules shared with the other mobile apps: SessionFields holds the rules for the access token, the user name and the refresh token (a sign-in replaces the refresh token, a renewal keeps it, signing... (and 2 more changes)
+
 - **The stored session follows the rules shared with the other mobile apps:** `SessionFields` holds the rules for the access token, the user name and the refresh token (a sign-in replaces the refresh token, a renewal keeps it, signing out removes the token and the refresh token) over the same encrypted store and the same keys, so nobody is signed out by the update, and a test replays the sequences all the mobile apps share.
 
 - **The live socket is owned by its own class:** opening the socket, closing the previous one first and ignoring the close, error and expired-token signals of the server being left during a server switch moved out of the view model into `LiveSocket` (with a stand-in socket in the tests), and the callbacks of the view model became one listener; no change in behaviour.
