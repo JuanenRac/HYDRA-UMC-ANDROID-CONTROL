@@ -27,6 +27,7 @@ import com.hydraumc.control.network.SessionRenewer
 import com.hydraumc.control.network.UserProfile
 import com.hydraumc.control.network.ClaimInfo
 import com.hydraumc.control.network.RobotCommandContract
+import com.hydraumc.control.network.RobotCommandQueue
 import com.hydraumc.control.network.RobotCommandRepository
 import com.hydraumc.control.network.StopAllEndpoint
 import com.hydraumc.control.network.StopAllRunner
@@ -379,6 +380,9 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
 
     /** Sends every robot command: revisions, retry of a stop, `table` fallback, jogs on the wire, debounce and timings. */
     val commands = RobotCommandRepository(conditionalMode = { conditionalMode.value })
+
+    /** The writes of each robot go out in order; a STOP skips the line and drops the jogs that wait. */
+    private val commandQueue = RobotCommandQueue()
     /** The last revision seen of each robot. */
     val revisions get() = commands.revisions
     /** When the server last pushed the reservations (this phone clock, epoch ms); 0 before the first push. */
@@ -463,7 +467,16 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
     private val authPrefs = AuthPrefs(application)
     private val notificationPrefs = com.hydraumc.control.util.NotificationPrefs(application)
     private val stateCache = StateCache(application)
-    private var isSwitchingServer = false
+
+    // The connect sequence, the "switching server" flag and the metrics poll live in ConnectionManager: a new connect
+    // cancels the previous one, and starting the poll again cancels the previous loop, so a reconnect (server switch,
+    // manual reconnect) never leaves an old loop polling a server that is no longer the active one. Declared before the
+    // init block, which may connect at once.
+    private val connection = ConnectionManager(
+        scope = viewModelScope,
+        shouldPoll = { connectionState.value == WsStatus.CONNECTED && isAppInForeground },
+        onMetrics = { metrics.value = it },
+    )
 
     // At most one session renewal runs at a time: a rejected token shows up
     // twice (the server's error message, then the 1008 close) and in every
@@ -790,7 +803,8 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         // The session ends for real: no live socket, no polling, no client
         // that the widget or the notification could still send commands with.
         reloginJob?.cancel()
-        connectJob?.cancel()
+        connection.cancelConnect()
+        commandQueue.cancelAllWaiting()
         connection.stopMetrics()
         ws?.disconnect()
         ws = null
@@ -960,17 +974,8 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    // Guards against two connect() calls racing each other - e.g. the user
-    // tapping a discovered server right as scanNetwork()'s own auto-connect
-    // (its first discovered result) fires, or a rapid double-tap on Connect.
-    // Without this, both coroutines run concurrently and can interleave
-    // their writes to apiClient/state/robots.value, with whichever REST
-    // response lands last "winning" regardless of which connect() call was
-    // actually the user's most recent intent. Cancelling the previous job
-    // stops it at its next suspension point (every HydraApiClient call is a
-    // real suspend fun on Dispatchers.IO, so cancellation propagates instead
-    // of the coroutine running to completion in the background).
-    private var connectJob: kotlinx.coroutines.Job? = null
+    // Two connect() calls never race (a tap on a discovered server right as the scan connects by itself, a double tap):
+    // ConnectionManager cancels the previous sequence, which stops at its next suspension point.
 
     /**
      * @param onInitialConnectFailed Called only when the very first REST
@@ -1000,30 +1005,37 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         connectionState.value = WsStatus.CONNECTING
         lastError.value = null
         plainRemoteHost.value = null
-        isSwitchingServer = true
+        // Set before the old socket closes: its close callback reads the flag.
+        connection.isSwitching = true
 
         ws?.disconnect()
         bleClient?.disconnect()
         bleClient = null
 
-        connectJob?.cancel()
-        connectJob = viewModelScope.launch {
-            // Ensure token is carried over or reloaded from persistence
-            val profile = authPrefs.loadAuth()
-            val token = apiClient?.authToken ?: profile.token
-            val client = HydraApiClient(host, portInt)
-            client.authToken = token
-            client.refreshToken = apiClient?.refreshToken ?: profile.refreshToken.ifEmpty { null }
-            apiClient = client
-            authTokenState.value = token
-            var restSynced = false
-
-            prefs.save(host, portValue)
-
-            try {
+        lateinit var client: HydraApiClient
+        connection.connect(
+            prepare = {
+                // Ensure token is carried over or reloaded from persistence
+                val profile = authPrefs.loadAuth()
+                val token = apiClient?.authToken ?: profile.token
+                client = HydraApiClient(host, portInt)
+                client.authToken = token
+                client.refreshToken = apiClient?.refreshToken ?: profile.refreshToken.ifEmpty { null }
+                apiClient = client
+                authTokenState.value = token
+                prefs.save(host, portValue)
                 logTelemetry("Connecting to $host:$portInt...")
-                val info = client.getHydraInfo()
-                if (info != null) {
+                object : ConnectSource {
+                    override val usesTls: Boolean get() = client.usesTls
+                    override suspend fun hydraInfo() = client.getHydraInfo()
+                    override suspend fun settings() = client.getSettings()
+                    override suspend fun renewSession() = sessionRenewer.renew(client)
+                }
+            },
+            listener = object : ConnectListener {
+                override fun log(message: String) = logTelemetry(message)
+
+                override fun onInfo(info: JSONObject) {
                     val server = ServerInfo.fromHydraInfo(host, portInt, info)
                     activeServer.value = server
                     logTelemetry("Server verified: ${server.displayName}")
@@ -1031,42 +1043,29 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                         discoveredServers.value += server
                     }
                 }
-                
-                plainRemoteHost.value = host.takeIf { TlsPolicy.isPlainRemote(it, client.usesTls) }
-                if (plainRemoteHost.value != null) logTelemetry("Warning: unencrypted connection to a host outside the local network")
-                val settings = try {
-                    client.getSettings()
-                } catch (e: HydraApiException) {
-                    // An expired token at start-up: renew it once and read again
-                    // instead of bouncing the user to the login screen.
-                    if (e.isSessionProblem && sessionRenewer.renew(client)) client.getSettings() else throw e
+
+                override fun onReachable(usesTls: Boolean) {
+                    plainRemoteHost.value = host.takeIf { TlsPolicy.isPlainRemote(it, usesTls) }
+                    if (plainRemoteHost.value != null) logTelemetry("Warning: unencrypted connection to a host outside the local network")
                 }
-                logTelemetry("Initial state synchronized via REST")
-                applyState(HydraState(settings))
-                restSynced = true
-                onInitialConnectSucceeded?.invoke()
-            } catch (e: HydraApiException) {
-                logTelemetry("REST Sync Error: ${e.message}")
-                lastError.value = e.message
-                onInitialConnectFailed?.invoke()
-            } finally {
-                isSwitchingServer = false
-            }
 
-            // No socket against a server the REST sync could not reach: it would
-            // only retry forever in the background. The metrics poll starts when
-            // the socket reports CONNECTED (see setupWebSocket).
-            if (restSynced) setupWebSocket(host, portInt, client.usesTls)
-        }
+                override fun onSettings(settings: JSONObject) = applyState(HydraState(settings))
+
+                override fun onSynced() {
+                    onInitialConnectSucceeded?.invoke()
+                }
+
+                override fun onSyncFailed(error: HydraApiException) {
+                    lastError.value = error.message
+                    onInitialConnectFailed?.invoke()
+                }
+
+                // No socket against a server the REST sync could not reach: it would only retry forever in the
+                // background. The metrics poll starts when the socket reports CONNECTED (see setupWebSocket).
+                override fun openSocket() = setupWebSocket(host, portInt, client.usesTls)
+            },
+        )
     }
-
-    // The metrics poll lives in ConnectionManager: starting it again cancels the previous loop, so a reconnect (server
-    // switch, manual reconnect) never leaves an old loop polling a server that is no longer the active one.
-    private val connection = ConnectionManager(
-        scope = viewModelScope,
-        shouldPoll = { connectionState.value == WsStatus.CONNECTED && isAppInForeground },
-        onMetrics = { metrics.value = it },
-    )
 
     // Debounce job for the offline-viewing disk cache write in applyState()
     // below - see that call site's own comment for why this exists.
@@ -1102,7 +1101,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                         WsStatus.DISCONNECTED -> {
                             logTelemetry("WebSocket DISCONNECTED")
                             NotificationHelper.hideSafetyNotification(getApplication())
-                            if (!isSwitchingServer) {
+                            if (!connection.isSwitching) {
                                 discoveredServers.value = emptyList()
                             }
                         }
@@ -1151,10 +1150,10 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                     // The server closed the socket with 1008 (expired or invalid
                     // token). One renewal, however many signals arrive; only a
                     // failed renewal sends the user back to the login screen.
-                    if (!isSwitchingServer) renewSessionOrLogout()
+                    if (!connection.isSwitching) renewSessionOrLogout()
                 },
             ) { message ->
-                if (!isSwitchingServer) {
+                if (!connection.isSwitching) {
                     lastError.value = message
                 }
             }.also { it.connect() }
@@ -1195,7 +1194,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
             // exists for offline viewing (StateCache's own doc comment) and
             // is already superseded by a full REST sync on the next
             // connect() anyway. A short quiet-period debounce (same
-            // cancel-and-relaunch Job pattern as metricsJob/connectJob/
+            // cancel-and-relaunch Job pattern as metricsJob/the connect job/
             // commands.debounce) coalesces a burst of
             // rapid state changes into one write instead of one per change.
             stateCacheJob?.cancel()
@@ -1452,7 +1451,12 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         val isJog = command == RobotCommandContract.JOG || command == RobotCommandContract.TABLE
         val send: () -> Unit = {
             if (isJog) commands.jogStarted(robotId)
-            viewModelScope.launch {
+            val skipsLine = command == RobotCommandContract.STOP || command == RobotCommandContract.DISABLE
+            commandQueue.submit(
+                viewModelScope, robotId, urgent = skipsLine, cancellable = isJog,
+                // A jog that waited and was dropped by a stop: the screen goes back to what the robot really is.
+                onDropped = { viewModelScope.launch { rollback(); if (isJog) commands.jogEnded(robotId) } },
+            ) {
                 try {
                     val answer = commands.send(robotId, command, payload) { id, body, urgent, ifMatch -> client.postRobotCommand(id, body, urgent, ifMatch) }
                     val warnings = RobotCommandRepository.warningsOf(answer)
@@ -1462,7 +1466,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
                         logTelemetry("TX not applied [$command]: $warnings")
                         lastError.value = getApplication<Application>().getString(R.string.error_command_not_applied, command, warnings)
                         rollback()
-                        return@launch
+                        return@submit
                     }
                     // Success log for "$command" (play/pause/stop/enable/...) -
                     // previously only the FAILURE path logged anything
@@ -2226,6 +2230,8 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
         val app = getApplication<Application>()
         // First of all: a held continuous jog ends and its axis is stopped.
         deadMan.interrupt()
+        // The jogs that still wait their turn behind another write are dropped: they must not move a robot after the stop.
+        state.robots.forEach { commandQueue.cancelWaitingJogs(it.id) }
         val first = apiClient
         if (first == null) {
             val reason = app.getString(R.string.error_not_connected)
@@ -2605,7 +2611,7 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
 
     override fun onCleared() {
         super.onCleared()
-        connectJob?.cancel()
+        connection.cancelConnect()
         connection.stopMetrics()
         stateCacheJob?.cancel()
         ws?.disconnect()

@@ -4,6 +4,10 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The connect sequence moved out of the screen state:** the first synchronisation with a server (identity answer, one renewal of an expired session, the settings, then the live socket) and the "switching server" flag now live in `ConnectionManager`, next to the metrics poll. A second connect cancels the first one, so two taps never interleave their writes; a server that cannot be reached ends without a socket. Six JVM tests cover the order, the renewal, the failures and the cancellation; the behaviour is unchanged.
+
+- **The writes of each robot go out in order, and a STOP drops the jogs that wait:** a new queue per robot keeps two writes of the same robot from overtaking each other on the wire, never makes one robot wait for another, and lets a STOP (or switching a robot off) skip the line and cancel the jogs of that robot that have not left yet, so a held direction cannot keep moving it after the stop. A jog that was dropped puts the screen back to what the robot really is; signing out drops everything that waits. Five JVM tests cover it.
+
 ## [0.8.0.0] - The text helper and the update gate come from the shared Kotlin module: optStr, ReleaseMetadataParser and the result types of the update check moved to the SDK (clients/kotlinappcommon) and this app compiles the pinned copy;... (and 1 more changes)
 
 - **The text helper and the update gate come from the shared Kotlin module:** `optStr`, `ReleaseMetadataParser` and the result types of the update check moved to the SDK (`clients/kotlin_app_common`) and this app compiles the pinned copy; its own `ControlRelease` only names the asset. Nothing changes for the user: the same releases are offered and refused.
