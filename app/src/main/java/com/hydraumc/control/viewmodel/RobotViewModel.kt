@@ -273,12 +273,6 @@ private fun RobotView.toDisplay(): RobotState = RobotState(
     jogStep = raw.optDouble("jogStep", 1.0)
 )
 
-/** How many lines of the history of sign-ins the screen asks for. */
-private const val CONNECTION_EVENTS_SHOWN = 30
-
-/** Why the audit record could not be read, for the sentence the screen shows. */
-enum class AuditFailure { FORBIDDEN, UNAVAILABLE, SESSION, NETWORK, OTHER }
-
 /**
  * Shared ViewModel responsible for robot orchestration, networking, and UI state management.
  */
@@ -389,24 +383,22 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
     @Volatile var claimsPushedAtMs: Long = 0L
         private set
 
-    // The audit record (contract v2, block 4), for administrators.
-    val auditRead = mutableStateOf<AuditRead?>(null)
+    // The readings of the administration screens (the audit record, who connects, the access options of the server) live in
+    // [AdminReadings]; these are the same states the screens have always read.
+    private val admin = AdminReadings(scope = viewModelScope, client = { apiClient }, onSessionProblem = { renewSessionOrLogout() })
+    val auditRead get() = admin.auditRead
     /** The chain check of the lines in [auditRead] (only after the operator asked to verify); null before. */
-    val auditChain = mutableStateOf<ChainCheck?>(null)
-    val auditBusy = mutableStateOf(false)
-    val auditFailure = mutableStateOf<AuditFailure?>(null)
-
-    // Who connects to the server (the list of clients and the latest sign-ins), for every signed-in account.
-    val connectionClients = mutableStateOf<List<ConnectionClient>?>(null)
-    val connectionEvents = mutableStateOf<List<ConnectionEvent>?>(null)
-    val connectionsBusy = mutableStateOf(false)
-    val connectionsFailure = mutableStateOf<ConnectionsFailure?>(null)
-
-    // The access options of the server (administrators only).
-    val serverOptions = mutableStateOf<ServerSecurityOptions?>(null)
-    val serverOptionsBusy = mutableStateOf(false)
-    val serverOptionsFailure = mutableStateOf<ServerOptionsFailure?>(null)
-    val serverOptionsSaved = mutableStateOf(false)
+    val auditChain get() = admin.auditChain
+    val auditBusy get() = admin.auditBusy
+    val auditFailure get() = admin.auditFailure
+    val connectionClients get() = admin.connectionClients
+    val connectionEvents get() = admin.connectionEvents
+    val connectionsBusy get() = admin.connectionsBusy
+    val connectionsFailure get() = admin.connectionsFailure
+    val serverOptions get() = admin.serverOptions
+    val serverOptionsBusy get() = admin.serverOptionsBusy
+    val serverOptionsFailure get() = admin.serverOptionsFailure
+    val serverOptionsSaved get() = admin.serverOptionsSaved
     val controllerId: String get() = SessionController.id
 
     val ipAddress = mutableStateOf("192.168.1.100")
@@ -2047,150 +2039,20 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
         }
     }
 
-    /**
-     * Reads the audit record (administrators only): the newest lines for a filter, and with [verify] the server checks the
-     * whole record while this app checks the chain of the lines it was given. Never raises an error on the screen:
-     * the reason is left in [auditFailure].
-     */
-    fun refreshAudit(verify: Boolean, type: String?, robotId: Int?, limit: Int) {
-        val client = apiClient ?: run {
-            auditFailure.value = AuditFailure.NETWORK
-            return
-        }
-        auditBusy.value = true
-        viewModelScope.launch {
-            try {
-                val read = AuditRecord.parse(client.getAuditBody(AuditRecord.query(limit, type, robotId, verify)))
-                auditRead.value = read
-                auditChain.value = if (verify) AuditRecord.checkChain(read.lines) else null
-                auditFailure.value = null
-            } catch (e: HydraApiException) {
-                auditRead.value = null
-                auditChain.value = null
-                auditFailure.value = when {
-                    e.isSessionProblem -> AuditFailure.SESSION
-                    e.httpCode == 403 -> AuditFailure.FORBIDDEN
-                    e.isNotFound -> AuditFailure.UNAVAILABLE
-                    e.httpCode == null -> AuditFailure.NETWORK
-                    else -> AuditFailure.OTHER
-                }
-                if (e.isSessionProblem) renewSessionOrLogout()
-            } catch (_: Exception) {
-                auditRead.value = null
-                auditChain.value = null
-                auditFailure.value = AuditFailure.NETWORK
-            } finally {
-                auditBusy.value = false
-            }
-        }
-    }
+    /** Reads the audit record (administrators only); the reason it could not is left in [auditFailure]. See [AdminReadings]. */
+    fun refreshAudit(verify: Boolean, type: String?, robotId: Int?, limit: Int) = admin.refreshAudit(verify, type, robotId, limit)
 
-    /** Reads the list of clients and the latest sign-ins; never raises an error on the screen: the reason is left in [connectionsFailure]. */
-    fun refreshConnections() {
-        val client = apiClient ?: run {
-            connectionsFailure.value = ConnectionsFailure.NETWORK
-            return
-        }
-        connectionsBusy.value = true
-        viewModelScope.launch {
-            try {
-                val clients = ConnectionHistory.parseClients(client.getConnectionClientsBody())
-                val events = ConnectionHistory.parseEvents(client.getConnectionEventsBody(CONNECTION_EVENTS_SHOWN))
-                connectionClients.value = clients
-                connectionEvents.value = events
-                connectionsFailure.value = null
-            } catch (e: HydraApiException) {
-                connectionClients.value = null
-                connectionEvents.value = null
-                connectionsFailure.value = when {
-                    e.isSessionProblem -> ConnectionsFailure.SESSION
-                    e.isNotFound -> ConnectionsFailure.UNAVAILABLE
-                    e.httpCode == null -> ConnectionsFailure.NETWORK
-                    else -> ConnectionsFailure.OTHER
-                }
-                if (e.isSessionProblem) renewSessionOrLogout()
-            } catch (_: Exception) {
-                connectionClients.value = null
-                connectionEvents.value = null
-                connectionsFailure.value = ConnectionsFailure.NETWORK
-            } finally {
-                connectionsBusy.value = false
-            }
-        }
-    }
+    /** Reads the list of clients and the latest sign-ins; the reason it could not is left in [connectionsFailure]. */
+    fun refreshConnections() = admin.refreshConnections()
 
-    private fun serverOptionsFailureOf(e: HydraApiException): ServerOptionsFailure = when {
-        e.isSessionProblem -> ServerOptionsFailure.SESSION
-        e.isPermissionDenied -> ServerOptionsFailure.FORBIDDEN
-        e.isNotFound -> ServerOptionsFailure.UNAVAILABLE
-        e.httpCode == null -> ServerOptionsFailure.NETWORK
-        else -> ServerOptionsFailure.OTHER
-    }
+    /** Reads the access options of the server; the reason it could not is left in [serverOptionsFailure]. */
+    fun refreshServerOptions() = admin.refreshServerOptions()
 
-    /** Reads the access options of the server; the reason it could not is left in [serverOptionsFailure], never raised on the screen. */
-    fun refreshServerOptions() {
-        val client = apiClient ?: run {
-            serverOptionsFailure.value = ServerOptionsFailure.NETWORK
-            return
-        }
-        serverOptionsBusy.value = true
-        viewModelScope.launch {
-            try {
-                val options = ServerSecurity.parse(client.getServerConfigBody())
-                serverOptions.value = options
-                serverOptionsFailure.value = if (options == null) ServerOptionsFailure.OTHER else null
-            } catch (e: HydraApiException) {
-                serverOptions.value = null
-                serverOptionsFailure.value = serverOptionsFailureOf(e)
-                if (e.isSessionProblem) renewSessionOrLogout()
-            } catch (_: Exception) {
-                serverOptions.value = null
-                serverOptionsFailure.value = ServerOptionsFailure.NETWORK
-            } finally {
-                serverOptionsBusy.value = false
-            }
-        }
-    }
-
-    /** Saves what changed in [values] (the screen has already asked about every change that lowers the protection) and shows the options as the server now holds them. */
-    fun saveServerOptions(values: ServerSecurityValues) {
-        val client = apiClient ?: return
-        val current = serverOptions.value ?: return
-        val body = ServerSecurity.patch(current, values) ?: return
-        serverOptionsBusy.value = true
-        serverOptionsSaved.value = false
-        viewModelScope.launch {
-            try {
-                val answer = client.putServerConfigBody(body.toString())
-                serverOptions.value = ServerSecurity.parse(answer) ?: current
-                serverOptionsFailure.value = null
-                serverOptionsSaved.value = true
-            } catch (e: HydraApiException) {
-                serverOptionsFailure.value = serverOptionsFailureOf(e)
-                if (e.isSessionProblem) renewSessionOrLogout()
-            } catch (_: Exception) {
-                serverOptionsFailure.value = ServerOptionsFailure.NETWORK
-            } finally {
-                serverOptionsBusy.value = false
-            }
-        }
-    }
+    /** Saves what changed in [values] and shows the options as the server now holds them. */
+    fun saveServerOptions(values: ServerSecurityValues) = admin.saveServerOptions(values)
 
     /** The lines of the audit record as the server stores them (`.jsonl`), for sharing; [onReady] gets null when they could not be read. */
-    fun exportAudit(type: String?, robotId: Int?, limit: Int, onReady: (String?) -> Unit) {
-        val client = apiClient ?: run {
-            onReady(null)
-            return
-        }
-        viewModelScope.launch {
-            val text = try {
-                client.getAuditBody(AuditRecord.query(limit, type, robotId, format = "jsonl"))
-            } catch (_: Exception) {
-                null
-            }
-            onReady(text)
-        }
-    }
+    fun exportAudit(type: String?, robotId: Int?, limit: Int, onReady: (String?) -> Unit) = admin.exportAudit(type, robotId, limit, onReady)
 
     /** True while a jog of [robotId] is still on the wire, or the robot is running a trajectory (two writers on one setpoint). */
     private fun jogBlocked(robotId: Int?): Boolean {

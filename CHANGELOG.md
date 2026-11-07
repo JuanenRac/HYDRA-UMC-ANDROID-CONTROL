@@ -4,6 +4,7 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The administration readings leave the view model:** the audit record, who connects and the access options of the server (their states, their busy flags, the reason when they could not be read and the save of the options) are now in `viewmodel/AdminReadings.kt`; `RobotViewModel` keeps the same properties and functions and hands them over (the view model is 140 lines shorter). `RobotViewModelAdminReadingsTest` (14 tests against a local HTTP server: no connection, 403, 404, 5xx, a server that does not answer, the filter that is asked, the export, the options read and saved) passed before the move and after it.
 - **Instrumented tests on Android emulators (manual workflow):** `app/src/androidTest` holds six checks that need a real Android system and `android-instrumented.yml` runs them on Android 8, 11 and 14: what the package manager keeps of the manifest on each version (the legacy Bluetooth permissions only up to Android 11, the new ones from Android 12, no permission to switch the Wi-Fi, none to install silently) and that the biometric helper says no, without crashing, on a device with nothing enrolled.
 - **A test replays the behaviour shared with the Flutter apps:** `ApiClientVectorsTest` reads the SDK's `conformance/api-client/vectors.json` (copied to the test resources) and checks which commands are numbered and how the number grows, and how every refusal of the server (status, code, revision, message and the kind of refusal) is read by `HydraApiException`.
 
