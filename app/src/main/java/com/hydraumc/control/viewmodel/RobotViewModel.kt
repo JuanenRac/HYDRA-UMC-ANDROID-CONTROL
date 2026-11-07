@@ -21,6 +21,7 @@ import com.hydraumc.control.kinematics.parol6CartesianToJointsOrNull
 import com.hydraumc.control.R
 import com.hydraumc.control.network.AuthManager
 import com.hydraumc.control.network.AuthPrefs
+import com.hydraumc.control.network.AuthStore
 import com.hydraumc.control.network.LoginCheck
 import com.hydraumc.control.network.SignInResult
 import com.hydraumc.control.network.SessionRenewer
@@ -281,7 +282,7 @@ enum class AuditFailure { FORBIDDEN, UNAVAILABLE, SESSION, NETWORK, OTHER }
 /**
  * Shared ViewModel responsible for robot orchestration, networking, and UI state management.
  */
-class RobotViewModel(application: Application) : AndroidViewModel(application) {
+class RobotViewModel @JvmOverloads constructor(application: Application, authStore: AuthStore? = null) : AndroidViewModel(application) {
     val robots = mutableStateOf<List<RobotState>>(emptyList())
     val jobs = mutableStateOf<List<JobState>>(emptyList())
     val metrics = mutableStateOf<SystemMetrics?>(null)
@@ -463,7 +464,9 @@ class RobotViewModel(application: Application) : AndroidViewModel(application) {
     val tlsSettingsMessage = mutableStateOf<String?>(null)
     /** The host of the current session when it is not encrypted and not on the local network; null otherwise. The app shows a warning. */
     val plainRemoteHost = mutableStateOf<String?>(null)
-    private val authPrefs = AuthPrefs(application)
+    // The stored login: the encrypted store of the app unless a test (or another host) hands in its own, which is what lets the view model run on the JVM
+    // without an Android keystore.
+    private val authPrefs: AuthStore = authStore ?: AuthPrefs(application)
     private val notificationPrefs = com.hydraumc.control.util.NotificationPrefs(application)
     private val stateCache = StateCache(application)
 
