@@ -14,6 +14,8 @@ name: Android instrumented tests (manual)
 
 on:
   workflow_dispatch:
+  push:
+    branches: [tmp-android-instr]
 
 permissions:
   contents: read
