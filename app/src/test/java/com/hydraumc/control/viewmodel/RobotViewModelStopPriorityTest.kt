@@ -78,7 +78,7 @@ class RobotViewModelStopPriorityTest {
 
     @Test
     fun `a stop goes out while a jog is still on the wire and a second jog does not`() {
-        server.enqueue(MockResponse().setResponseCode(200).setBody("{}").setBodyDelay(1500, TimeUnit.MILLISECONDS))
+        server.enqueue(MockResponse().setResponseCode(200).setBody("{}").setBodyDelay(8000, TimeUnit.MILLISECONDS)) // long enough that a slow runner cannot answer the first jog before the checks below end
         server.enqueue(MockResponse().setResponseCode(200).setBody("{}"))
         val viewModel = newViewModel()
 
