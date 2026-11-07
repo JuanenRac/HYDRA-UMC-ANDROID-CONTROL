@@ -1,0 +1,104 @@
+# =============================================================================
+# HYDRA-UMC-ANDROID-CONTROL - Debug APK on Android emulators (manual)
+# Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
+# GPL-3.0-or-later - see LICENSE
+# =============================================================================
+# Started by hand only (workflow_dispatch): it never runs on a push or a pull request, so it cannot turn the checks of a push red.
+# The emulator is started by reactivecircus/android-emulator-runner, pinned by commit hash (it is on the allowed actions of the repository).
+#
+# Builds the debug APK (HYDRA_UMC_CI=1: nothing is signed with a release key, no version changes) and installs it on emulators of Android 8, 11 and 14, one job each.
+# Each one starts the app, waits, checks that the process is alive and that the log holds no crash or ANR, and keeps a screenshot as an artifact for a day. It is a
+# start-up check on emulated devices: no phone, no robot and no server are involved.
+
+name: Android emulators (manual)
+
+on:
+  push:
+    branches: [hy-tmp-emu]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-emulator
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build the debug APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Java
+        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: "21"
+      - name: Build
+        env:
+          HYDRA_UMC_CI: "1"
+        shell: bash
+        run: |
+          set -euo pipefail
+          chmod +x gradlew
+          ./gradlew --no-daemon assembleDebug
+          apk="$(find app/build/outputs/apk/debug -name '*.apk' | head -n 1)"
+          echo "apk: $apk"
+          mkdir -p dist-apk
+          cp "$apk" dist-apk/app-debug.apk
+      - name: Keep the APK for the emulator jobs
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: debug-apk
+          path: dist-apk/app-debug.apk
+          retention-days: 1
+
+  emulator:
+    name: Android ${{ matrix.api }}
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        api: [26, 30, 34]
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Get the APK
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: debug-apk
+          path: dist-apk
+      - name: Let the runner use hardware acceleration for the emulator
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Start the emulator and run the check
+        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
+        env:
+          SHOTS: ${{ github.workspace }}/emulator-shots
+        with:
+          api-level: ${{ matrix.api }}
+          target: default
+          arch: x86_64
+          profile: pixel_5
+          disable-animations: true
+          emulator-options: -no-window -no-audio -no-boot-anim -no-snapshot -gpu swiftshader_indirect
+          script: bash tools/emulator_smoke.sh dist-apk/app-debug.apk com.hydraumc.control android-${{ matrix.api }}
+      - name: Keep the screenshot
+        if: ${{ always() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: screenshot-android-${{ matrix.api }}
+          path: emulator-shots
+          retention-days: 1
+          if-no-files-found: ignore
