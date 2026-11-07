@@ -25,7 +25,7 @@ adb shell monkey -p "$PACKAGE" -c android.intent.category.LAUNCHER 1 >/tmp/monke
 sleep 20
 if [ -n "$(adb shell pidof "$PACKAGE" | tr -d '\r')" ]; then ok "the app is running 20 seconds after it started"; else bad "the app is not running"; fi
 adb logcat -d >/tmp/logcat.txt 2>&1
-if grep -E "FATAL EXCEPTION|Process: ${PACKAGE//./\\.}.*PID" /tmp/logcat.txt >/dev/null; then bad "the app crashed"; grep -A12 "FATAL EXCEPTION" /tmp/logcat.txt | head -n 30; else ok "no crash of the app in the log"; fi
+if grep -E "Process: ${PACKAGE//./\.}, PID" /tmp/logcat.txt >/dev/null; then bad "the app crashed"; grep -B2 -A12 -E "Process: ${PACKAGE//./\.}, PID" /tmp/logcat.txt | head -n 40; else ok "no crash of the app in the log"; fi
 if grep -E "ANR in ${PACKAGE//./\\.}" /tmp/logcat.txt >/dev/null; then bad "the app did not respond (ANR)"; else ok "no ANR"; fi
 adb exec-out screencap -p >"$SHOTS/${LABEL}.png" 2>/dev/null && ok "screenshot saved as ${LABEL}.png" || echo "SKIP  no screenshot"
 adb shell am force-stop "$PACKAGE"
