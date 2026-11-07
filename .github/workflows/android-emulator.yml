@@ -13,8 +13,6 @@
 name: Android emulators (manual)
 
 on:
-  push:
-    branches: [hy-tmp-emu]
   workflow_dispatch:
 
 permissions:
