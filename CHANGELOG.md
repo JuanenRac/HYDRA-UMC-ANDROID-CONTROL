@@ -4,6 +4,7 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **Instrumented tests on Android emulators (manual workflow):** `app/src/androidTest` holds six checks that need a real Android system and `android-instrumented.yml` runs them on Android 8, 11 and 14: what the package manager keeps of the manifest on each version (the legacy Bluetooth permissions only up to Android 11, the new ones from Android 12, no permission to switch the Wi-Fi, none to install silently) and that the biometric helper says no, without crashing, on a device with nothing enrolled.
 - **A test replays the behaviour shared with the Flutter apps:** `ApiClientVectorsTest` reads the SDK's `conformance/api-client/vectors.json` (copied to the test resources) and checks which commands are numbered and how the number grows, and how every refusal of the server (status, code, revision, message and the kind of refusal) is read by `HydraApiException`.
 
 ## [0.8.0.2] - The stored session follows the rules shared with the other mobile apps: SessionFields holds the rules for the access token, the user name and the refresh token (a sign-in replaces the refresh token, a renewal keeps it, signing... (and 2 more changes)

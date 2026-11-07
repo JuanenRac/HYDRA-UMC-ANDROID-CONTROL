@@ -1,0 +1,68 @@
+# =============================================================================
+# HYDRA-UMC-ANDROID-CONTROL - Instrumented tests on Android emulators (manual)
+# Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
+# GPL-3.0-or-later - see LICENSE
+# =============================================================================
+# Started by hand only (workflow_dispatch): it never runs on a push or a pull request, so it cannot turn the checks of a push red.
+# The emulator is started by reactivecircus/android-emulator-runner, pinned by commit hash (it is on the allowed actions of the repository).
+#
+# Runs the tests of app/src/androidTest (`connectedDebugAndroidTest`) on emulators of Android 8, 11 and 14, one job each: what the package manager keeps of the
+# manifest on each version and what the biometric helper says on a device with nothing enrolled. Nothing is signed (HYDRA_UMC_CI=1), no version changes and no
+# phone, robot or server is involved.
+
+name: Android instrumented tests (manual)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-instrumented
+  cancel-in-progress: false
+
+jobs:
+  instrumented:
+    name: Android ${{ matrix.api }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        api: [26, 30, 34]
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Java
+        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: "21"
+      - name: Let the runner use hardware acceleration for the emulator
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Start the emulator and run the instrumented tests
+        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
+        env:
+          HYDRA_UMC_CI: "1"
+        with:
+          api-level: ${{ matrix.api }}
+          target: default
+          arch: x86_64
+          profile: pixel_5
+          disable-animations: true
+          emulator-options: -no-window -no-audio -no-boot-anim -no-snapshot -gpu swiftshader_indirect
+          script: chmod +x gradlew && ./gradlew --no-daemon connectedDebugAndroidTest
+      - name: Keep the reports
+        if: ${{ always() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: instrumented-reports-android-${{ matrix.api }}
+          path: app/build/reports/androidTests
+          retention-days: 1
+          if-no-files-found: ignore

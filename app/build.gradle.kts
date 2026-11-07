@@ -96,6 +96,7 @@ android {
 
     defaultConfig {
         applicationId = "com.hydraumc.control"
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         minSdk = 24
         // 35 (Android 15) for stable runtime behavior.
         targetSdk = 35
