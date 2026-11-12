@@ -4,6 +4,7 @@
 
 All notable changes to this project are documented here.
 
+- **Tests of the tool changer, the speed slider and the work block through the view model:** 6 new tests against a loopback server (a slot turned into the name of its tool or None, a tool by name, no robot selected, a dragged slider that shows its last value and waits for the pause, a work file refused while no client is connected); no behaviour changes.
 - **Tests of the valves, the pumps, the jog step and the vision switch through the view model:** 7 new tests against a loopback server (what goes out, what shows at once, and what is refused with Listen only on, with no robot and with no client); no behaviour changes.
 - **README: the platform statement:** a note says that where the README speaks of the CM5 it means the pilot bench that runs today, and that the target platform of HYDRA-UMC, an NVIDIA Jetson Orin NX 16 GB, is a design that has not been built or tested.
 - **Listen only dims the controls it disables:** the joystick pad, the base-rotation buttons, HOME/RESET, the valves and pumps and the speed and acceleration sliders are drawn at 40 % opacity while the switch is on, like the DSI (the playback bar with STOP is untouched); the opacity is a pure function (`ListenOnly.controlAlpha`) with a test.
