@@ -75,6 +75,8 @@ Ansichten der App: **Anmeldung** (Serveradresse, Passwort, Fingerabdruck oder Ge
 
 **HYDRA-UMC-ANDROID-CONTROL** ist die native Android-Bedienkonsole von HYDRA-UMC: Sie findet einen HYDRA-UMC-SERVER im lokalen Netz, meldet sich an und zeigt dann die Roboter, bewegt sie, überwacht ihre Kameras und eine 3D-Ansicht und stoppt mit einem Tipp alles. Sie spricht denselben Fernsteuerungsvertrag wie die SUITE und die iOS-App und behält eine Kopie des letzten Zustands für den Fall ohne WLAN. Sie ist kein Sicherheitsgerät.
 
+> **Plattform:** Wo dieses README CM5 sagt, ist der Pilotprüfstand gemeint, der heute läuft; die Zielplattform von HYDRA-UMC ist ein NVIDIA Jetson Orin NX 16 GB, ein Entwurf, der weder gebaut noch getestet wurde.
+
 ## 🏛️ Architektur
 
 <p align="center">

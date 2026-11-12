@@ -75,6 +75,8 @@ Ecrãs da aplicação: **início de sessão** (endereço do servidor, palavra-pa
 
 A **HYDRA-UMC-ANDROID-CONTROL** é a consola nativa de operador Android do HYDRA-UMC: encontra um HYDRA-UMC-SERVER na rede local, inicia sessão e depois mostra os robôs, move-os, vigia as suas câmaras e uma vista 3D, e pára tudo com um toque. Fala o mesmo contrato remoto da SUITE e da aplicação iOS e guarda uma cópia do último estado para quando falta o Wi-Fi. Não é um dispositivo de segurança.
 
+> **Plataforma:** onde este README diz CM5, refere-se ao banco piloto que funciona hoje; a plataforma objetivo do HYDRA-UMC é uma NVIDIA Jetson Orin NX de 16 GB, um desenho que não foi construído nem testado.
+
 ## 🏛️ Arquitetura
 
 <p align="center">

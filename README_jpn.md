@@ -75,6 +75,8 @@ Wi-Fi または Bluetooth 経由で [HYDRA-UMC](https://github.com/JuanenRac/HYD
 
 **HYDRA-UMC-ANDROID-CONTROL** は HYDRA-UMC のネイティブ Android オペレーターコンソールです。ローカルネットワーク上の HYDRA-UMC-SERVER を見つけてサインインし、ロボットの表示と操作、カメラと 3D ビューの確認、ワンタップでの全停止ができます。SUITE や iOS アプリと同じリモート契約を使い、Wi-Fi が無いときのために最後の状態のコピーを保持します。安全装置ではありません。
 
+> **プラットフォーム：** この README の「CM5」は、現在動作している試験用ベンチを指します。HYDRA-UMC の目標プラットフォームは NVIDIA Jetson Orin NX 16 GB ですが、これは製作も試験もされていない設計です。
+
 ## 🏛️ アーキテクチャ
 
 <p align="center">

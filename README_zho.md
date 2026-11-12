@@ -75,6 +75,8 @@ GPL-3.0-or-later - see LICENSE
 
 **HYDRA-UMC-ANDROID-CONTROL** 是 HYDRA-UMC 的原生 Android 操作员控制台：它在本地网络中找到 HYDRA-UMC-SERVER，登录后显示机器人、移动它们、查看摄像头和 3D 视图，并可一键全部停止。它使用与 SUITE 和 iOS 应用相同的远程契约，并保留最后状态的副本以应对没有 Wi-Fi 的情况。它不是安全设备。
 
+> **平台：** 本 README 中的 CM5 指的是目前正在运行的试验台；HYDRA-UMC 的目标平台是 NVIDIA Jetson Orin NX 16 GB，这是尚未制造或测试的设计。
+
 ## 🏛️ 架构
 
 <p align="center">
