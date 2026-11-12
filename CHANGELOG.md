@@ -1,8 +1,10 @@
 # Changelog
 
+## [Unreleased]
+
 All notable changes to this project are documented here.
 
-## [Unreleased]
+## [0.8.0.3] - The view model tests no longer depend on timing: swapping the main dispatcher of the coroutines library fails when a request of the previous test is still reading it on a worker thread, which made two tests fail now and then on a slow runner. All the tests tha
 
 - **The view model tests no longer depend on timing:** swapping the main dispatcher of the coroutines library fails when a request of the previous test is still reading it on a worker thread, which made two tests fail now and then on a slow runner. All the tests that swap it now go through one helper that tries the change again for a short while, and the tear-down of the tests that start a local server no longer hides the real error when the set-up failed; the helper has its own tests (including a worker thread that keeps reading the dispatcher while it is swapped). The test that checks that a STOP is not held back by a jog on the wire no longer depends on which of the two requests the server sees first.
 

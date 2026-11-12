@@ -38,7 +38,7 @@ Una app Android nativa (Kotlin + Jetpack Compose) que controla un robot en la pl
 
 | | |
 |---|---|
-| Versión | `0.8.0.2` |
+| Versión | `0.8.0.3` |
 | Madurez | Funcional |
 | Tests | 571 (`./gradlew testDebugUnitTest`) |
 | Tecnología | Kotlin / Jetpack / biometric auth / WebSocket client |
