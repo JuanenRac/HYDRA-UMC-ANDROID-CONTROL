@@ -614,7 +614,7 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
             val askBeforePlay = prefs.loadConfirmPlay()
             if (!confirmPlayTouched) confirmPlay.value = askBeforePlay
             val listenOnlySaved = prefs.loadListenOnly()
-            if (!listenOnlyTouched) listenOnly.value = listenOnlySaved
+            if (!listenOnlyTouched) { listenOnly.value = listenOnlySaved; ListenOnly.enabled = listenOnlySaved }
             val homeResetSaved = prefs.loadHomeReset(RobotCommandContract.HOME_RESET_ENABLED_BY_DEFAULT)
             if (!homeResetTouched) homeResetEnabled.value = homeResetSaved
             deadMan.enabled.value = prefs.loadFlag(ConnectionPrefs.Flags.DEAD_MAN_JOG, RobotCommandContract.DEAD_MAN_JOG_ENABLED_BY_DEFAULT)
@@ -1519,6 +1519,7 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
     fun setListenOnly(on: Boolean) {
         listenOnlyTouched = true
         listenOnly.value = on
+        ListenOnly.enabled = on
         if (on) deadMan.interrupt()
         viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) { prefs.saveListenOnly(on) }
     }
