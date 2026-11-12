@@ -14,8 +14,13 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
 /** The checks before a command changes the screen, and the undo of an edit that the server refused. */
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [34])
 class CommandPreflightTest {
     private val limits = JogLimits(maxAmount = 10.0, maxAbsolute = 500.0)
 
