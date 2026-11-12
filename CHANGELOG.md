@@ -4,6 +4,8 @@
 
 All notable changes to this project are documented here.
 
+- **The Bluetooth session and the reaction to a refused command leave the view model:** `BleManager` holds the one Bluetooth session of the app (opening one closes the previous one, closing twice is harmless, nothing is kept once it is closed) and `CommandSender` decides what follows a refused robot command (read the robot again, remember that an older server has no `reset` or `trajectory`, end the jog arming, renew the session) from the answer and the command alone. The view model keeps thin calls to both; 13 tests (6 and 7) cover them without a phone. The Bluetooth link itself has still not run against a real device.
+
 - **The line coverage of the unit tests can be measured on demand:** `./gradlew -PhydraUmcCoverage=true testDebugUnitTest createDebugUnitTestCoverageReport` runs the tests with the JaCoCo agent of the Android Gradle plugin (told to include the classes Robolectric loads, or the app shows as never run), and `python tools/kotlin_coverage.py` prints the share of lines run and the files with the most lines no test runs. The manual workflow `android-coverage.yml` does both on a CI runner. No floor is set: a floor comes from a measured value.
 
 - **Screens and dialogs that no test drew are drawn:** `ScreensRenderTest` (8 tests) composes the login screen, the dashboard, the audit and connections dialogs, the link and security settings, the telemetry and the settings screens with a view model that has no server, and checks the words a person needs to use them; the control screen is tested to carry the global STOP once a robot is selected.

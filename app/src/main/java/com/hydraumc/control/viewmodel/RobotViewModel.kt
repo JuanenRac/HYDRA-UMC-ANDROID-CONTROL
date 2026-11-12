@@ -47,7 +47,6 @@ import com.hydraumc.control.network.ServerOptionsFailure
 import com.hydraumc.control.network.ServerSecurity
 import com.hydraumc.control.network.ServerSecurityOptions
 import com.hydraumc.control.network.ServerSecurityValues
-import com.hydraumc.control.network.isUnknownCommand
 import com.hydraumc.control.network.revisionOf
 import com.hydraumc.control.network.tableAsJogs
 import com.hydraumc.control.network.tableLimitExceeded
@@ -63,7 +62,6 @@ import com.hydraumc.control.network.HydraApiException
 import com.hydraumc.control.network.BleError
 import com.hydraumc.control.network.BleErrorKind
 import com.hydraumc.control.network.BlePermissions
-import com.hydraumc.control.network.HydraBleClient
 import com.hydraumc.control.network.TlsPolicy
 import com.hydraumc.control.network.TlsPrefs
 import com.hydraumc.control.network.TlsProblem
@@ -447,7 +445,7 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
     // reaching into apiClient?.authToken directly.
     val authTokenState = mutableStateOf<String?>(null)
     private val liveSocket = LiveSocket(isSwitching = { connection.isSwitching })
-    private var bleClient: HydraBleClient? = null
+    private val ble by lazy { BleManager.forAndroid(getApplication()) }
     private val prefs = ConnectionPrefs(application)
     private val tlsPrefs = TlsPrefs(application)
 
@@ -1003,8 +1001,7 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
         connection.isSwitching = true
 
         liveSocket.close()
-        bleClient?.disconnect()
-        bleClient = null
+        ble.close()
 
         lateinit var client: HydraApiClient
         connection.connect(
@@ -1464,16 +1461,17 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
                 } catch (e: HydraApiException) {
                     logTelemetry("TX Error [$command]: ${e.message}")
                     lastError.value = CommandErrorText.describe(getApplication(), command, e)
+                    val failure = CommandSender.classify(command, e)
                     // The robot changed since this app read it: read it again so the screen shows what it is now.
-                    if (e.isRevisionMismatch) refreshRobot(robotId)
+                    if (failure.refreshRobot) refreshRobot(robotId)
                     // An older server does not have `reset`: remember it, so the button explains instead of sending again.
-                    if (command == RobotCommandContract.RESET && isUnknownCommand(e)) homeResetServerSupports.value = false
-                    if (command == RobotCommandContract.TRAJECTORY && isUnknownCommand(e)) workServerSupports.value = false
+                    if (failure.homeResetUnsupported) homeResetServerSupports.value = false
+                    if (failure.workUnsupported) workServerSupports.value = false
                     // The arming ended (it times out, or a stop cleared it): the screen offers to arm again.
-                    if (e.isJogNotArmed) jogArmedUntilMs.value = jogArmedUntilMs.value - robotId
+                    if (failure.disarmJog) jogArmedUntilMs.value = jogArmedUntilMs.value - robotId
                     // An expired session is renewed (once, whoever notices first);
                     // only a failed renewal returns to the login screen.
-                    if (e.isSessionProblem) renewSessionOrLogout()
+                    if (failure.renewSession) renewSessionOrLogout()
                     rollback()
                 } catch (e: Exception) {
                     // Was `catch (e: HydraApiException)` only - a plain
@@ -2327,20 +2325,16 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
         }
         stopBtScan()
         liveSocket.close()
-        bleClient?.disconnect()
         apiClient = null
         authTokenState.value = null
 
         lastError.value = null
         lastBtError.value = null
         connectionState.value = WsStatus.CONNECTING
-        bleClient = HydraBleClient.forAndroid(
-            context = getApplication(),
+        ble.open(
             deviceAddress = device.address,
-            onStatus = { status ->
-                // BLE reports the same three states
-                connectionState.value = status
-            },
+            // BLE reports the same three states
+            onStatus = { status -> connectionState.value = status },
             onSettings = { payload ->
                 try {
                     applyState(HydraState(org.json.JSONObject(payload)))
@@ -2349,7 +2343,7 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
                 }
             },
             onError = { error -> reportBleError(error) },
-        ).also { it.connect() }
+        )
     }
 
     /** Saves the TLS choices if they are valid; otherwise says what is wrong. They apply to the next connection. */
@@ -2368,10 +2362,7 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
         }
     }
 
-    fun disconnectBle() {
-        bleClient?.disconnect()
-        bleClient = null
-    }
+    fun disconnectBle() = ble.close()
 
     private fun portValue(): Int = port.value.toIntOrNull() ?: 3000
 
@@ -2387,7 +2378,7 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
         connection.stopMetrics()
         stateCacheJob?.cancel()
         liveSocket.close()
-        bleClient?.disconnect()
+        ble.close()
         stopBtScan()
         ProcessLifecycleOwner.get().lifecycle.removeObserver(appLifecycleObserver)
         try {
