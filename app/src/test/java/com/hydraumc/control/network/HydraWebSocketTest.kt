@@ -5,13 +5,11 @@
 // =============================================================================
 package com.hydraumc.control.network
 
+import com.hydraumc.control.MainDispatcherSwap
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
-import kotlinx.coroutines.test.resetMain
-import kotlinx.coroutines.test.setMain
 import kotlinx.coroutines.withTimeout
 import okhttp3.OkHttpClient
 import okhttp3.mockwebserver.MockResponse
@@ -52,7 +50,7 @@ class HydraWebSocketTest {
         // real reason in its own header comment (org.json isn't thread-safe
         // against the callers those callbacks mutate). A plain JVM unit test
         // has no real Android main looper to back that dispatcher.
-        Dispatchers.setMain(UnconfinedTestDispatcher())
+        MainDispatcherSwap.set()
         server = MockWebServer()
         server.start()
         client = OkHttpClient()
@@ -60,8 +58,11 @@ class HydraWebSocketTest {
 
     @After
     fun tearDown() {
-        server.shutdown()
-        Dispatchers.resetMain()
+        try {
+            if (::server.isInitialized) server.shutdown()
+        } finally {
+            MainDispatcherSwap.reset()
+        }
     }
 
     /** Collects callback events onto a channel so the test can await them

@@ -7,14 +7,11 @@ package com.hydraumc.control.viewmodel
 
 import android.app.Application
 import androidx.test.core.app.ApplicationProvider
+import com.hydraumc.control.MainDispatcherSwap
 import com.hydraumc.control.network.AuthStore
 import com.hydraumc.control.network.StopAllStatus
 import com.hydraumc.control.network.UserProfile
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
-import kotlinx.coroutines.test.resetMain
-import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -52,12 +49,12 @@ class RobotViewModelStoredSessionTest {
 
     @Before
     fun setUp() {
-        Dispatchers.setMain(UnconfinedTestDispatcher())
+        MainDispatcherSwap.set()
     }
 
     @After
     fun tearDown() {
-        Dispatchers.resetMain()
+        MainDispatcherSwap.reset()
     }
 
     private fun viewModel(store: AuthStore) = RobotViewModel(ApplicationProvider.getApplicationContext<Application>(), store)

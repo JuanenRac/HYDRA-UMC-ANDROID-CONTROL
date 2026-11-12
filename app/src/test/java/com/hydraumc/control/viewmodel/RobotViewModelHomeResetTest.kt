@@ -8,14 +8,11 @@ package com.hydraumc.control.viewmodel
 import android.app.Application
 import android.util.Base64
 import androidx.test.core.app.ApplicationProvider
+import com.hydraumc.control.MainDispatcherSwap
 import com.hydraumc.control.model.HydraState
 import com.hydraumc.control.network.HydraApiClient
 import com.hydraumc.control.util.HomeReset
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
-import kotlinx.coroutines.test.resetMain
-import kotlinx.coroutines.test.setMain
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.json.JSONObject
@@ -44,15 +41,18 @@ class RobotViewModelHomeResetTest {
 
     @Before
     fun setUp() {
-        Dispatchers.setMain(UnconfinedTestDispatcher())
+        MainDispatcherSwap.set()
         server = MockWebServer()
         server.start()
     }
 
     @After
     fun tearDown() {
-        server.shutdown()
-        Dispatchers.resetMain()
+        try {
+            if (::server.isInitialized) server.shutdown()
+        } finally {
+            MainDispatcherSwap.reset()
+        }
     }
 
     private fun newViewModel(playing: Boolean = false, enabled: Boolean = true, online: Boolean = true): RobotViewModel {

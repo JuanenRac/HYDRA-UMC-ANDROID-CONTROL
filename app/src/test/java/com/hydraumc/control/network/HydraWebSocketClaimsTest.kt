@@ -5,13 +5,10 @@
 // =============================================================================
 package com.hydraumc.control.network
 
-import kotlinx.coroutines.Dispatchers
+import com.hydraumc.control.MainDispatcherSwap
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
-import kotlinx.coroutines.test.resetMain
-import kotlinx.coroutines.test.setMain
 import kotlinx.coroutines.withTimeout
 import okhttp3.OkHttpClient
 import okhttp3.WebSocket
@@ -40,7 +37,7 @@ class HydraWebSocketClaimsTest {
 
     @Before
     fun setUp() {
-        Dispatchers.setMain(UnconfinedTestDispatcher())
+        MainDispatcherSwap.set()
         server = MockWebServer()
         server.start()
         client = OkHttpClient()
@@ -51,7 +48,7 @@ class HydraWebSocketClaimsTest {
         try {
             server.shutdown()
         } finally {
-            Dispatchers.resetMain()
+            MainDispatcherSwap.reset()
         }
     }
 
