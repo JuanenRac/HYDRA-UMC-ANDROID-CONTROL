@@ -49,13 +49,11 @@ import com.hydraumc.control.network.ServerSecurityOptions
 import com.hydraumc.control.network.ServerSecurityValues
 import com.hydraumc.control.network.revisionOf
 import com.hydraumc.control.network.tableAsJogs
-import com.hydraumc.control.network.tableLimitExceeded
 import com.hydraumc.control.network.tableParams
 import com.hydraumc.control.network.RobotSafety
 import com.hydraumc.control.network.SessionController
 import com.hydraumc.control.network.claimStanding
 import com.hydraumc.control.network.jwtRole
-import com.hydraumc.control.network.jogLimitExceeded
 import com.hydraumc.control.network.ConnectionPrefs
 import com.hydraumc.control.network.HydraApiClient
 import com.hydraumc.control.network.HydraApiException
@@ -90,7 +88,6 @@ import com.hydraumc.control.wear.WatchAlertSink
 import com.hydraumc.control.wear.WatchAlertStop
 import com.hydraumc.control.wear.WearAlertSink
 import com.hydraumc.control.util.NotificationHelper
-import com.hydraumc.control.util.OptimisticRollback
 import com.hydraumc.control.util.StaleData
 import com.hydraumc.control.util.reuseUnchangedRows
 import kotlinx.coroutines.launch
@@ -1304,26 +1301,11 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
         applyState(state, changedRobotIds = setOf(robotId))
     }
 
-    // Every write in this app goes through the real atomic
-    // POST /api/robot/:id/command (server.ts:210-298) instead of pushing the
-    // full settings tree for a single jog tick: the server computes
-    // affectedIds itself (self + combinedWith), persists to disk, AND
-    // broadcasts a "delta" to every connected client (this one included) on
-    // its own, so this app doesn't also need to push the full tree over its
-    // own WebSocket. Every command shares the same affectedIds computation below
-    // (propagateToCombined), so enable/disable, play/pause/stop, and any
-    // future command all propagate to a robot's own combinedWith siblings
-    // the same way instead of each reimplementing that fan-out separately.
-    // Keyed by `command`, not a single shared Job - a pending debounced
-    // command (only setSpeed uses debounceMs today) must only be cancelled
-    // by a NEW command of that same kind, not by an unrelated jog/valve/
-    // pump/play tap that happens to land inside the debounce window. A
-    // single shared Job here used to mean: drag the speed slider, then
-    // immediately jog before the 300ms debounce fires, and the speed
-    // change silently never reaches the server at all - the UI already
-    // shows the new speed (the local mutation below is synchronous), so
-    // nothing about the screen indicates the robot is still running at
-    // the OLD speed.
+    // Every write goes through the atomic POST /api/robot/:id/command, never a push of the whole settings tree. The server computes
+    // the affected robots (itself and its combinedWith), saves, and broadcasts a delta to every client, this one included, so all
+    // commands propagate to combined robots the same way (propagateToCombined).
+    // A pending debounced send is kept per command, not in one shared job: a new command of the same kind cancels it, an unrelated
+    // jog, valve, pump or play tap does not (only setSpeed debounces today).
     /**
      * Applies [command]/[params] to [robotId] (defaults to the globally
      * selected control robot; the Camera screen passes an explicit id since
@@ -1350,51 +1332,33 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
             return
         }
 
-        // Checked BEFORE the optimistic mutation below, not after (used to
-        // be `val client = apiClient ?: return`, reached only once the UI
-        // already showed the change as applied) - with no REST client at
-        // all (BLE-only session: connectBle() sets apiClient = null and
-        // this app has no BLE command path yet), every command used to
-        // mutate the local/UI state and then silently discard itself,
-        // so every button appeared to work while doing nothing whatsoever
-        // to the real robot.
+        // Checked before the optimistic change: with no REST client (a Bluetooth-only session has no command path) a command would
+        // show as applied and do nothing.
         val client = apiClient ?: run {
             lastError.value = getApplication<Application>().getString(R.string.error_not_connected)
             return
         }
         // A stop (or safe mode) of the robot ends a continuous jog that is held.
-        if (command == RobotCommandContract.STOP || command == RobotCommandContract.DISABLE) deadMan.interrupt()
+        if (CommandPreflight.interruptsHeldJog(command)) deadMan.interrupt()
 
         // A jog above the limit the server holds for this robot model is not sent at all (the
         // server checks it again). Checked before the optimistic change, like the client above.
-        if (command == RobotCommandContract.JOG || command == RobotCommandContract.TABLE) {
+        if (CommandPreflight.isMotion(command)) {
             if (jogNeedsArming(robotId)) {
                 lastError.value = getApplication<Application>().getString(R.string.error_jog_not_armed)
                 return
             }
-            val limits = safetyByRobot.value[robotId]?.jog
-            // A table move is checked as a whole, and a relative one also by where it ends.
-            val exceeded = if (command == "table") {
-                params?.let { tableLimitExceeded(it, limits, targetRobot.xyTablePos.optDouble("x", 0.0), targetRobot.xyTablePos.optDouble("y", 0.0)) }
-            } else {
-                jogLimitExceeded(
-                    amount = params?.optDouble("amount", 0.0) ?: 0.0,
-                    limits = limits,
-                    absolute = params?.optBoolean("absolute", false) ?: false,
-                )
-            }
+            val exceeded = CommandPreflight.limitExceeded(
+                command, params, safetyByRobot.value[robotId]?.jog,
+                targetRobot.xyTablePos.optDouble("x", 0.0), targetRobot.xyTablePos.optDouble("y", 0.0),
+            )
             if (exceeded != null) {
                 lastError.value = getApplication<Application>().getString(R.string.error_jog_over_limit, CommandErrorText.formatLimit(exceeded))
                 return
             }
         }
 
-        val affectedIds = mutableListOf(robotId)
-        if (propagateToCombined) {
-            targetRobot.raw.optJSONArray("combinedWith")?.let { arr ->
-                for (i in 0 until arr.length()) affectedIds.add(arr.getInt(i))
-            }
-        }
+        val affectedIds = CommandPreflight.affectedIds(robotId, targetRobot.raw.optJSONArray("combinedWith"), propagateToCombined)
         // Snapshot every affected robot's raw state as JSON text before
         // mutating, so a failed send can restore it - the mutation below is
         // optimistic (applied to the UI immediately, before the network
@@ -1403,30 +1367,27 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
         // that isn't the one already-handled 401 case) left the UI showing
         // the command as applied forever, with no way back to the real
         // last-known-good state short of a full reconnect.
-        val snapshots = affectedIds.mapNotNull { id -> state.robotById(id)?.let { id to JSONObject(it.raw.toString()) } }
-        affectedIds.forEach { id -> state.robotById(id)?.let(localMutate) }
         // Only the fields this command changed are undone on failure (and only
         // while they still hold the value it wrote), so deltas that arrived in
         // the meantime and jogs that succeeded keep their newer values.
-        val edits = snapshots.map { (id, before) ->
-            id to OptimisticRollback.diff(before, JSONObject(state.robotById(id)?.raw?.toString() ?: "{}"))
-        }
+        val edits = OptimisticEdits.apply(
+            affectedIds,
+            rawOf = { id -> state.robotById(id)?.raw },
+            mutate = { id -> state.robotById(id)?.let(localMutate) },
+        )
         applyState(state, changedRobotIds = affectedIds.toSet())
 
         val payload = JSONObject().put("command", command).apply { if (params != null) put("params", params) }
 
         fun rollback() {
-            for ((id, changes) in edits) {
-                val raw = state.robotById(id)?.raw ?: continue
-                OptimisticRollback.restore(raw, changes)
-            }
-            applyState(state, changedRobotIds = edits.map { it.first }.toSet())
+            edits.rollback { id -> state.robotById(id)?.raw }
+            applyState(state, changedRobotIds = edits.ids)
         }
 
-        val isJog = command == RobotCommandContract.JOG || command == RobotCommandContract.TABLE
+        val isJog = CommandPreflight.isMotion(command)
         val send: () -> Unit = {
             if (isJog) commands.jogStarted(robotId)
-            val skipsLine = command == RobotCommandContract.STOP || command == RobotCommandContract.DISABLE
+            val skipsLine = CommandPreflight.interruptsHeldJog(command)
             commandQueue.submit(
                 viewModelScope, robotId, urgent = skipsLine, cancellable = isJog,
                 // A jog that waited and was dropped by a stop: the screen goes back to what the robot really is.
@@ -1443,17 +1404,7 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
                         rollback()
                         return@submit
                     }
-                    // Success log for "$command" (play/pause/stop/enable/...) -
-                    // previously only the FAILURE path logged anything
-                    // (logTelemetry("TX Error [...]") below), so a command
-                    // that reached the server with no visible effect (the
-                    // still-open Pause/Stop investigation looked identical in the
-                    // on-screen log to one that silently failed to send at
-                    // all. This line is the missing half: confirms the POST
-                    // actually left this app, so the next live repro can
-                    // tell "never sent" apart from "sent, server/STUDIO
-                    // didn't react" just from this screen's own log, no
-                    // logcat needed for that first split.
+                    // The success line confirms the POST left this app, so "never sent" can be told from "sent, no effect" on the log screen.
                     logTelemetry("TX OK [$command] -> robot $robotId")
                     // The server disarms the jog on a stop.
                     if (command == RobotCommandContract.STOP) jogArmedUntilMs.value = jogArmedUntilMs.value - robotId
@@ -1474,10 +1425,7 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
                     if (failure.renewSession) renewSessionOrLogout()
                     rollback()
                 } catch (e: Exception) {
-                    // Was `catch (e: HydraApiException)` only - a plain
-                    // timeout/SocketException from OkHttp isn't wrapped in
-                    // HydraApiException, so it escaped uncaught, skipping
-                    // both the error message AND the rollback below.
+                    // Not a HydraApiException (a timeout or a socket failure): the message is generic and the change is rolled back too.
                     logTelemetry("TX Error [$command]: ${e.message}")
                     lastError.value = getApplication<Application>().getString(
                         if (command == "stop") R.string.error_stop_not_confirmed else R.string.error_command_failed,
@@ -1535,12 +1483,7 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
             if (claim.controllerId != SessionController.id) continue
             val until = claim.jogArmedUntil
             val ttl = safetyByRobot.value[claim.robotId]?.armTtlMs ?: 60_000L
-            // The server clock and this phone clock may differ: the arming is shown as ending no later than its length allows.
-            jogArmedUntilMs.value = if (until != null && until > now) {
-                jogArmedUntilMs.value + (claim.robotId to minOf(until, now + ttl))
-            } else {
-                jogArmedUntilMs.value - claim.robotId
-            }
+            jogArmedUntilMs.value = JogArming.fromServer(jogArmedUntilMs.value, claim.robotId, until, now, ttl)
         }
     }
 
@@ -1744,8 +1687,8 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
                 workFiles.value = WorkFiles.parseIndex(client.getWorkIndexBody(folder)) ?: emptyList()
             } catch (e: HydraApiException) {
                 // A folder that does not exist yet is an empty list, not an error.
-                if (e.isNotFound) workFiles.value = emptyList() else lastError.value = getApplication<Application>().getString(R.string.work_load_failed)
-                if (e.isSessionProblem) renewSessionOrLogout()
+                if (WorkFileFlow.listOutcome(e) == WorkFileFlow.ListOutcome.EMPTY_LIST) workFiles.value = emptyList() else lastError.value = getApplication<Application>().getString(R.string.work_load_failed)
+                if (WorkFileFlow.sessionEnded(e)) renewSessionOrLogout()
             } catch (e: Exception) {
                 lastError.value = getApplication<Application>().getString(R.string.work_load_failed)
             } finally {
@@ -1765,7 +1708,7 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
             return
         }
         val folder = workFolderOf(robotId)
-        if (folder == null || !WorkFiles.isSafeFileName(file)) {
+        if (!WorkFileFlow.canLoad(folder, file, WorkFiles::isSafeFileName)) {
             lastError.value = app.getString(R.string.work_load_failed)
             return
         }
@@ -1857,7 +1800,7 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
         if (robotId == null) return false
         val safety = safetyByRobot.value[robotId] ?: return false
         if (!safety.armRequired) return false
-        return (jogArmedUntilMs.value[robotId] ?: 0L) <= nowMs
+        return JogArming.needsArming(jogArmedUntilMs.value, robotId, nowMs)
     }
 
     /**
@@ -1884,12 +1827,7 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
                 safetyByRobot.value = safetyByRobot.value + (robotId to safety)
                 val until = safety.jogArmedUntil
                 val now = System.currentTimeMillis()
-                // The server clock and this phone clock may differ: the arming is shown as ending no later than its length allows.
-                jogArmedUntilMs.value = if (until != null && until > now) {
-                    jogArmedUntilMs.value + (robotId to minOf(until, now + safety.armTtlMs))
-                } else {
-                    jogArmedUntilMs.value - robotId
-                }
+                jogArmedUntilMs.value = JogArming.fromServer(jogArmedUntilMs.value, robotId, until, now, safety.armTtlMs)
             } catch (e: HydraApiException) {
                 if (e.isSessionProblem) renewSessionOrLogout()
             } catch (_: Exception) {
@@ -1926,12 +1864,8 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
     /** Arms or disarms the jog of the selected robot (only needed when the server requires it). */
     fun setJogArmed(armed: Boolean) = runAccessRequest("jog-arm") { client, robotId ->
         val answer = client.postJogArm(robotId, armed)
-        if (armed) {
-            val ttl = answer.optLong("ttlMs", safetyByRobot.value[robotId]?.armTtlMs ?: 60_000L)
-            jogArmedUntilMs.value = jogArmedUntilMs.value + (robotId to System.currentTimeMillis() + ttl)
-        } else {
-            jogArmedUntilMs.value = jogArmedUntilMs.value - robotId
-        }
+        val ttl = answer.optLong("ttlMs", safetyByRobot.value[robotId]?.armTtlMs ?: 60_000L)
+        jogArmedUntilMs.value = JogArming.afterRequest(jogArmedUntilMs.value, robotId, armed, System.currentTimeMillis(), ttl)
         answer
     }
 
