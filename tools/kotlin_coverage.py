@@ -5,15 +5,17 @@
 # =============================================================================
 """Reads the JaCoCo XML report of the unit tests and says which files are least covered.
 
-Usage: python tools/kotlin_coverage.py [REPORT.xml] [--top N] [--floor PERCENT]
+Usage: python tools/kotlin_coverage.py [REPORT.xml] [--top N] [--floor PERCENT | --floor-file tools/coverage_floor.json]
 
 The report is the one `createDebugUnitTestCoverageReport` writes (run Gradle with -PhydraUmcCoverage=true). The total is the share of lines run by at least
 one test; the list shows the files with the most lines that no test runs, which is where a new test pays most. With --floor the exit status is 1 when the total is
-below the given percent (no floor is applied unless it is given: a floor comes from a measured value, never from a guess).
+below the given percent (no floor is applied unless it is given: a floor comes from a measured value, never from a guess). --floor-file reads the
+"kotlin" entry of tools/coverage_floor.json.
 """
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 import xml.etree.ElementTree as ET
 from pathlib import Path
@@ -45,6 +47,14 @@ def percent(missed: int, covered: int) -> float:
     return 100.0 * covered / total if total else 100.0
 
 
+def floor_from_file(path: Path) -> float:
+    """The floor of the \"kotlin\" entry of a coverage_floor.json file."""
+    for entry in json.loads(path.read_text(encoding="utf-8")):
+        if entry.get("stack") == "kotlin":
+            return float(entry["floor"])
+    raise SystemExit(f"no kotlin entry in {path}")
+
+
 def summary(path: Path, top: int = 15) -> str:
     (missed, covered), files = read_report(path)
     lines = [f"lines covered: {percent(missed, covered):.1f} % ({covered} of {missed + covered}) in {len(files)} files", "", "files with the most lines no test runs:"]
@@ -58,11 +68,14 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("report", nargs="?", type=Path, default=DEFAULT_REPORT)
     parser.add_argument("--top", type=int, default=15)
     parser.add_argument("--floor", type=float, default=None, help="fail when the total is below this percent")
+    parser.add_argument("--floor-file", type=Path, default=None, help="read the floor from the kotlin entry of this coverage_floor.json")
     arguments = parser.parse_args(argv)
     if not arguments.report.is_file():
         print(f"no report at {arguments.report}: run Gradle with -PhydraUmcCoverage=true first", file=sys.stderr)
         return 2
     print(summary(arguments.report, arguments.top))
+    if arguments.floor_file is not None:
+        arguments.floor = floor_from_file(arguments.floor_file)
     if arguments.floor is not None:
         (missed, covered), _ = read_report(arguments.report)
         if percent(missed, covered) < arguments.floor:

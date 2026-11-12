@@ -4,6 +4,7 @@
 # GPL-3.0-or-later - see LICENSE
 # =============================================================================
 # Runs the JVM unit tests with line coverage (JaCoCo through the Android Gradle plugin) on GitHub Actions and prints which files have the most lines no test runs.
+# The total is compared with the floor in tools/coverage_floor.json (the measured value, rounded down); the run fails below it.
 # Nothing is built for release, nothing is signed and no version changes (HYDRA_UMC_CI=1).
 name: Android coverage
 
@@ -45,4 +46,6 @@ jobs:
 
       - name: Say which files have the most lines no test runs
         shell: bash
-        run: python tools/kotlin_coverage.py --top 25 | tee "$GITHUB_STEP_SUMMARY"
+        run: |
+          set -o pipefail
+          python tools/kotlin_coverage.py --top 25 --floor-file tools/coverage_floor.json | tee "$GITHUB_STEP_SUMMARY"

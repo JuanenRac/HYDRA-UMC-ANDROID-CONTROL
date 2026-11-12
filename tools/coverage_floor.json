@@ -1,0 +1,9 @@
+[
+  {
+    "stack": "kotlin",
+    "floor": 62,
+    "report": "app/build/reports/coverage/test/debug/report.xml",
+    "measured": "62.1 % (5559 of 8946 lines)",
+    "note": "Line coverage of the JVM unit tests (JaCoCo, workflow android-coverage), the measured value rounded down. tools/kotlin_coverage.py --floor-file checks it; hydra_project_tool.py coverage does not run Gradle and skips this entry."
+  }
+]
