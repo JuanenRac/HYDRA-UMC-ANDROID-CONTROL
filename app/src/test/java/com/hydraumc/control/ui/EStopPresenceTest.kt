@@ -79,4 +79,14 @@ class EStopPresenceTest {
 
         composeTestRule.onNodeWithContentDescription(stopDescription()).assertExists()
     }
+
+    @Test
+    fun theControlScreenCarriesTheStopButtonOnceARobotIsSelected() {
+        val model = viewModel()
+        model.robots.value = listOf(aRobot())
+        model.selectedRobotId.value = 1
+        composeTestRule.setContent { ControlScreen(model) }
+
+        composeTestRule.onNodeWithContentDescription(stopDescription()).assertExists()
+    }
 }

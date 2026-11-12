@@ -1593,35 +1593,11 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
     }
 
     /** The phrase for a reason the continuous jog does not start, in the language of the phone. */
-    fun deadManBlockText(block: DeadManJog.Block): String = getApplication<Application>().getString(
-        when (block) {
-            DeadManJog.Block.NONE -> R.string.home_reset_blocked_none
-            DeadManJog.Block.OFF -> R.string.dead_man_blocked_off
-            DeadManJog.Block.NOT_CONNECTED -> R.string.error_not_connected
-            DeadManJog.Block.OFFLINE -> R.string.dead_man_blocked_offline
-            DeadManJog.Block.SAFE_MODE -> R.string.dead_man_blocked_safe_mode
-            DeadManJog.Block.MOVING -> R.string.dead_man_blocked_moving
-            DeadManJog.Block.STOP_PENDING -> R.string.dead_man_blocked_stop
-            DeadManJog.Block.NOT_ARMED -> R.string.error_jog_not_armed
-            DeadManJog.Block.ROLE -> R.string.dead_man_blocked_role
-            DeadManJog.Block.BAD_LINK -> R.string.dead_man_blocked_bad_link
-            DeadManJog.Block.ALREADY_RUNNING -> R.string.dead_man_blocked_already
-            DeadManJog.Block.NOT_SUPPORTED -> R.string.dead_man_blocked_not_supported
-        },
-    )
+    fun deadManBlockText(block: DeadManJog.Block): String = DeadManText.block(getApplication<Application>(), block)
 
     /** What to tell the person when a continuous jog ended on its own; null when nothing needs saying. */
-    fun deadManEndText(reason: DeadManJog.EndReason, stopConfirmed: Boolean): String? {
-        val app = getApplication<Application>()
-        if (!stopConfirmed) return app.getString(R.string.dead_man_stop_not_confirmed)
-        return when (reason) {
-            DeadManJog.EndReason.RELEASED, DeadManJog.EndReason.INTERRUPTED -> null
-            DeadManJog.EndReason.LINK_LOST -> app.getString(R.string.dead_man_ended_link_lost)
-            DeadManJog.EndReason.TOO_LONG -> app.getString(R.string.dead_man_ended_too_long)
-            DeadManJog.EndReason.BAD_LINK -> app.getString(R.string.dead_man_ended_bad_link)
-            DeadManJog.EndReason.SERVER_REFUSED -> app.getString(R.string.dead_man_ended_refused)
-        }
-    }
+    fun deadManEndText(reason: DeadManJog.EndReason, stopConfirmed: Boolean): String? =
+        DeadManText.end(getApplication<Application>(), reason, stopConfirmed)
 
     // ---- pairing by QR code or link ----------------------------------------------------------------------------
 
@@ -1650,17 +1626,7 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
         }
         when (val result = PairingLink.parse(text)) {
             is PairingLink.Result.Ok -> pairingOffer.value = result.offer
-            is PairingLink.Result.Refused -> lastError.value = app.getString(
-                when (result.problem) {
-                    PairingLink.Problem.BAD_HOST, PairingLink.Problem.MISSING_HOST -> R.string.pairing_problem_host
-                    PairingLink.Problem.BAD_PORT -> R.string.pairing_problem_port
-                    PairingLink.Problem.BAD_FINGERPRINT -> R.string.pairing_problem_fingerprint
-                    PairingLink.Problem.MISSING_FINGERPRINT -> R.string.pairing_problem_missing_fingerprint
-                    PairingLink.Problem.BAD_NAME -> R.string.pairing_problem_name
-                    PairingLink.Problem.NOT_A_PAIRING_LINK, PairingLink.Problem.EMPTY -> R.string.pairing_problem_not_link
-                    else -> R.string.pairing_problem_generic
-                },
-            )
+            is PairingLink.Result.Refused -> lastError.value = app.getString(PairingText.of(result.problem))
         }
         return true
     }
@@ -1698,18 +1664,7 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
     }
 
     /** The sentence of an alert, in the language of the phone. */
-    fun watchAlertText(event: WatchAlertEvent): String {
-        val app = getApplication<Application>()
-        val name = event.robotName ?: ""
-        return when (event.kind) {
-            WatchAlertKind.CONNECTION_LOST -> app.getString(R.string.watch_alert_connection_lost)
-            WatchAlertKind.CONNECTION_RESTORED -> app.getString(R.string.watch_alert_connection_restored)
-            WatchAlertKind.ROBOT_OFFLINE -> app.getString(R.string.watch_alert_robot_offline, name)
-            WatchAlertKind.ROBOT_SAFE_MODE -> app.getString(R.string.watch_alert_robot_safe_mode, name)
-            WatchAlertKind.STOP_NOT_CONFIRMED -> app.getString(R.string.watch_alert_stop_not_confirmed)
-            WatchAlertKind.STOP_CONFIRMED -> app.getString(R.string.watch_alert_stop_confirmed)
-        }
-    }
+    fun watchAlertText(event: WatchAlertEvent): String = BlockText.watchAlert(getApplication<Application>(), event)
 
     /** What the alert rules see of the plant right now. */
     fun watchAlertInput(): WatchAlertInput = WatchAlertInput(
@@ -1772,19 +1727,7 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
         )
     }
 
-    fun workBlockText(block: WorkFiles.Block): String = getApplication<Application>().getString(
-        when (block) {
-            WorkFiles.Block.NONE -> R.string.work_blocked_none
-            WorkFiles.Block.NOT_CONNECTED -> R.string.error_not_connected
-            WorkFiles.Block.OFFLINE -> R.string.work_blocked_offline
-            WorkFiles.Block.SAFE_MODE -> R.string.work_blocked_safe_mode
-            WorkFiles.Block.PLAYING -> R.string.work_blocked_playing
-            WorkFiles.Block.STOP_PENDING -> R.string.work_blocked_stop
-            WorkFiles.Block.ROLE -> R.string.work_blocked_role
-            WorkFiles.Block.NO_TABLE -> R.string.work_blocked_no_table
-            WorkFiles.Block.NOT_SUPPORTED -> R.string.work_not_supported
-        },
-    )
+    fun workBlockText(block: WorkFiles.Block): String = BlockText.work(getApplication<Application>(), block)
 
     /** Reads the names of the work files of [robotId]'s folder. */
     fun loadWorkList(robotId: Int) {
@@ -1883,25 +1826,7 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
     }
 
     /** The phrase for a [HomeReset.Block], in the language of the phone. */
-    fun homeResetBlockText(block: HomeReset.Block): String {
-        val app = getApplication<Application>()
-        return app.getString(
-            when (block) {
-                HomeReset.Block.NONE -> R.string.home_reset_blocked_none
-                HomeReset.Block.OFF -> R.string.home_reset_blocked_off
-                HomeReset.Block.NOT_CONNECTED -> R.string.error_not_connected
-                HomeReset.Block.OFFLINE -> R.string.home_reset_blocked_offline
-                HomeReset.Block.SAFE_MODE -> R.string.home_reset_blocked_safe_mode
-                HomeReset.Block.MOVING -> R.string.home_reset_blocked_moving
-                HomeReset.Block.JOG_BUSY -> R.string.home_reset_blocked_jog
-                HomeReset.Block.STOP_PENDING -> R.string.home_reset_blocked_stop
-                HomeReset.Block.NOT_ARMED -> R.string.error_jog_not_armed
-                HomeReset.Block.ROLE -> R.string.home_reset_blocked_role
-                HomeReset.Block.NO_POSE -> R.string.home_reset_blocked_no_pose
-                HomeReset.Block.NOT_SUPPORTED -> R.string.home_reset_not_supported
-            },
-        )
-    }
+    fun homeResetBlockText(block: HomeReset.Block): String = BlockText.homeReset(getApplication<Application>(), block)
 
     /**
      * Sends the reset (the selected robot to its zero position) once the confirmation in steps is complete. The

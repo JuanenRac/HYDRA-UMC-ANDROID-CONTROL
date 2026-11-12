@@ -1,0 +1,48 @@
+# =============================================================================
+# HYDRA-UMC-ANDROID-CONTROL - Android coverage
+# Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
+# GPL-3.0-or-later - see LICENSE
+# =============================================================================
+# Runs the JVM unit tests with line coverage (JaCoCo through the Android Gradle plugin) on GitHub Actions and prints which files have the most lines no test runs.
+# Nothing is built for release, nothing is signed and no version changes (HYDRA_UMC_CI=1).
+name: Android coverage
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  coverage:
+    name: Unit tests with line coverage
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+
+      - name: Set up Java
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.12"
+
+      - name: Run the unit tests with coverage
+        env:
+          HYDRA_UMC_CI: "1"
+        shell: bash
+        run: |
+          set -euo pipefail
+          chmod +x gradlew
+          ./gradlew --no-daemon -PhydraUmcCoverage=true testDebugUnitTest createDebugUnitTestCoverageReport
+
+      - name: Say which files have the most lines no test runs
+        shell: bash
+        run: python tools/kotlin_coverage.py --top 25 | tee "$GITHUB_STEP_SUMMARY"

@@ -4,6 +4,12 @@
 
 All notable changes to this project are documented here.
 
+- **The line coverage of the unit tests can be measured on demand:** `./gradlew -PhydraUmcCoverage=true testDebugUnitTest createDebugUnitTestCoverageReport` runs the tests with the JaCoCo agent of the Android Gradle plugin (told to include the classes Robolectric loads, or the app shows as never run), and `python tools/kotlin_coverage.py` prints the share of lines run and the files with the most lines no test runs. The manual workflow `android-coverage.yml` does both on a CI runner. No floor is set: a floor comes from a measured value.
+
+- **Screens and dialogs that no test drew are drawn:** `ScreensRenderTest` (8 tests) composes the login screen, the dashboard, the audit and connections dialogs, the link and security settings, the telemetry and the settings screens with a view model that has no server, and checks the words a person needs to use them; the control screen is tested to carry the global STOP once a robot is selected.
+
+- **The view model gives up the sentences it only formatted:** the reasons a refused pairing link, the continuous jog, the work files and HOME/RESET are blocked, and the watch alerts, now live in `PairingText`, `DeadManText` and `BlockText` (the view model keeps thin methods that call them, so no screen changes). 10 new tests cover that every reason has a sentence and that the alerts of a robot name it.
+
 ## [0.8.0.3] - The view model tests no longer depend on timing: swapping the main dispatcher of the coroutines library fails when a request of the previous test is still reading it on a worker thread, which made two tests fail now and then on a slow runner. All the tests tha
 
 - **The view model tests no longer depend on timing:** swapping the main dispatcher of the coroutines library fails when a request of the previous test is still reading it on a worker thread, which made two tests fail now and then on a slow runner. All the tests that swap it now go through one helper that tries the change again for a short while, and the tear-down of the tests that start a local server no longer hides the real error when the set-up failed; the helper has its own tests (including a worker thread that keeps reading the dispatcher while it is swapped). The test that checks that a STOP is not held back by a jog on the wire no longer depends on which of the two requests the server sees first.
