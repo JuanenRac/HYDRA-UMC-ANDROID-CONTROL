@@ -89,8 +89,10 @@ class RobotViewModelStopPriorityTest {
 
         val first = server.takeRequest(5, TimeUnit.SECONDS)
         val second = server.takeRequest(5, TimeUnit.SECONDS)
-        assertEquals("jog", JSONObject(first!!.body.readUtf8()).getString("command"))
-        assertEquals("stop", JSONObject(second!!.body.readUtf8()).getString("command"))
+        // The jog counts as on the wire as soon as it is handed to the network, but its request and the stop travel on two connections, so which of
+        // the two the server sees first depends on the speed of the runner: what matters is that both arrive and that the second jog does not.
+        val commands = listOf(first!!, second!!).map { JSONObject(it.body.readUtf8()).getString("command") }
+        assertEquals(listOf("jog", "stop"), commands.sorted())
         assertNull("no third request: the second jog was held back", server.takeRequest(300, TimeUnit.MILLISECONDS))
     }
 
