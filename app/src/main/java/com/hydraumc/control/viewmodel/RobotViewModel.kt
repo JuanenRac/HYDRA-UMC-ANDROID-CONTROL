@@ -1708,7 +1708,7 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
             return
         }
         val folder = workFolderOf(robotId)
-        if (!WorkFileFlow.canLoad(folder, file, WorkFiles::isSafeFileName)) {
+        if (folder == null || !WorkFiles.isSafeFileName(file)) {
             lastError.value = app.getString(R.string.work_load_failed)
             return
         }

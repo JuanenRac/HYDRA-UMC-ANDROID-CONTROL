@@ -44,8 +44,8 @@ class WatchRelayHandlerTest {
     }
 
     private class Flags(var presence: Boolean = true, var confirm: Boolean = true) : WatchRelayFlags {
-        override fun presenceRelay() = presence
-        override fun voiceConfirmRelay() = confirm
+        override suspend fun presenceRelay() = presence
+        override suspend fun voiceConfirmRelay() = confirm
     }
 
     private val texts = WatchRelayTexts("no connection", "offline", "server unreachable", "confirmation is off")

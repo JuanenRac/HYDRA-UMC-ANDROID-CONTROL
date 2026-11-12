@@ -56,10 +56,10 @@ class WatchVoiceRelayService : WearableListenerService() {
                     .addOnFailureListener { e -> Log.w(TAG, "sendMessage($path) to $nodeId failed", e) }
             },
             flags = object : WatchRelayFlags {
-                override fun presenceRelay() =
+                override suspend fun presenceRelay() =
                     ConnectionPrefs(applicationContext).loadFlag(ConnectionPrefs.Flags.PRESENCE_RELAY, RobotCommandContract.PRESENCE_RELAY_ENABLED_BY_DEFAULT)
 
-                override fun voiceConfirmRelay() =
+                override suspend fun voiceConfirmRelay() =
                     ConnectionPrefs(applicationContext).loadFlag(ConnectionPrefs.Flags.VOICE_CONFIRM_RELAY, RobotCommandContract.VOICE_CONFIRM_ENABLED_BY_DEFAULT)
             },
             texts = WatchRelayTexts(

@@ -17,7 +17,4 @@ object WorkFileFlow {
 
     /** True when the failure means the session ended, so it must be renewed. */
     fun sessionEnded(error: Exception): Boolean = error is HydraApiException && error.isSessionProblem
-
-    /** A file name may be loaded only when the folder is a plain relative path and the name is safe. */
-    fun canLoad(folder: String?, file: String, isSafeName: (String) -> Boolean): Boolean = folder != null && isSafeName(file)
 }

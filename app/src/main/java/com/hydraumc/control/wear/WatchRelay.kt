@@ -28,8 +28,8 @@ interface WatchRelayBackend {
 
 /** The switches the operator sets in the app. */
 interface WatchRelayFlags {
-    fun presenceRelay(): Boolean
-    fun voiceConfirmRelay(): Boolean
+    suspend fun presenceRelay(): Boolean
+    suspend fun voiceConfirmRelay(): Boolean
 }
 
 /** The texts the relay writes itself, in the language of the phone. */

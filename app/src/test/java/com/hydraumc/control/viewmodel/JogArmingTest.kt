@@ -62,12 +62,4 @@ class JogArmingTest {
         assertFalse(WorkFileFlow.sessionEnded(error(404)))
         assertFalse(WorkFileFlow.sessionEnded(IllegalStateException()))
     }
-
-    @Test
-    fun aFileLoadsOnlyWithAFolderAndASafeName() {
-        val safe: (String) -> Boolean = { !it.contains("..") }
-        assertTrue(WorkFileFlow.canLoad("works/a", "x.json", safe))
-        assertFalse(WorkFileFlow.canLoad(null, "x.json", safe))
-        assertFalse(WorkFileFlow.canLoad("works/a", "../x", safe))
-    }
 }
