@@ -19,7 +19,7 @@ GPL-3.0-or-later - see LICENSE
   <img src="https://img.shields.io/badge/Language-Kotlin-7F52FF.svg" alt="Language">
   <img src="https://img.shields.io/badge/UI-Jetpack%20Compose-4285F4.svg" alt="UI">
   <img src="https://img.shields.io/badge/Platform-Android-3DDC84.svg" alt="Platform">
-  <img src="https://img.shields.io/badge/Tests-603%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-650%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.8.0.3-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-functional-0F6CBD.svg" alt="Maturity">
 </p>
@@ -28,7 +28,7 @@ GPL-3.0-or-later - see LICENSE
 
 一款原生 Android 应用（Kotlin + Jetpack Compose），通过 Wi-Fi 或蓝牙控制 [HYDRA-UMC](https://github.com/JuanenRac/HYDRA-UMC) 平台上的机器人，使用与 [HYDRA-UMC SUITE](https://github.com/JuanenRac/HYDRA-UMC-SUITE) 完全相同的 [`REMOTE_API.md`](https://github.com/JuanenRac/HYDRA-UMC-SERVER/blob/main/docs/REMOTE_API.md) 契约——针对运行中的 [HYDRA-UMC-SERVER](https://github.com/JuanenRac/HYDRA-UMC-SERVER) 后端（与 [HYDRA-UMC STUDIO](https://github.com/JuanenRac/HYDRA-UMC-STUDIO) 自身网页仪表盘所通信的同一个后端）进行发现、完整状态读写以及实时 WebSocket 同步。是 [HYDRA-UMC-IOS-CONTROL](https://github.com/JuanenRac/HYDRA-UMC-IOS-CONTROL) 的直接 Android 版本对应物。完整设计参见 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)。
 
-> **诚实检查——今天真正可运行的部分：** 核心业务逻辑——Parol6 运动学（`kinematics/Parol6Kinematics.kt`）、settings 树状态契约（`model/HydraState.kt`）、原子命令下发与语音中继（`viewmodel/RobotViewModel.kt`）、WebSocket 重连处理（`network/HydraWebSocket.kt`）、MJPEG 帧解析（`ui/MjpegPlayer.kt`）、应用内更新通道（`update/GitHubReleaseUpdater.kt`、`ReleaseMetadataParser.kt`、`SemanticVersion.kt`），以及 Wear 语音中继请求管理（`wear/BoundedRequestScope.kt`、`WatchCompanionProtocol.kt`）都是真实的，并由 603 个通过的 JVM/Robolectric 单元测试覆盖（`./gradlew testDebugUnitTest`）。这些测试在结构上无法触及——而这个仅有 Windows 的开发环境也没有实体 Android 设备可以验证——的是 `network/AuthPrefs.kt` 中真正基于 Keystore 的 `EncryptedSharedPreferences`、`androidx.biometric` 的指纹/面部提示、`network/HydraBleClient.kt` 的蓝牙 GATT 传输，以及 `MjpegStreamParser` 中 API 28+ 的硬件 `ImageDecoder` 路径：这些都是真实、已编译的代码，但自编写以来尚未在真实硬件上重新验证过。早期版本的基本启动/登录*确实*在真实设备上得到过现场确认（见 `CHANGELOG.md` 的 `v0.3.2`/`v0.3.3` 条目），但那早于蓝牙、生物识别和硬件解码路径。具体已交付的内容见 `CHANGELOG.md`，其中每条记录也附有关于哪些部分仍未经硬件验证的说明。
+> **诚实检查——今天真正可运行的部分：** 核心业务逻辑——Parol6 运动学（`kinematics/Parol6Kinematics.kt`）、settings 树状态契约（`model/HydraState.kt`）、原子命令下发与语音中继（`viewmodel/RobotViewModel.kt`）、WebSocket 重连处理（`network/HydraWebSocket.kt`）、MJPEG 帧解析（`ui/MjpegPlayer.kt`）、应用内更新通道（`update/GitHubReleaseUpdater.kt`、`ReleaseMetadataParser.kt`、`SemanticVersion.kt`），以及 Wear 语音中继请求管理（`wear/BoundedRequestScope.kt`、`WatchCompanionProtocol.kt`）都是真实的，并由 650 个通过的 JVM/Robolectric 单元测试覆盖（`./gradlew testDebugUnitTest`）。这些测试在结构上无法触及——而这个仅有 Windows 的开发环境也没有实体 Android 设备可以验证——的是 `network/AuthPrefs.kt` 中真正基于 Keystore 的 `EncryptedSharedPreferences`、`androidx.biometric` 的指纹/面部提示、`network/HydraBleClient.kt` 的蓝牙 GATT 传输，以及 `MjpegStreamParser` 中 API 28+ 的硬件 `ImageDecoder` 路径：这些都是真实、已编译的代码，但自编写以来尚未在真实硬件上重新验证过。早期版本的基本启动/登录*确实*在真实设备上得到过现场确认（见 `CHANGELOG.md` 的 `v0.3.2`/`v0.3.3` 条目），但那早于蓝牙、生物识别和硬件解码路径。具体已交付的内容见 `CHANGELOG.md`，其中每条记录也附有关于哪些部分仍未经硬件验证的说明。
 
 > **安全与安防现状:**本生态系统不是经认证的安全系统。目前尚无硬件 E-STOP 通路,没有由固件强制执行的限位或联锁,也没有经过验证的运动指令;固件映像使用 CRC-32 和 Ed25519 签名校验,发布构建会拒绝已公开的开发密钥(中继之后的工具头和扩展板仍运行 URTC 的引导程序,它们使用共享密钥的 HMAC-SHA256 而不是签名);TLS 与双向 TLS 均为可选项,默认关闭;自制电路板尚未组装或测试。在依赖此处任何说法来保障人身安全之前,请先阅读[安全基线](https://github.com/JuanenRac/HYDRA-UMC-DOCS/blob/main/docs/SECURITY_BASELINE.md)和[威胁模型](https://github.com/JuanenRac/HYDRA-UMC-DOCS/blob/main/docs/THREAT_MODEL.md)。
 
@@ -40,7 +40,7 @@ GPL-3.0-or-later - see LICENSE
 |---|---|
 | 版本 | `0.8.0.3` |
 | 成熟度 | 可用 |
-| 测试 | 603 (`./gradlew testDebugUnitTest`) |
+| 测试 | 650 (`./gradlew testDebugUnitTest`) |
 | 技术栈 | Kotlin / Jetpack / biometric auth / WebSocket client |
 | 目标 | Android 手机或平板 |
 | 真实硬件 | 尚未：此版本没有在真实硬件上运行的记录 |
@@ -56,7 +56,7 @@ GPL-3.0-or-later - see LICENSE
 | 领域 | 状态 | 在这里的含义 |
 |---|---|---|
 | 软件 | 🟡 | 主要用途可用；上面的诚实性检查列出了仍然缺少的内容 |
-| 测试 | 🟢 | 603 项自动测试，每次变更都会运行 |
+| 测试 | 🟢 | 650 项自动测试，每次变更都会运行 |
 | 真实硬件 | 🔴 | 尚未：此版本没有在真实硬件上运行的记录 |
 | 接口与协议 | 🟡 | 提供的路由或消息已有文档，并用客户端测试过；尚未被所有客户端使用 |
 | 集成 | 🟠 | 其消息和路由已对照 SDK 的共享契约检查；尚未与真实设备一起运行 |
@@ -171,7 +171,7 @@ GPL-3.0-or-later - see LICENSE
 
 ## 🧪 测试
 
-运行 `./gradlew testDebugUnitTest` 会执行 603 个自动测试。 不需要硬件，也不需要这台机器以外的任何东西。
+运行 `./gradlew testDebugUnitTest` 会执行 650 个自动测试。 不需要硬件，也不需要这台机器以外的任何东西。
 
 CI 运行 `HYDRA_UMC_CI=1 python tools/ci_validate.py`，检查清单、文档、八个 README 和图片。
 
