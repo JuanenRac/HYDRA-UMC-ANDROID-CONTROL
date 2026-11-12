@@ -57,7 +57,8 @@ class MainThreeDSettingsRenderTest {
     @Test
     fun theMainScaffoldDrawsItsNavigationWithoutAServer() {
         val model = viewModel()
-        composeTestRule.setContent { MainScreen(model, AppUpdateViewModel(app)) }
+        val updates = AppUpdateViewModel(app)
+        composeTestRule.setContent { MainScreen(model, updates) }
         composeTestRule.waitForIdle()
         assertDrawn()
         assertTrue(composeTestRule.onAllNodesWithText(app.getString(R.string.dashboard_title)).fetchSemanticsNodes().isNotEmpty())
@@ -74,7 +75,8 @@ class MainThreeDSettingsRenderTest {
     @Test
     fun theSettingsScreenKeepsDrawingAfterTheSwitchesChange() {
         val model = viewModel()
-        composeTestRule.setContent { SettingsScreen(model, AppUpdateViewModel(app)) }
+        val updates = AppUpdateViewModel(app)
+        composeTestRule.setContent { SettingsScreen(model, updates) }
         composeTestRule.waitForIdle()
         model.setDeadManEnabled(true)
         model.setLinkBlockOnBadLink(true)
