@@ -28,4 +28,11 @@ class ListenOnlyTest {
             assertFalse(command, ListenOnly.allows(true, command))
         }
     }
+
+    @Test
+    fun `the controls are dimmed only while listen only is on`() {
+        assertTrue(ListenOnly.controlAlpha(false) == 1f)
+        assertTrue(ListenOnly.controlAlpha(true) == ListenOnly.DIMMED_ALPHA)
+        assertTrue(ListenOnly.DIMMED_ALPHA in 0.2f..0.6f)
+    }
 }

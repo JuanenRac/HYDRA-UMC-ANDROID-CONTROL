@@ -13,6 +13,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import android.widget.Toast
 import androidx.compose.material3.*
@@ -39,6 +40,7 @@ import android.annotation.SuppressLint
 import com.hydraumc.control.viewmodel.RobotViewModel
 import com.hydraumc.control.viewmodel.RobotState
 import com.hydraumc.control.R
+import com.hydraumc.control.network.ListenOnly
 import com.hydraumc.control.network.RobotCommandContract
 import com.hydraumc.control.network.WsStatus
 import com.hydraumc.control.ui.theme.metallicIndustrial
@@ -165,6 +167,8 @@ fun ControlScreen(viewModel: RobotViewModel) {
     var speedState by remember(selectedRobot?.speed) { mutableFloatStateOf(selectedRobot?.speed?.toFloat() ?: 100f) }
     var accelState by remember(selectedRobot?.acceleration) { mutableFloatStateOf(selectedRobot?.acceleration?.toFloat() ?: 500f) }
 
+    // Listen only dims the controls it disables (the DSI does the same); STOP and the playback console stay as they are.
+    val controlAlpha = ListenOnly.controlAlpha(viewModel.listenOnly.value)
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
@@ -319,7 +323,7 @@ fun ControlScreen(viewModel: RobotViewModel) {
                 // full 8-direction D-pad (diagonals fire both X and Y in one
                 // press-and-hold, same as STUDIO) instead of the old 6-button
                 // cardinal-only cross.
-                Box(modifier = Modifier.fillMaxWidth().metallicIndustrial()) {
+                Box(modifier = Modifier.fillMaxWidth().alpha(controlAlpha).metallicIndustrial()) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(8.dp)) {
                         Text(stringResource(R.string.virtual_joystick).uppercase(), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, color = Color.Gray)
 
@@ -383,7 +387,7 @@ fun ControlScreen(viewModel: RobotViewModel) {
 
                 // HOME/RESET: drawn only when the person switched it on in the Access panel; two confirmations.
                 Spacer(modifier = Modifier.height(8.dp))
-                HomeResetControl(viewModel, selectedRobot, nowMs)
+                Box(modifier = Modifier.alpha(controlAlpha)) { HomeResetControl(viewModel, selectedRobot, nowMs) }
 
                 // The link to the server and the continuous jog held by a dead-man (both off or hidden until switched on in the Access panel).
                 Spacer(modifier = Modifier.height(8.dp))
@@ -399,7 +403,7 @@ fun ControlScreen(viewModel: RobotViewModel) {
                 Text(stringResource(R.string.industrial_io_hub), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, color = Color.Gray)
                 Spacer(modifier = Modifier.height(8.dp))
                 
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Row(modifier = Modifier.fillMaxWidth().alpha(controlAlpha), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     HydraButton(
                         text = stringResource(R.string.valve_n, 1),
                         icon = Icons.Default.WaterDrop,
@@ -416,7 +420,7 @@ fun ControlScreen(viewModel: RobotViewModel) {
                     )
                 }
                 Spacer(modifier = Modifier.height(12.dp))
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Row(modifier = Modifier.fillMaxWidth().alpha(controlAlpha), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     HydraButton(
                         text = stringResource(R.string.vacuum_n, 1),
                         icon = Icons.Default.PowerSettingsNew,
@@ -439,7 +443,7 @@ fun ControlScreen(viewModel: RobotViewModel) {
 
                 // SETTINGS SLIDERS
                 Text(stringResource(R.string.tab_settings).uppercase(), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, color = Color.Gray)
-                Column(modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {
+                Column(modifier = Modifier.fillMaxWidth().padding(top = 8.dp).alpha(controlAlpha)) {
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                         Text(stringResource(R.string.feedrate_override), style = MaterialTheme.typography.bodySmall, color = Color.White)
                         Text("${speedState.toInt()}%", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = MetallicCyan)

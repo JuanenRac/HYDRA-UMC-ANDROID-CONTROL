@@ -24,6 +24,11 @@ object ListenOnly {
     /** Whether [command] may leave the app while Listen only is [on]. */
     fun allows(on: Boolean, command: String): Boolean = !on || command in ALWAYS_ALLOWED
 
+    /** Opacity of the controls that Listen only disables (same dimming as the DSI); everything stays at full opacity when off. */
+    fun controlAlpha(on: Boolean): Float = if (on) DIMMED_ALPHA else 1f
+
+    const val DIMMED_ALPHA: Float = 0.4f
+
     /** The switch as the network layer reads it; set by the view model, off until the person turns it on. */
     @Volatile
     var enabled: Boolean = false
