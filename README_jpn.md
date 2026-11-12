@@ -19,7 +19,7 @@ GPL-3.0-or-later - see LICENSE
   <img src="https://img.shields.io/badge/Language-Kotlin-7F52FF.svg" alt="Language">
   <img src="https://img.shields.io/badge/UI-Jetpack%20Compose-4285F4.svg" alt="UI">
   <img src="https://img.shields.io/badge/Platform-Android-3DDC84.svg" alt="Platform">
-  <img src="https://img.shields.io/badge/Tests-562%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-565%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.8.0.2-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-functional-0F6CBD.svg" alt="Maturity">
 </p>
@@ -40,7 +40,7 @@ Wi-Fi または Bluetooth 経由で [HYDRA-UMC](https://github.com/JuanenRac/HYD
 |---|---|
 | バージョン | `0.8.0.2` |
 | 成熟度 | 機能する |
-| テスト | 562 (`./gradlew testDebugUnitTest`) |
+| テスト | 565 (`./gradlew testDebugUnitTest`) |
 | 技術 | Kotlin / Jetpack / biometric auth / WebSocket client |
 | 対象 | Android のスマートフォンまたはタブレット |
 | 実機での確認 | まだです：このバージョンについて実機での動作記録はありません |
@@ -56,7 +56,7 @@ Wi-Fi または Bluetooth 経由で [HYDRA-UMC](https://github.com/JuanenRac/HYD
 | 領域 | 状態 | ここでの意味 |
 |---|---|---|
 | ソフトウェア | 🟡 | 主な目的では動作します。足りない点は上の正直さの確認に書かれています |
-| テスト | 🟢 | 自動テスト 562 件。変更のたびに実行されます |
+| テスト | 🟢 | 自動テスト 565 件。変更のたびに実行されます |
 | 実機 | 🔴 | まだです：このバージョンについて実機での動作記録はありません |
 | インターフェースとプロトコル | 🟡 | 提供するルートやメッセージは文書化され、クライアントで試験済みです。すべてのクライアントがまだ使ったわけではありません |
 | 連携 | 🟠 | メッセージとルートは SDK の共通契約に照らして検証されていますが、実機と一緒に動かしたことはありません |
@@ -171,7 +171,7 @@ JDK 21 と Android SDK（Android Studio に両方含まれます）、および 
 
 ## 🧪 テスト
 
-`./gradlew testDebugUnitTest` で自動テスト 562 件を実行します。 ハードウェアも、このマシンの外にあるものも必要ありません。
+`./gradlew testDebugUnitTest` で自動テスト 565 件を実行します。 ハードウェアも、このマシンの外にあるものも必要ありません。
 
 CI は `HYDRA_UMC_CI=1 python tools/ci_validate.py` を実行し、マニフェスト、文書、8 つの README、図を検査します。
 
