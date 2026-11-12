@@ -9,6 +9,9 @@ import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Assume.assumeTrue
 import org.junit.Before
@@ -75,5 +78,17 @@ class FakeServerSessionTest {
         assertEquals(2, stop.stoppedCount)
         assertEquals(0, stop.failedCount)
         assertFalse(stop.robots.any { !it.stopped })
+    }
+
+    @Test
+    fun `the camera ticket comes from the shared stand-in server only to a signed-in account`() = runBlocking {
+        val client = HydraApiClient("127.0.0.1", port)
+        assertNull("without a session the route answers 401 and the client gives no ticket", client.fetchCameraTicket())
+        client.authToken = client.login("admin", "admin").optString("token")
+        val first = client.fetchCameraTicket()
+        val second = client.fetchCameraTicket()
+        assertNotNull(first)
+        assertTrue(first!!, first.startsWith("tkt-"))
+        assertNotEquals(first, second)
     }
 }

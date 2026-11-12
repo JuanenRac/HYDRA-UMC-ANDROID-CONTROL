@@ -320,6 +320,10 @@
     <string name="play_confirm_button">开始</string>
     <string name="access_confirm_play_label">PLAY 之前先确认</string>
     <string name="access_confirm_play_hint">在开始轨迹之前显示机器人、已记录的点、速度以及预留者。默认开启。</string>
+    <string name="access_listen_only_label">仅监听</string>
+    <string name="access_listen_only_hint">显示机器人及其数据，但不发送任何命令。STOP 和安全模式的关闭始终有效。默认关闭。</string>
+    <string name="control_listen_only_banner">仅监听：命令已禁用。STOP 仍然有效。</string>
+    <string name="error_listen_only">仅监听已开启：命令未发送。</string>
     <string name="valve_n">阀门 %1$d</string>
     <string name="vacuum_n">真空 %1$d</string>
     <string name="networked_robot">联网机器人</string>

@@ -23,6 +23,7 @@ import com.hydraumc.control.ui.ObscuredTouchPolicy
 import com.hydraumc.control.network.AuthManager
 import com.hydraumc.control.network.AuthPrefs
 import com.hydraumc.control.network.AuthStore
+import com.hydraumc.control.network.ListenOnly
 import com.hydraumc.control.network.LoginCheck
 import com.hydraumc.control.network.SignInResult
 import com.hydraumc.control.network.SessionRenewer
@@ -303,6 +304,9 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
     /** Whether PLAY asks first (see [com.hydraumc.control.util.PlayConfirmation]); on until the person turns it off. */
     val confirmPlay = mutableStateOf(true)
     @Volatile private var confirmPlayTouched = false
+    /** Listen only: no command leaves the app except STOP and the safe-mode disable. Off by default; kept across restarts. */
+    val listenOnly = mutableStateOf(false)
+    @Volatile private var listenOnlyTouched = false
 
     /** HOME/RESET switch (see [HomeReset]); off until the person turns it on, the default comes from the contract. */
     val homeResetEnabled = mutableStateOf(RobotCommandContract.HOME_RESET_ENABLED_BY_DEFAULT)
@@ -318,6 +322,7 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
     val deadMan = DeadManJogController(
         scope = viewModelScope,
         poster = CommandPoster { id, body, urgent, ifMatch ->
+            if (!ListenOnly.allows(listenOnly.value, body.optString("command"))) throw HydraApiException("listen only")
             (apiClient ?: throw HydraApiException("not connected")).postRobotCommand(id, body, urgent, ifMatch)
         },
         pinger = { (apiClient ?: throw HydraApiException("not connected")).pingRoundTripMs(RobotCommandContract.LINK_HEALTH_PROBE_TIMEOUT_MS) },
@@ -608,6 +613,8 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
             if (!conditionalModeTouched) conditionalMode.value = saved
             val askBeforePlay = prefs.loadConfirmPlay()
             if (!confirmPlayTouched) confirmPlay.value = askBeforePlay
+            val listenOnlySaved = prefs.loadListenOnly()
+            if (!listenOnlyTouched) listenOnly.value = listenOnlySaved
             val homeResetSaved = prefs.loadHomeReset(RobotCommandContract.HOME_RESET_ENABLED_BY_DEFAULT)
             if (!homeResetTouched) homeResetEnabled.value = homeResetSaved
             deadMan.enabled.value = prefs.loadFlag(ConnectionPrefs.Flags.DEAD_MAN_JOG, RobotCommandContract.DEAD_MAN_JOG_ENABLED_BY_DEFAULT)
@@ -1331,6 +1338,11 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
         explicitRobotId: Int? = null,
         localMutate: (RobotView) -> Unit,
     ) {
+        // Listen only (a switch in the access panel, off by default): nothing but STOP and the safe-mode disable goes out.
+        if (!ListenOnly.allows(listenOnly.value, command)) {
+            lastError.value = getApplication<Application>().getString(R.string.error_listen_only)
+            return
+        }
         val robotId = explicitRobotId ?: selectedRobotId.value ?: return
         val targetRobot = state.robotById(robotId) ?: run {
             lastError.value = getApplication<Application>().getString(R.string.error_robot_not_found)
@@ -1501,6 +1513,14 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
         conditionalModeTouched = true
         conditionalMode.value = mode
         viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) { prefs.saveConditionalMode(mode) }
+    }
+
+    /** Switches Listen only and keeps the choice. A jog that is held stops when it is switched on. */
+    fun setListenOnly(on: Boolean) {
+        listenOnlyTouched = true
+        listenOnly.value = on
+        if (on) deadMan.interrupt()
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) { prefs.saveListenOnly(on) }
     }
 
     /** Chooses whether PLAY asks first, and keeps the choice. */

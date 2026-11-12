@@ -24,6 +24,8 @@ private val KEY_CONTROLLER_ID = stringPreferencesKey("controller_id")
 private val KEY_CONDITIONAL_MODE = stringPreferencesKey("conditional_mode")
 /** Preference key for asking before PLAY starts a trajectory. */
 private val KEY_CONFIRM_PLAY = booleanPreferencesKey("confirm_play")
+/** Preference key for Listen only (off until the person turns it on). */
+private val KEY_LISTEN_ONLY = booleanPreferencesKey("listen_only")
 /** Preference key for the HOME/RESET switch (off until the person turns it on). */
 private val KEY_HOME_RESET = booleanPreferencesKey("home_reset_enabled")
 
@@ -68,6 +70,13 @@ class ConnectionPrefs(private val context: Context) {
 
     suspend fun saveConfirmPlay(ask: Boolean) {
         context.connectionDataStore.edit { prefs -> prefs[KEY_CONFIRM_PLAY] = ask }
+    }
+
+    /** Whether Listen only is on (no command but STOP and the safe-mode disable); off before any choice. */
+    suspend fun loadListenOnly(): Boolean = context.connectionDataStore.data.first()[KEY_LISTEN_ONLY] ?: false
+
+    suspend fun saveListenOnly(on: Boolean) {
+        context.connectionDataStore.edit { prefs -> prefs[KEY_LISTEN_ONLY] = on }
     }
 
     /** Whether HOME/RESET is switched on; [default] (off in the contract) before any choice. */

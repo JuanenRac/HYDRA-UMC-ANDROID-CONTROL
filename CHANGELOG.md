@@ -4,6 +4,8 @@
 
 All notable changes to this project are documented here.
 
+- **Listen only (off by default):** a switch in the access panel makes the app show the robots and their data without sending any command. While it is on, a banner on the Control tab says so and the one place every command goes through (and the held jog) refuses everything except STOP and the safe-mode disable, because refusing a stop would be the unsafe side; a held jog stops when it is switched on. The choice is kept across restarts. Texts in the eight languages; `ListenOnlyTest` has 3 tests. `FakeServerSessionTest` also reads the camera ticket from the stand-in server of the SDK (no ticket without a session, a new one each time).
+
 - **The unit tests have a coverage floor of 62 %:** the manual `Android coverage` workflow measured 62.1 % of the lines (5559 of 8946) twice with the same result, `tools/coverage_floor.json` holds that value rounded down, and the workflow now fails when the total falls below it (`tools/kotlin_coverage.py --floor-file`). Tooling only: no behaviour changes.
 
 - **Touches through an overlay are ignored (on by default):** the window drops a touch while another app draws over it, so the STOP and the other controls cannot be pressed through a hidden overlay (clickjacking). A switch in Settings turns it off for an overlay that is harmless (a screen filter) and blocks the buttons; the text is in the eight languages. `ObscuredTouchPolicy` and its tests cover the default, the switch and the flags of a covered window.

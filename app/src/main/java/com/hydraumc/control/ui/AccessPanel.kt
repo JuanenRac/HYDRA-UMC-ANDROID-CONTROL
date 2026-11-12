@@ -148,6 +148,14 @@ fun AccessPanel(viewModel: RobotViewModel, robotId: Int, nowMs: Long) {
                     }
                 }
                 Text(stringResource(R.string.access_conditional_hint), color = Color.Gray, style = MaterialTheme.typography.bodySmall)
+                // Listen only: the app sends no command but STOP and the safe-mode disable (off by default).
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Switch(checked = viewModel.listenOnly.value, onCheckedChange = { viewModel.setListenOnly(it) })
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(stringResource(R.string.access_listen_only_label), color = Color.White, style = MaterialTheme.typography.bodyMedium)
+                }
+                Text(stringResource(R.string.access_listen_only_hint), color = Color.Gray, style = MaterialTheme.typography.bodySmall)
                 // Whether PLAY asks first.
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {

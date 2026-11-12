@@ -320,6 +320,10 @@
     <string name="play_confirm_button">Start</string>
     <string name="access_confirm_play_label">Ask before PLAY</string>
     <string name="access_confirm_play_hint">Shows the robot, its recorded points, the speed and who has it reserved before a trajectory starts. On by default.</string>
+    <string name="access_listen_only_label">Listen only</string>
+    <string name="access_listen_only_hint">Shows the robots and their data but sends no command. STOP and the safe-mode disable always work. Off by default.</string>
+    <string name="control_listen_only_banner">Listen only: commands are disabled. STOP still works.</string>
+    <string name="error_listen_only">Listen only is on: the command was not sent.</string>
     <string name="valve_n">VALVE %1$d</string>
     <string name="vacuum_n">VACUUM %1$d</string>
     <string name="networked_robot">NETWORKED ROBOT</string>

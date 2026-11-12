@@ -174,6 +174,15 @@ fun ControlScreen(viewModel: RobotViewModel) {
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
+            if (viewModel.listenOnly.value) {
+                Text(
+                    stringResource(R.string.control_listen_only_banner),
+                    color = Color(0xFFFFC107),
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.fillMaxWidth().background(Color(0x33FFC107), RoundedCornerShape(8.dp)).padding(8.dp),
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+            }
             // Top Status Bar
             Row(
                 modifier = Modifier.fillMaxWidth(),

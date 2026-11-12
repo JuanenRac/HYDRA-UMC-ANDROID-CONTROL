@@ -320,6 +320,10 @@
     <string name="play_confirm_button">Iniciar</string>
     <string name="access_confirm_play_label">Preguntar antes de PLAY</string>
     <string name="access_confirm_play_hint">Muestra el robot, sus puntos grabados, la velocidad y quién lo tiene reservado antes de empezar una trayectoria. Activado por defecto.</string>
+    <string name="access_listen_only_label">Solo escucha</string>
+    <string name="access_listen_only_hint">Muestra los robots y sus datos pero no envía ningún comando. STOP y la desactivación del modo seguro siempre funcionan. Desactivado por defecto.</string>
+    <string name="control_listen_only_banner">Solo escucha: los comandos están desactivados. STOP sigue funcionando.</string>
+    <string name="error_listen_only">Solo escucha está activado: el comando no se envió.</string>
     <string name="valve_n">VÁLVULA %1$d</string>
     <string name="vacuum_n">VACÍO %1$d</string>
     <string name="networked_robot">ROBOT EN RED</string>
