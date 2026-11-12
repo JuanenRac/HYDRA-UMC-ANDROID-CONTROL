@@ -40,6 +40,7 @@
          reach a real server at all on API 28+, which blocks cleartext by
          default. -->
     <application
+        android:name=".HydraApplication"
         android:allowBackup="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"

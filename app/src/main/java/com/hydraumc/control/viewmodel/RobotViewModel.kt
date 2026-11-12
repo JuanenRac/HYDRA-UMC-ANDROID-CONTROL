@@ -29,6 +29,7 @@ import com.hydraumc.control.network.UserProfile
 import com.hydraumc.control.network.ClaimInfo
 import com.hydraumc.control.network.RobotCommandContract
 import com.hydraumc.control.network.RobotCommandQueue
+import com.hydraumc.control.sharedServicesOrNull
 import com.hydraumc.control.network.RobotCommandRepository
 import com.hydraumc.control.network.StopAllEndpoint
 import com.hydraumc.control.network.StopAllRunner
@@ -376,7 +377,7 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
     val commands = RobotCommandRepository(conditionalMode = { conditionalMode.value })
 
     /** The writes of each robot go out in order; a STOP skips the line and drops the jogs that wait. */
-    private val commandQueue = RobotCommandQueue()
+    private val commandQueue = application.sharedServicesOrNull()?.commandQueue ?: RobotCommandQueue()
     /** The last revision seen of each robot. */
     val revisions get() = commands.revisions
     /** When the server last pushed the reservations (this phone clock, epoch ms); 0 before the first push. */
@@ -458,7 +459,7 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
     val plainRemoteHost = mutableStateOf<String?>(null)
     // The stored login: the encrypted store of the app unless a test (or another host) hands in its own, which is what lets the view model run on the JVM
     // without an Android keystore.
-    private val authPrefs: AuthStore = authStore ?: AuthPrefs(application)
+    private val authPrefs: AuthStore = authStore ?: application.sharedServicesOrNull()?.authStore ?: AuthPrefs(application)
     private val notificationPrefs = com.hydraumc.control.util.NotificationPrefs(application)
     private val stateCache = StateCache(application)
 

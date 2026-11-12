@@ -23,6 +23,7 @@ import com.google.android.gms.wearable.Wearable
 import com.google.android.gms.wearable.WearableListenerService
 import com.hydraumc.control.R
 import com.hydraumc.control.network.AuthPrefs
+import com.hydraumc.control.sharedServicesOrNull
 import com.hydraumc.control.network.ConnectionPrefs
 import com.hydraumc.control.model.HydraState
 import com.hydraumc.control.network.HydraApiClient
@@ -221,7 +222,7 @@ class WatchVoiceRelayService : WearableListenerService() {
             ?: throw IllegalStateException("paired phone has no Server connection")
         val port = connection.second.toIntOrNull()?.takeIf { it in 1..65535 }
             ?: throw IllegalStateException("paired phone has an invalid Server port")
-        val token = AuthPrefs(applicationContext).loadAuth().token
+        val token = (sharedServicesOrNull()?.authStore ?: AuthPrefs(applicationContext)).loadAuth().token
             .takeIf { it.isNotBlank() }
             ?: throw IllegalStateException("paired phone has no Server session")
         // The phone app may not be running: read the TLS choices of the user from storage.
