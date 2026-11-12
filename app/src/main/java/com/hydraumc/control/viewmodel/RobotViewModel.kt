@@ -19,6 +19,7 @@ import com.hydraumc.control.model.ServerInfo
 import com.hydraumc.control.kinematics.PAROL6_JOINT_LIMITS_DEG
 import com.hydraumc.control.kinematics.parol6CartesianToJointsOrNull
 import com.hydraumc.control.R
+import com.hydraumc.control.ui.ObscuredTouchPolicy
 import com.hydraumc.control.network.AuthManager
 import com.hydraumc.control.network.AuthPrefs
 import com.hydraumc.control.network.AuthStore
@@ -349,6 +350,9 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
 
     /** Pairing by QR code or link: off until the person turns it on (see [PairingLink]); [pairingOffer] waits for the person's answer. */
     val pairingEnabled = mutableStateOf(RobotCommandContract.PAIRING_ENABLED_BY_DEFAULT)
+
+    /** Whether a touch is ignored while another app draws over this one (on by default; see [ObscuredTouchPolicy]). */
+    val filterObscuredTouches = mutableStateOf(ObscuredTouchPolicy.ENABLED_BY_DEFAULT)
     val pairingOffer = mutableStateOf<PairingLink.Offer?>(null)
     @Volatile private var pairingFlagsLoaded = false
     private var pairingTextWaiting: String? = null
@@ -609,6 +613,7 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
             deadMan.enabled.value = prefs.loadFlag(ConnectionPrefs.Flags.DEAD_MAN_JOG, RobotCommandContract.DEAD_MAN_JOG_ENABLED_BY_DEFAULT)
             deadMan.blockOnBadLink.value = prefs.loadFlag(ConnectionPrefs.Flags.LINK_BLOCK_JOG, RobotCommandContract.LINK_HEALTH_BLOCK_JOG_ON_BAD_LINK_DEFAULT)
             deadMan.indicator.value = prefs.loadFlag(ConnectionPrefs.Flags.LINK_INDICATOR, RobotCommandContract.LINK_HEALTH_INDICATOR_ENABLED_BY_DEFAULT)
+            filterObscuredTouches.value = prefs.loadFlag(ConnectionPrefs.Flags.FILTER_OBSCURED_TOUCHES, ObscuredTouchPolicy.ENABLED_BY_DEFAULT)
             pairingEnabled.value = prefs.loadFlag(ConnectionPrefs.Flags.PAIRING, RobotCommandContract.PAIRING_ENABLED_BY_DEFAULT)
             watchAlertsEnabled.value = prefs.loadFlag(ConnectionPrefs.Flags.WATCH_ALERTS, RobotCommandContract.WATCH_ALERTS_ENABLED_BY_DEFAULT)
             presenceRelayEnabled.value = prefs.loadFlag(ConnectionPrefs.Flags.PRESENCE_RELAY, RobotCommandContract.PRESENCE_RELAY_ENABLED_BY_DEFAULT)
@@ -1525,6 +1530,11 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
     fun setLinkBlockOnBadLink(on: Boolean) {
         deadMan.blockOnBadLink.value = on
         viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) { prefs.saveFlag(ConnectionPrefs.Flags.LINK_BLOCK_JOG, on) }
+    }
+
+    fun setFilterObscuredTouches(on: Boolean) {
+        filterObscuredTouches.value = on
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) { prefs.saveFlag(ConnectionPrefs.Flags.FILTER_OBSCURED_TOUCHES, on) }
     }
 
     fun setLinkIndicator(on: Boolean) {

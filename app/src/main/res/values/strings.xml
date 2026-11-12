@@ -429,6 +429,8 @@
     <string name="link_block_switch_hint">When the answers from the server are too slow, or stop, the continuous jog is refused and a running one is stopped. On by default.</string>
     <string name="link_indicator_switch_label">Show the link indicator</string>
     <string name="link_indicator_switch_hint">Shows on the Control screen how fast the server answers. It sends one small request every two seconds.</string>
+    <string name="obscured_touch_switch_label">Ignore touches when another app covers the screen</string>
+    <string name="obscured_touch_switch_hint">The STOP and every control ignore a touch while another app draws over them, so a hidden overlay cannot press them. Turn it off only if a harmless overlay (a screen filter) blocks the buttons.</string>
     <string name="link_label">Link</string>
     <string name="link_unknown">measuring</string>
     <string name="link_good">good</string>

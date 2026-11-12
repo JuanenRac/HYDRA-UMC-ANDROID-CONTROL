@@ -14,6 +14,7 @@ import androidx.fragment.app.FragmentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import com.hydraumc.control.ui.ObscuredTouchPolicy
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -196,6 +197,9 @@ class MainActivity : FragmentActivity() {
         }
 
         setContent {
+            // A touch is dropped by the system while another app draws over this window (clickjacking), unless the person turned it off.
+            val obscuredFilter = robotViewModel.filterObscuredTouches.value
+            LaunchedEffect(obscuredFilter) { ObscuredTouchPolicy.apply(window.decorView, obscuredFilter) }
             // Remove native splash right away to show our custom Compose splash screen
             LaunchedEffect(Unit) {
                 keepNativeSplash = false

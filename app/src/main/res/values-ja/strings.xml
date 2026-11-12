@@ -429,6 +429,8 @@
     <string name="link_block_switch_hint">サーバーの応答が遅すぎる、または途絶えた場合、連続ジョグを拒否し、実行中のものを停止します。初期設定ではオンです。</string>
     <string name="link_indicator_switch_label">通信インジケーターを表示</string>
     <string name="link_indicator_switch_hint">制御画面にサーバーの応答速度を表示します。2秒ごとに小さなリクエストを1件送信します。</string>
+    <string name="obscured_touch_switch_label">他のアプリが画面を覆っているときはタッチを無視する</string>
+    <string name="obscured_touch_switch_hint">他のアプリが上に描画されている間、STOPとすべての操作部はタッチを無視します。隠れたオーバーレイが操作部を押すことはできません。無害なオーバーレイ（画面フィルターなど）でボタンが反応しない場合のみ、オフにしてください。</string>
     <string name="link_label">通信</string>
     <string name="link_unknown">測定中</string>
     <string name="link_good">良好</string>

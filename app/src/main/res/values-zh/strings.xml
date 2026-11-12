@@ -429,6 +429,8 @@
     <string name="link_block_switch_hint">服务器响应过慢或中断时,将拒绝连续点动并停止正在进行的点动。默认开启。</string>
     <string name="link_indicator_switch_label">显示链路指示器</string>
     <string name="link_indicator_switch_hint">在控制界面显示服务器的响应速度。每两秒发送一个小请求。</string>
+    <string name="obscured_touch_switch_label">其他应用遮盖屏幕时忽略触摸</string>
+    <string name="obscured_touch_switch_hint">当其他应用绘制在上方时，STOP 和所有控件都会忽略触摸，隐藏的叠加层因此无法按下它们。只有在无害的叠加层（如屏幕滤镜）导致按钮无响应时才关闭。</string>
     <string name="link_label">链路</string>
     <string name="link_unknown">测量中</string>
     <string name="link_good">良好</string>

@@ -429,6 +429,8 @@
     <string name="link_block_switch_hint">Si les réponses du serveur sont trop lentes ou cessent, le déplacement continu est refusé et celui en cours est arrêté. Activé par défaut.</string>
     <string name="link_indicator_switch_label">Afficher l\'indicateur de liaison</string>
     <string name="link_indicator_switch_hint">Montre sur l\'écran de contrôle la rapidité de réponse du serveur. Une petite requête est envoyée toutes les deux secondes.</string>
+    <string name="obscured_touch_switch_label">Ignorer les appuis si une autre appli recouvre l\'écran</string>
+    <string name="obscured_touch_switch_hint">Le STOP et toutes les commandes ignorent un appui tant qu\'une autre appli s\'affiche par-dessus, afin qu\'une superposition cachée ne puisse pas les actionner. Ne le désactivez que si une superposition inoffensive (un filtre d\'écran) bloque les boutons.</string>
     <string name="link_label">Liaison</string>
     <string name="link_unknown">mesure</string>
     <string name="link_good">bonne</string>

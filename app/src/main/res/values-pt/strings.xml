@@ -429,6 +429,8 @@
     <string name="link_block_switch_hint">Quando as respostas do servidor são demasiado lentas ou cessam, o movimento contínuo é recusado e o que estiver em curso é parado. Ativado por predefinição.</string>
     <string name="link_indicator_switch_label">Mostrar o indicador da ligação</string>
     <string name="link_indicator_switch_hint">Mostra no ecrã de controlo a rapidez com que o servidor responde. Envia um pequeno pedido de dois em dois segundos.</string>
+    <string name="obscured_touch_switch_label">Ignorar toques quando outra aplicação cobre o ecrã</string>
+    <string name="obscured_touch_switch_hint">O STOP e todos os controlos ignoram um toque enquanto outra aplicação desenha por cima, para que uma sobreposição oculta não os possa premir. Desative-o apenas se uma sobreposição inofensiva (um filtro de ecrã) bloquear os botões.</string>
     <string name="link_label">Ligação</string>
     <string name="link_unknown">a medir</string>
     <string name="link_good">boa</string>

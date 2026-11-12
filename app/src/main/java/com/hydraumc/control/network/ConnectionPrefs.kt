@@ -89,6 +89,7 @@ class ConnectionPrefs(private val context: Context) {
         const val DEAD_MAN_JOG = "dead_man_jog"
         const val LINK_BLOCK_JOG = "link_block_jog"
         const val LINK_INDICATOR = "link_indicator"
+        const val FILTER_OBSCURED_TOUCHES = "filter_obscured_touches"
         const val PAIRING = "pairing_links"
         const val WATCH_ALERTS = "watch_alerts"
         const val PRESENCE_RELAY = "presence_relay"

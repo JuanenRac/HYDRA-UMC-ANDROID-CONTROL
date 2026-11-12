@@ -429,6 +429,8 @@
     <string name="link_block_switch_hint">Se le risposte del server sono troppo lente o cessano, il movimento continuo viene rifiutato e quello in corso viene fermato. Attivato per impostazione predefinita.</string>
     <string name="link_indicator_switch_label">Mostra l\'indicatore del collegamento</string>
     <string name="link_indicator_switch_hint">Mostra nella schermata di controllo la rapidità di risposta del server. Invia una piccola richiesta ogni due secondi.</string>
+    <string name="obscured_touch_switch_label">Ignora i tocchi se un\'altra app copre lo schermo</string>
+    <string name="obscured_touch_switch_hint">Lo STOP e tutti i comandi ignorano un tocco mentre un\'altra app disegna sopra di essi, così una sovrapposizione nascosta non può premerli. Disattivalo solo se una sovrapposizione innocua (un filtro dello schermo) blocca i pulsanti.</string>
     <string name="link_label">Collegamento</string>
     <string name="link_unknown">in misurazione</string>
     <string name="link_good">buono</string>

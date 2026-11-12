@@ -429,6 +429,8 @@
     <string name="link_block_switch_hint">Sind die Antworten des Servers zu langsam oder bleiben aus, wird das kontinuierliche Verfahren abgelehnt und ein laufendes gestoppt. Standardmäßig an.</string>
     <string name="link_indicator_switch_label">Verbindungsanzeige anzeigen</string>
     <string name="link_indicator_switch_hint">Zeigt auf dem Steuerbildschirm, wie schnell der Server antwortet. Es wird alle zwei Sekunden eine kleine Anfrage gesendet.</string>
+    <string name="obscured_touch_switch_label">Berührungen ignorieren, wenn eine andere App den Bildschirm überdeckt</string>
+    <string name="obscured_touch_switch_hint">STOP und alle Bedienelemente ignorieren eine Berührung, solange eine andere App darüber zeichnet, damit ein verdecktes Overlay sie nicht drücken kann. Nur ausschalten, wenn ein harmloses Overlay (ein Bildschirmfilter) die Tasten blockiert.</string>
     <string name="link_label">Verbindung</string>
     <string name="link_unknown">wird gemessen</string>
     <string name="link_good">gut</string>

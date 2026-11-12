@@ -58,6 +58,7 @@ fun LinkAndWatchSettings(viewModel: RobotViewModel) {
         SwitchRow(controller.enabled.value, viewModel::setDeadManEnabled, stringResource(R.string.dead_man_switch_label), stringResource(R.string.dead_man_switch_hint))
         SwitchRow(controller.blockOnBadLink.value, viewModel::setLinkBlockOnBadLink, stringResource(R.string.link_block_switch_label), stringResource(R.string.link_block_switch_hint))
         SwitchRow(controller.indicator.value, viewModel::setLinkIndicator, stringResource(R.string.link_indicator_switch_label), stringResource(R.string.link_indicator_switch_hint))
+        SwitchRow(viewModel.filterObscuredTouches.value, viewModel::setFilterObscuredTouches, stringResource(R.string.obscured_touch_switch_label), stringResource(R.string.obscured_touch_switch_hint))
         SwitchRow(viewModel.watchAlertsEnabled.value, viewModel::setWatchAlertsEnabled, stringResource(R.string.watch_alerts_switch_label), stringResource(R.string.watch_alerts_switch_hint))
         SwitchRow(viewModel.presenceRelayEnabled.value, viewModel::setPresenceRelayEnabled, stringResource(R.string.presence_relay_switch_label), stringResource(R.string.presence_relay_switch_hint))
         SwitchRow(viewModel.voiceConfirmRelayEnabled.value, viewModel::setVoiceConfirmRelayEnabled, stringResource(R.string.voice_confirm_switch_label), stringResource(R.string.voice_confirm_switch_hint))
