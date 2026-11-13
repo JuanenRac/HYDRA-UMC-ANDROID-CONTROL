@@ -322,6 +322,8 @@
     <string name="access_confirm_play_hint">軌道を開始する前に、ロボット、記録済みの点、速度、予約している人を表示します。既定でオンです。</string>
     <string name="access_listen_only_label">リッスン専用</string>
     <string name="access_listen_only_hint">ロボットとそのデータは表示しますが、コマンドは送信しません。STOP とセーフモードの無効化は常に動作します。初期設定はオフです。</string>
+    <string name="access_listen_only_server_label">このサーバーはリッスン専用</string>
+    <string name="access_listen_only_server_hint">STOP とセーフモードの解除を除き、使用中のサーバーにコマンドを送りません。他のサーバーには影響しません。既定ではオフです。</string>
     <string name="control_listen_only_banner">リッスン専用：コマンドは無効です。STOP は引き続き動作します。</string>
     <string name="error_listen_only">リッスン専用がオンです。コマンドは送信されませんでした。</string>
     <string name="valve_n">バルブ %1$d</string>

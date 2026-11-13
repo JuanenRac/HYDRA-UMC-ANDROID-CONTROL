@@ -29,6 +29,20 @@ object ListenOnly {
 
     const val DIMMED_ALPHA: Float = 0.4f
 
+    /** The most servers kept read-only by their own switch. */
+    const val MAX_SERVERS: Int = 50
+
+    /** How a server is named in the list: its host and port. */
+    fun serverKey(host: String, port: Int): String = "$host:$port"
+
+    /** Whether Listen only holds for the server [serverKey]: the general switch, or that server in the list (no server known: only the general switch). */
+    fun effective(general: Boolean, servers: Set<String>, serverKey: String?): Boolean =
+        general || (serverKey != null && serverKey in servers)
+
+    /** The names that are kept from a stored list: not empty, no longer than 200 characters, no spaces at the ends, at most [MAX_SERVERS]. */
+    fun cleanServers(raw: Collection<String>): Set<String> =
+        raw.filter { it.isNotEmpty() && it.length <= 200 && it.trim() == it }.take(MAX_SERVERS).toSet()
+
     /** The switch as the network layer reads it; set by the view model, off until the person turns it on. */
     @Volatile
     var enabled: Boolean = false
