@@ -51,9 +51,10 @@ class HydraWebSocketClaimsTest {
     @After
     fun tearDown() {
         try {
-            sockets.forEach { it.disconnect() }
             server.shutdown()
         } finally {
+            // after the server is down (a close handshake with a live server would make its shutdown wait), and before the real main dispatcher comes back
+            sockets.forEach { it.disconnect() }
             MainDispatcherSwap.reset()
         }
     }
