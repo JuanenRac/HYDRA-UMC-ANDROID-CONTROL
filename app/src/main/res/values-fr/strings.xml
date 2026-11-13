@@ -322,6 +322,8 @@
     <string name="access_confirm_play_hint">Affiche le robot, ses points enregistrés, la vitesse et qui l\'a réservé avant de lancer une trajectoire. Activé par défaut.</string>
     <string name="access_listen_only_label">Écoute seule</string>
     <string name="access_listen_only_hint">Affiche les robots et leurs données mais n\'envoie aucune commande. STOP et la désactivation du mode sûr fonctionnent toujours. Désactivée par défaut.</string>
+    <string name="access_listen_only_server_label">Écoute seule pour ce serveur</string>
+    <string name="access_listen_only_server_hint">N’envoie aucune commande au serveur utilisé sauf STOP et la désactivation du mode sûr. Les autres serveurs ne sont pas concernés. Désactivé par défaut.</string>
     <string name="control_listen_only_banner">Écoute seule : les commandes sont désactivées. STOP fonctionne toujours.</string>
     <string name="error_listen_only">L\'écoute seule est activée : la commande n\'a pas été envoyée.</string>
     <string name="valve_n">VANNE %1$d</string>
