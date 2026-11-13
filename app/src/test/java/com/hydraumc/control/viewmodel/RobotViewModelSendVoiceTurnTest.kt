@@ -5,6 +5,7 @@
 // =============================================================================
 package com.hydraumc.control.viewmodel
 
+import com.hydraumc.control.EmptyAuthStore
 import android.app.Application
 import androidx.test.core.app.ApplicationProvider
 import com.hydraumc.control.MainDispatcherSwap
@@ -60,7 +61,7 @@ class RobotViewModelSendVoiceTurnTest {
 
     private fun newViewModel(): RobotViewModel {
         val application = ApplicationProvider.getApplicationContext<Application>()
-        val viewModel = RobotViewModel(application)
+        val viewModel = RobotViewModel(application, EmptyAuthStore)
         viewModel.apiClient = HydraApiClient("127.0.0.1", server.port)
         return viewModel
     }
@@ -126,7 +127,7 @@ class RobotViewModelSendVoiceTurnTest {
     @Test
     fun `refuses to send without a connected client instead of crashing`() {
         val application = ApplicationProvider.getApplicationContext<Application>()
-        val viewModel = RobotViewModel(application) // apiClient left null - never connected
+        val viewModel = RobotViewModel(application, EmptyAuthStore) // apiClient left null - never connected
 
         viewModel.sendVoiceTurn("status for robot 1")
 

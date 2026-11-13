@@ -5,6 +5,7 @@
 // =============================================================================
 package com.hydraumc.control.viewmodel
 
+import com.hydraumc.control.EmptyAuthStore
 import android.app.Application
 import android.util.Base64
 import androidx.test.core.app.ApplicationProvider
@@ -61,7 +62,7 @@ class RobotViewModelHomeResetTest {
               {"id":1,"name":"R1","online":$online,"enabled":$enabled,"pos":{"x":10,"y":20,"z":30,"a":1,"b":2,"c":3},"playbackState":{"isPlaying":$playing}}
             ]}]}
         """.trimIndent()
-        val viewModel = RobotViewModel(ApplicationProvider.getApplicationContext<Application>())
+        val viewModel = RobotViewModel(ApplicationProvider.getApplicationContext<Application>(), EmptyAuthStore)
         viewModel.apiClient = HydraApiClient("127.0.0.1", server.port)
         viewModel.state = HydraState(JSONObject(json))
         viewModel.selectedRobotId.value = 1

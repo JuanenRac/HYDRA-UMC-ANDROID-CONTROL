@@ -5,6 +5,7 @@
 // =============================================================================
 package com.hydraumc.control.viewmodel
 
+import com.hydraumc.control.EmptyAuthStore
 import android.app.Application
 import androidx.test.core.app.ApplicationProvider
 import com.hydraumc.control.MainDispatcherSwap
@@ -56,7 +57,7 @@ class RobotViewModelWorkFilesTest {
               {"id":1,"name":"Arm One","online":true,"enabled":true,"pos":{"x":1,"y":2,"z":3,"a":0,"b":0,"c":0}}
             ]}]}
         """.trimIndent()
-        val viewModel = RobotViewModel(ApplicationProvider.getApplicationContext<Application>())
+        val viewModel = RobotViewModel(ApplicationProvider.getApplicationContext<Application>(), EmptyAuthStore)
         if (connected) viewModel.apiClient = HydraApiClient("127.0.0.1", server.port)
         viewModel.state = HydraState(JSONObject(json))
         viewModel.selectedRobotId.value = 1

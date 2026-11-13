@@ -5,6 +5,7 @@
 // =============================================================================
 package com.hydraumc.control.viewmodel
 
+import com.hydraumc.control.EmptyAuthStore
 import android.app.Application
 import androidx.test.core.app.ApplicationProvider
 import com.hydraumc.control.MainDispatcherSwap
@@ -82,7 +83,7 @@ class RobotViewModelSendAtomicCommandTest {
 
     private fun newViewModel(): RobotViewModel {
         val application = ApplicationProvider.getApplicationContext<Application>()
-        val viewModel = RobotViewModel(application)
+        val viewModel = RobotViewModel(application, EmptyAuthStore)
         viewModel.apiClient = HydraApiClient("127.0.0.1", server.port)
         viewModel.state = rawStateWith(robot1Playing = false, robot2Playing = false)
         viewModel.selectedRobotId.value = 1
@@ -183,7 +184,7 @@ class RobotViewModelSendAtomicCommandTest {
      * starting-from-idle "play" scenario. */
     private fun newViewModelAlreadyPlaying(): RobotViewModel {
         val application = ApplicationProvider.getApplicationContext<Application>()
-        val viewModel = RobotViewModel(application)
+        val viewModel = RobotViewModel(application, EmptyAuthStore)
         viewModel.apiClient = HydraApiClient("127.0.0.1", server.port)
         viewModel.state = rawStateWith(robot1Playing = true, robot2Playing = true)
         viewModel.selectedRobotId.value = 1
