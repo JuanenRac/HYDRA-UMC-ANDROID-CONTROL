@@ -5,6 +5,7 @@
 // =============================================================================
 package com.hydraumc.control.viewmodel
 
+import com.hydraumc.control.EmptyAuthStore
 import android.app.Application
 import androidx.test.core.app.ApplicationProvider
 import com.hydraumc.control.MainDispatcherSwap
@@ -67,7 +68,7 @@ class RobotViewModelAdminReadingsTest {
     }
 
     private fun newViewModel(withClient: Boolean = true): RobotViewModel {
-        val viewModel = RobotViewModel(ApplicationProvider.getApplicationContext<Application>())
+        val viewModel = RobotViewModel(ApplicationProvider.getApplicationContext<Application>(), EmptyAuthStore)
         if (withClient) viewModel.apiClient = HydraApiClient("127.0.0.1", server.port).also { it.authToken = "tok" }
         return viewModel
     }
