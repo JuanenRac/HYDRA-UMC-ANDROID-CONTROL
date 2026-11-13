@@ -43,9 +43,15 @@ class HydraWebSocketClaimsTest {
         client = OkHttpClient()
     }
 
+    /** Every socket a test opens: closed at the end so that no reconnect or late callback outlives the test (and the dispatcher it swapped). */
+    private val sockets = mutableListOf<HydraWebSocket>()
+
+    private fun tracked(socket: HydraWebSocket): HydraWebSocket = socket.also { sockets += it }
+
     @After
     fun tearDown() {
         try {
+            sockets.forEach { it.disconnect() }
             server.shutdown()
         } finally {
             MainDispatcherSwap.reset()
@@ -72,7 +78,7 @@ class HydraWebSocketClaimsTest {
             }),
         )
 
-        val socket = HydraWebSocket(
+        val socket = tracked(HydraWebSocket(
             host = server.hostName,
             port = server.port,
             token = "tok",
@@ -81,7 +87,7 @@ class HydraWebSocketClaimsTest {
             onSettings = { settings.trySend(it) },
             onClaims = { claims.trySend(it) },
             onError = {},
-        )
+        ))
         socket.connect()
 
         val message = withTimeout(5_000) { claims.receive() }
@@ -111,7 +117,7 @@ class HydraWebSocketClaimsTest {
             }),
         )
 
-        val socket = HydraWebSocket(
+        val socket = tracked(HydraWebSocket(
             host = server.hostName,
             port = server.port,
             token = "tok",
@@ -119,7 +125,7 @@ class HydraWebSocketClaimsTest {
             onStatus = { statuses.trySend(it) },
             onSettings = { settings.trySend(it) },
             onError = {},
-        )
+        ))
         socket.connect()
 
         val first = withTimeout(5_000) { settings.receive() }
