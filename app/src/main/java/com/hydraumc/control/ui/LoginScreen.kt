@@ -75,6 +75,7 @@ fun LoginScreen(viewModel: RobotViewModel) {
 
     val biometricPromptTitle = stringResource(R.string.biometric_prompt_title)
     val biometricPromptSubtitle = stringResource(R.string.biometric_prompt_subtitle)
+    val strongUnavailableText = stringResource(R.string.biometric_strong_unavailable)
     val strongMode = isBiometricEnabled && viewModel.isStrongBiometric.value
     val showBiometric = isBiometricEnabled && !strongMode && BiometricHelper.isBiometricAvailable(context)
     val showStrongBiometric = strongMode && viewModel.sealedPassword.value.isNotEmpty() &&
@@ -204,7 +205,7 @@ fun LoginScreen(viewModel: RobotViewModel) {
                             onClick = {
                                 val cipher = StrongBiometricVault.decryptCipher()
                                 if (cipher == null) {
-                                    viewModel.lastError.value = context.getString(R.string.biometric_strong_unavailable)
+                                    viewModel.lastError.value = strongUnavailableText
                                 } else {
                                     BiometricHelper.showStrongBiometricPrompt(
                                         activity = activity,
@@ -214,7 +215,7 @@ fun LoginScreen(viewModel: RobotViewModel) {
                                         onSuccess = { unlocked ->
                                             val opened = StrongBiometricVault.open(unlocked, viewModel.sealedPassword.value)
                                             if (opened == null) {
-                                                viewModel.lastError.value = context.getString(R.string.biometric_strong_unavailable)
+                                                viewModel.lastError.value = strongUnavailableText
                                             } else {
                                                 viewModel.ipAddress.value = ipAddress.trim()
                                                 viewModel.port.value = port.trim()
