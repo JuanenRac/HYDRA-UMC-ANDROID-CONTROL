@@ -352,6 +352,7 @@
     <string name="safe_mode_enable_message">%1$s 将重新接受命令。请确认其周围区域没有人员和障碍。</string>
     <string name="safe_mode_enable_button">启用</string>
     <string name="error_robot_disabled">机器人处于安全模式(已停用)：命令 %1$s 未被应用。在管理员启用之前，只有 STOP 可用。</string>
+    <string name="error_server_read_only">服务器处于只读模式：命令 %1$s 未发送。只有 STOP 和安全模式的解除可以通过。管理员可以关闭它。</string>
 
     <!-- Access options of the server (administrators only) -->
     <string name="server_options_title">服务器访问选项</string>
