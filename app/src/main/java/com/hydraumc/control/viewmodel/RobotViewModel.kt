@@ -498,7 +498,7 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
     private val renewalBudget = com.hydraumc.control.util.RenewalBudget()
 
     // Sign-in, stored profile and sign-out (see AuthManager); the store is injected, so it is tested without a keystore.
-    private val authManager = AuthManager(authPrefs)
+    private val authManager = AuthManager(authPrefs, com.hydraumc.control.util.StrongBiometricVault)
 
     // Gets a new token by refresh token or by the saved "remember me" login; a password the server refused once is not tried again until the person signs in by hand.
     private val sessionRenewer = SessionRenewer(
@@ -531,6 +531,10 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
     val loginEmail = mutableStateOf(value = "")
     val loginRememberMe = mutableStateOf(value = false)
     val isBiometricEnabled = mutableStateOf(value = false)
+    // Strong biometric mode (off by default): the password lives only sealed in the Keystore, is never put in
+    // loginPassword and is opened by a fingerprint through a CryptoObject (LoginScreen).
+    val isStrongBiometric = mutableStateOf(value = false)
+    val sealedPassword = mutableStateOf(value = "")
     // In-app notifications toggle - see NotificationPrefs.kt's own header
     // comment for why this exists alongside Android's own per-app system
     // toggle. Defaults to true (this app's behavior before this preference
@@ -670,6 +674,8 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
             loginEmail.value = profile.email
             loginRememberMe.value = profile.rememberMe
             isBiometricEnabled.value = profile.isBiometricEnabled
+            isStrongBiometric.value = profile.isStrongBiometric
+            sealedPassword.value = profile.sealedPassword
             
             if (profile.token.isNotEmpty()) {
                 val client = HydraApiClient(ipAddress.value, port.value.toIntOrNull() ?: 3000)
@@ -760,14 +766,18 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
 
         viewModelScope.launch {
             logTelemetry("Logging in to ${check.host}:${check.port}...")
-            when (val result = authManager.signIn(client, user, pass, remember, loginEmail.value, isBiometricEnabled.value)) {
+            when (val result = authManager.signIn(client, user, pass, remember, loginEmail.value, isBiometricEnabled.value, isStrongBiometric.value)) {
                 is SignInResult.Success -> {
                     authTokenState.value = result.token
                     isLoggedIn.value = true
                     renewalBudget.reset()
                     sessionRenewer.forgetRefusal()
                     loginUsername.value = user
-                    loginPassword.value = pass
+                    if (isStrongBiometric.value && isBiometricEnabled.value) {
+                        sealedPassword.value = runCatching { authPrefs.loadAuth().sealedPassword }.getOrDefault(sealedPassword.value)
+                    } else {
+                        loginPassword.value = pass
+                    }
                     loginRememberMe.value = remember
                     logTelemetry("Login successful")
                     connect() // Proceed to full sync
@@ -781,13 +791,22 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
         }
     }
 
-    fun saveUserProfile(user: String, pass: String, email: String, biometric: Boolean = isBiometricEnabled.value) {
+    fun saveUserProfile(
+        user: String,
+        pass: String,
+        email: String,
+        biometric: Boolean = isBiometricEnabled.value,
+        strong: Boolean = isStrongBiometric.value,
+    ) {
+        val strongOn = biometric && strong
         loginUsername.value = user
-        loginPassword.value = pass
+        loginPassword.value = if (strongOn) "" else pass
         loginEmail.value = email
         isBiometricEnabled.value = biometric
+        isStrongBiometric.value = strongOn
         viewModelScope.launch {
-            authManager.saveProfile(user, pass, email, biometric, loginRememberMe.value, isLoggedIn.value)
+            val saved = authManager.saveProfile(user, pass, email, biometric, loginRememberMe.value, isLoggedIn.value, strongOn)
+            sealedPassword.value = saved.sealedPassword
         }
     }
 

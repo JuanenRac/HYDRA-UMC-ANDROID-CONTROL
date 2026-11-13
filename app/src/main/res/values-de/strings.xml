@@ -120,6 +120,9 @@
     <string name="biometric_prompt_subtitle">Identität bestätigen</string>
     <string name="biometric_setting_label">Biometrisches Login aktivieren</string>
     <string name="biometric_hint">Biometrie verfügbar. Im Benutzerprofil aktivieren.</string>
+    <string name="biometric_strong_label">Starke Biometrie (Keystore)</string>
+    <string name="biometric_strong_warning">Sperrt das gespeicherte Passwort im sicheren Schlüssel des Telefons: Es wird nur durch Fingerabdruck oder starken Gesichtsscan freigegeben und nicht mehr ins Formular eingetragen. Telefone mit nur schwacher Biometrie (Gesichtsentsperrung) können sich so nicht mehr anmelden. Standardmäßig aus.</string>
+    <string name="biometric_strong_unavailable">Starke Biometrie ist nicht verfügbar: Melden Sie sich mit dem Passwort an.</string>
     <string name="robot_control_title">ROBOTER-STEUERZENTRALE</string>
     <string name="industrial_io_hub">INDUSTRIELLES E/A-HUB</string>
     <string name="real_time_telemetry">ECHTZEIT-TELEMETRIE</string>

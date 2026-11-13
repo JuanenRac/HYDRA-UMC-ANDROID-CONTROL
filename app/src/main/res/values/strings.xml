@@ -120,6 +120,9 @@
     <string name="biometric_prompt_subtitle">Verify your identity to access control</string>
     <string name="biometric_setting_label">Enable Biometric Login</string>
     <string name="biometric_hint">Biometrics available. Enable in User Profile.</string>
+    <string name="biometric_strong_label">Strong biometrics (Keystore)</string>
+    <string name="biometric_strong_warning">Locks the saved password in the phone's secure key: it is released only by a fingerprint or strong face scan, and is no longer filled into the form. Phones that only have weak biometrics (face unlock) can no longer sign in this way. Off by default.</string>
+    <string name="biometric_strong_unavailable">Strong biometrics are not available: sign in with the password.</string>
     <string name="robot_control_title">ROBOT CONTROL CENTER</string>
     <string name="industrial_io_hub">INDUSTRIAL I/O HUB</string>
     <string name="real_time_telemetry">REAL-TIME TELEMETRY</string>
