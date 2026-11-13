@@ -94,7 +94,7 @@
 <text x="58" y="560" font-family="'Segoe UI','Noto Sans','Noto Sans CJK SC','Microsoft YaHei','Yu Gothic','Helvetica Neue',Helvetica,Arial,sans-serif" font-size="12" font-weight="400" fill="#C9D1D9" text-anchor="start">tested part</text>
 <rect x="160.4" y="548" width="14" height="14" rx="3" fill="none" stroke="#0088FF" stroke-width="2"/>
 <text x="182.4" y="560" font-family="'Segoe UI','Noto Sans','Noto Sans CJK SC','Microsoft YaHei','Yu Gothic','Helvetica Neue',Helvetica,Arial,sans-serif" font-size="12" font-weight="400" fill="#C9D1D9" text-anchor="start">contract, signed or server part</text>
-<rect x="399.9999999999999" y="548" width="14" height="14" rx="3" fill="#FF6B6B" opacity="0.7"/>
+<rect x="400.0" y="548" width="14" height="14" rx="3" fill="#FF6B6B" opacity="0.7"/>
 <text x="422" y="560" font-family="'Segoe UI','Noto Sans','Noto Sans CJK SC','Microsoft YaHei','Yu Gothic','Helvetica Neue',Helvetica,Arial,sans-serif" font-size="12" font-weight="400" fill="#C9D1D9" text-anchor="start">has not run on real hardware</text>
 <text x="36" y="604" font-family="'Segoe UI','Noto Sans','Noto Sans CJK SC','Microsoft YaHei','Yu Gothic','Helvetica Neue',Helvetica,Arial,sans-serif" font-size="12" font-weight="400" fill="#6E7681" text-anchor="start">Unit-tested on a plain JVM; the Wi-Fi path was tried against a local server, Bluetooth LE and TLS against a real HYDRA-UMC server were not.</text>
 </svg>
