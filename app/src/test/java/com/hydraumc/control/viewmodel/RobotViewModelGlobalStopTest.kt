@@ -5,6 +5,7 @@
 // =============================================================================
 package com.hydraumc.control.viewmodel
 
+import com.hydraumc.control.EmptyAuthStore
 import android.app.Application
 import androidx.test.core.app.ApplicationProvider
 import com.hydraumc.control.MainDispatcherSwap
@@ -60,7 +61,7 @@ class RobotViewModelGlobalStopTest {
 
     private fun newViewModel(): RobotViewModel {
         val application = ApplicationProvider.getApplicationContext<Application>()
-        val viewModel = RobotViewModel(application)
+        val viewModel = RobotViewModel(application, EmptyAuthStore)
         viewModel.apiClient = HydraApiClient("127.0.0.1", server.port).also { it.authToken = "tok" }
         val state = HydraState(
             JSONObject(
@@ -226,7 +227,7 @@ class RobotViewModelGlobalStopTest {
     @Test
     fun `with no connection STOP is shown as not confirmed`() {
         val application = ApplicationProvider.getApplicationContext<Application>()
-        val viewModel = RobotViewModel(application)
+        val viewModel = RobotViewModel(application, EmptyAuthStore)
 
         viewModel.globalStop()
 

@@ -124,6 +124,13 @@ android {
             // Robolectric loads the classes of the app through its own class loader, which the coverage agent does not see unless it is told to
             // include classes without a source location; without this the view model and the screens show as never run.
             all { test ->
+                // A failed test prints its whole cause chain in the log of the CI, so a failure that only shows on a runner can be read there.
+                test.testLogging {
+                    events("failed")
+                    exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+                    showCauses = true
+                    showStackTraces = true
+                }
                 test.extensions.findByType(org.gradle.testing.jacoco.plugins.JacocoTaskExtension::class.java)?.apply {
                     isIncludeNoLocationClasses = true
                     excludes = listOf("jdk.internal.*")

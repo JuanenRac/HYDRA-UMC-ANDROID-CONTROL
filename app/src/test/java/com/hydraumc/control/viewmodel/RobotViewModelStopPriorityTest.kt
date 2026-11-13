@@ -5,6 +5,7 @@
 // =============================================================================
 package com.hydraumc.control.viewmodel
 
+import com.hydraumc.control.EmptyAuthStore
 import android.app.Application
 import androidx.test.core.app.ApplicationProvider
 import com.hydraumc.control.MainDispatcherSwap
@@ -58,7 +59,7 @@ class RobotViewModelStopPriorityTest {
 
     private fun newViewModel(enabled: Boolean = true): RobotViewModel {
         val application = ApplicationProvider.getApplicationContext<Application>()
-        val viewModel = RobotViewModel(application)
+        val viewModel = RobotViewModel(application, EmptyAuthStore)
         viewModel.apiClient = HydraApiClient("127.0.0.1", server.port).also { it.authToken = "tok" }
         viewModel.state = HydraState(
             JSONObject(
