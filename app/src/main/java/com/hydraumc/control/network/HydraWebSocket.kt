@@ -110,6 +110,8 @@ class HydraWebSocket(
      * connection that asked for remoteApiVersion=2): the same list as GET /api/claims, so the app need not poll it.
      */
     private val onClaims: ((JSONObject) -> Unit)? = null,
+    /** The pause before a dropped socket is opened again; a test passes a short one instead of waiting the real seconds. */
+    private val reconnectDelayMs: Long = RECONNECT_DELAY_MS,
     private val onError: (String) -> Unit,
 ) {
     /** The underlying OkHttp WebSocket instance. */
@@ -369,7 +371,7 @@ class HydraWebSocket(
         if (closingByUser) return
         reconnectJob?.cancel()
         reconnectJob = scope.launch {
-            delay(RECONNECT_DELAY_MS)
+            delay(reconnectDelayMs)
             if (!closingByUser) openSocket()
         }
     }

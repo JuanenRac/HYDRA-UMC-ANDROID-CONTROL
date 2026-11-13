@@ -136,6 +136,7 @@ class HydraWebSocketTest {
         val socket = HydraWebSocket(
             host = server.hostName,
             port = server.port,
+            reconnectDelayMs = 20, // a short pause: the test waits for the reconnect itself, never for the real seconds
             token = "a-valid-token",
             client = client,
             onStatus = { events.statuses.trySend(it) },
@@ -166,6 +167,7 @@ class HydraWebSocketTest {
         val socket = HydraWebSocket(
             host = server.hostName,
             port = server.port,
+            reconnectDelayMs = 20, // a short pause: the test waits for the reconnect itself, never for the real seconds
             token = "a-valid-token",
             client = client,
             onStatus = { events.statuses.trySend(it) },
@@ -174,7 +176,7 @@ class HydraWebSocketTest {
         )
         socket.connect()
 
-        withTimeout(5_000) {
+        withTimeout(30_000) {
             while (events.statuses.receive() != WsStatus.CONNECTED) { /* wait for the second attempt */ }
         }
         server.takeRequest()
@@ -203,6 +205,7 @@ class HydraWebSocketTest {
         val socket = HydraWebSocket(
             host = server.hostName,
             port = server.port,
+            reconnectDelayMs = 20, // a short pause: the test waits for the reconnect itself, never for the real seconds
             token = "a-still-valid-token",
             client = client,
             onStatus = { events.statuses.trySend(it) },
@@ -211,7 +214,7 @@ class HydraWebSocketTest {
         )
         socket.connect()
 
-        withTimeout(6_000) {
+        withTimeout(30_000) {
             assertEquals(WsStatus.CONNECTING, events.statuses.receive()) // 1st attempt
             assertEquals(WsStatus.CONNECTED, events.statuses.receive())
             assertEquals(WsStatus.DISCONNECTED, events.statuses.receive()) // server closed 1001
@@ -248,6 +251,7 @@ class HydraWebSocketTest {
         val socket = HydraWebSocket(
             host = server.hostName,
             port = server.port,
+            reconnectDelayMs = 20, // a short pause: the test waits for the reconnect itself, never for the real seconds
             token = "a-valid-token",
             client = client,
             onStatus = { events.statuses.trySend(it) },
@@ -306,6 +310,7 @@ class HydraWebSocketTest {
         val socket = HydraWebSocket(
             host = server.hostName,
             port = server.port,
+            reconnectDelayMs = 20, // a short pause: the test waits for the reconnect itself, never for the real seconds
             token = "tok.en-1",
             client = client,
             onStatus = { events.statuses.trySend(it) },
@@ -337,6 +342,7 @@ class HydraWebSocketTest {
         val socket = HydraWebSocket(
             host = server.hostName,
             port = server.port,
+            reconnectDelayMs = 20, // a short pause: the test waits for the reconnect itself, never for the real seconds
             token = "tok.en-2",
             client = client,
             onStatus = { events.statuses.trySend(it) },
@@ -372,6 +378,7 @@ class HydraWebSocketTest {
         val socket = HydraWebSocket(
             host = server.hostName,
             port = server.port,
+            reconnectDelayMs = 20, // a short pause: the test waits for the reconnect itself, never for the real seconds
             token = "expired",
             client = client,
             onStatus = { events.statuses.trySend(it) },
@@ -406,6 +413,7 @@ class HydraWebSocketTest {
         val socket = HydraWebSocket(
             host = server.hostName,
             port = server.port,
+            reconnectDelayMs = 20, // a short pause: the test waits for the reconnect itself, never for the real seconds
             token = "tok.en-3",
             client = client,
             onStatus = { events.statuses.trySend(it) },
@@ -436,6 +444,7 @@ class HydraWebSocketTest {
         val socket = HydraWebSocket(
             host = server.hostName,
             port = server.port,
+            reconnectDelayMs = 20, // a short pause: the test waits for the reconnect itself, never for the real seconds
             token = "tok.en-4",
             client = client,
             onStatus = {},

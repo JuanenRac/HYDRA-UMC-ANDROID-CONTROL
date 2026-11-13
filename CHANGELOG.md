@@ -1,5 +1,9 @@
 # Changelog
 
+## [Unreleased]
+
+- **The reconnect tests of the WebSocket do not wait for real seconds:** the pause before a dropped socket is opened again is a parameter (`reconnectDelayMs`, three seconds by default), and the tests that wait for the reconnect pass a short one and a generous bound, so a slow runner can no longer fail them; no behaviour changes.
+
 ## [0.8.0.4] - Listen-only mode, touches through an overlay ignored, a coverage floor for the unit tests and the Bluetooth session out of the view model
 
 All notable changes to this project are documented here.
