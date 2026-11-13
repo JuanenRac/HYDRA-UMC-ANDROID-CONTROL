@@ -141,29 +141,8 @@ class MainActivity : FragmentActivity() {
     }
 
     /** Every runtime permission NSD (mDNS) discovery, Bluetooth LE scanning, and notifications need, for this device's API level. */
-    private fun discoveryPermissionsToRequest(): Array<String> {
-        val permissions = mutableListOf(
-            android.Manifest.permission.ACCESS_FINE_LOCATION,
-            android.Manifest.permission.ACCESS_COARSE_LOCATION,
-        )
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            permissions.add(android.Manifest.permission.BLUETOOTH_SCAN)
-            permissions.add(android.Manifest.permission.BLUETOOTH_CONNECT)
-        }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            permissions.add("android.permission.NEARBY_WIFI_DEVICES")
-            // Declared in AndroidManifest.xml since this app's earliest BLE
-            // scaffolding, but - like every dangerous permission since API
-            // 23 - a manifest declaration alone never grants it; nothing in
-            // this app requested it at runtime until now, so the persistent
-            // E-STOP notification (NotificationHelper.showSafetyNotification,
-            // shown on every WS connect) almost certainly never actually
-            // appeared on Android 13+ devices, with no indication to the
-            // user that their quick-E-STOP notification was silently absent.
-            permissions.add(android.Manifest.permission.POST_NOTIFICATIONS)
-        }
-        return permissions.toTypedArray()
-    }
+    private fun discoveryPermissionsToRequest(): Array<String> =
+        com.hydraumc.control.network.DiscoveryPermissions.forSdk(Build.VERSION.SDK_INT).toTypedArray()
 
     /**
      * Called when the activity is starting. This is where most initialization should go.

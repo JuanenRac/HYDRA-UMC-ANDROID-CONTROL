@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- **The app targets Android 17 (`targetSdk` 37, the same as `compileSdk`):** the behavior changes of Android 16 and 17 were reviewed against the app. Back is already handled by the system (no `onBackPressed`/`KEYCODE_BACK` code), edge-to-edge is already on, the activity handles `orientation|screenSize|screenLayout` itself so the large-screen rule that ignores fixed orientation changes nothing, and the foreground services and exact alarms of the targets 35 to 37 are not used. The one change that reaches the app is the local network permission: `ACCESS_LOCAL_NETWORK` is declared and asked at start from API 37 (`DiscoveryPermissions`, which also makes the list of permissions testable), because the server of the cell is a device of the local network. Not run on an Android 17 device. `DiscoveryPermissionsTest` (6 tests). The touch filter for overlays (STOP and the other controls) was already on by default with a switch in Settings.
 - **The reconnect tests of the WebSocket do not wait for real seconds:** the pause before a dropped socket is opened again is a parameter (`reconnectDelayMs`, three seconds by default), and the tests that wait for the reconnect pass a short one and a generous bound, so a slow runner can no longer fail them; no behaviour changes.
 
 ## [0.8.0.4] - Listen-only mode, touches through an overlay ignored, a coverage floor for the unit tests and the Bluetooth session out of the view model

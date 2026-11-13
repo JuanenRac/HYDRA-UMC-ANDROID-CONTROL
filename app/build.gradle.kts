@@ -98,8 +98,8 @@ android {
         applicationId = "com.hydraumc.control"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         minSdk = 24
-        // 35 (Android 15) for stable runtime behavior.
-        targetSdk = 35
+        // The same level as compileSdk: the behavior changes of Android 16 and 17 were reviewed (see the CHANGELOG).
+        targetSdk = 37
         versionCode = appVersionCode
         versionName = appVersionName
     }
