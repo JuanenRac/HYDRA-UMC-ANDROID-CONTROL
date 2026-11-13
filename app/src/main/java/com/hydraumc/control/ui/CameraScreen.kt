@@ -45,7 +45,8 @@ fun CameraScreen(viewModel: RobotViewModel) {
     val cameraEnabled = selectedRobot?.hasCamera ?: false
 
     // Industrial MJPEG stream URL
-    val streamUrl = "$scheme://$ip:$port/api/camera/$selectedCameraId/stream"
+    val streamCameraId = viewModel.state.cameraIdForRobot(selectedCameraId)
+    val streamUrl = "$scheme://$ip:$port/api/camera/$streamCameraId/stream"
 
     Column(
         modifier = Modifier
