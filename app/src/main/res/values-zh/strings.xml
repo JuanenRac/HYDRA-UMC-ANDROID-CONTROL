@@ -322,6 +322,8 @@
     <string name="access_confirm_play_hint">在开始轨迹之前显示机器人、已记录的点、速度以及预留者。默认开启。</string>
     <string name="access_listen_only_label">仅监听</string>
     <string name="access_listen_only_hint">显示机器人及其数据，但不发送任何命令。STOP 和安全模式的关闭始终有效。默认关闭。</string>
+    <string name="access_listen_only_server_label">此服务器仅监听</string>
+    <string name="access_listen_only_server_hint">除 STOP 和安全模式解除外，不向当前服务器发送任何命令。其他服务器不受影响。默认关闭。</string>
     <string name="control_listen_only_banner">仅监听：命令已禁用。STOP 仍然有效。</string>
     <string name="error_listen_only">仅监听已开启：命令未发送。</string>
     <string name="valve_n">阀门 %1$d</string>

@@ -322,6 +322,8 @@
     <string name="access_confirm_play_hint">Zeigt vor dem Start einer Bahn den Roboter, seine aufgezeichneten Punkte, die Geschwindigkeit und wer ihn reserviert hat. Standardmäßig an.</string>
     <string name="access_listen_only_label">Nur Zuhören</string>
     <string name="access_listen_only_hint">Zeigt die Roboter und ihre Daten, sendet aber keinen Befehl. STOP und das Abschalten des abgesicherten Modus funktionieren immer. Standardmäßig aus.</string>
+    <string name="access_listen_only_server_label">Nur zuhören für diesen Server</string>
+    <string name="access_listen_only_server_hint">Sendet an den verwendeten Server außer STOP und dem Abschalten des sicheren Modus keinen Befehl. Andere Server sind nicht betroffen. Standardmäßig aus.</string>
     <string name="control_listen_only_banner">Nur Zuhören: Befehle sind deaktiviert. STOP funktioniert weiterhin.</string>
     <string name="error_listen_only">Nur Zuhören ist aktiv: der Befehl wurde nicht gesendet.</string>
     <string name="valve_n">VENTIL %1$d</string>

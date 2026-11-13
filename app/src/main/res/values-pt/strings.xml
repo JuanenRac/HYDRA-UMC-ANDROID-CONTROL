@@ -322,6 +322,8 @@
     <string name="access_confirm_play_hint">Mostra o robô, os seus pontos gravados, a velocidade e quem o tem reservado antes de iniciar uma trajetória. Ativado por defeito.</string>
     <string name="access_listen_only_label">Só escuta</string>
     <string name="access_listen_only_hint">Mostra os robôs e os seus dados, mas não envia nenhum comando. O STOP e a desativação do modo seguro funcionam sempre. Desativado por predefinição.</string>
+    <string name="access_listen_only_server_label">Só escuta para este servidor</string>
+    <string name="access_listen_only_server_hint">Não envia nenhum comando ao servidor em uso, exceto o STOP e a desativação do modo seguro. Os outros servidores não são afetados. Desativado por predefinição.</string>
     <string name="control_listen_only_banner">Só escuta: os comandos estão desativados. O STOP continua a funcionar.</string>
     <string name="error_listen_only">O modo só escuta está ativo: o comando não foi enviado.</string>
     <string name="valve_n">VÁLVULA %1$d</string>

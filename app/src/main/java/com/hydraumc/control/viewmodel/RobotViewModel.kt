@@ -307,6 +307,18 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
     /** Listen only: no command leaves the app except STOP and the safe-mode disable. Off by default; kept across restarts. */
     val listenOnly = mutableStateOf(false)
     @Volatile private var listenOnlyTouched = false
+    /** The general switch and the servers that have their own: [listenOnly] is what holds for the server in use (either of them). */
+    @Volatile private var listenOnlyGeneral = false
+    val listenOnlyServers = mutableStateOf<Set<String>>(emptySet())
+    private fun activeServerKey(): String? = activeServer.value?.let { ListenOnly.serverKey(it.host, it.port) }
+    private fun refreshListenOnly() {
+        val on = ListenOnly.effective(listenOnlyGeneral, listenOnlyServers.value, activeServerKey())
+        listenOnly.value = on
+        ListenOnly.enabled = on
+        if (on) deadMan.interrupt()
+    }
+    /** Whether the server in use is read-only by its own switch. */
+    val listenOnlyThisServer: Boolean get() = activeServerKey()?.let { it in listenOnlyServers.value } == true
 
     /** HOME/RESET switch (see [HomeReset]); off until the person turns it on, the default comes from the contract. */
     val homeResetEnabled = mutableStateOf(RobotCommandContract.HOME_RESET_ENABLED_BY_DEFAULT)
@@ -614,7 +626,8 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
             val askBeforePlay = prefs.loadConfirmPlay()
             if (!confirmPlayTouched) confirmPlay.value = askBeforePlay
             val listenOnlySaved = prefs.loadListenOnly()
-            if (!listenOnlyTouched) { listenOnly.value = listenOnlySaved; ListenOnly.enabled = listenOnlySaved }
+            val listenOnlyServersSaved = prefs.loadListenOnlyServers()
+            if (!listenOnlyTouched) { listenOnlyGeneral = listenOnlySaved; listenOnlyServers.value = listenOnlyServersSaved; refreshListenOnly() }
             val homeResetSaved = prefs.loadHomeReset(RobotCommandContract.HOME_RESET_ENABLED_BY_DEFAULT)
             if (!homeResetTouched) homeResetEnabled.value = homeResetSaved
             deadMan.enabled.value = prefs.loadFlag(ConnectionPrefs.Flags.DEAD_MAN_JOG, RobotCommandContract.DEAD_MAN_JOG_ENABLED_BY_DEFAULT)
@@ -1038,6 +1051,7 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
                 override fun onInfo(info: JSONObject) {
                     val server = ServerInfo.fromHydraInfo(host, portInt, info)
                     activeServer.value = server
+                    refreshListenOnly()
                     logTelemetry("Server verified: ${server.displayName}")
                     if (discoveredServers.value.none { (it.host == host) && (it.port == portInt) }) {
                         discoveredServers.value += server
@@ -1518,10 +1532,19 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
     /** Switches Listen only and keeps the choice. A jog that is held stops when it is switched on. */
     fun setListenOnly(on: Boolean) {
         listenOnlyTouched = true
-        listenOnly.value = on
-        ListenOnly.enabled = on
-        if (on) deadMan.interrupt()
+        listenOnlyGeneral = on
+        refreshListenOnly()
         viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) { prefs.saveListenOnly(on) }
+    }
+
+    /** Switches Listen only for the server in use alone and keeps the choice (nothing happens while no server is in use). */
+    fun setListenOnlyThisServer(on: Boolean) {
+        val key = activeServerKey() ?: return
+        listenOnlyTouched = true
+        listenOnlyServers.value = if (on) listenOnlyServers.value + key else listenOnlyServers.value - key
+        refreshListenOnly()
+        val saved = listenOnlyServers.value
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) { prefs.saveListenOnlyServers(saved) }
     }
 
     /** Chooses whether PLAY asks first, and keeps the choice. */

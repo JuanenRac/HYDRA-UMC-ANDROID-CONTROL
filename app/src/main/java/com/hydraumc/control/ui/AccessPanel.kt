@@ -42,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import com.hydraumc.control.R
 import com.hydraumc.control.network.ClaimStanding
 import com.hydraumc.control.network.ConditionalMode
+import com.hydraumc.control.network.ListenOnly
 import com.hydraumc.control.viewmodel.RobotViewModel
 
 @Composable
@@ -156,6 +157,19 @@ fun AccessPanel(viewModel: RobotViewModel, robotId: Int, nowMs: Long) {
                     Text(stringResource(R.string.access_listen_only_label), color = Color.White, style = MaterialTheme.typography.bodyMedium)
                 }
                 Text(stringResource(R.string.access_listen_only_hint), color = Color.Gray, style = MaterialTheme.typography.bodySmall)
+                // The same for the server in use alone: the other servers are not touched.
+                if (viewModel.activeServer.value != null) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Switch(
+                            checked = viewModel.listenOnlyServers.value.contains(ListenOnly.serverKey(viewModel.activeServer.value!!.host, viewModel.activeServer.value!!.port)),
+                            onCheckedChange = { viewModel.setListenOnlyThisServer(it) },
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(stringResource(R.string.access_listen_only_server_label), color = Color.White, style = MaterialTheme.typography.bodyMedium)
+                    }
+                    Text(stringResource(R.string.access_listen_only_server_hint), color = Color.Gray, style = MaterialTheme.typography.bodySmall)
+                }
                 // Whether PLAY asks first.
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {

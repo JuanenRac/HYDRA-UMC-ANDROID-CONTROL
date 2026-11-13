@@ -9,6 +9,7 @@ import android.content.Context
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.first
 
@@ -26,6 +27,7 @@ private val KEY_CONDITIONAL_MODE = stringPreferencesKey("conditional_mode")
 private val KEY_CONFIRM_PLAY = booleanPreferencesKey("confirm_play")
 /** Preference key for Listen only (off until the person turns it on). */
 private val KEY_LISTEN_ONLY = booleanPreferencesKey("listen_only")
+private val KEY_LISTEN_ONLY_SERVERS = stringSetPreferencesKey("listen_only_servers")
 /** Preference key for the HOME/RESET switch (off until the person turns it on). */
 private val KEY_HOME_RESET = booleanPreferencesKey("home_reset_enabled")
 
@@ -77,6 +79,14 @@ class ConnectionPrefs(private val context: Context) {
 
     suspend fun saveListenOnly(on: Boolean) {
         context.connectionDataStore.edit { prefs -> prefs[KEY_LISTEN_ONLY] = on }
+    }
+
+    /** The servers (host:port) that are read-only by their own switch, whatever the general one says; none before any choice. */
+    suspend fun loadListenOnlyServers(): Set<String> =
+        ListenOnly.cleanServers(context.connectionDataStore.data.first()[KEY_LISTEN_ONLY_SERVERS] ?: emptySet())
+
+    suspend fun saveListenOnlyServers(servers: Set<String>) {
+        context.connectionDataStore.edit { prefs -> prefs[KEY_LISTEN_ONLY_SERVERS] = ListenOnly.cleanServers(servers) }
     }
 
     /** Whether HOME/RESET is switched on; [default] (off in the contract) before any choice. */

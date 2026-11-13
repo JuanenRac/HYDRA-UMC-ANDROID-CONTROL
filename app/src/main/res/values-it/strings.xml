@@ -322,6 +322,8 @@
     <string name="access_confirm_play_hint">Mostra il robot, i suoi punti registrati, la velocità e chi lo ha prenotato prima di avviare una traiettoria. Attivo per impostazione predefinita.</string>
     <string name="access_listen_only_label">Solo ascolto</string>
     <string name="access_listen_only_hint">Mostra i robot e i loro dati ma non invia alcun comando. STOP e la disattivazione della modalità sicura funzionano sempre. Disattivato per impostazione predefinita.</string>
+    <string name="access_listen_only_server_label">Solo ascolto per questo server</string>
+    <string name="access_listen_only_server_hint">Non invia comandi al server in uso tranne STOP e la disattivazione della modalità sicura. Gli altri server non sono interessati. Disattivato per impostazione predefinita.</string>
     <string name="control_listen_only_banner">Solo ascolto: i comandi sono disattivati. STOP continua a funzionare.</string>
     <string name="error_listen_only">Solo ascolto è attivo: il comando non è stato inviato.</string>
     <string name="valve_n">VALVOLA %1$d</string>
