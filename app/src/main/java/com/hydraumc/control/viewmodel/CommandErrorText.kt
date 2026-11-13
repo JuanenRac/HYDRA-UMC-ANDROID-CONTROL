@@ -18,6 +18,7 @@ object CommandErrorText {
         e.isSessionProblem -> context.getString(R.string.error_session_expired)
         command == RobotCommandContract.RESET && isUnknownCommand(e) -> context.getString(R.string.home_reset_not_supported)
         command == RobotCommandContract.RESET && e.isPermissionDenied -> context.getString(R.string.home_reset_blocked_role)
+        e.isServerReadOnly -> context.getString(R.string.error_server_read_only, command)
         e.isRobotDisabled -> context.getString(R.string.error_robot_disabled, command)
         e.isRevisionMismatch -> context.getString(R.string.error_revision_changed, command)
         e.isJogNotArmed -> context.getString(R.string.error_jog_not_armed)

@@ -354,6 +354,7 @@
     <string name="safe_mode_enable_message">%1$s nimmt wieder Befehle an. Stelle sicher, dass der Bereich um ihn frei ist.</string>
     <string name="safe_mode_enable_button">AKTIVIEREN</string>
     <string name="error_robot_disabled">Der Roboter ist im sicheren Modus (deaktiviert): der Befehl %1$s wurde nicht ausgeführt. Nur STOP funktioniert, bis ein Administrator ihn aktiviert.</string>
+    <string name="error_server_read_only">Der Server ist im Nur-Lese-Modus: Der Befehl %1$s wurde nicht gesendet. Nur STOP und das Abschalten des sicheren Modus gehen durch. Ein Administrator kann ihn ausschalten.</string>
 
     <!-- Access options of the server (administrators only) -->
     <string name="server_options_title">Zugriffsoptionen des Servers</string>
