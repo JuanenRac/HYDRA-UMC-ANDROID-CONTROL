@@ -354,6 +354,7 @@
     <string name="safe_mode_enable_message">%1$s は再びコマンドを受け付けます。周囲に人や物がないことを確認してください。</string>
     <string name="safe_mode_enable_button">有効にする</string>
     <string name="error_robot_disabled">ロボットはセーフモード(無効)です。コマンド %1$s は適用されませんでした。管理者が有効にするまで STOP のみ動作します。</string>
+    <string name="error_server_read_only">サーバーは読み取り専用モードです。コマンド %1$s は送信されませんでした。STOP とセーフモードの解除だけが通ります。管理者が解除できます。</string>
 
     <!-- Access options of the server (administrators only) -->
     <string name="server_options_title">サーバーのアクセス設定</string>

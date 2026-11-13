@@ -354,6 +354,7 @@
     <string name="safe_mode_enable_message">%1$s voltará a aceitar comandos. Certifique-se de que a zona à sua volta está livre.</string>
     <string name="safe_mode_enable_button">ATIVAR</string>
     <string name="error_robot_disabled">O robô está em modo seguro (desativado): o comando %1$s não foi aplicado. Só o STOP funciona até um administrador o ativar.</string>
+    <string name="error_server_read_only">O servidor está em modo só de leitura: o comando %1$s não foi enviado. Só passam o STOP e a desativação do modo seguro. Um administrador pode desativá-lo.</string>
 
     <!-- Access options of the server (administrators only) -->
     <string name="server_options_title">Opções de acesso do servidor</string>
