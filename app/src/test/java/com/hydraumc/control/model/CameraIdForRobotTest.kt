@@ -9,7 +9,13 @@ import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
+/** `org.json` of a JVM unit test is a stub that throws; the runner of the other tests of the app gives it the real one. */
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [34])
 class CameraIdForRobotTest {
     private fun state(vararg controllers: JSONObject): HydraState =
         HydraState(JSONObject().put("controllers", JSONArray().also { array -> controllers.forEach { array.put(it) } }))
