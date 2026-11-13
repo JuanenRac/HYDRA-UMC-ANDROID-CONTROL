@@ -19,6 +19,8 @@
          location-permission dependency for this one. See MainActivity's
          runtime permission request. -->
     <uses-permission android:name="android.permission.NEARBY_WIFI_DEVICES" android:usesPermissionFlags="neverForLocation" />
+    <!-- Android 17 (API 37) asks for this to reach devices of the local network, such as the server of the cell. -->
+    <uses-permission android:name="android.permission.ACCESS_LOCAL_NETWORK" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <!-- Voice assistant dialog: on-device speech recognition (RecognizerIntent),
