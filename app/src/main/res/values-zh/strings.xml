@@ -491,4 +491,16 @@
     <string name="work_blocked_role">只有操作员和管理员可以加载作业。</string>
     <string name="work_blocked_no_table">该作业使用 XY 工作台,而此机器人没有。</string>
     <string name="work_not_supported">此服务器不支持加载作业。</string>
+    <string name="canota_title">CAN 刷写</string>
+    <string name="canota_phase_connecting">正在连接板卡</string>
+    <string name="canota_phase_entering_bootloader">正在进入引导程序</string>
+    <string name="canota_phase_erasing_fram">正在擦除 FRAM</string>
+    <string name="canota_phase_transferring">正在发送镜像</string>
+    <string name="canota_phase_verifying">正在校验镜像</string>
+    <string name="canota_phase_rebooting">正在重启板卡</string>
+    <string name="canota_phase_done">刷写完成</string>
+    <string name="canota_phase_error">刷写失败</string>
+    <string name="canota_pages">%1$d / %2$d 页</string>
+    <string name="canota_error">原因：%1$s</string>
+    <string name="canota_percent">%1$d%%</string>
 </resources>

@@ -491,4 +491,16 @@
     <string name="work_blocked_role">Nur Bediener und Administratoren können eine Arbeit laden.</string>
     <string name="work_blocked_no_table">Diese Arbeit nutzt einen XY-Tisch, den der Roboter nicht hat.</string>
     <string name="work_not_supported">Dieser Server unterstützt das Laden einer Arbeit nicht.</string>
+    <string name="canota_title">CAN-Flash</string>
+    <string name="canota_phase_connecting">Verbindung zur Platine</string>
+    <string name="canota_phase_entering_bootloader">Wechsel in den Bootloader</string>
+    <string name="canota_phase_erasing_fram">FRAM wird gelöscht</string>
+    <string name="canota_phase_transferring">Image wird gesendet</string>
+    <string name="canota_phase_verifying">Image wird geprüft</string>
+    <string name="canota_phase_rebooting">Platine wird neu gestartet</string>
+    <string name="canota_phase_done">Flash abgeschlossen</string>
+    <string name="canota_phase_error">Flash fehlgeschlagen</string>
+    <string name="canota_pages">%1$d von %2$d Seiten</string>
+    <string name="canota_error">Grund: %1$s</string>
+    <string name="canota_percent">%1$d %%</string>
 </resources>

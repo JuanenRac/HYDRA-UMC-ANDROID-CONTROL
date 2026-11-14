@@ -491,4 +491,16 @@
     <string name="work_blocked_role">ワークを読み込めるのはオペレーターと管理者のみです。</string>
     <string name="work_blocked_no_table">このワークはXYテーブルを使用しますが、ロボットにはありません。</string>
     <string name="work_not_supported">このサーバーはワークの読み込みに対応していません。</string>
+    <string name="canota_title">CAN フラッシュ</string>
+    <string name="canota_phase_connecting">ボードに接続中</string>
+    <string name="canota_phase_entering_bootloader">ブートローダーに移行中</string>
+    <string name="canota_phase_erasing_fram">FRAM を消去中</string>
+    <string name="canota_phase_transferring">イメージを送信中</string>
+    <string name="canota_phase_verifying">イメージを検証中</string>
+    <string name="canota_phase_rebooting">ボードを再起動中</string>
+    <string name="canota_phase_done">フラッシュが完了しました</string>
+    <string name="canota_phase_error">フラッシュに失敗しました</string>
+    <string name="canota_pages">%1$d / %2$d ページ</string>
+    <string name="canota_error">理由: %1$s</string>
+    <string name="canota_percent">%1$d%%</string>
 </resources>
