@@ -43,6 +43,7 @@ import androidx.fragment.app.FragmentActivity
 import com.hydraumc.control.R
 import com.hydraumc.control.ui.theme.*
 import com.hydraumc.control.util.BiometricHelper
+import com.hydraumc.control.util.StrongBiometricVault
 import com.hydraumc.control.viewmodel.RobotViewModel
 
 /**
@@ -74,7 +75,11 @@ fun LoginScreen(viewModel: RobotViewModel) {
 
     val biometricPromptTitle = stringResource(R.string.biometric_prompt_title)
     val biometricPromptSubtitle = stringResource(R.string.biometric_prompt_subtitle)
-    val showBiometric = isBiometricEnabled && BiometricHelper.isBiometricAvailable(context)
+    val strongUnavailableText = stringResource(R.string.biometric_strong_unavailable)
+    val strongMode = isBiometricEnabled && viewModel.isStrongBiometric.value
+    val showBiometric = isBiometricEnabled && !strongMode && BiometricHelper.isBiometricAvailable(context)
+    val showStrongBiometric = strongMode && viewModel.sealedPassword.value.isNotEmpty() &&
+        BiometricHelper.isStrongBiometricAvailable(context)
     val biometricSupportedButDisabled = !isBiometricEnabled && BiometricHelper.isBiometricAvailable(context)
 
     val fieldColors = OutlinedTextFieldDefaults.colors(
@@ -193,6 +198,45 @@ fun LoginScreen(viewModel: RobotViewModel) {
                         Icon(Icons.AutoMirrored.Filled.Login, null)
                         Spacer(Modifier.width(10.dp))
                         Text(stringResource(R.string.login_button_label), fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    }
+
+                    if (showStrongBiometric && activity != null) {
+                        FilledTonalButton(
+                            onClick = {
+                                val cipher = StrongBiometricVault.decryptCipher()
+                                if (cipher == null) {
+                                    viewModel.lastError.value = strongUnavailableText
+                                } else {
+                                    BiometricHelper.showStrongBiometricPrompt(
+                                        activity = activity,
+                                        title = biometricPromptTitle,
+                                        subtitle = biometricPromptSubtitle,
+                                        cipher = cipher,
+                                        onSuccess = { unlocked ->
+                                            val opened = StrongBiometricVault.open(unlocked, viewModel.sealedPassword.value)
+                                            if (opened == null) {
+                                                viewModel.lastError.value = strongUnavailableText
+                                            } else {
+                                                viewModel.ipAddress.value = ipAddress.trim()
+                                                viewModel.port.value = port.trim()
+                                                viewModel.login(
+                                                    viewModel.loginUsername.value,
+                                                    opened,
+                                                    viewModel.loginRememberMe.value,
+                                                )
+                                            }
+                                        },
+                                        onError = { /* User cancelled or failed */ },
+                                    )
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth().height(48.dp),
+                            shape = buttonShape,
+                        ) {
+                            Icon(Icons.Filled.Fingerprint, null)
+                            Spacer(Modifier.width(8.dp))
+                            Text(stringResource(R.string.biometric_login_button))
+                        }
                     }
 
                     if (showBiometric && activity != null) {
