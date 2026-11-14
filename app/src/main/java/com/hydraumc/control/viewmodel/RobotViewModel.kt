@@ -288,6 +288,8 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
     // installation and not to the whole account.
     /** Every active reservation, as of the last refresh (GET /api/claims). */
     val claims = mutableStateOf<List<ClaimInfo>>(emptyList())
+    /** The last progress of a flash cycle of a board the server pushed (administrators only); null before the first message and after the socket closes. */
+    val canOtaProgress = mutableStateOf<com.hydraumc.control.model.CanOtaProgress?>(null)
     /** The limits of each robot model the server told this app about, by robot id. */
     val safetyByRobot = mutableStateOf<Map<Int, RobotSafety>>(emptyMap())
     /** Until when (this phone clock, epoch ms) the jog of each robot is armed from this app. */
@@ -1129,6 +1131,7 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
 
         override fun onClosedIdle() {
             discoveredServers.value = emptyList()
+            canOtaProgress.value = null
         }
 
         // Full replace, not a merge: it reaches here for "settings" (the first message on connect and any full POST
@@ -1145,6 +1148,11 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
 
         override fun onClaims(message: JSONObject) {
             applyClaimsPush(message)
+        }
+
+        // A message with a phase the app does not know leaves what is shown as it was.
+        override fun onCanOtaProgress(message: JSONObject) {
+            com.hydraumc.control.model.CanOtaProgress.fromMessage(message)?.let { canOtaProgress.value = it }
         }
 
         // The server closed the socket with 1008 (expired or invalid token). One renewal, however many signals arrive;

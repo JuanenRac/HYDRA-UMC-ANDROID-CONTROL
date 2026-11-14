@@ -110,6 +110,11 @@ class HydraWebSocket(
      * connection that asked for remoteApiVersion=2): the same list as GET /api/claims, so the app need not poll it.
      */
     private val onClaims: ((JSONObject) -> Unit)? = null,
+    /**
+     * The `canota_progress` message (live progress of a flash cycle of a board, sent only to administrators): the whole message, as it came.
+     * Optional: a caller that does not pass it ignores the message.
+     */
+    private val onCanOtaProgress: ((JSONObject) -> Unit)? = null,
     /** The pause before a dropped socket is opened again; a test passes a short one instead of waiting the real seconds. */
     private val reconnectDelayMs: Long = RECONNECT_DELAY_MS,
     private val onError: (String) -> Unit,
@@ -310,6 +315,11 @@ class HydraWebSocket(
         val type = json.optStr("type")
         if (type == "claims") {
             val handler = onClaims
+            if (handler != null) mainScope.launch { handler(json) }
+            return
+        }
+        if (type == "canota_progress") {
+            val handler = onCanOtaProgress
             if (handler != null) mainScope.launch { handler(json) }
             return
         }
