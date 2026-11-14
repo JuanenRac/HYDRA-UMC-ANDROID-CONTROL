@@ -120,6 +120,9 @@
     <string name="biometric_prompt_subtitle">请验证您的身份以获取控制权限</string>
     <string name="biometric_setting_label">启用生物识别登录</string>
     <string name="biometric_hint">生物识别可用。请在用户资料中启用。</string>
+    <string name="biometric_strong_label">强生物识别(Keystore)</string>
+    <string name="biometric_strong_warning">将已保存的密码锁定在手机的安全密钥中:只有指纹或强人脸识别才能释放,且不再填入表单。仅有弱生物识别(人脸解锁)的手机将无法再以此方式登录。默认关闭。</string>
+    <string name="biometric_strong_unavailable">强生物识别不可用:请使用密码登录。</string>
     <string name="robot_control_title">机器人控制中心</string>
     <string name="industrial_io_hub">工业 I/O 集线器</string>
     <string name="real_time_telemetry">实时遥测</string>

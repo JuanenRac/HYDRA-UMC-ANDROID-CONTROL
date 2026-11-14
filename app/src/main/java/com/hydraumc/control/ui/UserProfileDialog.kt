@@ -38,8 +38,10 @@ fun UserProfileDialog(viewModel: RobotViewModel, onDismiss: () -> Unit) {
     var password by remember { mutableStateOf(viewModel.loginPassword.value) }
     var email by remember { mutableStateOf(viewModel.loginEmail.value) }
     var biometricEnabled by remember { mutableStateOf(viewModel.isBiometricEnabled.value) }
+    var strongBiometric by remember { mutableStateOf(viewModel.isStrongBiometric.value) }
 
     val hasBiometricHardware = BiometricHelper.isBiometricAvailable(context)
+    val hasStrongBiometric = BiometricHelper.isStrongBiometricAvailable(context)
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -100,6 +102,27 @@ fun UserProfileDialog(viewModel: RobotViewModel, onDismiss: () -> Unit) {
                                 onCheckedChange = { biometricEnabled = it }
                             )
                         }
+                        if (biometricEnabled && hasStrongBiometric) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.biometric_strong_label),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                Switch(
+                                    checked = strongBiometric,
+                                    onCheckedChange = { strongBiometric = it }
+                                )
+                            }
+                            Text(
+                                text = stringResource(R.string.biometric_strong_warning),
+                                style = MaterialTheme.typography.labelSmall,
+                            )
+                        }
                     }
 
                     Spacer(modifier = Modifier.height(24.dp))
@@ -130,7 +153,7 @@ fun UserProfileDialog(viewModel: RobotViewModel, onDismiss: () -> Unit) {
                             text = "",
                             icon = Icons.Default.Check,
                             onClick = {
-                                viewModel.saveUserProfile(username, password, email, biometricEnabled)
+                                viewModel.saveUserProfile(username, password, email, biometricEnabled, biometricEnabled && strongBiometric && hasStrongBiometric)
                                 onDismiss()
                             },
                             modifier = Modifier.size(56.dp),
