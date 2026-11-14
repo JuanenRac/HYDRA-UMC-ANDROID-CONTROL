@@ -382,6 +382,9 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
     val voiceConfirmRelayEnabled = mutableStateOf(RobotCommandContract.VOICE_CONFIRM_ENABLED_BY_DEFAULT)
     /** Where the alerts go; the Wear Data Layer in the app, replaced by a fake in the tests. */
     var watchAlertSink: WatchAlertSink = WearAlertSink(application)
+    /** Where the progress of a flash cycle goes on the wrist (with the option of the alerts of the watch on). */
+    var watchCanOtaSink: com.hydraumc.control.wear.WatchCanOtaSink = com.hydraumc.control.wear.WearCanOtaSink(application)
+    private val canOtaWatchPolicy = com.hydraumc.control.wear.CanOtaWatchPolicy()
     private val watchAlertRules = WatchAlertRules()
     private var watchAlertJob: kotlinx.coroutines.Job? = null
 
@@ -1132,6 +1135,7 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
         override fun onClosedIdle() {
             discoveredServers.value = emptyList()
             canOtaProgress.value = null
+            canOtaWatchPolicy.reset()
         }
 
         // Full replace, not a merge: it reaches here for "settings" (the first message on connect and any full POST
@@ -1152,7 +1156,10 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
 
         // A message with a phase the app does not know leaves what is shown as it was.
         override fun onCanOtaProgress(message: JSONObject) {
-            com.hydraumc.control.model.CanOtaProgress.fromMessage(message)?.let { canOtaProgress.value = it }
+            com.hydraumc.control.model.CanOtaProgress.fromMessage(message)?.let { progress ->
+                canOtaProgress.value = progress
+                passCanOtaToWatch(progress)
+            }
         }
 
         // The server closed the socket with 1008 (expired or invalid token). One renewal, however many signals arrive;
@@ -1686,6 +1693,20 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
         if (!watchAlertsEnabled.value) return
         for (event in watchAlertRules.observe(watchAlertInput())) {
             watchAlertSink.send(WatchAlert.of(event.severity, watchAlertText(event)))
+        }
+    }
+
+    /** Passes the progress of a flash cycle to the watch, rationed by [CanOtaWatchPolicy]; only while the option of the alerts of the watch is on. */
+    private fun passCanOtaToWatch(progress: com.hydraumc.control.model.CanOtaProgress) {
+        if (!watchAlertsEnabled.value || !canOtaWatchPolicy.accept(progress, System.currentTimeMillis())) return
+        viewModelScope.launch {
+            try {
+                watchCanOtaSink.send(com.hydraumc.control.wear.WatchCanOtaProgress.of(progress))
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                logTelemetry("Watch flash progress failed: ${e.javaClass.simpleName}")
+            }
         }
     }
 

@@ -201,3 +201,43 @@ data class WatchSystemStatus(
         }
     }
 }
+
+/**
+ * Read-only progress of a flash cycle of a board for the watch: the phase (one of [com.hydraumc.control.model.CanOtaPhase]'s wire names) and a percent
+ * from 0 to 100, or none. The phone reads it from the server (`canota_progress`, sent only to administrators) and passes it on; nothing in it can start
+ * or stop a flash. Same rules as the watch applies when it receives it (docs/watch_relay_contract.json, "canota_progress_status").
+ */
+data class WatchCanOtaProgress(
+    val phase: String,
+    val percent: Int?,
+    val protocolVersion: Int = PROTOCOL_VERSION,
+) {
+    init {
+        require(protocolVersion == PROTOCOL_VERSION) { "unsupported flash progress protocol version" }
+        require(com.hydraumc.control.model.CanOtaPhase.fromWire(phase) != null) { "a phase of a flash cycle" }
+        require(percent == null || percent in 0..100) { "percent must be from 0 to 100" }
+    }
+
+    fun toJson(): JSONObject = JSONObject()
+        .put("type", "canota_progress_status")
+        .put("protocolVersion", protocolVersion)
+        .put("phase", phase)
+        .apply { percent?.let { put("percent", it) } }
+
+    companion object {
+        const val PROTOCOL_VERSION = 1
+
+        fun fromJson(json: JSONObject): WatchCanOtaProgress {
+            require(json.getString("type") == "canota_progress_status") { "unexpected flash progress type" }
+            return WatchCanOtaProgress(
+                phase = json.getString("phase"),
+                percent = if (json.has("percent")) json.getInt("percent") else null,
+                protocolVersion = json.getInt("protocolVersion"),
+            )
+        }
+
+        /** The message for [progress], or null when it has nothing the watch accepts. */
+        fun of(progress: com.hydraumc.control.model.CanOtaProgress): WatchCanOtaProgress =
+            WatchCanOtaProgress(progress.phase.wire, progress.percent)
+    }
+}
