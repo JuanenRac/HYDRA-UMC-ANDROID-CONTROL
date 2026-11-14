@@ -120,6 +120,9 @@
     <string name="biometric_prompt_subtitle">Vérifiez votre identité pour accéder au contrôle</string>
     <string name="biometric_setting_label">Activer l\'authentification biométrique</string>
     <string name="biometric_hint">Biométrie disponible. Activer dans le profil utilisateur.</string>
+    <string name="biometric_strong_label">Biométrie forte (Keystore)</string>
+    <string name="biometric_strong_warning">Verrouille le mot de passe enregistré dans la clé sécurisée du téléphone : seule une empreinte ou un scan facial fort le libère, et il n’est plus rempli dans le formulaire. Les téléphones qui n’ont qu’une biométrie faible (déverrouillage facial) ne peuvent plus se connecter ainsi. Désactivé par défaut.</string>
+    <string name="biometric_strong_unavailable">La biométrie forte n’est pas disponible : connectez-vous avec le mot de passe.</string>
     <string name="robot_control_title">CENTRE DE CONTRÔLE ROBOTIQUE</string>
     <string name="industrial_io_hub">HUB D\'E/S INDUSTRIEL</string>
     <string name="real_time_telemetry">TÉLÉMÉTRIE EN TEMPS RÉEL</string>

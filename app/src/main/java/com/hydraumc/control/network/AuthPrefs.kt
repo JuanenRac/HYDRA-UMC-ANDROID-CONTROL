@@ -46,6 +46,8 @@ private const val KEY_EMAIL = "email"
 private const val KEY_REMEMBER_ME = "remember_me"
 private const val KEY_LOGGED_IN = "is_logged_in"
 private const val KEY_BIOMETRIC_ENABLED = "biometric_enabled"
+private const val KEY_BIOMETRIC_STRONG = "biometric_strong"
+private const val KEY_SEALED_PASSWORD = "sealed_password"
 private const val KEY_TOKEN = SessionKeys.TOKEN
 private const val KEY_REFRESH_TOKEN = SessionKeys.REFRESH_TOKEN
 
@@ -181,6 +183,8 @@ class AuthPrefs(private val context: Context) : AuthStore {
             rememberMe = prefs.getBoolean(KEY_REMEMBER_ME, false),
             isLoggedIn = prefs.getBoolean(KEY_LOGGED_IN, false),
             isBiometricEnabled = prefs.getBoolean(KEY_BIOMETRIC_ENABLED, false),
+            isStrongBiometric = prefs.getBoolean(KEY_BIOMETRIC_STRONG, false),
+            sealedPassword = prefs.getString(KEY_SEALED_PASSWORD, "") ?: "",
             token = prefs.getString(KEY_TOKEN, "") ?: "",
             refreshToken = prefs.getString(KEY_REFRESH_TOKEN, "") ?: "",
         )
@@ -202,6 +206,8 @@ class AuthPrefs(private val context: Context) : AuthStore {
             .putBoolean(KEY_REMEMBER_ME, profile.rememberMe)
             .putBoolean(KEY_LOGGED_IN, profile.isLoggedIn)
             .putBoolean(KEY_BIOMETRIC_ENABLED, profile.isBiometricEnabled)
+            .putBoolean(KEY_BIOMETRIC_STRONG, profile.isStrongBiometric)
+            .putString(KEY_SEALED_PASSWORD, profile.sealedPassword)
             .apply()
         Unit
     }
@@ -220,7 +226,7 @@ class AuthPrefs(private val context: Context) : AuthStore {
         val prefs = openEncryptedPrefs()
         SessionFields(SharedPreferencesKv(prefs)).clearSession()
         val edit = prefs.edit().putBoolean(KEY_LOGGED_IN, false)
-        if (wipePassword) edit.putString(KEY_PASSWORD, "")
+        if (wipePassword) edit.putString(KEY_PASSWORD, "").putString(KEY_SEALED_PASSWORD, "")
         edit.apply()
         Unit
     }
@@ -239,4 +245,8 @@ data class UserProfile(
     val token: String = "",
     /** Opaque refresh token from the last login; empty when there is none. */
     val refreshToken: String = "",
+    /** The strong biometric mode: the password is kept only sealed in the Keystore, never in the form or as text. */
+    val isStrongBiometric: Boolean = false,
+    /** The password sealed by the Keystore key (Base64); empty when there is none. */
+    val sealedPassword: String = "",
 )

@@ -120,6 +120,9 @@
     <string name="biometric_prompt_subtitle">Confirme a sua identidade para aceder ao controlo</string>
     <string name="biometric_setting_label">Ativar início de sessão biométrico</string>
     <string name="biometric_hint">Biometria disponível. Ative-a no Perfil do utilizador.</string>
+    <string name="biometric_strong_label">Biometria forte (Keystore)</string>
+    <string name="biometric_strong_warning">Bloqueia a palavra-passe guardada na chave segura do telemóvel: só é libertada por uma impressão digital ou por uma leitura facial forte e já não é preenchida no formulário. Os telemóveis que só têm biometria fraca (desbloqueio facial) deixam de poder iniciar sessão assim. Desligado por predefinição.</string>
+    <string name="biometric_strong_unavailable">A biometria forte não está disponível: inicie sessão com a palavra-passe.</string>
     <string name="robot_control_title">CENTRO DE CONTROLO DO ROBÔ</string>
     <string name="industrial_io_hub">HUB DE E/S INDUSTRIAL</string>
     <string name="real_time_telemetry">TELEMETRIA EM TEMPO REAL</string>
