@@ -5,6 +5,7 @@
 // =============================================================================
 package com.hydraumc.control.viewmodel
 
+import com.hydraumc.control.EmptyAuthStore
 import android.app.Application
 import androidx.test.core.app.ApplicationProvider
 import com.hydraumc.control.MainDispatcherSwap
@@ -58,7 +59,7 @@ class RobotViewModelStopPriorityTest {
 
     private fun newViewModel(enabled: Boolean = true): RobotViewModel {
         val application = ApplicationProvider.getApplicationContext<Application>()
-        val viewModel = RobotViewModel(application)
+        val viewModel = RobotViewModel(application, EmptyAuthStore)
         viewModel.apiClient = HydraApiClient("127.0.0.1", server.port).also { it.authToken = "tok" }
         viewModel.state = HydraState(
             JSONObject(
@@ -113,7 +114,8 @@ class RobotViewModelStopPriorityTest {
 
     @Test
     fun `disabling a robot goes back when the server refuses it`() {
-        server.enqueue(MockResponse().setResponseCode(500).setBody("error"))
+        // the answer is held back long enough that a slow runner cannot roll the change back before the check of the optimistic state
+        server.enqueue(MockResponse().setResponseCode(500).setBody("error").setBodyDelay(1500, TimeUnit.MILLISECONDS))
         val viewModel = newViewModel(enabled = true)
 
         viewModel.sendCommand("disable")
@@ -125,7 +127,7 @@ class RobotViewModelStopPriorityTest {
 
     @Test
     fun `enabling a robot goes back to disabled when the server answers 403`() {
-        server.enqueue(MockResponse().setResponseCode(403).setBody("""{"error":"administrator only"}"""))
+        server.enqueue(MockResponse().setResponseCode(403).setBody("""{"error":"administrator only"}""").setBodyDelay(1500, TimeUnit.MILLISECONDS))
         val viewModel = newViewModel(enabled = false)
 
         viewModel.sendCommand("enable")

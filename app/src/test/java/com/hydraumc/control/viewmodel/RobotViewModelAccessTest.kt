@@ -9,11 +9,13 @@ import android.app.Application
 import androidx.test.core.app.ApplicationProvider
 import com.hydraumc.control.MainDispatcherSwap
 import com.hydraumc.control.model.HydraState
+import com.hydraumc.control.network.AuthStore
 import com.hydraumc.control.network.ClaimStanding
 import com.hydraumc.control.network.HydraApiClient
 import com.hydraumc.control.network.JogLimits
 import com.hydraumc.control.network.RobotSafety
 import com.hydraumc.control.network.SessionController
+import com.hydraumc.control.network.UserProfile
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
@@ -83,9 +85,18 @@ class RobotViewModelAccessTest {
         }
     }
 
+    /**
+     * The stored login the view model reads in the background when it is created. It answers the account these tests use, so
+     * that late read puts the same name the tests set by hand: whichever comes first, the result is the same.
+     */
+    private val storedLogin = object : AuthStore {
+        override suspend fun loadAuth() = UserProfile("ana", "", "", rememberMe = false, isLoggedIn = false)
+        override suspend fun saveAuth(profile: UserProfile) {}
+    }
+
     private fun newViewModel(): RobotViewModel {
         val application = ApplicationProvider.getApplicationContext<Application>()
-        val viewModel = RobotViewModel(application)
+        val viewModel = RobotViewModel(application, storedLogin)
         viewModel.apiClient = HydraApiClient("127.0.0.1", server.port).also { it.authToken = "tok" }
         viewModel.state = HydraState(
             JSONObject("""{"activeControllerId":"c1","controllers":[{"id":"c1","robots":[{"id":1,"playbackState":{"isPlaying":false},"joints":{"j1":0}}]}]}"""),

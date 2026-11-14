@@ -125,8 +125,8 @@ fun MjpegPlayer(url: String, modifier: Modifier = Modifier, authToken: String? =
                 Log.e("MjpegPlayer", "Stream error: ${e.message}")
             }
         }
-        failures = if (gotFrame) 0 else failures + 1
-        delay((1_000L shl failures.coerceAtMost(4)).coerceAtMost(15_000L))
+        failures = MjpegReconnectPolicy.failuresAfter(failures, gotFrame)
+        delay(MjpegReconnectPolicy.delayMs(failures))
       }
     }
 

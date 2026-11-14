@@ -56,11 +56,18 @@ class HydraWebSocketTest {
         client = OkHttpClient()
     }
 
+    /** Every socket a test opens: closed at the end so that no reconnect or late callback outlives the test (and the dispatcher it swapped). */
+    private val sockets = mutableListOf<HydraWebSocket>()
+
+    private fun tracked(socket: HydraWebSocket): HydraWebSocket = socket.also { sockets += it }
+
     @After
     fun tearDown() {
         try {
             if (::server.isInitialized) server.shutdown()
         } finally {
+            // after the server is down (a close handshake with a live server would make its shutdown wait), and before the real main dispatcher comes back
+            sockets.forEach { it.disconnect() }
             MainDispatcherSwap.reset()
         }
     }
@@ -86,7 +93,7 @@ class HydraWebSocketTest {
             })
         )
 
-        val socket = HydraWebSocket(
+        val socket = tracked(HydraWebSocket(
             host = server.hostName,
             port = server.port,
             token = "an-expired-token",
@@ -94,7 +101,7 @@ class HydraWebSocketTest {
             onStatus = { events.statuses.trySend(it) },
             onSettings = {},
             onError = { events.errors.trySend(it) },
-        )
+        ))
         socket.connect()
 
         withTimeout(5_000) {
@@ -133,7 +140,7 @@ class HydraWebSocketTest {
         // Second connection: it accepts and stays open.
         server.enqueue(MockResponse().withWebSocketUpgrade(object : WebSocketListener() {}))
 
-        val socket = HydraWebSocket(
+        val socket = tracked(HydraWebSocket(
             host = server.hostName,
             port = server.port,
             reconnectDelayMs = 20, // a short pause: the test waits for the reconnect itself, never for the real seconds
@@ -143,7 +150,7 @@ class HydraWebSocketTest {
             onSettings = {},
             onError = { events.errors.trySend(it) },
             onUnauthorized = { unauthorized.trySend(Unit) },
-        )
+        ))
         socket.connect()
 
         withTimeout(7_000) {
@@ -164,7 +171,7 @@ class HydraWebSocketTest {
         server.enqueue(MockResponse().setResponseCode(400).setHeader("Connection", "close"))
         server.enqueue(MockResponse().withWebSocketUpgrade(object : WebSocketListener() {}))
 
-        val socket = HydraWebSocket(
+        val socket = tracked(HydraWebSocket(
             host = server.hostName,
             port = server.port,
             reconnectDelayMs = 20, // a short pause: the test waits for the reconnect itself, never for the real seconds
@@ -173,7 +180,7 @@ class HydraWebSocketTest {
             onStatus = { events.statuses.trySend(it) },
             onSettings = {},
             onError = { events.errors.trySend(it) },
-        )
+        ))
         socket.connect()
 
         withTimeout(30_000) {
@@ -202,7 +209,7 @@ class HydraWebSocketTest {
             MockResponse().withWebSocketUpgrade(object : WebSocketListener() {})
         )
 
-        val socket = HydraWebSocket(
+        val socket = tracked(HydraWebSocket(
             host = server.hostName,
             port = server.port,
             reconnectDelayMs = 20, // a short pause: the test waits for the reconnect itself, never for the real seconds
@@ -211,7 +218,7 @@ class HydraWebSocketTest {
             onStatus = { events.statuses.trySend(it) },
             onSettings = {},
             onError = { events.errors.trySend(it) },
-        )
+        ))
         socket.connect()
 
         withTimeout(30_000) {
@@ -248,7 +255,7 @@ class HydraWebSocketTest {
             })
         )
 
-        val socket = HydraWebSocket(
+        val socket = tracked(HydraWebSocket(
             host = server.hostName,
             port = server.port,
             reconnectDelayMs = 20, // a short pause: the test waits for the reconnect itself, never for the real seconds
@@ -257,7 +264,7 @@ class HydraWebSocketTest {
             onStatus = { events.statuses.trySend(it) },
             onSettings = {},
             onError = { events.errors.trySend(it) },
-        )
+        ))
         socket.connect()
 
         val payload = JSONObject().put("foo", "bar")
@@ -307,7 +314,7 @@ class HydraWebSocketTest {
                 }
             }))
 
-        val socket = HydraWebSocket(
+        val socket = tracked(HydraWebSocket(
             host = server.hostName,
             port = server.port,
             reconnectDelayMs = 20, // a short pause: the test waits for the reconnect itself, never for the real seconds
@@ -316,7 +323,7 @@ class HydraWebSocketTest {
             onStatus = { events.statuses.trySend(it) },
             onSettings = {},
             onError = { events.errors.trySend(it) },
-        )
+        ))
         socket.connect()
         withTimeout(5_000) {
             assertEquals(WsStatus.CONNECTING, events.statuses.receive())
@@ -339,7 +346,7 @@ class HydraWebSocketTest {
                 }
             }))
 
-        val socket = HydraWebSocket(
+        val socket = tracked(HydraWebSocket(
             host = server.hostName,
             port = server.port,
             reconnectDelayMs = 20, // a short pause: the test waits for the reconnect itself, never for the real seconds
@@ -348,7 +355,7 @@ class HydraWebSocketTest {
             onStatus = { events.statuses.trySend(it) },
             onSettings = {},
             onError = { events.errors.trySend(it) },
-        )
+        ))
         socket.connect()
         withTimeout(5_000) {
             // CONNECTING (subprotocol attempt), CONNECTING (fallback), CONNECTED
@@ -375,7 +382,7 @@ class HydraWebSocketTest {
                 }
             })
         )
-        val socket = HydraWebSocket(
+        val socket = tracked(HydraWebSocket(
             host = server.hostName,
             port = server.port,
             reconnectDelayMs = 20, // a short pause: the test waits for the reconnect itself, never for the real seconds
@@ -385,7 +392,7 @@ class HydraWebSocketTest {
             onSettings = {},
             onUnauthorized = { unauthorized.trySend(Unit) },
             onError = { events.errors.trySend(it) },
-        )
+        ))
         socket.connect()
         withTimeout(5_000) { unauthorized.receive() }
     }
@@ -410,7 +417,7 @@ class HydraWebSocketTest {
                 webSocket.close(1000, null)
             }
         }))
-        val socket = HydraWebSocket(
+        val socket = tracked(HydraWebSocket(
             host = server.hostName,
             port = server.port,
             reconnectDelayMs = 20, // a short pause: the test waits for the reconnect itself, never for the real seconds
@@ -420,7 +427,7 @@ class HydraWebSocketTest {
             onSettings = { settings.trySend(it) },
             onUnauthorized = { unauthorized.trySend(Unit) },
             onError = { events.errors.trySend(it) },
-        )
+        ))
         socket.connect()
         withTimeout(5_000) { settings.receive() }
         val first = server.takeRequest(5, java.util.concurrent.TimeUnit.SECONDS)!!
@@ -441,7 +448,7 @@ class HydraWebSocketTest {
                 }
             }))
         }
-        val socket = HydraWebSocket(
+        val socket = tracked(HydraWebSocket(
             host = server.hostName,
             port = server.port,
             reconnectDelayMs = 20, // a short pause: the test waits for the reconnect itself, never for the real seconds
@@ -451,7 +458,7 @@ class HydraWebSocketTest {
             onSettings = {},
             onUnauthorized = { unauthorized.trySend(Unit) },
             onError = {},
-        )
+        ))
         socket.connect()
         withTimeout(5_000) { unauthorized.receive() }
         assertEquals(2, server.requestCount)

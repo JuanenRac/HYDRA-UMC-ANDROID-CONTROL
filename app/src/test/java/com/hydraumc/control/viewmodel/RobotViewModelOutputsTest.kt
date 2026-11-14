@@ -5,6 +5,7 @@
 // =============================================================================
 package com.hydraumc.control.viewmodel
 
+import com.hydraumc.control.EmptyAuthStore
 import android.app.Application
 import androidx.test.core.app.ApplicationProvider
 import com.hydraumc.control.MainDispatcherSwap
@@ -63,7 +64,7 @@ class RobotViewModelOutputsTest {
               {"id":1,"name":"R1","online":true,"enabled":true,"valves":[false,false],"pumps":[false,false],"visionEnabled":true,"camera":{"connected":true}}
             ]}]}
         """.trimIndent()
-        val viewModel = RobotViewModel(ApplicationProvider.getApplicationContext<Application>())
+        val viewModel = RobotViewModel(ApplicationProvider.getApplicationContext<Application>(), EmptyAuthStore)
         if (withClient) viewModel.apiClient = HydraApiClient("127.0.0.1", server.port)
         viewModel.state = HydraState(JSONObject(json))
         if (selected) viewModel.selectedRobotId.value = 1
@@ -139,8 +140,10 @@ class RobotViewModelOutputsTest {
     fun `nothing goes out and nothing changes while Listen only is on`() {
         val viewModel = newViewModel()
 
-        // The state is set directly: setListenOnly() also saves the choice on another thread, and a saved "on" would leak into the tests that follow.
-        viewModel.listenOnly.value = true
+        // Not saved (setListenOnly() would save it on another thread, and a saved "on" would leak into the tests that follow), and held against the
+        // load of the stored choice that the view model starts when it is created: setting the state directly raced with that load, and a load that
+        // ended after the line below switched Listen only off again and let a command go out.
+        viewModel.holdListenOnlyWithoutSaving(true)
 
         viewModel.toggleValve(0)
         viewModel.togglePump(0)

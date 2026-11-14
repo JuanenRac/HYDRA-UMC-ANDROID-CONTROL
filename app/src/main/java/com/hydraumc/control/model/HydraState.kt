@@ -368,6 +368,25 @@ class HydraState(val raw: JSONObject) {
     /** Finds a robot by its ID across the entire system. */
     fun robotById(robotId: Int): RobotView? = allRobots.find { it.id == robotId }
 
+    /**
+     * The id of the camera whose picture belongs to a robot: the first camera of any controller that names the robot in
+     * `assignedRobotId`, and the robot id itself when no camera does (a server whose cameras carry no assignment numbers
+     * its cameras like its robots). The stream route of the server takes the camera id, not the robot id.
+     */
+    fun cameraIdForRobot(robotId: Int): Int {
+        var best: Int? = null
+        for (controller in controllers) {
+            val cameras = controller.raw.optJSONArray("cameras") ?: continue
+            for (i in 0 until cameras.length()) {
+                val camera = cameras.optJSONObject(i) ?: continue
+                val id = camera.optInt("id", Int.MIN_VALUE)
+                if (id == Int.MIN_VALUE || camera.optInt("assignedRobotId", Int.MIN_VALUE) != robotId) continue
+                if (best == null || id < best) best = id
+            }
+        }
+        return best ?: robotId
+    }
+
     /** 
      * Returns the raw JSONObject for serialization back to the server. 
      */
