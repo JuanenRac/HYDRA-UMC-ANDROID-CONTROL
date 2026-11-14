@@ -491,4 +491,16 @@
     <string name="work_blocked_role">Solo operatori e amministratori possono caricare un lavoro.</string>
     <string name="work_blocked_no_table">Questo lavoro usa una tavola XY che il robot non ha.</string>
     <string name="work_not_supported">Questo server non supporta il caricamento di un lavoro.</string>
+    <string name="canota_title">Flash CAN</string>
+    <string name="canota_phase_connecting">Connessione alla scheda</string>
+    <string name="canota_phase_entering_bootloader">Ingresso nel bootloader</string>
+    <string name="canota_phase_erasing_fram">Cancellazione della FRAM</string>
+    <string name="canota_phase_transferring">Invio dell\'immagine</string>
+    <string name="canota_phase_verifying">Verifica dell\'immagine</string>
+    <string name="canota_phase_rebooting">Riavvio della scheda</string>
+    <string name="canota_phase_done">Flash completato</string>
+    <string name="canota_phase_error">Flash non riuscito</string>
+    <string name="canota_pages">%1$d di %2$d pagine</string>
+    <string name="canota_error">Motivo: %1$s</string>
+    <string name="canota_percent">%1$d%%</string>
 </resources>

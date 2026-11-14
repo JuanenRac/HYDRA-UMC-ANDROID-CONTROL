@@ -35,6 +35,9 @@ interface SocketListener {
     /** The list of reservations of the robots. */
     fun onClaims(message: JSONObject) {}
 
+    /** The live progress of a flash cycle of a board (administrators only). */
+    fun onCanOtaProgress(message: JSONObject) {}
+
     /** The server closed the socket because the token is expired or invalid; not called while a server switch is under way. */
     fun onUnauthorized() {}
 
@@ -50,6 +53,7 @@ class SocketCallbacks(
     val onClaims: (JSONObject) -> Unit,
     val onUnauthorized: () -> Unit,
     val onError: (String) -> Unit,
+    val onCanOtaProgress: (JSONObject) -> Unit = {},
 )
 
 /**
@@ -82,6 +86,7 @@ class LiveSocket(
                 onClaims = { listener.onClaims(it) },
                 onUnauthorized = { if (!isSwitching()) listener.onUnauthorized() },
                 onError = { message -> if (!isSwitching()) listener.onError(message) },
+                onCanOtaProgress = { listener.onCanOtaProgress(it) },
             ),
         )
         current = handle
@@ -107,6 +112,7 @@ class LiveSocket(
                 onDelta = callbacks.onDelta,
                 onUnauthorized = callbacks.onUnauthorized,
                 onClaims = callbacks.onClaims,
+                onCanOtaProgress = callbacks.onCanOtaProgress,
                 onError = callbacks.onError,
             )
             return object : SocketHandle {

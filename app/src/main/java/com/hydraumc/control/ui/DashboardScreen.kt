@@ -78,6 +78,8 @@ fun DashboardScreen(viewModel: RobotViewModel) {
             )
         }
         
+        viewModel.canOtaProgress.value?.let { CanOtaProgressCard(it) }
+
         if (isConnected && (activeServer != null)) {
             Spacer(modifier = Modifier.height(8.dp))
             Box(
