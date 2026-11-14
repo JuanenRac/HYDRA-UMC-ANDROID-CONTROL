@@ -8,7 +8,7 @@ package com.hydraumc.control.util
 /**
  * How often the app may renew the session by itself. A renewal that is followed by another "session rejected" a moment later is not curing anything: at least
  * [minGapMs] must pass after one renewal before the next, and no more than [maxPerWindow] fit in [windowMs]. Past that the app goes back to the sign-in
- * instead of looping (every loop used to sign in again and ended by tripping the server's login rate limit).
+ * instead of looping (a loop would sign in again and again and end by tripping the server's login rate limit).
  */
 class RenewalBudget(
     private val minGapMs: Long = 20_000L,

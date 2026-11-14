@@ -232,9 +232,9 @@ class HydraWebSocketTest {
     }
 
     /**
-     * [webSocket] used to stay non-null (pointing at the now-dead
-     * socket) after a real close/failure - nothing nulled it out except a
-     * user-initiated disconnect() - so send()'s own echo-guard (a repeated
+     * [webSocket] is cleared after a real close/failure (not only by a
+     * user-initiated disconnect()); if it stayed non-null, pointing at the
+     * now-dead socket, send()'s own echo-guard (a repeated
      * payload matching lastPayloadJson) returned `true` before ever checking
      * whether anything was actually still connected. Real MockWebServer
      * close, never a mocked [WebSocket.send].

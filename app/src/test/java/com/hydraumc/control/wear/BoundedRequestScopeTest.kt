@@ -3,10 +3,8 @@
 // Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
 // GPL-3.0-or-later - see LICENSE
 //
-// Real regression coverage for WatchVoiceRelayService's own
-// coroutine scope used to have no per-requestId concurrency bound and was
-// never
-// cancelled on destroy. Plain kotlinx-coroutines-test, no Android/GMS
+// Coverage for WatchVoiceRelayService's own coroutine scope: it has a
+// per-requestId concurrency bound and is cancelled on destroy. Plain kotlinx-coroutines-test, no Android/GMS
 // dependency and no mocking library needed - this class has none.
 // =============================================================================
 @file:OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)

@@ -15,7 +15,7 @@ import org.robolectric.RobolectricTestRunner
 /**
  * Guards the state aliases shared by Android Control, Server and Studio.
  *
- * A1/A2 historically had a legacy camera.connected=true alongside the newer
+ * A1/A2 can carry a legacy camera.connected=true alongside the newer
  * visionEnabled=false. The command field is authoritative so a user can turn
  * the camera off reliably, while old servers still work through the fallback.
  */

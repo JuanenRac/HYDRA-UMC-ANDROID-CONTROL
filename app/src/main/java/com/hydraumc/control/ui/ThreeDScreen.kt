@@ -123,7 +123,7 @@ fun ThreeDScreen(viewModel: RobotViewModel) {
         }
     }
 
-    // Key used to force WebView recreation on refresh
+    // Key that forces WebView recreation on refresh
     var refreshKey by remember { mutableIntStateOf(0) }
 
     // We target the specific robot in the Studio UI via URL parameters.
@@ -316,7 +316,7 @@ fun ThreeDScreen(viewModel: RobotViewModel) {
                                 return true
                             }
                         }
-                        // No loadUrl() here anymore - see webViewSize/update
+                        // No loadUrl() here - see webViewSize/update
                         // below for why, and why that's not just a delay but
                         // a real fix for the blank-viewport bug.
                     }
@@ -342,8 +342,8 @@ fun ThreeDScreen(viewModel: RobotViewModel) {
                     }
                 },
                 // Without this, leaving this screen (or the key(refreshKey)
-                // block above discarding the old instance on a manual
-                // refresh) never called WebView.destroy() - the loaded page
+                // block above discarding the previous instance on a manual
+                // refresh) would never call WebView.destroy() - the loaded page
                 // is STUDIO's own Three.js viewport, which keeps a
                 // requestAnimationFrame loop running continuously, so an
                 // orphaned WebView kept driving that loop (CPU/GPU/battery)
@@ -430,8 +430,8 @@ fun ThreeDScreen(viewModel: RobotViewModel) {
         }
         // The full play/pause/stop console is not repeated here (the Control
         // screen has it), but every surface that can MOVE a robot carries an
-        // E-STOP: jogging in this viewport used to mean leaving it and finding
-        // the Control tab before the robot could be stopped.
+        // E-STOP: jogging in this viewport must not require leaving it to find
+        // the Control tab before the robot can be stopped.
         // The global STOP needs no selected robot: it is always there.
         Box(
             modifier = Modifier
@@ -531,8 +531,7 @@ private fun FullscreenJogOverlay(
     ) {
         JoystickZColumn(onJog = onJog, enabled = enabled)
     }
-    // The E-STOP/play/pause/stop console that used to sit bottom-center
-    // here was identical to, and redundant with, ControlScreen.kt's own
-    // Robot Control menu console - removed per live-testing feedback (see
-    // this file's other removal note above). This overlay is jog-only now.
+    // This overlay is jog-only: the E-STOP/play/pause/stop console is not
+    // repeated here because ControlScreen.kt's own Robot Control menu
+    // already carries it (see this file's other note above).
 }

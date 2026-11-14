@@ -10,11 +10,11 @@
 // /api/settings from anyone or a client sending the same envelope back over
 // this same socket.
 //
-// Replaces the old WebSocketManager, which only overrode onFailure() and
-// forwarded its message as if it were just another WS text frame - since
-// that JSON ({"error": "..."}) parses fine, the ViewModel's own try/catch
-// around JSONObject parsing never actually caught it, so a connection
-// failure left the UI stuck on "Conectando..." forever. This class instead
+// The WebSocket listener of the app. A connection failure must not be
+// forwarded as if it were just another WS text frame: that JSON
+// ({"error": "..."}) parses fine, so the ViewModel's own try/catch
+// around JSONObject parsing would never catch it and the UI would stay
+// stuck on "Conectando..." forever. This class instead
 // reports connection lifecycle (open/closing/closed/failure) through
 // dedicated callbacks - never as a fake WS message - and reconnects on an
 // unexpected drop with a fixed delay, mirroring HYDRA-UMC SUITE's own
@@ -337,7 +337,7 @@ class HydraWebSocket(
 
         val payload = json.optJSONObject("payload") ?: return
 
-        // Simple idempotency guard. Semantic check is no longer needed since
+        // Simple idempotency guard. No semantic check is needed because
         // the server doesn't broadcast the echo back to the sender.
         val payloadJson = payload.toString()
         if (payloadJson == lastPayloadJson) return
@@ -357,7 +357,7 @@ class HydraWebSocket(
     fun send(payload: JSONObject): Boolean {
         // Check real connectivity BEFORE the echo-guard, not after - and
         // check isSocketOpen, not just "webSocket is non-null" (the
-        // field used to stay non-null, pointing at a dead socket, for the
+        // field stays non-null, pointing at a dead socket, for the
         // entire reconnect window after a real close/failure). A payload
         // that happens to match the last one sent/received would otherwise
         // return "true" (nothing to do) regardless of whether the socket is

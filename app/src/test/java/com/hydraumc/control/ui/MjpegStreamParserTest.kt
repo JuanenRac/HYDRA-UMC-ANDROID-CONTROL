@@ -81,8 +81,7 @@ class MjpegStreamParserTest {
     @Test
     @Config(sdk = [34])
     fun `a genuinely undecodable frame never crashes readNextFrame`() {
-        // Real, observed behavior (both before and after this change,
-        // unrelated to the new hardware-decode branch): a byte sequence
+        // Observed behavior (unrelated to the hardware-decode branch): a byte sequence
         // with a valid SOI/EOI boundary but no valid JPEG in between makes
         // the decoder itself throw rather than return null, which
         // readNextFrame()'s own outer catch already treats the same as a

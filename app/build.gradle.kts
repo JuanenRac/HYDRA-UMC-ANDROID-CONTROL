@@ -59,16 +59,11 @@ val hasPrivateReleaseSigning = listOf(
 // separate, always-monotonic Android versionCode) - see bump_version_code.py's
 // own docstring.
 //
-// This used to write version.properties itself at Gradle CONFIGURATION
-// time on ANY real task (assembleDebug, installDebug, compileDebugKotlin,
-// ...) unless -PhydraUmcReadOnly=true/HYDRA_UMC_CI=1 was passed - a plain
-// dev build (e.g. a verification `compileDebugKotlin`) run without that
-// flag silently advanced the native version with no matching manifest/
-// CHANGELOG update. Found live: two verification compiles during this same
-// session bumped versionPatch/versionCode twice with the manifest never
-// moving - the exact version-mirror drift class this ecosystem's
-// convention exists to prevent, same bug already fixed in
-// HYDRA-UMC-WATCH's own build.gradle.kts.
+// A plain dev build (assembleDebug, installDebug, compileDebugKotlin, ...)
+// therefore never advances the native version without a matching
+// manifest/CHANGELOG update, which is the version-mirror drift this
+// ecosystem's convention exists to prevent. HYDRA-UMC-WATCH's own
+// build.gradle.kts follows the same rule.
 val versionPropsFile = file("version.properties")
 val versionPropsText = versionPropsFile.readText()
 

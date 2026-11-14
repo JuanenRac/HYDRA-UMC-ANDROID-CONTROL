@@ -66,7 +66,7 @@ fun MjpegPlayer(url: String, modifier: Modifier = Modifier, authToken: String? =
 
     LaunchedEffect(url, authToken) {
       // Reconnects for as long as the screen is shown: a stream that ends or
-      // fails used to leave the last frame frozen on screen with nothing
+      // fails is retried, not left as a frozen last frame with nothing
       // saying so. Back-off grows to 15 s while nothing arrives and resets
       // the moment a frame does.
       var failures = 0
@@ -107,12 +107,11 @@ fun MjpegPlayer(url: String, modifier: Modifier = Modifier, authToken: String? =
                                     bitmap = result.bitmap
                                 }
                                 // One undecodable frame (truncated read, a
-                                // corrupt JPEG) used to be indistinguishable
-                                // from the stream genuinely ending - both
-                                // returned null and `break`-ed the loop,
-                                // killing the whole camera feed over a single
-                                // bad frame. Now only a real end-of-stream
-                                // does that; a corrupt frame just gets
+                                // corrupt JPEG) is told apart from the stream
+                                // genuinely ending - treating both as the end
+                                // would kill the whole camera feed over a single
+                                // bad frame. Only a real end-of-stream
+                                // ends the loop; a corrupt frame just gets
                                 // skipped and the next one is attempted.
                                 MjpegFrameResult.CorruptFrame -> { /* skip, keep reading */ }
                                 MjpegFrameResult.StreamEnded -> return@use
