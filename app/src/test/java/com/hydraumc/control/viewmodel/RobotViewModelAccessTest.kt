@@ -105,6 +105,28 @@ class RobotViewModelAccessTest {
         return viewModel
     }
 
+    /**
+     * A view model whose first read of the reservations and limits has been applied, so that a test which sets
+     * `claims` by hand is not overwritten by that late answer: the view model stops asking the server once the
+     * read is done, so the test waits until no new request has arrived for a short while.
+     */
+    private fun settledViewModel(): RobotViewModel {
+        val viewModel = newViewModel()
+        val limit = System.currentTimeMillis() + 5_000
+        var last = -1
+        var quietSince = System.currentTimeMillis()
+        while (System.currentTimeMillis() < limit) {
+            Thread.sleep(25)
+            if (seen.size != last) {
+                last = seen.size
+                quietSince = System.currentTimeMillis()
+            } else if (System.currentTimeMillis() - quietSince >= 400) {
+                break
+            }
+        }
+        return viewModel
+    }
+
     private fun safety(maxAmount: Double = 20.0, armRequired: Boolean = false) =
         RobotSafety(robotId = 1, jog = JogLimits(maxAmount, 500.0), bedMaxC = 90.0, armRequired = armRequired, armTtlMs = 60_000L, jogArmedUntil = null)
 
@@ -223,7 +245,7 @@ class RobotViewModelAccessTest {
 
     @Test
     fun `the list of reservations tells where the robot stands`() {
-        val viewModel = newViewModel()
+        val viewModel = settledViewModel()
         viewModel.loginUsername.value = "ana"
         assertEquals(ClaimStanding.FREE, viewModel.claimStandingOf(1))
 
@@ -242,7 +264,7 @@ class RobotViewModelAccessTest {
 
     @Test
     fun `an administrator can take over a robot someone else holds, and the request carries force`() {
-        val viewModel = newViewModel()
+        val viewModel = settledViewModel()
         viewModel.authTokenState.value = tokenWithRole("admin")
         viewModel.loginUsername.value = "ana"
         viewModel.claims.value = listOf(com.hydraumc.control.network.ClaimInfo(1, "A1", "bob", "x", 1))
@@ -260,7 +282,7 @@ class RobotViewModelAccessTest {
 
     @Test
     fun `an operator never gets the take-over and nothing is sent if it is asked for anyway`() {
-        val viewModel = newViewModel()
+        val viewModel = settledViewModel()
         viewModel.authTokenState.value = tokenWithRole("operator")
         viewModel.loginUsername.value = "ana"
         viewModel.claims.value = listOf(com.hydraumc.control.network.ClaimInfo(1, "A1", "bob", "x", 1))
@@ -275,7 +297,7 @@ class RobotViewModelAccessTest {
 
     @Test
     fun `an administrator has no take-over on a free robot or on one reserved here`() {
-        val viewModel = newViewModel()
+        val viewModel = settledViewModel()
         viewModel.authTokenState.value = tokenWithRole("admin")
         viewModel.loginUsername.value = "ana"
         assertFalse(viewModel.canTakeOver(1))
