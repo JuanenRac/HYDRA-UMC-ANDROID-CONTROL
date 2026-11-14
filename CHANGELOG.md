@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- **The test of Listen only no longer races with the load of the stored choice:** `RobotViewModelOutputsTest` ("nothing goes out and nothing changes while Listen only is on") set the switch directly, and the load of the stored choice that the view model starts when it is created could end after that and switch it off again, so a command went out and the test failed now and then (on main too). The test now holds the switch through a function made for it that does not save the choice and marks it as touched, which is what makes that load leave it alone. No change of behaviour of the app.
 - **The dashboard shows the live progress of a CAN flash cycle:** the server pushes `canota_progress` (phase, pages sent and total, percent, reason of a failure) to every connected administrator while a board is flashed, and the app ignored it. A card on the dashboard now shows the phase, a bar with the percent, the pages while the image is sent and the reason when the cycle fails; it clears when the socket closes. It is read-only: the app starts no flash. A message with a phase the app does not know leaves what is shown as it was, and a missing or wrong number is shown as missing, never as zero. The texts are in the eight languages. Tests: the reading of the message and the delivery through the WebSocket.
 - **The vendored server answers and the stand-in server are the ones of the current SDK:** the copies the tests replay now equal the files the SDK generates from the server inventory, including the routes of the program updates.
 
