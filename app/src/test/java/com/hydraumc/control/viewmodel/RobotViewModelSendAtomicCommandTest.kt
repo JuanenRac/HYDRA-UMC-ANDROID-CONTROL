@@ -237,7 +237,13 @@ class RobotViewModelSendAtomicCommandTest {
         // response comes back - if a cancel request itself fails, the real
         // robot never actually stopped, so the UI must not keep showing it
         // as idle.
-        waitUntil { viewModel.lastError.value != null }
+        // The error is published before the rollback is applied, so wait for both
+        // robots to be playing again instead of asserting right after the error.
+        waitUntil {
+            viewModel.lastError.value != null &&
+                viewModel.state.robotById(1)?.isPlaying == true &&
+                viewModel.state.robotById(2)?.isPlaying == true
+        }
 
         assertTrue("robot 1 must be rolled back to still-playing - the cancel never actually reached the robot", viewModel.state.robotById(1)!!.isPlaying)
         assertTrue("the combinedWith sibling must be rolled back too", viewModel.state.robotById(2)!!.isPlaying)
