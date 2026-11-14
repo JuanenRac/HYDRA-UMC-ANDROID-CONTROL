@@ -20,7 +20,9 @@
     {"type": "system_status", "headline": "Server unreachable", "detail": "Retrying", "level": "WARNING", "speak": false, "errorCode": "connection_unavailable"},
     {"type": "system_status", "headline": "All good", "detail": "", "level": "NOMINAL", "speak": false},
     {"type": "server_security_status", "protocolVersion": 1, "loweredSwitches": ["health.open", "camera.open"], "lockedSwitches": 2, "activeClients": 3, "failedLogins": 1},
-    {"type": "server_security_status", "protocolVersion": 1, "loweredSwitches": [], "lockedSwitches": 0, "activeClients": 0, "failedLogins": 0}
+    {"type": "server_security_status", "protocolVersion": 1, "loweredSwitches": [], "lockedSwitches": 0, "activeClients": 0, "failedLogins": 0},
+    {"type": "canota_progress_status", "protocolVersion": 1, "phase": "transferring", "percent": 40},
+    {"type": "canota_progress_status", "protocolVersion": 1, "phase": "done"}
   ],
   "invalid": [
     {"why": "request id with a space", "type": "voice_turn", "requestId": "a b", "transcript": "hello", "locale": "en"},
@@ -38,6 +40,11 @@
     {"why": "security status with a repeated switch", "type": "server_security_status", "protocolVersion": 1, "loweredSwitches": ["health.open", "health.open"], "lockedSwitches": 0, "activeClients": 0, "failedLogins": 0},
     {"why": "security status with more than 16 switches", "type": "server_security_status", "protocolVersion": 1, "loweredSwitches": ["s.a", "s.b", "s.c", "s.d", "s.e", "s.f", "s.g", "s.h", "s.i", "s.j", "s.k", "s.l", "s.m", "s.n", "s.o", "s.p", "s.q"], "lockedSwitches": 0, "activeClients": 0, "failedLogins": 0},
     {"why": "security status with a negative count", "type": "server_security_status", "protocolVersion": 1, "loweredSwitches": [], "lockedSwitches": 0, "activeClients": -1, "failedLogins": 0},
-    {"why": "security status with a count over 100000", "type": "server_security_status", "protocolVersion": 1, "loweredSwitches": [], "lockedSwitches": 0, "activeClients": 0, "failedLogins": 100001}
+    {"why": "security status with a count over 100000", "type": "server_security_status", "protocolVersion": 1, "loweredSwitches": [], "lockedSwitches": 0, "activeClients": 0, "failedLogins": 100001},
+    {"why": "canota progress of another protocol version", "type": "canota_progress_status", "protocolVersion": 2, "phase": "done"},
+    {"why": "canota progress with an unknown phase", "type": "canota_progress_status", "protocolVersion": 1, "phase": "dancing"},
+    {"why": "canota progress without a phase", "type": "canota_progress_status", "protocolVersion": 1, "percent": 10},
+    {"why": "canota progress with a percent over 100", "type": "canota_progress_status", "protocolVersion": 1, "phase": "verifying", "percent": 101},
+    {"why": "canota progress with a negative percent", "type": "canota_progress_status", "protocolVersion": 1, "phase": "verifying", "percent": -1}
   ]
 }
