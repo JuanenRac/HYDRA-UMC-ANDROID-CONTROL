@@ -87,6 +87,31 @@ class RelayContractTest {
     }
 
     @Test
+    fun `valid flash progress messages are written back as the file writes them`() {
+        val valid = vectors("valid").filter { it.getString("type") == "canota_progress_status" }
+        assertEquals(true, valid.size >= 2)
+        for (vector in valid) {
+            val written = WatchCanOtaProgress.fromJson(vector).toJson()
+            assertEquals(vector.keys().asSequence().toSet(), written.keys().asSequence().toSet())
+            for (key in vector.keys()) assertEquals(key, vector.get(key).toString(), written.get(key).toString())
+        }
+    }
+
+    @Test
+    fun `invalid flash progress messages are refused`() {
+        val invalid = vectors("invalid").filter { it.getString("type") == "canota_progress_status" }
+        assertEquals(true, invalid.size >= 5)
+        for (vector in invalid) {
+            try {
+                WatchCanOtaProgress.fromJson(expanded(vector))
+                fail("accepted an invalid flash progress (${vector.getString("why")})")
+            } catch (_: Exception) {
+                // refused (a missing field is refused too), as the contract says
+            }
+        }
+    }
+
+    @Test
     fun `valid replies and statuses are written with the same fields and values`() {
         for (vector in vectors("valid")) {
             val written = when (vector.getString("type")) {

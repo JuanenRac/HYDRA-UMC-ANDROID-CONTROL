@@ -19,7 +19,7 @@ GPL-3.0-or-later - see LICENSE
   <img src="https://img.shields.io/badge/Language-Kotlin-7F52FF.svg" alt="Language">
   <img src="https://img.shields.io/badge/UI-Jetpack%20Compose-4285F4.svg" alt="UI">
   <img src="https://img.shields.io/badge/Platform-Android-3DDC84.svg" alt="Platform">
-  <img src="https://img.shields.io/badge/Tests-671%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-696%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.8.0.4-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-functional-0F6CBD.svg" alt="Maturity">
 </p>
@@ -28,7 +28,7 @@ GPL-3.0-or-later - see LICENSE
 
 Un'app Android nativa (Kotlin + Jetpack Compose) che controlla un robot sulla piattaforma [HYDRA-UMC](https://github.com/JuanenRac/HYDRA-UMC) via Wi-Fi o Bluetooth, parlando esattamente lo stesso contratto [`REMOTE_API.md`](https://github.com/JuanenRac/HYDRA-UMC-SERVER/blob/main/docs/REMOTE_API.md) usato da [HYDRA-UMC SUITE](https://github.com/JuanenRac/HYDRA-UMC-SUITE) - discovery, lettura/scrittura dello stato completo, e sincronizzazione live via WebSocket con un backend [HYDRA-UMC-SERVER](https://github.com/JuanenRac/HYDRA-UMC-SERVER) in esecuzione (lo stesso con cui parla la dashboard web di [HYDRA-UMC STUDIO](https://github.com/JuanenRac/HYDRA-UMC-STUDIO)). Controparte Android diretta di [HYDRA-UMC-IOS-CONTROL](https://github.com/JuanenRac/HYDRA-UMC-IOS-CONTROL). Vedi [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) per il design completo.
 
-> **Verifica di onestà - cosa funziona davvero oggi:** la logica di business principale - la cinematica Parol6 (`kinematics/Parol6Kinematics.kt`), il contratto di stato dell'albero di settings (`model/HydraState.kt`), l'invio di comandi atomici e il relay vocale (`viewmodel/RobotViewModel.kt`), la riconnessione WebSocket (`network/HydraWebSocket.kt`), il parsing dei frame MJPEG (`ui/MjpegPlayer.kt`), il canale di aggiornamento interno (`update/GitHubReleaseUpdater.kt`, `ReleaseMetadataParser.kt`, `SemanticVersion.kt`), e la gestione delle richieste del relay vocale Wear (`wear/BoundedRequestScope.kt`, `WatchCompanionProtocol.kt`) sono reali e coperti da 671 test unitari JVM/Robolectric che passano (`./gradlew testDebugUnitTest`). Ciò che questi test strutturalmente non possono raggiungere - e ciò che questo ambiente di sviluppo solo-Windows non ha un dispositivo Android fisico per verificare - è il vero `EncryptedSharedPreferences` basato su Keystore di `network/AuthPrefs.kt`, il prompt impronta/volto di `androidx.biometric`, il trasporto Bluetooth GATT di `network/HydraBleClient.kt`, e il percorso `ImageDecoder` hardware in API 28+ dentro `MjpegStreamParser`: codice reale e compilato che non è stato riverificato su hardware da quando è stato scritto. L'avvio/login di base *è stato* confermato dal vivo su un dispositivo reale per release precedenti (vedi le voci `v0.3.2`/`v0.3.3` di `CHANGELOG.md`), ma questo precede Bluetooth, biometria e il percorso di decodifica hardware. Vedi `CHANGELOG.md` per cosa è stato esattamente consegnato, incluse le sue stesse note per voce su cosa resta non verificato su hardware.
+> **Verifica di onestà - cosa funziona davvero oggi:** la logica di business principale - la cinematica Parol6 (`kinematics/Parol6Kinematics.kt`), il contratto di stato dell'albero di settings (`model/HydraState.kt`), l'invio di comandi atomici e il relay vocale (`viewmodel/RobotViewModel.kt`), la riconnessione WebSocket (`network/HydraWebSocket.kt`), il parsing dei frame MJPEG (`ui/MjpegPlayer.kt`), il canale di aggiornamento interno (`update/GitHubReleaseUpdater.kt`, `ReleaseMetadataParser.kt`, `SemanticVersion.kt`), e la gestione delle richieste del relay vocale Wear (`wear/BoundedRequestScope.kt`, `WatchCompanionProtocol.kt`) sono reali e coperti da 696 test unitari JVM/Robolectric che passano (`./gradlew testDebugUnitTest`). Ciò che questi test strutturalmente non possono raggiungere - e ciò che questo ambiente di sviluppo solo-Windows non ha un dispositivo Android fisico per verificare - è il vero `EncryptedSharedPreferences` basato su Keystore di `network/AuthPrefs.kt`, il prompt impronta/volto di `androidx.biometric`, il trasporto Bluetooth GATT di `network/HydraBleClient.kt`, e il percorso `ImageDecoder` hardware in API 28+ dentro `MjpegStreamParser`: codice reale e compilato che non è stato riverificato su hardware da quando è stato scritto. L'avvio/login di base *è stato* confermato dal vivo su un dispositivo reale per release precedenti (vedi le voci `v0.3.2`/`v0.3.3` di `CHANGELOG.md`), ma questo precede Bluetooth, biometria e il percorso di decodifica hardware. Vedi `CHANGELOG.md` per cosa è stato esattamente consegnato, incluse le sue stesse note per voce su cosa resta non verificato su hardware.
 
 > **Stato di sicurezza (safety e security):** questo ecosistema non è un sistema di sicurezza certificato. Non esiste ancora un percorso E-STOP hardware, né limiti o interblocchi imposti dal firmware, né un comando di movimento verificato; le immagini firmware sono controllate con CRC-32 e una firma Ed25519, e una compilazione di rilascio rifiuta le chiavi di sviluppo pubblicate (le teste utensile e le schede di espansione dietro il relè usano ancora i bootloader di URTC, che accettano un HMAC-SHA256 a chiave condivisa invece di una firma); TLS e TLS reciproco sono opzionali e disattivati per impostazione predefinita; nessuna scheda propria è stata ancora assemblata o provata. Leggi la [base di sicurezza](https://github.com/JuanenRac/HYDRA-UMC-DOCS/blob/main/docs/SECURITY_BASELINE.md) e il [modello delle minacce](https://github.com/JuanenRac/HYDRA-UMC-DOCS/blob/main/docs/THREAT_MODEL.md) prima di fidarti di qualsiasi affermazione qui per la sicurezza di una persona.
 
@@ -40,7 +40,7 @@ Un'app Android nativa (Kotlin + Jetpack Compose) che controlla un robot sulla pi
 |---|---|
 | Versione | `0.8.0.4` |
 | Maturità | Funzionale |
-| Test | 671 (`./gradlew testDebugUnitTest`) |
+| Test | 696 (`./gradlew testDebugUnitTest`) |
 | Tecnologia | Kotlin / Jetpack / biometric auth / WebSocket client |
 | Destinazione | Uno smartphone o tablet Android |
 | Su hardware reale | Non ancora: per questa versione non risulta alcuna esecuzione su hardware reale |
@@ -56,7 +56,7 @@ Ogni riga è una parte di questo repository e il semaforo dice a che punto è og
 | Area | Stato | Cosa significa qui |
 |---|---|---|
 | Software | 🟡 | Funziona per il suo scopo principale; la verifica di onestà qui sopra elenca ciò che manca ancora |
-| Test | 🟢 | 671 test automatici, eseguiti a ogni modifica |
+| Test | 🟢 | 696 test automatici, eseguiti a ogni modifica |
 | Hardware reale | 🔴 | Non ancora: per questa versione non risulta alcuna esecuzione su hardware reale |
 | Interfaccia e protocolli | 🟡 | Le rotte o i messaggi offerti sono documentati e provati con un client; non tutti i client li hanno ancora usati |
 | Integrazione | 🟠 | I suoi messaggi e le sue rotte sono verificati rispetto ai contratti condivisi dell'SDK; non ha ancora funzionato insieme all'apparecchiatura reale |
@@ -173,7 +173,7 @@ Richiede JDK 21 e l'SDK Android (Android Studio li include entrambi), e un telef
 
 ## 🧪 Test
 
-671 test automatici si eseguono con `./gradlew testDebugUnitTest`. Non richiedono hardware né nulla al di fuori di questa macchina.
+696 test automatici si eseguono con `./gradlew testDebugUnitTest`. Non richiedono hardware né nulla al di fuori di questa macchina.
 
 La CI esegue `HYDRA_UMC_CI=1 python tools/ci_validate.py`, che controlla il manifesto, i documenti, gli otto README e le immagini.
 
