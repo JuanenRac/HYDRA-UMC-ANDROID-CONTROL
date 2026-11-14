@@ -120,6 +120,9 @@
     <string name="biometric_prompt_subtitle">制御にアクセスするには本人確認が必要です</string>
     <string name="biometric_setting_label">生体認証ログインを有効化</string>
     <string name="biometric_hint">生体認証が利用可能です。ユーザープロフィールで有効化してください。</string>
+    <string name="biometric_strong_label">強力な生体認証(Keystore)</string>
+    <string name="biometric_strong_warning">保存したパスワードを端末の安全な鍵で保護します。指紋または強力な顔認証でのみ解除され、フォームには入力されなくなります。弱い生体認証(顔ロック解除)しかない端末では、この方法でサインインできなくなります。初期設定はオフです。</string>
+    <string name="biometric_strong_unavailable">強力な生体認証は利用できません。パスワードでサインインしてください。</string>
     <string name="robot_control_title">ロボット制御センター</string>
     <string name="industrial_io_hub">産業用 I/O ハブ</string>
     <string name="real_time_telemetry">リアルタイムテレメトリ</string>

@@ -120,6 +120,9 @@
     <string name="biometric_prompt_subtitle">Verifica tu identidad para acceder al control</string>
     <string name="biometric_setting_label">Activar Login Biométrico</string>
     <string name="biometric_hint">Biometría disponible. Actívala en el Perfil de Usuario.</string>
+    <string name="biometric_strong_label">Biometría fuerte (Keystore)</string>
+    <string name="biometric_strong_warning">Bloquea la contraseña guardada en la clave segura del teléfono: solo la libera una huella o un escaneo facial fuerte y ya no se rellena en el formulario. Los teléfonos que solo tienen biometría débil (desbloqueo facial) ya no pueden entrar así. Desactivado por defecto.</string>
+    <string name="biometric_strong_unavailable">La biometría fuerte no está disponible: entra con la contraseña.</string>
     <string name="robot_control_title">CENTRO DE CONTROL ROBÓTICO</string>
     <string name="industrial_io_hub">HUB DE E/S INDUSTRIAL</string>
     <string name="real_time_telemetry">TELEMETRÍA EN TIEMPO REAL</string>

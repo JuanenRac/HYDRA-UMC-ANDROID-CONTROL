@@ -14,6 +14,15 @@ interface LoginEndpoint : SessionEndpoint {
     suspend fun logout(token: String)
 }
 
+/** Locks a password so that only a strong biometric opens it again (the Keystore in the app, a fake in the tests). */
+interface PasswordSealer {
+    /** The sealed password, or null when it cannot be sealed: the caller then keeps nothing. */
+    fun seal(plain: String): String?
+
+    /** Drops the key behind the sealed passwords. */
+    fun forget()
+}
+
 /** What the sign-in form holds, checked before anything goes to the server. */
 sealed class LoginCheck {
     data class Valid(val host: String, val port: Int, val user: String, val password: String) : LoginCheck()
@@ -40,7 +49,20 @@ sealed class SignInResult {
  * The sign-in, the stored profile and the sign-out, away from the view model. The stored login is reached only through
  * [AuthStore], so all of it is tested on the JVM with a fake store (the encrypted store needs a real keystore).
  */
-class AuthManager(private val store: AuthStore) {
+class AuthManager(private val store: AuthStore, private val sealer: PasswordSealer? = null) {
+
+    /**
+     * What is stored of the password: the plain text (only for "remember me" or the weak fingerprint sign-in) and the
+     * sealed one. In the strong mode the plain text is never stored; a sealer that cannot seal stores nothing.
+     */
+    private fun passwordFields(password: String, remember: Boolean, biometric: Boolean, strong: Boolean, keepSealed: String): Pair<String, String> {
+        if (biometric && strong) {
+            if (password.isBlank()) return "" to keepSealed
+            return "" to (sealer?.seal(password) ?: "")
+        }
+        sealer?.forget()
+        return (if (remember || biometric) password else "") to ""
+    }
 
     /** The same validation for the form and for a reconnect: nothing empty, and a port that is a number. */
     fun check(host: String, port: String, user: String, password: String): LoginCheck {
@@ -63,6 +85,7 @@ class AuthManager(private val store: AuthStore) {
         remember: Boolean,
         email: String,
         biometric: Boolean,
+        strong: Boolean = false,
     ): SignInResult {
         return try {
             val response = client.login(user, password)
@@ -71,16 +94,19 @@ class AuthManager(private val store: AuthStore) {
             val refresh = response.optStr("refreshToken").ifEmpty { null }
             client.authToken = token
             client.refreshToken = refresh
+            val (plain, sealed) = passwordFields(password, remember, biometric, strong, "")
             store.saveAuth(
                 UserProfile(
                     username = user,
-                    password = if (remember || biometric) password else "",
+                    password = plain,
                     email = email,
                     rememberMe = remember,
                     isLoggedIn = true,
                     isBiometricEnabled = biometric,
                     token = token,
                     refreshToken = refresh ?: "",
+                    isStrongBiometric = biometric && strong,
+                    sealedPassword = sealed,
                 ),
             )
             SignInResult.Success(token, refresh)
@@ -102,17 +128,22 @@ class AuthManager(private val store: AuthStore) {
         biometric: Boolean,
         remember: Boolean,
         loggedIn: Boolean,
-    ) {
-        store.saveAuth(
-            store.loadAuth().copy(
-                username = user,
-                password = if (remember || biometric) password else "",
-                email = email,
-                rememberMe = remember,
-                isLoggedIn = loggedIn,
-                isBiometricEnabled = biometric,
-            ),
+        strong: Boolean = false,
+    ): UserProfile {
+        val stored = store.loadAuth()
+        val (plain, sealed) = passwordFields(password, remember, biometric, strong, stored.sealedPassword)
+        val saved = stored.copy(
+            username = user,
+            password = plain,
+            email = email,
+            rememberMe = remember,
+            isLoggedIn = loggedIn,
+            isBiometricEnabled = biometric,
+            isStrongBiometric = biometric && strong,
+            sealedPassword = sealed,
         )
+        store.saveAuth(saved)
+        return saved
     }
 
     /**
