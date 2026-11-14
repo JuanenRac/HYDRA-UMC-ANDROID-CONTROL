@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **The vendored server answers and the stand-in server are the ones of the current SDK:** the copies the tests replay now equal the files the SDK generates from the server inventory, including the routes of the program updates.
+
 - **The WebSocket tests close the sockets they open:** a socket left open kept a reconnect job on the IO scope and posted late callbacks to the main scope after the test had put the real main dispatcher back, and the failure of those coroutines was reported as an uncaught exception to whatever test used `runTest` next (`RobotCommandRepositoryTest` failed now and then with "uncaught exceptions before the test started", on main too). Every test of `HydraWebSocketTest` and `HydraWebSocketClaimsTest` now disconnects its sockets right after the server is shut down and before the real main dispatcher comes back. Tests only.
 - **The test of the camera of a robot runs with the same runner as the other tests of the app:** `CameraIdForRobotTest` used `org.json` in a plain JVM test, where it is a stub that throws "Method put in org.json.JSONObject not mocked", and made the unit tests of main fail. It now runs under Robolectric like its neighbours. Tests only.
 - **The camera picture is asked for by the camera of the robot:** the stream address used the id of the robot as the id of the camera; the screen now takes the camera whose `assignedRobotId` names the robot (the lowest one if two do) and keeps the robot id when no camera names it, so a server whose cameras are not numbered like its robots shows the right picture. `HydraState.cameraIdForRobot`, 6 tests (`CameraIdForRobotTest`). Not run with a real server and cameras.
