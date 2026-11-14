@@ -1552,6 +1552,17 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
         viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) { prefs.saveListenOnly(on) }
     }
 
+    /**
+     * Switches Listen only without saving the choice, and holds it against the load of the stored choice that the view model starts when it is
+     * created (that load changes the switch unless it has been touched). For the tests: setting [listenOnly] directly raced with that load.
+     */
+    @androidx.annotation.VisibleForTesting
+    internal fun holdListenOnlyWithoutSaving(on: Boolean) {
+        listenOnlyTouched = true
+        listenOnlyGeneral = on
+        refreshListenOnly()
+    }
+
     /** Switches Listen only for the server in use alone and keeps the choice (nothing happens while no server is in use). */
     fun setListenOnlyThisServer(on: Boolean) {
         val key = activeServerKey() ?: return
