@@ -357,6 +357,7 @@
     <string name="safe_mode_enable_message">%1$s accetterà di nuovo i comandi. Assicurati che l\'area intorno sia libera.</string>
     <string name="safe_mode_enable_button">ATTIVA</string>
     <string name="error_robot_disabled">Il robot è in modalità sicura (disattivato): il comando %1$s non è stato applicato. Funziona solo STOP finché un amministratore non lo attiva.</string>
+    <string name="error_server_read_only">Il server è in sola lettura: il comando %1$s non è stato inviato. Passano solo STOP e la disattivazione della modalità sicura. Un amministratore può disattivarla.</string>
 
     <!-- Access options of the server (administrators only) -->
     <string name="server_options_title">Opzioni di accesso del server</string>
@@ -493,4 +494,16 @@
     <string name="work_blocked_role">Solo operatori e amministratori possono caricare un lavoro.</string>
     <string name="work_blocked_no_table">Questo lavoro usa una tavola XY che il robot non ha.</string>
     <string name="work_not_supported">Questo server non supporta il caricamento di un lavoro.</string>
+    <string name="canota_title">Flash CAN</string>
+    <string name="canota_phase_connecting">Connessione alla scheda</string>
+    <string name="canota_phase_entering_bootloader">Ingresso nel bootloader</string>
+    <string name="canota_phase_erasing_fram">Cancellazione della FRAM</string>
+    <string name="canota_phase_transferring">Invio dell\'immagine</string>
+    <string name="canota_phase_verifying">Verifica dell\'immagine</string>
+    <string name="canota_phase_rebooting">Riavvio della scheda</string>
+    <string name="canota_phase_done">Flash completato</string>
+    <string name="canota_phase_error">Flash non riuscito</string>
+    <string name="canota_pages">%1$d di %2$d pagine</string>
+    <string name="canota_error">Motivo: %1$s</string>
+    <string name="canota_percent">%1$d%%</string>
 </resources>

@@ -357,6 +357,7 @@
     <string name="safe_mode_enable_message">%1$s will accept commands again. Make sure the area around it is clear.</string>
     <string name="safe_mode_enable_button">ENABLE</string>
     <string name="error_robot_disabled">The robot is in safe mode (disabled): the %1$s command was not applied. Only STOP works until an administrator enables it.</string>
+    <string name="error_server_read_only">The server is in read-only mode: the %1$s command was not sent. Only STOP and the safe-mode disable go through. An administrator can switch it off.</string>
 
     <!-- Access options of the server (administrators only) -->
     <string name="server_options_title">Server access options</string>
@@ -493,4 +494,16 @@
     <string name="work_blocked_role">Only operators and administrators can load a Work.</string>
     <string name="work_blocked_no_table">This Work uses an XY table and the robot has none.</string>
     <string name="work_not_supported">This server does not support loading a Work.</string>
+    <string name="canota_title">CAN flash</string>
+    <string name="canota_phase_connecting">Connecting to the board</string>
+    <string name="canota_phase_entering_bootloader">Entering the bootloader</string>
+    <string name="canota_phase_erasing_fram">Erasing the FRAM</string>
+    <string name="canota_phase_transferring">Sending the image</string>
+    <string name="canota_phase_verifying">Verifying the image</string>
+    <string name="canota_phase_rebooting">Restarting the board</string>
+    <string name="canota_phase_done">Flash finished</string>
+    <string name="canota_phase_error">Flash failed</string>
+    <string name="canota_pages">%1$d of %2$d pages</string>
+    <string name="canota_error">Reason: %1$s</string>
+    <string name="canota_percent">%1$d%%</string>
 </resources>

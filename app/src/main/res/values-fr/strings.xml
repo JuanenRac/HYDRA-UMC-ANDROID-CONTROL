@@ -357,6 +357,7 @@
     <string name="safe_mode_enable_message">%1$s acceptera de nouveau les commandes. Vérifiez que la zone autour de lui est dégagée.</string>
     <string name="safe_mode_enable_button">ACTIVER</string>
     <string name="error_robot_disabled">Le robot est en mode sûr (désactivé) : la commande %1$s n\'a pas été appliquée. Seul STOP fonctionne jusqu\'à ce qu\'un administrateur l\'active.</string>
+    <string name="error_server_read_only">Le serveur est en lecture seule : la commande %1$s n’a pas été envoyée. Seuls STOP et la désactivation du mode sûr passent. Un administrateur peut le désactiver.</string>
 
     <!-- Access options of the server (administrators only) -->
     <string name="server_options_title">Options d\'accès du serveur</string>
@@ -493,4 +494,16 @@
     <string name="work_blocked_role">Seuls les opérateurs et les administrateurs peuvent charger un travail.</string>
     <string name="work_blocked_no_table">Ce travail utilise une table XY que le robot n\'a pas.</string>
     <string name="work_not_supported">Ce serveur ne prend pas en charge le chargement d\'un travail.</string>
+    <string name="canota_title">Flash CAN</string>
+    <string name="canota_phase_connecting">Connexion à la carte</string>
+    <string name="canota_phase_entering_bootloader">Entrée dans le bootloader</string>
+    <string name="canota_phase_erasing_fram">Effacement de la FRAM</string>
+    <string name="canota_phase_transferring">Envoi de l\'image</string>
+    <string name="canota_phase_verifying">Vérification de l\'image</string>
+    <string name="canota_phase_rebooting">Redémarrage de la carte</string>
+    <string name="canota_phase_done">Flash terminé</string>
+    <string name="canota_phase_error">Échec du flash</string>
+    <string name="canota_pages">%1$d sur %2$d pages</string>
+    <string name="canota_error">Motif : %1$s</string>
+    <string name="canota_percent">%1$d %%</string>
 </resources>

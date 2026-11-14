@@ -1,26 +1,39 @@
 # =============================================================================
-# HYDRA-UMC-ANDROID-CONTROL - Instrumented tests on Android emulators (manual)
+# HYDRA-UMC-ANDROID-CONTROL - Instrumented tests on Android emulators
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
 # GPL-3.0-or-later - see LICENSE
 # =============================================================================
-# Started by hand only (workflow_dispatch): it never runs on a push or a pull request, so it cannot turn the checks of a push red.
+# Runs once a week, by hand, and on a pull request to main that changes the app, its build files or this check (never on a push, so a push to main
+# cannot turn red because of an emulator). A newer run of the same pull request cancels the older one.
 # The emulator is started by reactivecircus/android-emulator-runner, pinned by commit hash (it is on the allowed actions of the repository).
 #
 # Runs the tests of app/src/androidTest (`connectedDebugAndroidTest`) on emulators of Android 8, 11 and 14, one job each: what the package manager keeps of the
 # manifest on each version and what the biometric helper says on a device with nothing enrolled. Nothing is signed (HYDRA_UMC_CI=1), no version changes and no
 # phone, robot or server is involved.
 
-name: Android instrumented tests (manual)
+name: Android instrumented tests
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: "47 4 * * 1"
+  pull_request:
+    branches: [main]
+    paths:
+      - "app/**"
+      - "build.gradle*"
+      - "settings.gradle*"
+      - "gradle/**"
+      - "gradle.properties"
+      - "tools/emulator_smoke.sh"
+      - ".github/workflows/android-instrumented.yml"
 
 permissions:
   contents: read
 
 concurrency:
-  group: android-instrumented
-  cancel-in-progress: false
+  group: android-instrumented-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   instrumented:
@@ -41,6 +54,7 @@ jobs:
         with:
           distribution: temurin
           java-version: "21"
+          cache: gradle
       - name: Let the runner use hardware acceleration for the emulator
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules

@@ -93,8 +93,11 @@ class HydraApiException(
     /** 400 `home-pose-mismatch` or 422 `home-out-of-limits`: the server refused to send the robot home (the pose is not the home pose of its model, or a joint would leave its range); the robot did not move. */
     val isHomeRejected: Boolean get() = (httpCode == 400 && serverCode == "home-pose-mismatch") || (httpCode == 422 && serverCode == "home-out-of-limits")
 
+    /** 423 `server-read-only`: the whole server is in read-only mode and changes nothing except STOP and the safe-mode disable. */
+    val isServerReadOnly: Boolean get() = serverCode == "server-read-only"
+
     /** 423 `robot-disabled`: the robot is in safe mode and refuses every command but STOP until an administrator enables it. */
-    val isRobotDisabled: Boolean get() = httpCode == 423 || serverCode == "robot-disabled"
+    val isRobotDisabled: Boolean get() = (httpCode == 423 && serverCode != "server-read-only") || serverCode == "robot-disabled"
 
     /** The server is rate limiting this client (429). */
     val isRateLimited: Boolean get() = httpCode == 429

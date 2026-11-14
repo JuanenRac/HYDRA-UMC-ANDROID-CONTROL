@@ -5,6 +5,7 @@
 // =============================================================================
 package com.hydraumc.control.ui
 
+import com.hydraumc.control.EmptyAuthStore
 import android.app.Application
 import android.view.MotionEvent
 import android.view.View
@@ -33,7 +34,7 @@ class ObscuredTouchPolicyTest {
     @Test
     fun theProtectionIsOnByDefault() {
         assertTrue(ObscuredTouchPolicy.ENABLED_BY_DEFAULT)
-        assertTrue(RobotViewModel(ApplicationProvider.getApplicationContext<Application>()).filterObscuredTouches.value)
+        assertTrue(RobotViewModel(ApplicationProvider.getApplicationContext<Application>(), EmptyAuthStore).filterObscuredTouches.value)
     }
 
     @Test
@@ -55,7 +56,7 @@ class ObscuredTouchPolicyTest {
 
     @Test
     fun turningTheSwitchOffIsKeptInTheViewModel() {
-        val viewModel = RobotViewModel(ApplicationProvider.getApplicationContext<Application>())
+        val viewModel = RobotViewModel(ApplicationProvider.getApplicationContext<Application>(), EmptyAuthStore)
         viewModel.setFilterObscuredTouches(false)
         assertFalse(viewModel.filterObscuredTouches.value)
         viewModel.setFilterObscuredTouches(true)

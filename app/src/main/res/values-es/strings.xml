@@ -357,6 +357,7 @@
     <string name="safe_mode_enable_message">%1$s volverá a aceptar comandos. Comprueba que la zona a su alrededor está despejada.</string>
     <string name="safe_mode_enable_button">ACTIVAR</string>
     <string name="error_robot_disabled">El robot está en modo seguro (desactivado): el comando %1$s no se ha aplicado. Solo funciona STOP hasta que un administrador lo active.</string>
+    <string name="error_server_read_only">El servidor está en modo de solo lectura: el comando %1$s no se ha enviado. Solo pasan STOP y la desactivación del modo seguro. Un administrador puede desactivarlo.</string>
 
     <!-- Access options of the server (administrators only) -->
     <string name="server_options_title">Opciones de acceso del servidor</string>
@@ -493,4 +494,16 @@
     <string name="work_blocked_role">Solo operadores y administradores pueden cargar un trabajo.</string>
     <string name="work_blocked_no_table">Este trabajo usa una mesa XY y el robot no tiene ninguna.</string>
     <string name="work_not_supported">Este servidor no admite cargar un trabajo.</string>
+    <string name="canota_title">Flasheo CAN</string>
+    <string name="canota_phase_connecting">Conectando con la placa</string>
+    <string name="canota_phase_entering_bootloader">Entrando en el bootloader</string>
+    <string name="canota_phase_erasing_fram">Borrando la FRAM</string>
+    <string name="canota_phase_transferring">Enviando la imagen</string>
+    <string name="canota_phase_verifying">Verificando la imagen</string>
+    <string name="canota_phase_rebooting">Reiniciando la placa</string>
+    <string name="canota_phase_done">Flasheo terminado</string>
+    <string name="canota_phase_error">El flasheo ha fallado</string>
+    <string name="canota_pages">%1$d de %2$d páginas</string>
+    <string name="canota_error">Motivo: %1$s</string>
+    <string name="canota_percent">%1$d%%</string>
 </resources>

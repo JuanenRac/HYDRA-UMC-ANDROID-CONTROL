@@ -68,6 +68,17 @@ class HydraApiClientErrorsTest {
     }
 
     @Test
+    fun `a read-only server answers 423 and is not taken for a robot in safe mode`() {
+        val e = refusal(423, """{"error":"this server is in read-only mode","code":"server-read-only"}""")
+        assertEquals(423, e.httpCode)
+        assertTrue(e.isServerReadOnly)
+        assertFalse(e.isRobotDisabled)
+        assertFalse(refusal(423, """{"code":"robot-disabled"}""").isServerReadOnly)
+        assertTrue(refusal(423, """{"code":"robot-disabled"}""").isRobotDisabled)
+        assertTrue(refusal(423, "").isRobotDisabled)
+    }
+
+    @Test
     fun `a robot in safe mode answers 423 and is told apart from the other refusals`() {
         val e = refusal(423, """{"error":"robot 1 is disabled (safe mode): enable it first","code":"robot-disabled","robotId":1}""")
         assertEquals(423, e.httpCode)

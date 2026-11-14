@@ -357,6 +357,7 @@
     <string name="safe_mode_enable_message">%1$s nimmt wieder Befehle an. Stelle sicher, dass der Bereich um ihn frei ist.</string>
     <string name="safe_mode_enable_button">AKTIVIEREN</string>
     <string name="error_robot_disabled">Der Roboter ist im sicheren Modus (deaktiviert): der Befehl %1$s wurde nicht ausgeführt. Nur STOP funktioniert, bis ein Administrator ihn aktiviert.</string>
+    <string name="error_server_read_only">Der Server ist im Nur-Lese-Modus: Der Befehl %1$s wurde nicht gesendet. Nur STOP und das Abschalten des sicheren Modus gehen durch. Ein Administrator kann ihn ausschalten.</string>
 
     <!-- Access options of the server (administrators only) -->
     <string name="server_options_title">Zugriffsoptionen des Servers</string>
@@ -493,4 +494,16 @@
     <string name="work_blocked_role">Nur Bediener und Administratoren können eine Arbeit laden.</string>
     <string name="work_blocked_no_table">Diese Arbeit nutzt einen XY-Tisch, den der Roboter nicht hat.</string>
     <string name="work_not_supported">Dieser Server unterstützt das Laden einer Arbeit nicht.</string>
+    <string name="canota_title">CAN-Flash</string>
+    <string name="canota_phase_connecting">Verbindung zur Platine</string>
+    <string name="canota_phase_entering_bootloader">Wechsel in den Bootloader</string>
+    <string name="canota_phase_erasing_fram">FRAM wird gelöscht</string>
+    <string name="canota_phase_transferring">Image wird gesendet</string>
+    <string name="canota_phase_verifying">Image wird geprüft</string>
+    <string name="canota_phase_rebooting">Platine wird neu gestartet</string>
+    <string name="canota_phase_done">Flash abgeschlossen</string>
+    <string name="canota_phase_error">Flash fehlgeschlagen</string>
+    <string name="canota_pages">%1$d von %2$d Seiten</string>
+    <string name="canota_error">Grund: %1$s</string>
+    <string name="canota_percent">%1$d %%</string>
 </resources>
