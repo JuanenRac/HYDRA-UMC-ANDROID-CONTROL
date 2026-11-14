@@ -88,8 +88,8 @@ fun MainScreen(
     // Hoisted above the bottomBar's own read of the same state (review
     // note: "modo landscape optimizado para tablets" -
     // BUG (found while
-    // implementing that idea): landscape used to unconditionally force
-    // the fullscreen 3D view regardless of which tab was open, so a
+    // implementing that idea): landscape must not unconditionally force
+    // the fullscreen 3D view regardless of which tab is open, or a
     // tablet (landscape being its natural default orientation, unlike a
     // phone) rotating away from portrait while on Dashboard/Control/
     // Camera/Telemetry/Settings got hijacked to 3D with no way back
@@ -138,13 +138,12 @@ fun MainScreen(
             title = { Text(stringResource(R.string.app_updates)) },
             text = {
                 UpdateAvailableContent(update) {
-                    // Real regression fix, live-reproduced: this used to
-                    // only start the download and let the dialog vanish
-                    // (its own visibility condition stops matching the
-                    // instant state leaves Available) - the operator was
-                    // dropped back on whatever screen was underneath with
-                    // no way to see download/install progress. Now also
-                    // navigates to Settings, which opens directly on its
+                    // Starting the download makes the dialog vanish (its
+                    // own visibility condition stops matching the instant
+                    // state leaves Available), which would drop the
+                    // operator back on whatever screen was underneath with
+                    // no way to see download/install progress. So the tap
+                    // also navigates to Settings, which opens directly on its
                     // own Updates tab for exactly this in-flight state (see
                     // SettingsScreen.kt's own initialTabIndex comment).
                     updateViewModel.downloadAndInstall(update)

@@ -73,7 +73,7 @@ private const val SCAN_TIMEOUT_MS = 1500L
 // Dispatchers.IO too for a real AndroidKeyStore round-trip
 // (AuthPrefs.kt's own openEncryptedPrefs()) - a live timing capture showed
 // authPrefs.loadAuth() alone taking 17.5s on one cold start, wildly out of
-// line with a normal Keystore read. At the OLD value of 64, every single
+// line with a normal Keystore read. At a value of 64, every single
 // one of this scan's probes (up to 254, one per candidate host in a /24)
 // could occupy a real OS thread from Dispatchers.IO's own shared pool
 // (also sized ~64 by default) for the full SCAN_TIMEOUT_MS each, for
@@ -247,7 +247,7 @@ fun scanSubnets(context: Context, client: OkHttpClient, port: Int = DEFAULT_PORT
         // The subnet scan itself is done, but mDNS resolutions triggered by
         // onServiceFound can still be in flight - mDNS is typically slower
         // than the subnet HTTP probes above, so closing immediately here
-        // used to cancel any resolution that hadn't landed yet, silently
+        // would cancel any resolution that hasn't landed yet, silently
         // dropping that result with no error surfaced anywhere. Give
         // pending resolutions up to MDNS_GRACE_MS more before closing.
         val deadline = System.currentTimeMillis() + MDNS_GRACE_MS

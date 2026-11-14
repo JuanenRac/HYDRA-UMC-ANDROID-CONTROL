@@ -321,7 +321,7 @@ fun ControlScreen(viewModel: RobotViewModel) {
                 // contract) HYDRA-UMC-STUDIO already uses for robot A1's own
                 // floating 3D overlay (see Joystick3D.kt's own header comment) -
                 // full 8-direction D-pad (diagonals fire both X and Y in one
-                // press-and-hold, same as STUDIO) instead of the old 6-button
+                // press-and-hold, same as STUDIO), not a 6-button
                 // cardinal-only cross.
                 Box(modifier = Modifier.fillMaxWidth().alpha(controlAlpha).metallicIndustrial()) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(8.dp)) {
@@ -343,8 +343,7 @@ fun ControlScreen(viewModel: RobotViewModel) {
                         Spacer(modifier = Modifier.height(12.dp))
 
                         // Z column only makes sense for the arm target - the XY
-                        // table has no Z axis of its own (same gate the old
-                        // per-button layout applied). Joystick3D still shows the
+                        // table has no Z axis of its own. Joystick3D still shows the
                         // Z column even for the XY-table target (matches
                         // STUDIO's own fixed layout) rather than the geometry
                         // jumping around when toggling Robot/XY Table - it's

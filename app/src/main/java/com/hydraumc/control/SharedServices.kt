@@ -13,7 +13,7 @@ import com.hydraumc.control.network.RobotCommandQueue
 
 /**
  * What the screens, the watch relay and the other entry points of the app share for the whole life of the process, built once:
- * the stored login (opening the encrypted store is a keystore round-trip that took seconds, and every entry point used to open its own)
+ * the stored login (opening the encrypted store is a keystore round-trip that can take seconds, so the entry points share one instead of each opening its own)
  * and the per-robot queue of writes (so two entry points never send to the same robot in parallel). It holds no Android class, so it is tested on the JVM.
  */
 class SharedServices(authStoreFactory: () -> AuthStore, queueFactory: () -> RobotCommandQueue = { RobotCommandQueue() }) {

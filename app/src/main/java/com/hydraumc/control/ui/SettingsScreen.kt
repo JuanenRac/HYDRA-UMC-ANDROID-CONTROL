@@ -51,14 +51,12 @@ fun SettingsScreen(
     onEnableBluetooth: () -> Unit = {},
 ) {
     val updateState by updateViewModel.state.collectAsState()
-    // Real regression fix, live-reproduced: tapping "Download and install"
-    // on the update dialog (MainScreen.kt) used to just start the download
-    // and dismiss the dialog - it never navigated here at all, so the
-    // operator had no way to see progress/the install-permission prompt/a
-    // failure short of remembering to open Settings > Updates themselves.
-    // MainScreen.kt now navigates to this screen on that same tap; this
-    // screen in turn opens directly on the Updates tab whenever there's an
-    // update actively in flight, instead of always defaulting to Wi-Fi.
+    // Tapping "Download and install" on the update dialog (MainScreen.kt)
+    // starts the download and navigates here, so the operator sees the
+    // progress, the install-permission prompt or a failure without having
+    // to open Settings > Updates by hand. This screen opens directly on the
+    // Updates tab whenever an update is actively in flight, and defaults to
+    // Wi-Fi otherwise.
     // Evaluated once, at this screen's own first composition - not a race
     // with downloadAndInstall's own coroutine: the state at the moment the
     // button was tapped was Available (that's the only way the dialog
@@ -83,10 +81,9 @@ fun SettingsScreen(
     )
 
     Column(modifier = Modifier.fillMaxSize()) {
-        // Real complaint this fixes, live-reproduced: with 4 tabs (this
-        // used to be 3, Notifications is new), each label's text wrapped/
-        // got clipped mid-word inside its narrow quarter-width slot. Icon-
-        // only now, at double the default size, so the row stays legible
+        // With 4 tabs, a text label would wrap or get clipped mid-word
+        // inside its narrow quarter-width slot. The tabs are icon-only,
+        // at double the default size, so the row stays legible
         // regardless of language/label length - the title is kept as the
         // icon's contentDescription instead, for screen readers.
         TabRow(selectedTabIndex = selectedTabIndex) {
@@ -211,14 +208,13 @@ private fun UpdateSettings(state: AppUpdateState, updateViewModel: AppUpdateView
     }
 }
 
-// Real fix for a real complaint ("sale muy feo"): this used to dump the
-// FULL release notes text directly inside the update AlertDialog's own
-// `text` slot, which AlertDialog sizes tightly around its title/buttons -
-// long notes just got visually squeezed/clipped rather than genuinely
-// scrolled. Now shows installed vs new version as two clearly labeled
-// lines (not one blended sentence) and moves the notes themselves into a
-// dedicated, properly scrollable ReleaseNotesDialog opened via its own
-// button, sized to actually fit real release-notes-length text.
+// The update AlertDialog sizes its `text` slot tightly around its
+// title/buttons, so long release notes would be squeezed or clipped
+// instead of scrolled. The dialog therefore shows installed vs new
+// version as two clearly labeled lines (not one blended sentence) and
+// keeps the notes themselves in a dedicated, properly scrollable
+// ReleaseNotesDialog opened via its own button, sized to fit real
+// release-notes-length text.
 @Composable
 fun UpdateAvailableContent(
     update: com.hydraumc.common.AvailableUpdate,

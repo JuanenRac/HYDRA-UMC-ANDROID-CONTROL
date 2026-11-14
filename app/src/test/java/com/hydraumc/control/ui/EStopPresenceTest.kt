@@ -35,7 +35,7 @@ class EStopPresenceTest {
     val composeTestRule = createComposeRule()
 
     // The stored login is a fake that holds nothing, so the view model starts at once on the JVM (the encrypted store needs the Android keystore, which
-    // this runner does not have, and used to make the view model wait for its failure).
+    // this runner does not have, and the view model would wait for its failure).
     private val emptyStore = object : AuthStore {
         override suspend fun loadAuth() = UserProfile("", "", "", rememberMe = false, isLoggedIn = false)
         override suspend fun saveAuth(profile: UserProfile) {}

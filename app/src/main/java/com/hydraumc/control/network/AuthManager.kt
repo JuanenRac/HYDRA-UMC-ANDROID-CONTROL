@@ -118,8 +118,8 @@ class AuthManager(private val store: AuthStore, private val sealer: PasswordSeal
     }
 
     /**
-     * Saves the profile fields the person edited, starting from what is stored: saving the profile used to write an
-     * empty token, which ended the session at the next reconnect.
+     * Saves the profile fields the person edited, starting from what is stored: the stored token is kept, because
+     * writing an empty one would end the session at the next reconnect.
      */
     suspend fun saveProfile(
         user: String,

@@ -496,7 +496,7 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
 
     // At most one session renewal runs at a time: a rejected token shows up
     // twice (the server's error message, then the 1008 close) and in every
-    // command that is in flight, and each used to start its own login.
+    // command that is in flight, and each would otherwise start its own login.
     private var reloginJob: kotlinx.coroutines.Job? = null
 
     // Renewals the app may do by itself are rationed (see RenewalBudget): past that it goes back to the sign-in instead of looping.
@@ -513,7 +513,7 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
     )
 
     // Jog commands currently on the wire, per robot. A press-and-hold repeats
-    // every 150 ms; on a slow link the POSTs used to pile up and arrive after
+    // every 150 ms; on a slow link the POSTs would pile up and arrive after
     // the button was released (or after a stop). While one is in flight the
     // next tick is dropped instead of queued.
 
@@ -691,16 +691,15 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
             }
 
             if (profile.rememberMe && profile.isLoggedIn) {
-                // Real bug, live-reproduced, in what USED to be here:
-                // isLoggedIn was set true immediately (before connect() had
-                // confirmed anything), so if the cached ip/port turned out
-                // unreachable, MainActivity showed the full Dashboard -
-                // empty, since nothing had synced yet, reading as a
+                // isLoggedIn is not set true immediately (before connect()
+                // has confirmed anything): if the cached ip/port turned out
+                // unreachable, MainActivity would show the full Dashboard -
+                // empty, since nothing has synced yet, reading as a
                 // stuck/black screen against this app's dark theme - for
                 // however long HydraApiClient's own connectTimeout (5s) +
-                // the eventual onInitialConnectFailed round-trip took,
+                // the eventual onInitialConnectFailed round-trip takes,
                 // BEFORE finally bouncing back to LoginScreen. isLoggedIn
-                // now only flips true once the connection is actually
+                // only flips true once the connection is actually
                 // confirmed (onInitialConnectSucceeded, right after a real
                 // settings sync - see connect()'s own success path) - while
                 // that's pending, MainActivity correctly shows LoginScreen
@@ -708,7 +707,7 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
                 // not a misleading empty Dashboard. A normal, reachable
                 // server still resolves this near-instantly (LAN latency,
                 // not the 5s timeout), so the common case isn't slowed
-                // down - only the "server unreachable" case now shows an
+                // down - only the "server unreachable" case shows an
                 // honest, usable login form the whole time instead of
                 // something that looks broken.
                 connect(
@@ -1112,8 +1111,8 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
     private fun startMetricsLoop(client: HydraApiClient) = connection.startMetrics { client.getSystemMetrics() }
 
     private fun setupWebSocket(host: String, port: Int, useTls: Boolean = false) {
-        // Runs inside connect()'s own job, with the token that job just confirmed against the REST sync: it used to be a
-        // separate coroutine that read the token from disk, so two quick connects could leave an orphan socket that kept
+        // Runs inside connect()'s own job, with the token that job just confirmed against the REST sync: it is not
+        // a separate coroutine that reads the token from disk, because two quick connects could then leave an orphan socket that keeps
         // reconnecting on its own. LiveSocket closes the previous socket before it opens this one.
         val token = apiClient?.authToken.orEmpty()
         liveSocket.open(SocketTarget(host, port, useTls, if (token.isNotEmpty()) token else null), socketListener)
@@ -1218,7 +1217,7 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
             // Debounced, not written on every single call - applyState()
             // runs on every WS broadcast AND every local optimistic command
             // mutation (sendAtomicCommand calls it directly), so a robot
-            // being actively jogged/controlled used to write the ENTIRE
+            // being actively jogged/controlled would write the ENTIRE
             // current state tree to disk (DataStore's edit{} does a full
             // atomic file replace under the hood) on every single one of
             // those, unthrottled - real flash wear on the eMMC over a
@@ -1247,12 +1246,12 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
                 // Gated on isFinished too, not just the isPlaying:true->false
                 // transition alone - that transition also happens on a plain
                 // manual STOP (from this app, the browser, or SUITE), which
-                // used to make every operator-initiated stop show a false
+                // would make every operator-initiated stop show a false
                 // "completed successfully" notification. isFinished is only
                 // ever set true by the browser client's own natural-completion
                 // path (see RobotView.isFinished's own comment) and left
                 // false by every play/pause/stop action, atomic or not - a
-                // manual stop no longer trips this. Known residual gap: the
+                // manual stop does not trip this. Known residual gap: the
                 // server's own atomic "play" command (server.ts) doesn't
                 // reset isFinished, so a robot that finished a job once and
                 // is then replayed+stopped from this app before the browser
@@ -2291,7 +2290,7 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
         sendAtomicCommand(RobotCommandContract.VISION, params, explicitRobotId = robotId) { r ->
             r.raw.put("visionEnabled", enabled)
             // Keep the legacy embedded camera mirror aligned with the
-            // authoritative robot value. A1/A2 used to retain connected=true
+            // authoritative robot value. A1/A2 would otherwise retain connected=true
             // here after vision was disabled, unlike A3-A8.
             r.raw.optJSONObject("camera")?.put("connected", enabled)
         }

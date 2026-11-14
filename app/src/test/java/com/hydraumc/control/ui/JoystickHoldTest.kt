@@ -23,10 +23,10 @@ import org.robolectric.annotation.GraphicsMode
 
 /**
  * A button held down keeps repeating its jog every 150 ms from a coroutine
- * that was started by the first touch. That coroutine used to keep calling the
- * lambda it captured then: change the jog step (or switch from the arm to the
- * XY table) while a button is held and the robot kept moving by the OLD step
- * or on the OLD target. The repeat must always call the current lambda.
+ * that was started by the first touch. That coroutine must not keep calling the
+ * lambda it captured then: if the jog step changes (or the target switches from the arm to the
+ * XY table) while a button is held, the robot would keep moving by the previous step
+ * or on the previous target. The repeat must always call the current lambda.
  */
 @RunWith(RobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)

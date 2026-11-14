@@ -63,8 +63,8 @@ import com.hydraumc.control.viewmodel.RobotViewModel
 
 /**
  * The E-STOP / PLAY / PAUSE / STOP floating console - the single, real
- * implementation of this safety-critical control surface. Originally lived
- * only inline inside ControlScreen.kt; extracted here so ThreeDScreen.kt's
+ * implementation of this safety-critical control surface. It lives here,
+ * outside ControlScreen.kt, so ThreeDScreen.kt's
  * 3D viewport (portrait and fullscreen-landscape alike) can offer the exact
  * same real long-press-protected commands without a second, divergent copy
  * of that protection logic - the ecosystem's own "reuse, don't invent" rule

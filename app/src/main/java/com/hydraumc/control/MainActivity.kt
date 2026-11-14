@@ -206,8 +206,8 @@ class MainActivity : FragmentActivity() {
             // Real fix for a live-reproduced bug, not just belt-and-braces:
             // see RobotViewModel.authCheckComplete's own comment. Splash now
             // stays up until BOTH the branding timer AND the cached-session
-            // check have finished, whichever takes longer - previously the
-            // timer alone decided, so a slow authPrefs.loadAuth() could
+            // check have finished, whichever takes longer - the timer alone
+            // must not decide, or a slow authPrefs.loadAuth() could
             // still be resolving after LoginScreen was already showing and
             // being typed into.
             val showSplash = !splashTimerDone || !robotViewModel.authCheckComplete.value
