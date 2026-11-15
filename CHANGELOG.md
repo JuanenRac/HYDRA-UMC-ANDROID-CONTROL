@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- **The SDK pin and the shared tools are up to date:** the SDK dependency names the newest release tag, and the shared tools are the canonical copies again.
 - **The SDK is pinned to its newest release and the tests replay its newest server answers:** the workflow fetches the contracts of `v0.6.4`, and the recorded answers of the server now include the last health frame of a controller board (`GET /api/ecosystem/node-health`). The shared Kotlin code (semantic version, JSON text, release metadata) already equals the SDK copy.
 
 - **The test of a failed cancel waits for the rollback, not only for the error:** `RobotViewModelSendAtomicCommandTest` read the state of the two robots as soon as the error was published, before the rollback was applied, and failed now and then on a slow runner; it now waits until both robots are playing again.
