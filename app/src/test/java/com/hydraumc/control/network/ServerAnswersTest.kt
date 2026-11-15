@@ -64,8 +64,9 @@ class ServerAnswersTest {
             val statuses = all.getJSONObject(route)
             for (status in statuses.keys()) {
                 val kinds = statuses.getJSONObject(status)
-                assertTrue("$route $status has no minimal body", kinds.optJSONObject("minimal") != null)
-                assertTrue("$route $status has no full body", kinds.optJSONObject("full") != null)
+                // a list answer (the telemetry routes) is a JSON array, every other answer an object
+                assertTrue("$route $status has no minimal body", kinds.optJSONObject("minimal") != null || kinds.optJSONArray("minimal") != null)
+                assertTrue("$route $status has no full body", kinds.optJSONObject("full") != null || kinds.optJSONArray("full") != null)
             }
         }
     }
