@@ -64,8 +64,9 @@ class ServerAnswersTest {
             val statuses = all.getJSONObject(route)
             for (status in statuses.keys()) {
                 val kinds = statuses.getJSONObject(status)
-                assertTrue("$route $status has no minimal body", kinds.optJSONObject("minimal") != null)
-                assertTrue("$route $status has no full body", kinds.optJSONObject("full") != null)
+                // a list answer (the telemetry routes) is a JSON array, every other answer an object
+                assertTrue("$route $status has no minimal body", kinds.optJSONObject("minimal") != null || kinds.optJSONArray("minimal") != null)
+                assertTrue("$route $status has no full body", kinds.optJSONObject("full") != null || kinds.optJSONArray("full") != null)
             }
         }
     }
@@ -115,6 +116,29 @@ class ServerAnswersTest {
             serve(200, answer("GET /api/system/metrics", "200", kind))
             val metrics = runBlocking { client.getSystemMetrics() }
             assertTrue("kind $kind", metrics.has("cpu_load"))
+        }
+    }
+
+    @Test
+    fun `jog arm of either kind reads through the typed client and keeps the flags the app reads`() {
+        for (kind in listOf("minimal", "full")) {
+            serve(200, answer("POST /api/robot/{id}/jog-arm", "200", kind))
+            val armed = runBlocking { client.postJogArm(1, true) }
+            assertTrue("kind $kind", armed.has("success") && armed.has("armed"))
+            assertEquals("kind $kind", kind == "full", armed.has("ttlMs"))
+        }
+    }
+
+    @Test
+    fun `the refusals of the jog arm reach the app as errors with their status`() {
+        for (status in listOf("400", "404", "409", "423")) {
+            serve(status.toInt(), answer("POST /api/robot/{id}/jog-arm", status, "minimal"))
+            try {
+                runBlocking { client.postJogArm(1, true) }
+                throw AssertionError("expected a HydraApiException for $status")
+            } catch (e: HydraApiException) {
+                assertEquals(status.toInt(), e.httpCode)
+            }
         }
     }
 

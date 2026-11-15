@@ -30,8 +30,12 @@ import java.io.File
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34])
 class WatchReleaseNoticeSwitchTest {
+    // The stored choice lives in a file that outlives a test; another test of the run may have left it off, so every test starts from the default.
     @Before
-    fun setUp() = MainDispatcherSwap.set()
+    fun setUp() {
+        MainDispatcherSwap.set()
+        runBlocking { ConnectionPrefs(context).saveFlag(ConnectionPrefs.Flags.WATCH_RELEASE_NOTICE, RobotCommandContract.WATCH_ALERTS_RELEASE_NOTICE_ENABLED_BY_DEFAULT) }
+    }
 
     @After
     fun tearDown() = MainDispatcherSwap.reset()
