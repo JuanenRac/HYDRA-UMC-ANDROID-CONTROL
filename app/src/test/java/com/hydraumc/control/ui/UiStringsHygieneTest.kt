@@ -34,7 +34,8 @@ class UiStringsHygieneTest {
             main.walkTopDown().filter { it.isFile && it.extension == "xml" && !it.invariantSeparatorsPath.contains("/res/values") }
                 .forEach { append(it.readText()) }
         }
-        val dead = keysOf("values").filter { key -> !Regex("""R\.string\.$key\b|@string/$key\b""").containsMatchIn(used) }
+        // the common_<id> lines are the block of shared texts that HYDRA-UMC-SDK writes: the app carries all of them, whether a screen asks for one or not
+        val dead = keysOf("values").filter { key -> !key.startsWith("common_") && !Regex("""R\.string\.$key\b|@string/$key\b""").containsMatchIn(used) }
         assertTrue("strings no code uses: $dead", dead.isEmpty())
     }
 

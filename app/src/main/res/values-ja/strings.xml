@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">HYDRA-UMC CONTROL</string>
-    <string name="tab_dashboard">ダッシュボード</string>
+    <string name="tab_dashboard">@string/common_dashboard</string>
     <string name="tab_control">制御</string>
-    <string name="tab_camera">カメラ</string>
+    <string name="tab_camera">@string/common_camera</string>
     <string name="select_camera_feed">カメラを選択</string>
     <string name="robot_camera_fallback_name">ロボットカメラ %d</string>
     <string name="camera_enabled_label">カメラ有効</string>
@@ -11,8 +11,8 @@
     <string name="camera_disabled_hint">上のスイッチでサーバー側で有効にしてください</string>
     <string name="camera_live_label">ライブ: %s</string>
     <string name="tab_3d_view">3D ビュー</string>
-    <string name="tab_telemetry">テレメトリ</string>
-    <string name="tab_settings">設定</string>
+    <string name="tab_telemetry">@string/common_telemetry</string>
+    <string name="tab_settings">@string/common_settings</string>
     <string name="dashboard_title">ダッシュボード</string>
     <string name="server_status">サーバー状態：%s</string>
     <string name="no_robots">接続または設定済みのロボットがありません。</string>
@@ -69,12 +69,12 @@
     <string name="virtual_joystick">仮想ジョイスティック</string>
     <string name="xy_table">XY テーブル</string>
     <string name="ip_label">IP アドレス</string>
-    <string name="port_label">ポート</string>
+    <string name="port_label">@string/common_port</string>
     <string name="save_and_connect">保存して接続</string>
     <string name="search_local">ローカルネットワークを検索</string>
     <string name="scan_button">スキャン</string>
     <string name="no_results_yet">まだ結果がありません。</string>
-    <string name="connect_button">接続</string>
+    <string name="connect_button">@string/common_connect</string>
     <string name="server_info">%1$s:%2$d · コントローラー %3$d 台、ロボット %4$d 台</string>
 
     <!-- Bluetooth 文字列 -->
@@ -93,8 +93,8 @@
 
     <!-- プロフィールとアプリ情報 -->
     <string name="user_profile_title">ユーザープロフィール</string>
-    <string name="username_label">ユーザー名</string>
-    <string name="password_label">パスワード</string>
+    <string name="username_label">@string/common_username</string>
+    <string name="password_label">@string/common_password</string>
     <string name="email_label">メールアドレス</string>
     <string name="cancel_button">キャンセル</string>
     <string name="biometric_auth_failed">認証に失敗しました</string>
@@ -143,12 +143,12 @@
     <string name="update_version_installed">インストール済み: v%1$s</string>
     <string name="update_version_new">新しいバージョン: v%1$s</string>
     <string name="update_view_changes">変更内容を見る</string>
-    <string name="update_close">閉じる</string>
+    <string name="update_close">@string/common_close</string>
     <!-- 3D viewport fullscreen landscape mode -->
     <string name="threed_fullscreen">全画面表示</string>
     <string name="threed_exit_fullscreen">全画面表示を終了</string>
     <!-- Ecosystem status tab -->
-    <string name="tab_ecosystem">エコシステム</string>
+    <string name="tab_ecosystem">@string/common_ecosystem</string>
     <string name="ecosystem_unavailable">サーバーは隣接プロジェクトのマニフェストを見つけられませんでした。これは、サーバーが他の HYDRA-UMC/URTC リポジトリと同じマシン上のチェックアウトから実行されている場合にのみ機能します。</string>
     <string name="maturity_established">確立済み</string>
     <string name="maturity_functional">機能中</string>
@@ -169,7 +169,7 @@
     <string name="voice_assistant_input_label">入力するかマイクをタップ</string>
     <string name="voice_assistant_requires_confirmation">これは反映される前に確認が必要です。</string>
     <string name="voice_start">音声認識を開始</string>
-    <string name="voice_send">送信</string>
+    <string name="voice_send">@string/common_send</string>
     <string name="voice_prompt">リクエストを話してください</string>
     <string name="voice_unavailable">この端末では音声認識を利用できません。</string>
     <string name="voice_permission_denied">音声入力にはマイクの権限が必要です。</string>
@@ -178,8 +178,8 @@
     <string name="access_mine_here">この端末であなたが予約中</string>
     <string name="access_mine_elsewhere">別の端末であなたが予約中</string>
     <string name="access_other">%1$s が予約中</string>
-    <string name="access_reserve">予約</string>
-    <string name="access_release">解放する</string>
+    <string name="access_reserve">@string/common_reserve</string>
+    <string name="access_release">@string/common_release</string>
     <string name="access_list_show">予約一覧</string>
     <string name="access_list_empty">予約されているロボットはありません。</string>
     <string name="access_list_item">%1$s：%2$s</string>
@@ -198,7 +198,7 @@
     <string name="error_jog_over_limit">ジョグを拒否しました：ステップがこのモデルにサーバーが設定した上限 %1$s を超えています。何も送信されていません。</string>
 
     <!-- Bluetooth GATT and connection security -->
-    <string name="tab_security">セキュリティ</string>
+    <string name="tab_security">@string/common_security</string>
     <string name="tls_title">接続のセキュリティ (TLS)</string>
     <string name="tls_mode_auto">自動</string>
     <string name="tls_mode_required">TLSを必須にする</string>
@@ -239,17 +239,17 @@
     <string name="bt_show_all_hint">オフ:HYDRA-UMCサービスを通知するデバイスのみ表示します。</string>
     <string name="error_revision_changed">このアプリが最後に読み取って以降、ロボットが変更されました(別のオペレーターまたは別の端末)。%1$s コマンドは適用されていません。サーバーからロボットを読み直しました。内容を確認し、まだ必要ならコマンドをやり直してください。</string>
     <string name="access_conditional_label">ロボットが変更されていないか確認する</string>
-    <string name="access_conditional_standard">標準</string>
+    <string name="access_conditional_standard">@string/common_standard</string>
     <string name="access_conditional_strict">厳格</string>
-    <string name="access_conditional_off">オフ</string>
+    <string name="access_conditional_off">@string/common_off</string>
     <string name="access_conditional_hint">書き込みごとに、このアプリが最後に見たロボットのリビジョンを付けて送ります。その間に他の人がロボットを変更していた場合、サーバーは拒否し、ロボットを読み直します。標準は予約、テーブル、単発のコマンドを確認し、厳格は STOP 以外すべてを確認し、オフは何も確認しません。ジョグと速度は1秒間に何度も繰り返されるため、標準では確認しません。STOP は確認されません。</string>
     <string name="audit_open">監査記録</string>
     <string name="audit_title">監査記録</string>
     <string name="audit_intro">サーバーが重要な変更について記録した内容です(予約、強制解放、ジョグの有効化、安全上限の変更、全体停止)。各行は SHA-256 で前の行につながっているため、後から変更または削除された行は、チェーンを検証すると分かります。</string>
-    <string name="audit_all_types">すべての種類</string>
-    <string name="audit_all_robots">すべてのロボット</string>
+    <string name="audit_all_types">@string/common_all_types</string>
+    <string name="audit_all_robots">@string/common_all_robots</string>
     <string name="audit_lines_count">%1$d 行</string>
-    <string name="audit_refresh">更新</string>
+    <string name="audit_refresh">@string/common_refresh</string>
     <string name="audit_verify">チェーンを検証</string>
     <string name="audit_share">共有(.jsonl)</string>
     <string name="audit_empty">このフィルターに該当する行はありません。</string>
@@ -269,12 +269,12 @@
     <string name="audit_failure_session">セッションが終了しました。もう一度サインインしてください。</string>
     <string name="audit_failure_network">サーバーに接続できませんでした。</string>
     <string name="audit_failure_other">サーバーが監査記録を返しませんでした。</string>
-    <string name="connections_open">接続</string>
+    <string name="connections_open">@string/common_connections</string>
     <string name="connections_title">サーバーに接続しているのは誰か</string>
     <string name="connections_intro">サーバーが確認したアプリとセッション、直近のサインインとサインアウトです。管理者はすべて、それ以外のアカウントは自分の分だけが見えます。パスワードやトークンは保存されません。</string>
     <string name="connections_clients">確認されたアプリ</string>
     <string name="connections_events">最近のできごと</string>
-    <string name="connections_refresh">更新</string>
+    <string name="connections_refresh">@string/common_refresh</string>
     <string name="connections_none_clients">まだサインインしたアプリはありません。</string>
     <string name="connections_none_events">まだ何も起きていません。</string>
     <string name="connections_no_user">不明なユーザー</string>
@@ -293,8 +293,8 @@
     <string name="connections_kind_ios">iPhone / iPad</string>
     <string name="connections_kind_dsi">タッチスクリーン</string>
     <string name="connections_kind_watch">ウォッチ</string>
-    <string name="connections_kind_voice">音声</string>
-    <string name="connections_kind_other">その他</string>
+    <string name="connections_kind_voice">@string/common_voice</string>
+    <string name="connections_kind_other">@string/common_other</string>
     <string name="connections_action_first_seen">初めて確認</string>
     <string name="connections_action_login">サインイン</string>
     <string name="connections_action_login_failed">サインイン拒否</string>
@@ -337,7 +337,7 @@
     <string name="viewport_model">モデル:%1$s</string>
     <string name="viewport_unknown">不明</string>
     <string name="viewport_generic">汎用</string>
-    <string name="refresh_description">更新</string>
+    <string name="refresh_description">@string/common_refresh</string>
     <string name="camera_robot_disabled">%1$s(無効)</string>
     <string name="notification_safety_title">HYDRA-UMC 安全</string>
     <string name="notification_safety_text">接続中です。緊急停止をすぐに使えます。</string>
@@ -378,7 +378,7 @@
     <string name="server_options_confirm_voice">確認済みの音声リクエストに、検証済みの署名が不要になります。</string>
     <string name="server_options_source_env">サーバーの環境で設定済み（ロック）</string>
     <string name="server_options_source_config">この画面から保存</string>
-    <string name="server_options_source_default">既定</string>
+    <string name="server_options_source_default">@string/common_default</string>
     <string name="server_options_health_label">ネットワーク上の誰でもサインインなしで GET /health を読めるようにする</string>
     <string name="server_options_health_help">既定ではオフ:ルートは存在しないかのように応答します。オンにすると、監視ツールやロードバランサー向けに最小限のヘルスレポートだけを返します。</string>
     <string name="server_options_health_confirm">GET /health がサインインなしで応答します。公開しますか?</string>
@@ -402,7 +402,7 @@
     <string name="home_reset_switch_hint">選択したロボットをゼロ位置へ移動するボタンを表示します。実機が動くため確認を2回求め、オペレーターと管理者のみが使え、初期設定ではオフです。</string>
     <string name="home_reset_step1_title">%1$s をゼロ位置へ移動しますか？(1/2)</string>
     <string name="home_reset_step1_message">ロボットはゼロ位置へ移動します。進路に障害物がないか確認してください。</string>
-    <string name="home_reset_step1_button">続ける</string>
+    <string name="home_reset_step1_button">@string/common_continue</string>
     <string name="home_reset_step2_title">最終確認(2/2)</string>
     <string name="home_reset_step2_message">%1$s がこれから動きます。STOPボタンは使えます。ゼロ位置へ移動しますか？</string>
     <string name="home_reset_step2_button">ゼロ位置へ移動</string>
@@ -483,7 +483,7 @@
     <string name="work_dialog_title">ワークを選択</string>
     <string name="work_loading">一覧を読み込み中...</string>
     <string name="work_empty">このロボットにはサーバー上に保存されたワークがありません。</string>
-    <string name="work_refresh">更新</string>
+    <string name="work_refresh">@string/common_refresh</string>
     <string name="work_load_failed">サーバーからワークを読み込めませんでした。</string>
     <string name="work_invalid_file">%1$s は有効なワークファイルではありません。何も読み込まれませんでした。</string>
     <string name="work_blocked_none">ワークを読み込めます。</string>
@@ -506,4 +506,106 @@
     <string name="canota_pages">%1$d / %2$d ページ</string>
     <string name="canota_error">理由: %1$s</string>
     <string name="canota_percent">%1$d%%</string>
+
+    <!-- Common texts of the apps: written by tools/i18n_common.py of HYDRA-UMC-SDK, not by hand -->
+    <string name="common_confirm">確認</string>
+    <string name="common_cancel">キャンセル</string>
+    <string name="common_save">保存</string>
+    <string name="common_close">閉じる</string>
+    <string name="common_retry">再試行</string>
+    <string name="common_yes">はい</string>
+    <string name="common_no">いいえ</string>
+    <string name="common_loading">読み込み中…</string>
+    <string name="common_online">オンライン</string>
+    <string name="common_offline">オフライン</string>
+    <string name="common_administrator">管理者</string>
+    <string name="common_operator">オペレーター</string>
+    <string name="common_viewer">閲覧者</string>
+    <string name="common_delete">削除</string>
+    <string name="common_pause">一時停止</string>
+    <string name="common_next">次へ</string>
+    <string name="common_previous">前へ</string>
+    <string name="common_done">完了</string>
+    <string name="common_status">状態</string>
+    <string name="common_name">名前</string>
+    <string name="common_password">パスワード</string>
+    <string name="common_language">言語</string>
+    <string name="common_theme">テーマ</string>
+    <string name="common_type">種類</string>
+    <string name="common_key">キー</string>
+    <string name="common_time">時刻</string>
+    <string name="common_robot">ロボット</string>
+    <string name="common_robots">ロボット</string>
+    <string name="common_temperature">温度</string>
+    <string name="common_connect">接続</string>
+    <string name="common_disconnect">切断</string>
+    <string name="common_role">役割</string>
+    <string name="common_account">アカウント</string>
+    <string name="common_memory">メモリ</string>
+    <string name="common_telemetry">テレメトリ</string>
+    <string name="common_approve">承認</string>
+    <string name="common_controllers">コントローラー</string>
+    <string name="common_services">サービス</string>
+    <string name="common_users">ユーザー</string>
+    <string name="common_export">エクスポート</string>
+    <string name="common_download">ダウンロード</string>
+    <string name="common_load">読み込み</string>
+    <string name="common_clear">クリア</string>
+    <string name="common_search">検索</string>
+    <string name="common_value">値</string>
+    <string name="common_enable">有効にする</string>
+    <string name="common_disable">無効にする</string>
+    <string name="common_saved">保存しました。</string>
+    <string name="common_level_basic">基本</string>
+    <string name="common_level_advanced">上級</string>
+    <string name="common_level_technical">技術</string>
+    <string name="common_sign_in">サインイン</string>
+    <string name="common_finish">完了</string>
+    <string name="common_endstops">エンドストップ</string>
+    <string name="common_speed">速度</string>
+    <string name="common_vision_center">ビジョンセンター</string>
+    <string name="common_stop">停止</string>
+    <string name="common_start">開始</string>
+    <string name="common_off">オフ</string>
+    <string name="common_default">既定</string>
+    <string name="common_continue">続ける</string>
+    <string name="common_connecting">接続中…</string>
+    <string name="common_error">エラー</string>
+    <string name="common_running">稼働中</string>
+    <string name="common_restart">再起動</string>
+    <string name="common_resume">再開</string>
+    <string name="common_play">再生</string>
+    <string name="common_step">ステップ</string>
+    <string name="common_server">サーバー</string>
+    <string name="common_settings">設定</string>
+    <string name="common_security">セキュリティ</string>
+    <string name="common_refresh">更新</string>
+    <string name="common_other">その他</string>
+    <string name="common_release">解放する</string>
+    <string name="common_reserve">予約</string>
+    <string name="common_port">ポート</string>
+    <string name="common_uptime">稼働時間</string>
+    <string name="common_cpu_load">CPU 負荷</string>
+    <string name="common_memory_usage">メモリ使用量</string>
+    <string name="common_address">アドレス</string>
+    <string name="common_camera">カメラ</string>
+    <string name="common_acceleration">加速度</string>
+    <string name="common_sign_out">サインアウト</string>
+    <string name="common_username">ユーザー名</string>
+    <string name="common_standard">標準</string>
+    <string name="common_dashboard">ダッシュボード</string>
+    <string name="common_updates">アップデート</string>
+    <string name="common_connections">接続</string>
+    <string name="common_ecosystem">エコシステム</string>
+    <string name="common_voice">音声</string>
+    <string name="common_voice_assistant">音声アシスタント</string>
+    <string name="common_all_robots">すべてのロボット</string>
+    <string name="common_all_types">すべての種類</string>
+    <string name="common_warning">警告</string>
+    <string name="common_send">送信</string>
+    <string name="common_state">状態</string>
+    <string name="common_update">更新</string>
+    <string name="common_up_to_date">最新です</string>
+    <string name="common_system_default">システムの既定値</string>
+    <string name="common_select_a_robot">ロボットを選択してください</string>
 </resources>
