@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">HYDRA-UMC CONTROL</string>
-    <string name="tab_dashboard">仪表盘</string>
+    <string name="tab_dashboard">@string/common_dashboard</string>
     <string name="tab_control">控制</string>
-    <string name="tab_camera">摄像头</string>
+    <string name="tab_camera">@string/common_camera</string>
     <string name="select_camera_feed">选择摄像头</string>
     <string name="robot_camera_fallback_name">机器人摄像头 %d</string>
     <string name="camera_enabled_label">摄像头已启用</string>
@@ -11,8 +11,8 @@
     <string name="camera_disabled_hint">使用上方的开关在服务器上启用它</string>
     <string name="camera_live_label">直播:%s</string>
     <string name="tab_3d_view">3D 视图</string>
-    <string name="tab_telemetry">遥测</string>
-    <string name="tab_settings">设置</string>
+    <string name="tab_telemetry">@string/common_telemetry</string>
+    <string name="tab_settings">@string/common_settings</string>
     <string name="dashboard_title">仪表盘</string>
     <string name="server_status">服务器状态：%s</string>
     <string name="no_robots">没有已连接或已配置的机器人。</string>
@@ -69,12 +69,12 @@
     <string name="virtual_joystick">虚拟摇杆</string>
     <string name="xy_table">XY 工作台</string>
     <string name="ip_label">IP 地址</string>
-    <string name="port_label">端口</string>
+    <string name="port_label">@string/common_port</string>
     <string name="save_and_connect">保存并连接</string>
     <string name="search_local">搜索本地网络</string>
     <string name="scan_button">扫描</string>
     <string name="no_results_yet">尚无结果。</string>
-    <string name="connect_button">连接</string>
+    <string name="connect_button">@string/common_connect</string>
     <string name="server_info">%1$s:%2$d · %3$d 个控制器，%4$d 个机器人</string>
 
     <!-- 蓝牙字符串 -->
@@ -93,8 +93,8 @@
 
     <!-- 个人资料与关于 -->
     <string name="user_profile_title">用户资料</string>
-    <string name="username_label">用户名</string>
-    <string name="password_label">密码</string>
+    <string name="username_label">@string/common_username</string>
+    <string name="password_label">@string/common_password</string>
     <string name="email_label">电子邮箱地址</string>
     <string name="cancel_button">取消</string>
     <string name="biometric_auth_failed">身份验证失败</string>
@@ -143,12 +143,12 @@
     <string name="update_version_installed">已安装：v%1$s</string>
     <string name="update_version_new">新版本：v%1$s</string>
     <string name="update_view_changes">查看更新内容</string>
-    <string name="update_close">关闭</string>
+    <string name="update_close">@string/common_close</string>
     <!-- 3D viewport fullscreen landscape mode -->
     <string name="threed_fullscreen">全屏</string>
     <string name="threed_exit_fullscreen">退出全屏</string>
     <!-- Ecosystem status tab -->
-    <string name="tab_ecosystem">生态系统</string>
+    <string name="tab_ecosystem">@string/common_ecosystem</string>
     <string name="ecosystem_unavailable">服务器未找到任何相邻项目的清单。此功能仅在服务器与其他 HYDRA-UMC/URTC 仓库一起从同一台机器运行时才可用。</string>
     <string name="maturity_established">已建立</string>
     <string name="maturity_functional">可用</string>
@@ -169,7 +169,7 @@
     <string name="voice_assistant_input_label">输入或点击麦克风</string>
     <string name="voice_assistant_requires_confirmation">这需要确认后才会生效。</string>
     <string name="voice_start">开始语音识别</string>
-    <string name="voice_send">发送</string>
+    <string name="voice_send">@string/common_send</string>
     <string name="voice_prompt">说出你的请求</string>
     <string name="voice_unavailable">此设备不支持语音识别。</string>
     <string name="voice_permission_denied">语音输入需要麦克风权限。</string>
@@ -178,8 +178,8 @@
     <string name="access_mine_here">你已在此设备上预留</string>
     <string name="access_mine_elsewhere">你已在另一台设备上预留</string>
     <string name="access_other">已被 %1$s 预留</string>
-    <string name="access_reserve">预留</string>
-    <string name="access_release">释放</string>
+    <string name="access_reserve">@string/common_reserve</string>
+    <string name="access_release">@string/common_release</string>
     <string name="access_list_show">预留列表</string>
     <string name="access_list_empty">没有被预留的机器人。</string>
     <string name="access_list_item">%1$s：%2$s</string>
@@ -198,7 +198,7 @@
     <string name="error_jog_over_limit">点动被拒绝：步长超过服务器为该型号设定的上限 %1$s。未发送任何内容。</string>
 
     <!-- Bluetooth GATT and connection security -->
-    <string name="tab_security">安全</string>
+    <string name="tab_security">@string/common_security</string>
     <string name="tls_title">连接安全 (TLS)</string>
     <string name="tls_mode_auto">自动</string>
     <string name="tls_mode_required">强制使用TLS</string>
@@ -239,17 +239,17 @@
     <string name="bt_show_all_hint">关闭:只列出广播HYDRA-UMC服务的设备。</string>
     <string name="error_revision_changed">自此应用上次读取以来,机器人已发生变化(其他操作员或其他设备)-%1$s 命令未被应用。已从服务器重新读取该机器人:请检查,如仍需要请重新发送命令。</string>
     <string name="access_conditional_label">检查机器人是否已变化</string>
-    <string name="access_conditional_standard">标准</string>
+    <string name="access_conditional_standard">@string/common_standard</string>
     <string name="access_conditional_strict">严格</string>
-    <string name="access_conditional_off">关闭</string>
+    <string name="access_conditional_off">@string/common_off</string>
     <string name="access_conditional_hint">每次写入都带有此应用最后看到的机器人修订号;如果期间有人修改了机器人,服务器会拒绝并重新读取机器人。标准模式检查预约、工作台和一次性命令;严格模式检查除 STOP 外的全部命令;关闭则不检查。点动和速度在标准模式下不检查,因为它们每秒重复多次。STOP 永远不检查。</string>
     <string name="audit_open">审计记录</string>
     <string name="audit_title">审计记录</string>
     <string name="audit_intro">服务器对重要变更的记录:预约、强制释放、点动解锁、安全限制的修改以及全局停止。每一行都通过 SHA-256 与上一行相连,之后被修改或删除的行在校验链时会被发现。</string>
-    <string name="audit_all_types">所有类型</string>
-    <string name="audit_all_robots">所有机器人</string>
+    <string name="audit_all_types">@string/common_all_types</string>
+    <string name="audit_all_robots">@string/common_all_robots</string>
     <string name="audit_lines_count">%1$d 行</string>
-    <string name="audit_refresh">刷新</string>
+    <string name="audit_refresh">@string/common_refresh</string>
     <string name="audit_verify">校验链</string>
     <string name="audit_share">分享(.jsonl)</string>
     <string name="audit_empty">此筛选条件下没有记录。</string>
@@ -269,12 +269,12 @@
     <string name="audit_failure_session">会话已结束。请重新登录。</string>
     <string name="audit_failure_network">无法连接到服务器。</string>
     <string name="audit_failure_other">服务器没有提供审计记录。</string>
-    <string name="connections_open">连接</string>
+    <string name="connections_open">@string/common_connections</string>
     <string name="connections_title">谁连接到了服务器</string>
     <string name="connections_intro">服务器见过的应用和会话,以及最近的登录和退出。管理员能看到全部;其他账户只能看到自己的。不保存密码或令牌。</string>
     <string name="connections_clients">已见过的应用</string>
     <string name="connections_events">最近事件</string>
-    <string name="connections_refresh">刷新</string>
+    <string name="connections_refresh">@string/common_refresh</string>
     <string name="connections_none_clients">还没有应用登录。</string>
     <string name="connections_none_events">目前还没有发生任何事。</string>
     <string name="connections_no_user">未知用户</string>
@@ -293,8 +293,8 @@
     <string name="connections_kind_ios">iPhone / iPad</string>
     <string name="connections_kind_dsi">触摸屏</string>
     <string name="connections_kind_watch">手表</string>
-    <string name="connections_kind_voice">语音</string>
-    <string name="connections_kind_other">其他</string>
+    <string name="connections_kind_voice">@string/common_voice</string>
+    <string name="connections_kind_other">@string/common_other</string>
     <string name="connections_action_first_seen">首次出现</string>
     <string name="connections_action_login">已登录</string>
     <string name="connections_action_login_failed">登录被拒绝</string>
@@ -337,7 +337,7 @@
     <string name="viewport_model">型号:%1$s</string>
     <string name="viewport_unknown">未知</string>
     <string name="viewport_generic">通用</string>
-    <string name="refresh_description">刷新</string>
+    <string name="refresh_description">@string/common_refresh</string>
     <string name="camera_robot_disabled">%1$s(已禁用)</string>
     <string name="notification_safety_title">HYDRA-UMC 安全</string>
     <string name="notification_safety_text">连接已建立。可快速紧急停止。</string>
@@ -378,7 +378,7 @@
     <string name="server_options_confirm_voice">已确认的语音请求将不再需要经过验证的签名。</string>
     <string name="server_options_source_env">已在服务器环境中设置（锁定）</string>
     <string name="server_options_source_config">已从此界面保存</string>
-    <string name="server_options_source_default">默认</string>
+    <string name="server_options_source_default">@string/common_default</string>
     <string name="server_options_health_label">允许网络上的任何人无需登录读取 GET /health</string>
     <string name="server_options_health_help">默认关闭:此时该路由的响应就像不存在一样。开启后只返回最简的健康报告,供监控程序或负载均衡器使用。</string>
     <string name="server_options_health_confirm">GET /health 将无需登录即可响应。要开放吗?</string>
@@ -402,7 +402,7 @@
     <string name="home_reset_switch_hint">显示一个按钮，将所选机器人移到零位。它会移动真实机器人，因此需要两次确认，仅操作员和管理员可用，默认关闭。</string>
     <string name="home_reset_step1_title">将 %1$s 移到零位？（第 1 步，共 2 步）</string>
     <string name="home_reset_step1_message">机器人将移到零位。请确认其路径上没有障碍物。</string>
-    <string name="home_reset_step1_button">继续</string>
+    <string name="home_reset_step1_button">@string/common_continue</string>
     <string name="home_reset_step2_title">最后确认（第 2 步，共 2 步）</string>
     <string name="home_reset_step2_message">%1$s 现在将会移动。STOP 按钮仍可使用。移到零位吗？</string>
     <string name="home_reset_step2_button">移到零位</string>
@@ -483,7 +483,7 @@
     <string name="work_dialog_title">选择作业</string>
     <string name="work_loading">正在读取列表...</string>
     <string name="work_empty">该机器人在服务器上没有已保存的作业。</string>
-    <string name="work_refresh">刷新</string>
+    <string name="work_refresh">@string/common_refresh</string>
     <string name="work_load_failed">无法从服务器读取该作业。</string>
     <string name="work_invalid_file">%1$s 不是有效的作业文件:未加载任何内容。</string>
     <string name="work_blocked_none">可以加载作业。</string>
@@ -506,4 +506,106 @@
     <string name="canota_pages">%1$d / %2$d 页</string>
     <string name="canota_error">原因：%1$s</string>
     <string name="canota_percent">%1$d%%</string>
+
+    <!-- Common texts of the apps: written by tools/i18n_common.py of HYDRA-UMC-SDK, not by hand -->
+    <string name="common_confirm">确认</string>
+    <string name="common_cancel">取消</string>
+    <string name="common_save">保存</string>
+    <string name="common_close">关闭</string>
+    <string name="common_retry">重试</string>
+    <string name="common_yes">是</string>
+    <string name="common_no">否</string>
+    <string name="common_loading">加载中…</string>
+    <string name="common_online">在线</string>
+    <string name="common_offline">离线</string>
+    <string name="common_administrator">管理员</string>
+    <string name="common_operator">操作员</string>
+    <string name="common_viewer">查看者</string>
+    <string name="common_delete">删除</string>
+    <string name="common_pause">暂停</string>
+    <string name="common_next">下一步</string>
+    <string name="common_previous">上一步</string>
+    <string name="common_done">完成</string>
+    <string name="common_status">状态</string>
+    <string name="common_name">名称</string>
+    <string name="common_password">密码</string>
+    <string name="common_language">语言</string>
+    <string name="common_theme">主题</string>
+    <string name="common_type">类型</string>
+    <string name="common_key">密钥</string>
+    <string name="common_time">时间</string>
+    <string name="common_robot">机器人</string>
+    <string name="common_robots">机器人</string>
+    <string name="common_temperature">温度</string>
+    <string name="common_connect">连接</string>
+    <string name="common_disconnect">断开连接</string>
+    <string name="common_role">角色</string>
+    <string name="common_account">账户</string>
+    <string name="common_memory">内存</string>
+    <string name="common_telemetry">遥测</string>
+    <string name="common_approve">批准</string>
+    <string name="common_controllers">控制器</string>
+    <string name="common_services">服务</string>
+    <string name="common_users">用户</string>
+    <string name="common_export">导出</string>
+    <string name="common_download">下载</string>
+    <string name="common_load">加载</string>
+    <string name="common_clear">清除</string>
+    <string name="common_search">搜索</string>
+    <string name="common_value">数值</string>
+    <string name="common_enable">启用</string>
+    <string name="common_disable">禁用</string>
+    <string name="common_saved">已保存。</string>
+    <string name="common_level_basic">基础</string>
+    <string name="common_level_advanced">进阶</string>
+    <string name="common_level_technical">技术</string>
+    <string name="common_sign_in">登录</string>
+    <string name="common_finish">完成</string>
+    <string name="common_endstops">限位开关</string>
+    <string name="common_speed">速度</string>
+    <string name="common_vision_center">视觉中心</string>
+    <string name="common_stop">停止</string>
+    <string name="common_start">开始</string>
+    <string name="common_off">关闭</string>
+    <string name="common_default">默认</string>
+    <string name="common_continue">继续</string>
+    <string name="common_connecting">连接中…</string>
+    <string name="common_error">错误</string>
+    <string name="common_running">运行中</string>
+    <string name="common_restart">重启</string>
+    <string name="common_resume">继续</string>
+    <string name="common_play">播放</string>
+    <string name="common_step">步进</string>
+    <string name="common_server">服务器</string>
+    <string name="common_settings">设置</string>
+    <string name="common_security">安全</string>
+    <string name="common_refresh">刷新</string>
+    <string name="common_other">其他</string>
+    <string name="common_release">释放</string>
+    <string name="common_reserve">预留</string>
+    <string name="common_port">端口</string>
+    <string name="common_uptime">运行时间</string>
+    <string name="common_cpu_load">CPU 负载</string>
+    <string name="common_memory_usage">内存使用</string>
+    <string name="common_address">地址</string>
+    <string name="common_camera">摄像头</string>
+    <string name="common_acceleration">加速度</string>
+    <string name="common_sign_out">退出登录</string>
+    <string name="common_username">用户名</string>
+    <string name="common_standard">标准</string>
+    <string name="common_dashboard">仪表盘</string>
+    <string name="common_updates">更新</string>
+    <string name="common_connections">连接</string>
+    <string name="common_ecosystem">生态系统</string>
+    <string name="common_voice">语音</string>
+    <string name="common_voice_assistant">语音助手</string>
+    <string name="common_all_robots">所有机器人</string>
+    <string name="common_all_types">所有类型</string>
+    <string name="common_warning">警告</string>
+    <string name="common_send">发送</string>
+    <string name="common_state">状态</string>
+    <string name="common_update">更新</string>
+    <string name="common_up_to_date">已是最新</string>
+    <string name="common_system_default">跟随系统</string>
+    <string name="common_select_a_robot">请选择一个机器人</string>
 </resources>

@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">HYDRA-UMC CONTROL</string>
-    <string name="tab_dashboard">Dashboard</string>
+    <string name="tab_dashboard">@string/common_dashboard</string>
     <string name="tab_control">Controllo</string>
-    <string name="tab_camera">Fotocamera</string>
+    <string name="tab_camera">@string/common_camera</string>
     <string name="select_camera_feed">Seleziona telecamera</string>
     <string name="robot_camera_fallback_name">Telecamera del robot %d</string>
     <string name="camera_enabled_label">Telecamera attivata</string>
@@ -11,8 +11,8 @@
     <string name="camera_disabled_hint">Usa l\'interruttore sopra per attivarla sul server</string>
     <string name="camera_live_label">IN DIRETTA: %s</string>
     <string name="tab_3d_view">Vista 3D</string>
-    <string name="tab_telemetry">Telemetria</string>
-    <string name="tab_settings">Impostazioni</string>
+    <string name="tab_telemetry">@string/common_telemetry</string>
+    <string name="tab_settings">@string/common_settings</string>
     <string name="dashboard_title">Dashboard</string>
     <string name="server_status">Stato del server: %s</string>
     <string name="no_robots">Nessun robot connesso o configurato.</string>
@@ -69,12 +69,12 @@
     <string name="virtual_joystick">Joystick Virtuale</string>
     <string name="xy_table">Tavolo XY</string>
     <string name="ip_label">Indirizzo IP</string>
-    <string name="port_label">Porta</string>
+    <string name="port_label">@string/common_port</string>
     <string name="save_and_connect">Salva e connetti</string>
     <string name="search_local">Cerca nella rete locale</string>
     <string name="scan_button">Scansiona</string>
     <string name="no_results_yet">Nessun risultato ancora.</string>
-    <string name="connect_button">Connetti</string>
+    <string name="connect_button">@string/common_connect</string>
     <string name="server_info">%1$s:%2$d · %3$d controller, %4$d robot</string>
 
     <!-- Bluetooth Strings -->
@@ -93,8 +93,8 @@
 
     <!-- Profile & About -->
     <string name="user_profile_title">PROFILO UTENTE</string>
-    <string name="username_label">Nome utente</string>
-    <string name="password_label">Password</string>
+    <string name="username_label">@string/common_username</string>
+    <string name="password_label">@string/common_password</string>
     <string name="email_label">Indirizzo e-mail</string>
     <string name="cancel_button">ANNULLA</string>
     <string name="biometric_auth_failed">Autenticazione non riuscita</string>
@@ -143,12 +143,12 @@
     <string name="update_version_installed">Installata: v%1$s</string>
     <string name="update_version_new">Nuova versione: v%1$s</string>
     <string name="update_view_changes">Vedi le modifiche</string>
-    <string name="update_close">Chiudi</string>
+    <string name="update_close">@string/common_close</string>
     <!-- 3D viewport fullscreen landscape mode -->
     <string name="threed_fullscreen">Schermo intero</string>
     <string name="threed_exit_fullscreen">Esci da schermo intero</string>
     <!-- Ecosystem status tab -->
-    <string name="tab_ecosystem">Ecosistema</string>
+    <string name="tab_ecosystem">@string/common_ecosystem</string>
     <string name="ecosystem_unavailable">Il server non ha trovato alcun manifesto di progetti vicini. Funziona solo quando il server viene eseguito da una copia locale con altri repository HYDRA-UMC/URTC accanto.</string>
     <string name="maturity_established">Consolidato</string>
     <string name="maturity_functional">Funzionale</string>
@@ -169,7 +169,7 @@
     <string name="voice_assistant_input_label">Scrivi o tocca il microfono</string>
     <string name="voice_assistant_requires_confirmation">Questo richiede conferma prima di avere effetto.</string>
     <string name="voice_start">Avvia riconoscimento vocale</string>
-    <string name="voice_send">Invia</string>
+    <string name="voice_send">@string/common_send</string>
     <string name="voice_prompt">Pronuncia la tua richiesta</string>
     <string name="voice_unavailable">Il riconoscimento vocale non è disponibile su questo dispositivo.</string>
     <string name="voice_permission_denied">È richiesto il permesso del microfono per l\'input vocale.</string>
@@ -178,8 +178,8 @@
     <string name="access_mine_here">Prenotato da te su questo dispositivo</string>
     <string name="access_mine_elsewhere">Prenotato da te su un altro dispositivo</string>
     <string name="access_other">Prenotato da %1$s</string>
-    <string name="access_reserve">Riserva</string>
-    <string name="access_release">Rilascia</string>
+    <string name="access_reserve">@string/common_reserve</string>
+    <string name="access_release">@string/common_release</string>
     <string name="access_list_show">Prenotazioni</string>
     <string name="access_list_empty">Nessun robot è riservato.</string>
     <string name="access_list_item">%1$s: %2$s</string>
@@ -198,7 +198,7 @@
     <string name="error_jog_over_limit">Jog rifiutato: il passo supera il limite di %1$s impostato dal server per questo modello. Non è stato inviato nulla.</string>
 
     <!-- Bluetooth GATT and connection security -->
-    <string name="tab_security">Sicurezza</string>
+    <string name="tab_security">@string/common_security</string>
     <string name="tls_title">Sicurezza della connessione (TLS)</string>
     <string name="tls_mode_auto">Automatico</string>
     <string name="tls_mode_required">Richiedi TLS</string>
@@ -239,17 +239,17 @@
     <string name="bt_show_all_hint">Disattivato: vengono elencati solo i dispositivi che annunciano il servizio HYDRA-UMC.</string>
     <string name="error_revision_changed">Il robot è cambiato da quando questa app lo ha letto l\'ultima volta (un altro operatore o un altro dispositivo) - il comando %1$s NON è stato applicato. Il robot è stato riletto dal server: controllalo e ripeti il comando se è ancora quello che vuoi.</string>
     <string name="access_conditional_label">Verificare che il robot non sia cambiato</string>
-    <string name="access_conditional_standard">Standard</string>
+    <string name="access_conditional_standard">@string/common_standard</string>
     <string name="access_conditional_strict">Rigoroso</string>
-    <string name="access_conditional_off">Disattivato</string>
+    <string name="access_conditional_off">@string/common_off</string>
     <string name="access_conditional_hint">Ogni scrittura porta la revisione del robot che questa app ha visto per ultima; se qualcuno ha modificato il robot nel frattempo, il server rifiuta e il robot viene riletto. Standard verifica prenotazioni, tavola e comandi singoli; Rigoroso verifica tutto tranne STOP; Disattivato non verifica nulla. Il jog e la velocità non sono verificati in Standard perché si ripetono molte volte al secondo. STOP non è mai verificato.</string>
     <string name="audit_open">Registro di audit</string>
     <string name="audit_title">Registro di audit</string>
     <string name="audit_intro">Ciò che il server ha annotato sui cambiamenti importanti: prenotazioni, rilasci forzati, armamento del jog, modifiche dei limiti di sicurezza e arresti globali. Ogni riga è concatenata alla precedente con uno SHA-256, quindi una riga modificata o rimossa in seguito si vede quando si verifica la catena.</string>
-    <string name="audit_all_types">Tutti i tipi</string>
-    <string name="audit_all_robots">Tutti i robot</string>
+    <string name="audit_all_types">@string/common_all_types</string>
+    <string name="audit_all_robots">@string/common_all_robots</string>
     <string name="audit_lines_count">%1$d righe</string>
-    <string name="audit_refresh">Aggiorna</string>
+    <string name="audit_refresh">@string/common_refresh</string>
     <string name="audit_verify">Verifica la catena</string>
     <string name="audit_share">Condividi (.jsonl)</string>
     <string name="audit_empty">Nessuna riga per questo filtro.</string>
@@ -269,12 +269,12 @@
     <string name="audit_failure_session">La sessione è terminata. Accedi di nuovo.</string>
     <string name="audit_failure_network">Il server non è raggiungibile.</string>
     <string name="audit_failure_other">Il server non ha fornito il registro di audit.</string>
-    <string name="connections_open">Connessioni</string>
+    <string name="connections_open">@string/common_connections</string>
     <string name="connections_title">Chi si connette al server</string>
     <string name="connections_intro">Le app e le sessioni viste dal server e gli ultimi accessi e uscite. Un amministratore le vede tutte; ogni altro account vede solo le proprie. Non vengono conservati password né token.</string>
     <string name="connections_clients">App viste</string>
     <string name="connections_events">Ultimi eventi</string>
-    <string name="connections_refresh">Aggiorna</string>
+    <string name="connections_refresh">@string/common_refresh</string>
     <string name="connections_none_clients">Nessuna app ha ancora effettuato l\'accesso.</string>
     <string name="connections_none_events">Non è ancora successo nulla.</string>
     <string name="connections_no_user">Utente sconosciuto</string>
@@ -293,8 +293,8 @@
     <string name="connections_kind_ios">iPhone / iPad</string>
     <string name="connections_kind_dsi">Schermo touch</string>
     <string name="connections_kind_watch">Orologio</string>
-    <string name="connections_kind_voice">Voce</string>
-    <string name="connections_kind_other">Altro</string>
+    <string name="connections_kind_voice">@string/common_voice</string>
+    <string name="connections_kind_other">@string/common_other</string>
     <string name="connections_action_first_seen">Visto per la prima volta</string>
     <string name="connections_action_login">Accesso</string>
     <string name="connections_action_login_failed">Accesso rifiutato</string>
@@ -337,7 +337,7 @@
     <string name="viewport_model">MODELLO: %1$s</string>
     <string name="viewport_unknown">SCONOSCIUTO</string>
     <string name="viewport_generic">GENERICO</string>
-    <string name="refresh_description">Aggiorna</string>
+    <string name="refresh_description">@string/common_refresh</string>
     <string name="camera_robot_disabled">%1$s (disattivata)</string>
     <string name="notification_safety_title">SICUREZZA HYDRA-UMC</string>
     <string name="notification_safety_text">Connessione attiva. Arresto di emergenza rapido disponibile.</string>
@@ -378,7 +378,7 @@
     <string name="server_options_confirm_voice">Una richiesta vocale confermata non richiederà più una firma verificata.</string>
     <string name="server_options_source_env">Impostato nell\'ambiente del server (bloccato)</string>
     <string name="server_options_source_config">Salvato da questa schermata</string>
-    <string name="server_options_source_default">Predefinito</string>
+    <string name="server_options_source_default">@string/common_default</string>
     <string name="server_options_health_label">Consentire a chiunque sulla rete di leggere GET /health senza accedere</string>
     <string name="server_options_health_help">Disattivato per impostazione predefinita: il percorso risponde come se non esistesse. Attivo, mostra solo un rapporto di salute minimo, per un supervisore o un bilanciatore.</string>
     <string name="server_options_health_confirm">GET /health risponderà senza accesso. Aprirlo?</string>
@@ -402,7 +402,7 @@
     <string name="home_reset_switch_hint">Mostra un pulsante che porta il robot selezionato alla posizione zero. Muove il robot reale, quindi chiede due conferme, funziona solo per operatori e amministratori ed è disattivato per impostazione predefinita.</string>
     <string name="home_reset_step1_title">Portare %1$s a zero? (1 di 2)</string>
     <string name="home_reset_step1_message">Il robot andrà alla posizione zero. Controlla che non ci sia nulla sul suo percorso.</string>
-    <string name="home_reset_step1_button">Continua</string>
+    <string name="home_reset_step1_button">@string/common_continue</string>
     <string name="home_reset_step2_title">Ultimo controllo (2 di 2)</string>
     <string name="home_reset_step2_message">%1$s si muoverà adesso. Il pulsante STOP resta disponibile. Portare a zero?</string>
     <string name="home_reset_step2_button">Porta a zero</string>
@@ -483,7 +483,7 @@
     <string name="work_dialog_title">Scegli un lavoro</string>
     <string name="work_loading">Lettura dell\'elenco...</string>
     <string name="work_empty">Questo robot non ha lavori salvati sul server.</string>
-    <string name="work_refresh">Aggiorna</string>
+    <string name="work_refresh">@string/common_refresh</string>
     <string name="work_load_failed">Non è stato possibile leggere il lavoro dal server.</string>
     <string name="work_invalid_file">%1$s non è un file di lavoro valido: non è stato caricato nulla.</string>
     <string name="work_blocked_none">Si può caricare un lavoro.</string>
@@ -506,4 +506,106 @@
     <string name="canota_pages">%1$d di %2$d pagine</string>
     <string name="canota_error">Motivo: %1$s</string>
     <string name="canota_percent">%1$d%%</string>
+
+    <!-- Common texts of the apps: written by tools/i18n_common.py of HYDRA-UMC-SDK, not by hand -->
+    <string name="common_confirm">Conferma</string>
+    <string name="common_cancel">Annulla</string>
+    <string name="common_save">Salva</string>
+    <string name="common_close">Chiudi</string>
+    <string name="common_retry">Riprova</string>
+    <string name="common_yes">Sì</string>
+    <string name="common_no">No</string>
+    <string name="common_loading">Caricamento…</string>
+    <string name="common_online">Online</string>
+    <string name="common_offline">Offline</string>
+    <string name="common_administrator">Amministratore</string>
+    <string name="common_operator">Operatore</string>
+    <string name="common_viewer">Osservatore</string>
+    <string name="common_delete">Elimina</string>
+    <string name="common_pause">Pausa</string>
+    <string name="common_next">Avanti</string>
+    <string name="common_previous">Precedente</string>
+    <string name="common_done">Fatto</string>
+    <string name="common_status">Stato</string>
+    <string name="common_name">Nome</string>
+    <string name="common_password">Password</string>
+    <string name="common_language">Lingua</string>
+    <string name="common_theme">Tema</string>
+    <string name="common_type">Tipo</string>
+    <string name="common_key">Chiave</string>
+    <string name="common_time">Ora</string>
+    <string name="common_robot">Robot</string>
+    <string name="common_robots">Robot</string>
+    <string name="common_temperature">Temperatura</string>
+    <string name="common_connect">Connetti</string>
+    <string name="common_disconnect">Disconnetti</string>
+    <string name="common_role">Ruolo</string>
+    <string name="common_account">Account</string>
+    <string name="common_memory">Memoria</string>
+    <string name="common_telemetry">Telemetria</string>
+    <string name="common_approve">Approva</string>
+    <string name="common_controllers">Controller</string>
+    <string name="common_services">Servizi</string>
+    <string name="common_users">Utenti</string>
+    <string name="common_export">Esporta</string>
+    <string name="common_download">Scarica</string>
+    <string name="common_load">Carica</string>
+    <string name="common_clear">Pulisci</string>
+    <string name="common_search">Cerca</string>
+    <string name="common_value">Valore</string>
+    <string name="common_enable">Abilita</string>
+    <string name="common_disable">Disabilita</string>
+    <string name="common_saved">Salvato.</string>
+    <string name="common_level_basic">Base</string>
+    <string name="common_level_advanced">Avanzato</string>
+    <string name="common_level_technical">Tecnico</string>
+    <string name="common_sign_in">Accedi</string>
+    <string name="common_finish">Fine</string>
+    <string name="common_endstops">Finecorsa</string>
+    <string name="common_speed">Velocità</string>
+    <string name="common_vision_center">Centro di visione</string>
+    <string name="common_stop">Ferma</string>
+    <string name="common_start">Avvia</string>
+    <string name="common_off">Disattivato</string>
+    <string name="common_default">Predefinito</string>
+    <string name="common_continue">Continua</string>
+    <string name="common_connecting">Connessione in corso…</string>
+    <string name="common_error">Errore</string>
+    <string name="common_running">In esecuzione</string>
+    <string name="common_restart">Riavvia</string>
+    <string name="common_resume">Riprendi</string>
+    <string name="common_play">Riproduci</string>
+    <string name="common_step">Passo</string>
+    <string name="common_server">Server</string>
+    <string name="common_settings">Impostazioni</string>
+    <string name="common_security">Sicurezza</string>
+    <string name="common_refresh">Aggiorna</string>
+    <string name="common_other">Altro</string>
+    <string name="common_release">Rilascia</string>
+    <string name="common_reserve">Riserva</string>
+    <string name="common_port">Porta</string>
+    <string name="common_uptime">Tempo di attività</string>
+    <string name="common_cpu_load">Carico CPU</string>
+    <string name="common_memory_usage">Uso memoria</string>
+    <string name="common_address">Indirizzo</string>
+    <string name="common_camera">Fotocamera</string>
+    <string name="common_acceleration">Accelerazione</string>
+    <string name="common_sign_out">Esci</string>
+    <string name="common_username">Nome utente</string>
+    <string name="common_standard">Standard</string>
+    <string name="common_dashboard">Dashboard</string>
+    <string name="common_updates">Aggiornamenti</string>
+    <string name="common_connections">Connessioni</string>
+    <string name="common_ecosystem">Ecosistema</string>
+    <string name="common_voice">Voce</string>
+    <string name="common_voice_assistant">Assistente vocale</string>
+    <string name="common_all_robots">Tutti i robot</string>
+    <string name="common_all_types">Tutti i tipi</string>
+    <string name="common_warning">Avviso</string>
+    <string name="common_send">Invia</string>
+    <string name="common_state">Stato</string>
+    <string name="common_update">Aggiorna</string>
+    <string name="common_up_to_date">Aggiornato</string>
+    <string name="common_system_default">Predefinito di sistema</string>
+    <string name="common_select_a_robot">Seleziona un robot</string>
 </resources>
