@@ -22,7 +22,9 @@
     {"type": "server_security_status", "protocolVersion": 1, "loweredSwitches": ["health.open", "camera.open"], "lockedSwitches": 2, "activeClients": 3, "failedLogins": 1},
     {"type": "server_security_status", "protocolVersion": 1, "loweredSwitches": [], "lockedSwitches": 0, "activeClients": 0, "failedLogins": 0},
     {"type": "canota_progress_status", "protocolVersion": 1, "phase": "transferring", "percent": 40},
-    {"type": "canota_progress_status", "protocolVersion": 1, "phase": "done"}
+    {"type": "canota_progress_status", "protocolVersion": 1, "phase": "done"},
+    {"type": "release_notice", "protocolVersion": 1, "version": "0.5.2"},
+    {"type": "release_notice", "protocolVersion": 1, "version": "0.8.0.1"}
   ],
   "invalid": [
     {"why": "request id with a space", "type": "voice_turn", "requestId": "a b", "transcript": "hello", "locale": "en"},
@@ -45,6 +47,12 @@
     {"why": "canota progress with an unknown phase", "type": "canota_progress_status", "protocolVersion": 1, "phase": "dancing"},
     {"why": "canota progress without a phase", "type": "canota_progress_status", "protocolVersion": 1, "percent": 10},
     {"why": "canota progress with a percent over 100", "type": "canota_progress_status", "protocolVersion": 1, "phase": "verifying", "percent": 101},
-    {"why": "canota progress with a negative percent", "type": "canota_progress_status", "protocolVersion": 1, "phase": "verifying", "percent": -1}
+    {"why": "canota progress with a negative percent", "type": "canota_progress_status", "protocolVersion": 1, "phase": "verifying", "percent": -1},
+    {"why": "release notice of another protocol version", "type": "release_notice", "protocolVersion": 2, "version": "0.5.2"},
+    {"why": "release notice without a version", "type": "release_notice", "protocolVersion": 1},
+    {"why": "release notice with a text instead of a number", "type": "release_notice", "protocolVersion": 1, "version": "latest"},
+    {"why": "release notice with a single group", "type": "release_notice", "protocolVersion": 1, "version": "5"},
+    {"why": "release notice with five groups", "type": "release_notice", "protocolVersion": 1, "version": "1.2.3.4.5"},
+    {"why": "release notice with a link inside", "type": "release_notice", "protocolVersion": 1, "version": "0.5.2 https://x.example"}
   ]
 }
