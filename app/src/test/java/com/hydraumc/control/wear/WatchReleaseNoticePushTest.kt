@@ -91,4 +91,25 @@ class WatchReleaseNoticePushTest {
         assertFalse("0.5.2.0 is not newer than 0.5.2", policy.accept(SemanticVersion(0, 5, 2, 0)))
         assertTrue(policy.accept(SemanticVersion(0, 5, 2, 1)))
     }
+
+    @Test
+    fun `with the switch off nothing is sent and the version is not remembered`() = runBlocking {
+        val sink = Recorder()
+        val policy = ReleaseNoticeWatchPolicy()
+        assertFalse(announceReleaseToWatch(available(SemanticVersion(0, 5, 2)), policy, sink, enabled = false))
+        assertFalse(announceReleaseToWatch(UpToDateResult, policy, sink, enabled = false))
+        assertTrue(sink.sent.isEmpty())
+        // the person turns it on again: the same version is told by the next check, because the off state did not use it up
+        assertTrue(announceReleaseToWatch(available(SemanticVersion(0, 5, 2)), policy, sink, enabled = true))
+        assertEquals(listOf("0.5.2"), sink.sent.map { it.version })
+    }
+
+    @Test
+    fun `the switch is on when the caller says nothing, as it ships`() = runBlocking {
+        val sink = Recorder()
+        assertTrue(announceReleaseToWatch(available(SemanticVersion(0, 6, 0)), ReleaseNoticeWatchPolicy(), sink))
+        assertEquals(1, sink.sent.size)
+    }
+
+    private val UpToDateResult: UpdateCheckResult = UpdateCheckResult.UpToDate
 }

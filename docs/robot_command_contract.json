@@ -73,6 +73,7 @@
   "watchAlerts": {
     "note": "Alerts the phone pushes to the watch (path /hydra-umc/alert/v1 of the watch protocol), rationed so a burst never floods the wrist.",
     "enabledByDefault": true,
+    "releaseNoticeEnabledByDefault": true,
     "messageMax": 280,
     "dedupeWindowMs": 30000,
     "minGapMs": 2000,

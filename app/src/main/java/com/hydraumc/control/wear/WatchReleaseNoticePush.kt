@@ -47,9 +47,11 @@ class ReleaseNoticeWatchPolicy {
 /**
  * Passes the verdict of the update check to the watch. Only a release that the shared gate accepted ([UpdateCheckResult.Available]: stable tag, newer than
  * the installed one, the exact asset, HTTPS, digest) is told; a failed or an up-to-date check sends nothing. The watch never downloads or installs anything.
+ * [enabled] is the switch of the phone (Settings, "Tell the watch when a newer version exists"; on as it ships): when it is off this sends nothing, whatever the check found.
  * Returns true when a message was taken by a watch.
  */
-suspend fun announceReleaseToWatch(result: UpdateCheckResult, policy: ReleaseNoticeWatchPolicy, sink: WatchReleaseNoticeSink): Boolean {
+suspend fun announceReleaseToWatch(result: UpdateCheckResult, policy: ReleaseNoticeWatchPolicy, sink: WatchReleaseNoticeSink, enabled: Boolean = true): Boolean {
+    if (!enabled) return false // the person switched the notice off: nothing is sent and the version is not remembered, so turning it on again tells the next check
     val available = result as? UpdateCheckResult.Available ?: return false
     val version = available.update.version
     if (!policy.accept(version)) return false

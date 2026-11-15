@@ -450,6 +450,8 @@
     <string name="link_rtt_ms">%1$d ms</string>
     <string name="watch_alerts_switch_label">Enviar alertas para o relógio</string>
     <string name="watch_alerts_switch_hint">Avisa o relógio emparelhado quando a ligação ao servidor se perde, um robô fica offline ou em modo seguro, ou um STOP não é confirmado. Os alertas repetidos são limitados.</string>
+    <string name="watch_release_notice_switch_label">Avisar o relógio de uma versão nova</string>
+    <string name="watch_release_notice_switch_hint">Quando a verificação de atualizações encontra uma versão mais recente, o relógio emparelhado é avisado uma vez por versão. O relógio só mostra o aviso se o seu próprio interruptor estiver ativado. Desative para que o telemóvel nunca o envie.</string>
     <string name="presence_relay_switch_label">Passar ao servidor a presença do operador do relógio</string>
     <string name="presence_relay_switch_hint">O relógio envia um batimento enquanto o operador está na célula; o telemóvel reencaminha-o e o servidor decide o que significa perdê-lo. Desativado por predefinição.</string>
     <string name="voice_confirm_switch_label">Passar ao servidor a confirmação em dois passos do relógio</string>

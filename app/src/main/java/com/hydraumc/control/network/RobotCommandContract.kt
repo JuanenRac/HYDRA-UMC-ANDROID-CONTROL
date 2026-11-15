@@ -83,6 +83,7 @@ object RobotCommandContract {
 
     /** Alerts pushed to the watch and how they are rationed. */
     const val WATCH_ALERTS_ENABLED_BY_DEFAULT = true
+    const val WATCH_ALERTS_RELEASE_NOTICE_ENABLED_BY_DEFAULT = true
     const val WATCH_ALERTS_MESSAGE_MAX = 280
     const val WATCH_ALERTS_DEDUPE_WINDOW_MS = 30000L
     const val WATCH_ALERTS_MIN_GAP_MS = 2000L
