@@ -1,0 +1,31 @@
+{
+  "typed": [
+    "/api/ecosystem/status",
+    "/api/robot/{p}/jog-arm",
+    "/api/system/metrics"
+  ],
+  "by_hand": {
+    "/api/admin/server-config": "the answer is kept as text on purpose (the audit hash, the history and the options are read from the exact text), and the typed client returns a parsed model",
+    "/api/audit": "the answer is kept as text on purpose (the audit hash, the history and the options are read from the exact text), and the typed client returns a parsed model; the typed client also returns Unit for it",
+    "/api/camera/ticket": "the typed client declares no answer for this route (it returns Unit), so the body the app reads would be lost",
+    "/api/camera/{p}/stream": "an address handed to the picture player, not a request of the app (the stream is opened by the player)",
+    "/api/claims": "the typed client declares no answer for this route (it returns Unit), so the body the app reads would be lost",
+    "/api/connections/clients": "the answer is kept as text on purpose (the audit hash, the history and the options are read from the exact text), and the typed client returns a parsed model",
+    "/api/connections/events": "the answer is kept as text on purpose (the audit hash, the history and the options are read from the exact text), and the typed client returns a parsed model",
+    "/api/hydra-info": "the discovery probe: it tries http and then https, builds its own address and must never throw",
+    "/api/login": "sign-in is not migrated: it sends no token and the refresh sits below the authenticated call",
+    "/api/logout": "sign-in is not migrated: best effort, never throws",
+    "/api/operator/presence": "the watch relay forwards the body it was given and sets its own client header and time limit",
+    "/api/refresh": "sign-in is not migrated: the refresh sits below the authenticated call",
+    "/api/robot/{p}": "an older server sends no revision with the robot and the typed answer needs it; wait for the oldest server the app supports to have it",
+    "/api/robot/{p}/claim": "the answers of the reservation tests are partial; wait for the stand-in server before typing it",
+    "/api/robot/{p}/command": "the motion command: numbering, the short limit of a stop and the conditional write stay by hand until the typed path is measured",
+    "/api/robot/{p}/release": "the answers of the reservation tests are partial; wait for the stand-in server before typing it",
+    "/api/safety-limits": "the typed client declares no answer for this route (it returns Unit), so the body the app reads would be lost",
+    "/api/settings": "the whole plant state is read as a JSON tree by the view model and the watch summary",
+    "/api/stop-all": "the safety stop is never migrated: it has its own two second limit and its own result",
+    "/api/voice/confirm": "the typed client declares no answer for this route (it returns Unit), so the body the app reads would be lost",
+    "/api/voice/turn": "the typed client declares no answer for this route (it returns Unit), so the body the app reads would be lost",
+    "/api/watch/system-status": "the typed client declares no answer for this route (it returns Unit), so the body the app reads would be lost"
+  }
+}

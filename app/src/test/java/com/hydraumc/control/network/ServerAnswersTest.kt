@@ -119,6 +119,29 @@ class ServerAnswersTest {
     }
 
     @Test
+    fun `jog arm of either kind reads through the typed client and keeps the flags the app reads`() {
+        for (kind in listOf("minimal", "full")) {
+            serve(200, answer("POST /api/robot/{id}/jog-arm", "200", kind))
+            val armed = runBlocking { client.postJogArm(1, true) }
+            assertTrue("kind $kind", armed.has("success") && armed.has("armed"))
+            assertEquals("kind $kind", kind == "full", armed.has("ttlMs"))
+        }
+    }
+
+    @Test
+    fun `the refusals of the jog arm reach the app as errors with their status`() {
+        for (status in listOf("400", "404", "409", "423")) {
+            serve(status.toInt(), answer("POST /api/robot/{id}/jog-arm", status, "minimal"))
+            try {
+                runBlocking { client.postJogArm(1, true) }
+                throw AssertionError("expected a HydraApiException for $status")
+            } catch (e: HydraApiException) {
+                assertEquals(status.toInt(), e.httpCode)
+            }
+        }
+    }
+
+    @Test
     fun `a login answer of either kind carries the tokens the app stores`() {
         for (kind in listOf("minimal", "full")) {
             serve(200, answer("POST /api/login", "200", kind))

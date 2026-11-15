@@ -29,6 +29,9 @@ package com.hydraumc.control.network
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import hydra.umc.client.HydraPostRobotByIdJogArmBody
+import hydra.umc.client.HydraServerClient
+import okhttp3.Headers
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -295,9 +298,8 @@ class HydraApiClient(
     }
 
     /** Arms (true) or disarms (false) the jog of one robot; only demanded by the server when the administrator turned it on. */
-    suspend fun postJogArm(robotId: Int, armed: Boolean): JSONObject = withContext(Dispatchers.IO) {
-        val body = JSONObject().put("armed", armed).put("controllerId", SessionController.id)
-        executeExpectingJson(controlRequest("/api/robot/$robotId/jog-arm", body))
+    suspend fun postJogArm(robotId: Int, armed: Boolean): JSONObject = typedCall { api ->
+        asJson(api.postRobotByIdJogArm(robotId.toLong(), HydraPostRobotByIdJogArmBody(armed = armed, controllerId = SessionController.id), headerXControllerId = SessionController.id).toJson())
     }
 
     /**
@@ -475,13 +477,7 @@ class HydraApiClient(
     /**
      * Fetches real-time system metrics from the CM5.
      */
-    suspend fun getSystemMetrics(): JSONObject = withContext(Dispatchers.IO) {
-        val request = Request.Builder()
-            .url("$baseUrl/api/system/metrics")
-            .header("Authorization", "Bearer ${authToken ?: ""}")
-            .build()
-        executeExpectingJson(request)
-    }
+    suspend fun getSystemMetrics(): JSONObject = typedCall { api -> asJson(api.getSystemMetrics().toJson()) }
 
     /**
      * Fetches the server's own real V0 ecosystem-status scan - see
@@ -491,13 +487,7 @@ class HydraApiClient(
      * every ecosystem project as a deployed network service). Same trust
      * tier as getSystemMetrics() above.
      */
-    suspend fun getEcosystemStatus(): JSONObject = withContext(Dispatchers.IO) {
-        val request = Request.Builder()
-            .url("$baseUrl/api/ecosystem/status")
-            .header("Authorization", "Bearer ${authToken ?: ""}")
-            .build()
-        executeExpectingJson(request)
-    }
+    suspend fun getEcosystemStatus(): JSONObject = typedCall { api -> asJson(api.getEcosystemStatus().toJson()) }
 
     /**
      * Relays a recognised Watch voice turn through the authenticated Server
@@ -570,7 +560,39 @@ class HydraApiClient(
     }
 
     /** Executes a network request and gives the body of a successful answer as text; any other answer is a [HydraApiException]. */
-    private fun executeExpectingText(request: Request, callClient: OkHttpClient = client): String {
+    private fun executeExpectingText(request: Request, callClient: OkHttpClient = client): String = executeWithHeaders(request, callClient).first
+
+    /**
+     * The typed client of the SDK (`hydra.umc.client.HydraServerClient`), carried over the same HTTP client, token and error rules as the calls written
+     * by hand in this class (see [OkHttpHydraTransport]). docs/typed_client_inventory.json says which routes go through it.
+     */
+    private val typed: HydraServerClient by lazy {
+        HydraServerClient(OkHttpHydraTransport({ baseUrl }, { authToken }, { client }, ::executeWithHeaders))
+    }
+
+    /**
+     * One call of the typed client. A refusal or a network failure arrives as the [HydraApiException] it always was; an answer that does not have
+     * the shape of the contract (a field missing or of another type) is a [HydraApiException] too, never a crash of the caller.
+     */
+    private suspend fun <T> typedCall(call: suspend (HydraServerClient) -> T): T = withContext(Dispatchers.IO) {
+        try {
+            call(typed)
+        } catch (e: HydraApiException) {
+            throw e
+        } catch (e: ClassCastException) {
+            throw HydraApiException("The answer does not have the shape of the server contract: ${e.message}", e)
+        } catch (e: NullPointerException) {
+            throw HydraApiException("The answer does not have the shape of the server contract: ${e.message}", e)
+        } catch (e: IllegalArgumentException) {
+            throw HydraApiException("The request does not fit the server contract: ${e.message}", e)
+        }
+    }
+
+    /** The answer of a typed call as the JSON object its callers read. */
+    private fun asJson(model: Map<String, Any?>): JSONObject = OkHttpHydraTransport.encode(model) as JSONObject
+
+    /** Like [executeExpectingText], with the headers of the answer. */
+    private fun executeWithHeaders(request: Request, callClient: OkHttpClient = client): Pair<String, Headers> {
         val response = try {
             callClient.newCall(request).execute()
         } catch (e: IOException) {
@@ -604,7 +626,7 @@ class HydraApiClient(
             if (bodyString == null) {
                 throw HydraApiException("Empty answer from $baseUrl${request.url.encodedPath}")
             }
-            return bodyString
+            return bodyString to it.headers
         }
     }
 
