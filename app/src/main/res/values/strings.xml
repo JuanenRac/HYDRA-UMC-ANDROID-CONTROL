@@ -450,6 +450,8 @@
     <string name="link_rtt_ms">%1$d ms</string>
     <string name="watch_alerts_switch_label">Send alerts to the watch</string>
     <string name="watch_alerts_switch_hint">Tells the paired watch when the connection to the server is lost, a robot goes offline or into safe mode, or a STOP is not confirmed. Repeated alerts are limited.</string>
+    <string name="watch_release_notice_switch_label">Tell the watch when a newer version exists</string>
+    <string name="watch_release_notice_switch_hint">After an update check finds a newer release, the paired watch is told once for each version. The watch shows the notice only if its own switch is on. Turn this off so the phone never sends it.</string>
     <string name="presence_relay_switch_label">Pass the operator presence of the watch to the server</string>
     <string name="presence_relay_switch_hint">The watch sends a heartbeat while the operator is in the cell; the phone passes it on and the server decides what a lost one means. Off by default.</string>
     <string name="voice_confirm_switch_label">Pass the two-step confirmation of the watch to the server</string>

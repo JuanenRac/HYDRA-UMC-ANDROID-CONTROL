@@ -378,6 +378,8 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
 
     /** Alerts pushed to the paired watch (on by default, rationed); the relays of presence and confirmation are off by default. */
     val watchAlertsEnabled = mutableStateOf(RobotCommandContract.WATCH_ALERTS_ENABLED_BY_DEFAULT)
+    /** Whether the phone tells the watch that a newer release exists (on as it ships; the watch has its own switch, off by default). */
+    val watchReleaseNoticeEnabled = mutableStateOf(RobotCommandContract.WATCH_ALERTS_RELEASE_NOTICE_ENABLED_BY_DEFAULT)
     val presenceRelayEnabled = mutableStateOf(RobotCommandContract.PRESENCE_RELAY_ENABLED_BY_DEFAULT)
     val voiceConfirmRelayEnabled = mutableStateOf(RobotCommandContract.VOICE_CONFIRM_ENABLED_BY_DEFAULT)
     /** Where the alerts go; the Wear Data Layer in the app, replaced by a fake in the tests. */
@@ -645,6 +647,7 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
             filterObscuredTouches.value = prefs.loadFlag(ConnectionPrefs.Flags.FILTER_OBSCURED_TOUCHES, ObscuredTouchPolicy.ENABLED_BY_DEFAULT)
             pairingEnabled.value = prefs.loadFlag(ConnectionPrefs.Flags.PAIRING, RobotCommandContract.PAIRING_ENABLED_BY_DEFAULT)
             watchAlertsEnabled.value = prefs.loadFlag(ConnectionPrefs.Flags.WATCH_ALERTS, RobotCommandContract.WATCH_ALERTS_ENABLED_BY_DEFAULT)
+            watchReleaseNoticeEnabled.value = prefs.loadFlag(ConnectionPrefs.Flags.WATCH_RELEASE_NOTICE, RobotCommandContract.WATCH_ALERTS_RELEASE_NOTICE_ENABLED_BY_DEFAULT)
             presenceRelayEnabled.value = prefs.loadFlag(ConnectionPrefs.Flags.PRESENCE_RELAY, RobotCommandContract.PRESENCE_RELAY_ENABLED_BY_DEFAULT)
             voiceConfirmRelayEnabled.value = prefs.loadFlag(ConnectionPrefs.Flags.VOICE_CONFIRM_RELAY, RobotCommandContract.VOICE_CONFIRM_ENABLED_BY_DEFAULT)
             pairingFlagsLoaded = true
@@ -1690,6 +1693,11 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
         watchAlertsEnabled.value = on
         if (on) ensureWatchAlertLoop()
         viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) { prefs.saveFlag(ConnectionPrefs.Flags.WATCH_ALERTS, on) }
+    }
+
+    fun setWatchReleaseNoticeEnabled(on: Boolean) {
+        watchReleaseNoticeEnabled.value = on
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) { prefs.saveFlag(ConnectionPrefs.Flags.WATCH_RELEASE_NOTICE, on) }
     }
 
     fun setPresenceRelayEnabled(on: Boolean) {

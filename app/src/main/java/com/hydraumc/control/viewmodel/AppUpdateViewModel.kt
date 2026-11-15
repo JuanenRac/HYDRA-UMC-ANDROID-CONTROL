@@ -10,6 +10,8 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.hydraumc.control.BuildConfig
 import com.hydraumc.common.AvailableUpdate
+import com.hydraumc.control.network.ConnectionPrefs
+import com.hydraumc.control.network.RobotCommandContract
 import com.hydraumc.control.update.GitHubReleaseUpdater
 import com.hydraumc.common.UpdateCheckResult
 import com.hydraumc.control.update.UpdateDownloadResult
@@ -52,6 +54,11 @@ class AppUpdateViewModel(application: Application) : AndroidViewModel(applicatio
     /** Where the notice of a newer release goes (the paired watch); a test gives its own. */
     var watchReleaseNoticeSink: WatchReleaseNoticeSink = WearReleaseNoticeSink(application.applicationContext)
     private val releaseNoticePolicy = ReleaseNoticeWatchPolicy()
+    private val connectionPrefs = ConnectionPrefs(application)
+    /** Whether the phone may tell the watch about a newer release (the switch of the settings); a test gives its own. */
+    var releaseNoticeSwitch: suspend () -> Boolean = {
+        connectionPrefs.loadFlag(ConnectionPrefs.Flags.WATCH_RELEASE_NOTICE, RobotCommandContract.WATCH_ALERTS_RELEASE_NOTICE_ENABLED_BY_DEFAULT)
+    }
 
     /** Safe to call at startup: it only reads release metadata, never downloads an APK. */
     fun checkForUpdate() {
@@ -66,7 +73,7 @@ class AppUpdateViewModel(application: Application) : AndroidViewModel(applicatio
             }
             // A failure to reach the watch is not an error of the update.
             try {
-                announceReleaseToWatch(result, releaseNoticePolicy, watchReleaseNoticeSink)
+                announceReleaseToWatch(result, releaseNoticePolicy, watchReleaseNoticeSink, releaseNoticeSwitch())
             } catch (e: kotlinx.coroutines.CancellationException) {
                 throw e
             } catch (_: Exception) {

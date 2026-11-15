@@ -450,6 +450,8 @@
     <string name="link_rtt_ms">%1$d ms</string>
     <string name="watch_alerts_switch_label">Invia avvisi all\'orologio</string>
     <string name="watch_alerts_switch_hint">Avvisa l\'orologio abbinato quando la connessione al server si perde, un robot va offline o in modalità sicura, o uno STOP non viene confermato. Gli avvisi ripetuti sono limitati.</string>
+    <string name="watch_release_notice_switch_label">Avvisa l\'orologio di una nuova versione</string>
+    <string name="watch_release_notice_switch_hint">Quando il controllo degli aggiornamenti trova una versione più recente, l\'orologio abbinato ne viene informato una volta per versione. L\'orologio mostra l\'avviso solo se il suo interruttore è attivo. Disattiva per non farlo inviare mai dal telefono.</string>
     <string name="presence_relay_switch_label">Inoltra al server la presenza dell\'operatore dall\'orologio</string>
     <string name="presence_relay_switch_hint">L\'orologio invia un battito finché l\'operatore è nella cella; il telefono lo inoltra e il server decide cosa significa la sua assenza. Disattivato per impostazione predefinita.</string>
     <string name="voice_confirm_switch_label">Inoltra al server la conferma in due passaggi dell\'orologio</string>

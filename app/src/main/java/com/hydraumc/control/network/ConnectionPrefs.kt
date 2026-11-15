@@ -111,6 +111,7 @@ class ConnectionPrefs(private val context: Context) {
         const val FILTER_OBSCURED_TOUCHES = "filter_obscured_touches"
         const val PAIRING = "pairing_links"
         const val WATCH_ALERTS = "watch_alerts"
+        const val WATCH_RELEASE_NOTICE = "watch_release_notice"
         const val PRESENCE_RELAY = "presence_relay"
         const val VOICE_CONFIRM_RELAY = "voice_confirm_relay"
     }

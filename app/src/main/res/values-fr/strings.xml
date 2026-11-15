@@ -450,6 +450,8 @@
     <string name="link_rtt_ms">%1$d ms</string>
     <string name="watch_alerts_switch_label">Envoyer des alertes à la montre</string>
     <string name="watch_alerts_switch_hint">Prévient la montre associée lorsque la connexion au serveur est perdue, qu\'un robot passe hors ligne ou en mode sécurisé, ou qu\'un STOP n\'est pas confirmé. Les alertes répétées sont limitées.</string>
+    <string name="watch_release_notice_switch_label">Prévenir la montre d\'une nouvelle version</string>
+    <string name="watch_release_notice_switch_hint">Lorsque la vérification des mises à jour trouve une version plus récente, la montre associée en est informée une fois par version. La montre n\'affiche l\'avis que si son propre interrupteur est activé. Désactivez ceci pour que le téléphone ne l\'envoie jamais.</string>
     <string name="presence_relay_switch_label">Transmettre au serveur la présence de l\'opérateur de la montre</string>
     <string name="presence_relay_switch_hint">La montre envoie un battement tant que l\'opérateur est dans la cellule ; le téléphone le transmet et le serveur décide de ce que signifie son absence. Désactivé par défaut.</string>
     <string name="voice_confirm_switch_label">Transmettre au serveur la confirmation en deux étapes de la montre</string>
