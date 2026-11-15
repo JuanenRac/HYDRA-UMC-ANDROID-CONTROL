@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- **The common words of the apps come from the SDK:** the eight `strings.xml` files carry the `common_<id>` lines that `tools/i18n_common.py render android` writes (100 words in all, written once in HYDRA-UMC-SDK), and the strings of the app that said exactly the same word point at them (`@string/common_<id>`), so the word cannot be written differently here and in the other apps. `tools/extra_checks.py` checks that the lines are the ones of the SDK when the SDK is at hand; the strings that differ in form or in meaning (capitals, a longer wording) stay as they are.
 - **The SDK is pinned to its newest release and the tests replay its newest server answers:** the workflow fetches the contracts of `v0.6.4`, and the recorded answers of the server now include the last health frame of a controller board (`GET /api/ecosystem/node-health`). The shared Kotlin code (semantic version, JSON text, release metadata) already equals the SDK copy.
 
 - **The test of a failed cancel waits for the rollback, not only for the error:** `RobotViewModelSendAtomicCommandTest` read the state of the two robots as soon as the error was published, before the rollback was applied, and failed now and then on a slow runner; it now waits until both robots are playing again.
