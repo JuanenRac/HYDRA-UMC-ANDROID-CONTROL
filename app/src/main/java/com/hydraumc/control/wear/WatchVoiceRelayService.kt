@@ -40,6 +40,8 @@ object WatchRelayPaths {
     const val SERVER_SECURITY = "/hydra-umc/server-security/v1"
     /** Phone -> watch: the live progress of a flash cycle of a board. */
     const val CANOTA_PROGRESS = "/hydra-umc/canota-progress/v1"
+    /** Phone -> watch: a newer release exists (read only; the watch downloads and installs nothing). */
+    const val RELEASE_NOTICE = "/hydra-umc/release-notice/v1"
 }
 
 private const val TAG = "WatchVoiceRelay"

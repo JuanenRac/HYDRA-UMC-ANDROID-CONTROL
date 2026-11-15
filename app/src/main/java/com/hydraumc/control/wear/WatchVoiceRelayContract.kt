@@ -241,3 +241,33 @@ data class WatchCanOtaProgress(
             WatchCanOtaProgress(progress.phase.wire, progress.percent)
     }
 }
+
+/**
+ * Read-only notice for the watch that a newer release exists: the number of the release as two to four groups of digits. The phone decides (it reads the
+ * release feed through the shared gate); the watch only shows a line, and only when its own switch is on. Same rules as the watch applies when it
+ * receives it (docs/watch_relay_contract.json, "release_notice").
+ */
+data class WatchReleaseNotice(
+    val version: String,
+    val protocolVersion: Int = PROTOCOL_VERSION,
+) {
+    init {
+        require(protocolVersion == PROTOCOL_VERSION) { "unsupported release notice protocol version" }
+        require(VERSION.matches(version)) { "a version of two to four groups of digits" }
+    }
+
+    fun toJson(): JSONObject = JSONObject()
+        .put("type", "release_notice")
+        .put("protocolVersion", protocolVersion)
+        .put("version", version)
+
+    companion object {
+        const val PROTOCOL_VERSION = 1
+        private val VERSION = Regex("^[0-9]{1,4}(\\.[0-9]{1,4}){1,3}$")
+
+        fun fromJson(json: JSONObject): WatchReleaseNotice {
+            require(json.getString("type") == "release_notice") { "unexpected release notice type" }
+            return WatchReleaseNotice(version = json.getString("version"), protocolVersion = json.getInt("protocolVersion"))
+        }
+    }
+}

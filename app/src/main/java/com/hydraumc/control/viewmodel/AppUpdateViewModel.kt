@@ -13,7 +13,11 @@ import com.hydraumc.common.AvailableUpdate
 import com.hydraumc.control.update.GitHubReleaseUpdater
 import com.hydraumc.common.UpdateCheckResult
 import com.hydraumc.control.update.UpdateDownloadResult
+import com.hydraumc.control.wear.ReleaseNoticeWatchPolicy
 import com.hydraumc.control.wear.WatchCompanionVersionStatus
+import com.hydraumc.control.wear.WatchReleaseNoticeSink
+import com.hydraumc.control.wear.WearReleaseNoticeSink
+import com.hydraumc.control.wear.announceReleaseToWatch
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -45,16 +49,28 @@ class AppUpdateViewModel(application: Application) : AndroidViewModel(applicatio
     private val mutableState = MutableStateFlow<AppUpdateState>(AppUpdateState.Idle)
     val state: StateFlow<AppUpdateState> = mutableState.asStateFlow()
     private var installingUpdate: AvailableUpdate? = null
+    /** Where the notice of a newer release goes (the paired watch); a test gives its own. */
+    var watchReleaseNoticeSink: WatchReleaseNoticeSink = WearReleaseNoticeSink(application.applicationContext)
+    private val releaseNoticePolicy = ReleaseNoticeWatchPolicy()
 
     /** Safe to call at startup: it only reads release metadata, never downloads an APK. */
     fun checkForUpdate() {
         if (mutableState.value is AppUpdateState.Checking) return
         viewModelScope.launch {
             mutableState.value = AppUpdateState.Checking
-            mutableState.value = when (val result = updater.checkForUpdate()) {
+            val result = updater.checkForUpdate()
+            mutableState.value = when (result) {
                 UpdateCheckResult.UpToDate -> AppUpdateState.UpToDate
                 is UpdateCheckResult.Available -> AppUpdateState.Available(result.update)
                 is UpdateCheckResult.Failed -> AppUpdateState.Failed(result.message)
+            }
+            // A failure to reach the watch is not an error of the update.
+            try {
+                announceReleaseToWatch(result, releaseNoticePolicy, watchReleaseNoticeSink)
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                // no watch, or it did not answer: the next check tells it again
             }
         }
     }
