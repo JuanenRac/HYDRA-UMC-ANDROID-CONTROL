@@ -27,6 +27,7 @@ import com.hydraumc.control.network.ListenOnly
 import com.hydraumc.control.network.LoginCheck
 import com.hydraumc.control.network.SignInResult
 import com.hydraumc.control.network.SessionRenewer
+import com.hydraumc.control.network.SessionBinding
 import com.hydraumc.control.network.UserProfile
 import com.hydraumc.control.network.ClaimInfo
 import com.hydraumc.control.network.RobotCommandContract
@@ -512,7 +513,21 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
         store = authPrefs,
         onToken = { authTokenState.value = it },
         log = { logTelemetry(it) },
+        allowed = { sessionBelongsTo(activeSessionServer ?: SessionBinding.id(ipAddress.value, portValue())) },
     )
+
+    // The server the connection in progress is aimed at; the stored session is used only when it was issued by that one.
+    @Volatile private var activeSessionServer: String? = null
+
+    /** True when the stored session (token, refresh token, saved password) was issued by [here]. A session stored before this was kept belongs to the server saved at that time. */
+    private suspend fun sessionBelongsTo(here: String): Boolean {
+        var bound = try { authPrefs.sessionServer() } catch (e: kotlinx.coroutines.CancellationException) { throw e } catch (_: Exception) { "" }
+        if (bound.isEmpty()) {
+            bound = prefs.load()?.let { SessionBinding.id(it.first, it.second.toIntOrNull() ?: 3000) } ?: here
+            try { authPrefs.bindSessionServer(bound) } catch (e: kotlinx.coroutines.CancellationException) { throw e } catch (_: Exception) { }
+        }
+        return bound == here
+    }
 
     // Jog commands currently on the wire, per robot. A press-and-hold repeats
     // every 150 ms; on a slow link the POSTs would pile up and arrive after
@@ -685,7 +700,8 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
             isStrongBiometric.value = profile.isStrongBiometric
             sealedPassword.value = profile.sealedPassword
             
-            if (profile.token.isNotEmpty()) {
+            activeSessionServer = SessionBinding.id(ipAddress.value, port.value.toIntOrNull() ?: 3000)
+            if (profile.token.isNotEmpty() && sessionBelongsTo(activeSessionServer!!)) {
                 val client = HydraApiClient(ipAddress.value, port.value.toIntOrNull() ?: 3000)
                 client.authToken = profile.token
                 client.refreshToken = profile.refreshToken.ifEmpty { null }
@@ -775,6 +791,8 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
             logTelemetry("Logging in to ${check.host}:${check.port}...")
             when (val result = authManager.signIn(client, user, pass, remember, loginEmail.value, isBiometricEnabled.value, isStrongBiometric.value)) {
                 is SignInResult.Success -> {
+                    runCatching { authPrefs.bindSessionServer(SessionBinding.id(check.host, check.port)) }
+                    activeSessionServer = SessionBinding.id(check.host, check.port)
                     authTokenState.value = result.token
                     isLoggedIn.value = true
                     renewalBudget.reset()
@@ -901,6 +919,7 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
             val host = ipAddress.value.trim()
             val portInt = port.value.trim().toIntOrNull() ?: return false
             val client = HydraApiClient(host, portInt)
+            activeSessionServer = SessionBinding.id(host, portInt)
             if (!sessionRenewer.renew(client)) return false
             apiClient = client
             logTelemetry("Session silently renewed after token expiry")
@@ -1056,10 +1075,15 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
             prepare = {
                 // Ensure token is carried over or reloaded from persistence
                 val profile = authPrefs.loadAuth()
-                val token = apiClient?.authToken ?: profile.token
+                // The token, the refresh token and the saved password go only to the server that issued them: another server gets none and the person signs in to it.
+                val here = SessionBinding.id(host, portInt)
+                activeSessionServer = here
+                val sameServer = sessionBelongsTo(here)
+                if (!sameServer) logTelemetry("This is not the server of the saved session: sign in again")
+                val token = if (sameServer) (apiClient?.authToken ?: profile.token) else ""
                 client = HydraApiClient(host, portInt)
                 client.authToken = token
-                client.refreshToken = apiClient?.refreshToken ?: profile.refreshToken.ifEmpty { null }
+                client.refreshToken = if (sameServer) (apiClient?.refreshToken ?: profile.refreshToken.ifEmpty { null }) else null
                 apiClient = client
                 authTokenState.value = token
                 prefs.save(host, portValue)

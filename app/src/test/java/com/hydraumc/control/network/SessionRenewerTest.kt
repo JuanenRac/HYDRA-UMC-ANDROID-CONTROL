@@ -124,4 +124,18 @@ class SessionRenewerTest {
         assertFalse(SessionRenewer(broken, {}, { logs += it }).renew(Client()))
         assertTrue(logs.single().contains("keystore"))
     }
+
+    @Test
+    fun aSessionThatBelongsToAnotherServerSendsNothingToThisOne() = runBlocking {
+        val client = Client(onRefresh = { ok("t", "r") }, onLogin = { _, _ -> ok("t", "r") })
+        val renewer = SessionRenewer(Store(profile(refresh = "stored-refresh")), {}, {}, allowed = { false })
+        assertFalse(renewer.renew(client))
+        assertEquals(0, client.refreshCalls)
+        assertEquals(0, client.loginCalls)
+    }
+
+    @Test
+    fun theIdOfAServerIgnoresCaseAndSpaces() {
+        assertEquals("plant.local:3000", SessionBinding.id(" Plant.Local ", 3000))
+    }
 }
