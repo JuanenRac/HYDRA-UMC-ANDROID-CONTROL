@@ -53,6 +53,7 @@
     <string name="stop_all_one_by_one">Enviado robot a robot (el servidor limitó la llamada global)</string>
     <string name="stop_all_robot_failed">%1$s no se detuvo: %2$s</string>
     <string name="stop_all_robot_reserved">%1$s está reservado por %2$s (detenido igualmente)</string>
+    <string name="stop_restored_after_restart">Detenido tras un reinicio del servidor: un administrador debe liberarlo</string>
     <string name="stop_all_not_confirmed">STOP NO CONFIRMADO: pulsa STOP otra vez o usa la seta de emergencia física</string>
     <string name="stop_hold_to_confirm">Mantén pulsado para confirmar el STOP</string>
     <string name="error_command_not_applied">El servidor no aplicó %1$s: %2$s (cambio revertido)</string>

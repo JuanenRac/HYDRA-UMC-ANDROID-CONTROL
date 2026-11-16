@@ -53,6 +53,7 @@
     <string name="stop_all_one_by_one">已逐台发送（服务器限制了全局调用）</string>
     <string name="stop_all_robot_failed">%1$s 未停止：%2$s</string>
     <string name="stop_all_robot_reserved">%1$s 已被 %2$s 预约（仍已停止）</string>
+    <string name="stop_restored_after_restart">服务器重启后处于停止状态：需要管理员解除</string>
     <string name="stop_all_not_confirmed">STOP 未确认：请再次点按 STOP 或使用物理急停</string>
     <string name="stop_hold_to_confirm">长按以确认停止</string>
     <string name="error_command_not_applied">服务器未应用 %1$s：%2$s（已撤销更改）</string>

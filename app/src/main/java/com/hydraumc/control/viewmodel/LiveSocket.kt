@@ -38,6 +38,9 @@ interface SocketListener {
     /** The live progress of a flash cycle of a board (administrators only). */
     fun onCanOtaProgress(message: JSONObject) {}
 
+    /** The stop state of the server (the physical and the global stop as one state). */
+    fun onStopState(message: JSONObject) {}
+
     /** The server closed the socket because the token is expired or invalid; not called while a server switch is under way. */
     fun onUnauthorized() {}
 
@@ -54,6 +57,7 @@ class SocketCallbacks(
     val onUnauthorized: () -> Unit,
     val onError: (String) -> Unit,
     val onCanOtaProgress: (JSONObject) -> Unit = {},
+    val onStopState: (JSONObject) -> Unit = {},
 )
 
 /**
@@ -87,6 +91,7 @@ class LiveSocket(
                 onUnauthorized = { if (!isSwitching()) listener.onUnauthorized() },
                 onError = { message -> if (!isSwitching()) listener.onError(message) },
                 onCanOtaProgress = { listener.onCanOtaProgress(it) },
+                onStopState = { listener.onStopState(it) },
             ),
         )
         current = handle
@@ -113,6 +118,7 @@ class LiveSocket(
                 onUnauthorized = callbacks.onUnauthorized,
                 onClaims = callbacks.onClaims,
                 onCanOtaProgress = callbacks.onCanOtaProgress,
+                onStopState = callbacks.onStopState,
                 onError = callbacks.onError,
             )
             return object : SocketHandle {

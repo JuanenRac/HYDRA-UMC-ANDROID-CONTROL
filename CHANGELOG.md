@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- **The app tells when the server is stopped only because it restarted:** the server keeps a global stop across a restart and stays stopped until an administrator releases it; the app reads `restoredAfterRestart` in the stop state it receives and shows "Stopped after a server restart: an administrator must release it" (eight languages) until the stop is released or the connection closes. A test covers the reading.
 - **A server error on the global STOP no longer stops the attempt:** when `POST /api/stop-all` answers with a 5xx status the app now stops the known robots one by one, as it already did for a rate limit or a missing route, and the banner starts with "STOP sent, no reply yet" (in the eight languages) until an answer arrives. Tests cover the fallback and the first status.
 - **The obscured-touch filter no longer drops a STOP:** the filter that ignores touches while another app draws over this one now skips the STOP buttons, so a covered window can still be stopped; every other control keeps the protection. A test covers the rule.
 - **Every switch read from storage at start keeps a change made before the read ends:** the dead-man jog, the link health options, the obscured-touch filter, pairing links, the watch alerts, the presence and voice relays and the notifications switch no longer fall back to the saved value when the person changes them while it is still being read. A test covers all of them.

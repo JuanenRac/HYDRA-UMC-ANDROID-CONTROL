@@ -115,6 +115,8 @@ class HydraWebSocket(
      * Optional: a caller that does not pass it ignores the message.
      */
     private val onCanOtaProgress: ((JSONObject) -> Unit)? = null,
+    /** The `stop-state` message (the physical and the global stop as one state): the whole message, as it came. */
+    private val onStopState: ((JSONObject) -> Unit)? = null,
     /** The pause before a dropped socket is opened again; a test passes a short one instead of waiting the real seconds. */
     private val reconnectDelayMs: Long = RECONNECT_DELAY_MS,
     private val onError: (String) -> Unit,
@@ -315,6 +317,11 @@ class HydraWebSocket(
         val type = json.optStr("type")
         if (type == "claims") {
             val handler = onClaims
+            if (handler != null) mainScope.launch { handler(json) }
+            return
+        }
+        if (type == "stop-state") {
+            val handler = onStopState
             if (handler != null) mainScope.launch { handler(json) }
             return
         }

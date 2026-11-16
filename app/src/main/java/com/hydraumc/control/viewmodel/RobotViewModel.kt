@@ -291,6 +291,9 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
     val claims = mutableStateOf<List<ClaimInfo>>(emptyList())
     /** The last progress of a flash cycle of a board the server pushed (administrators only); null before the first message and after the socket closes. */
     val canOtaProgress = mutableStateOf<com.hydraumc.control.model.CanOtaProgress?>(null)
+
+    /** True while the server is stopped only because it restarted while stopped: an administrator has to release it. */
+    val serverStoppedAfterRestart = mutableStateOf(false)
     /** The limits of each robot model the server told this app about, by robot id. */
     val safetyByRobot = mutableStateOf<Map<Int, RobotSafety>>(emptyMap())
     /** Until when (this phone clock, epoch ms) the jog of each robot is armed from this app. */
@@ -1190,6 +1193,7 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
         override fun onClosedIdle() {
             discoveredServers.value = emptyList()
             canOtaProgress.value = null
+            serverStoppedAfterRestart.value = false
             canOtaWatchPolicy.reset()
         }
 
@@ -1207,6 +1211,10 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
 
         override fun onClaims(message: JSONObject) {
             applyClaimsPush(message)
+        }
+
+        override fun onStopState(message: JSONObject) {
+            com.hydraumc.control.model.StopStateNotice.restoredAfterRestart(message)?.let { serverStoppedAfterRestart.value = it }
         }
 
         // A message with a phase the app does not know leaves what is shown as it was.

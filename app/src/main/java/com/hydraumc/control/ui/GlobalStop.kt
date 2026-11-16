@@ -144,6 +144,19 @@ fun StopAllBanner(viewModel: RobotViewModel, modifier: Modifier = Modifier) {
     }
 }
 
+/** The notice that the server is stopped only because it restarted while stopped: an administrator has to release it. */
+@Composable
+fun StopRestoredBanner(viewModel: RobotViewModel, modifier: Modifier = Modifier) {
+    if (!viewModel.serverStoppedAfterRestart.value) return
+    Text(
+        stringResource(R.string.stop_restored_after_restart),
+        color = Color.White,
+        style = MaterialTheme.typography.labelLarge,
+        fontWeight = FontWeight.Bold,
+        modifier = modifier.fillMaxWidth().background(WarnAmber).padding(horizontal = 16.dp, vertical = 6.dp),
+    )
+}
+
 @Composable
 private fun bannerLines(result: StopAllResult): List<String> {
     val lines = mutableListOf<String>()

@@ -108,6 +108,7 @@ fun MainScreen(
                 ThreeDScreen(viewModel)
                 // ThreeDScreen carries its own STOP button; the result of the last one shows here.
                 StopAllBanner(viewModel, Modifier.align(Alignment.TopCenter))
+                StopRestoredBanner(viewModel, Modifier.align(Alignment.BottomCenter))
             }
         }
         return
@@ -332,6 +333,7 @@ fun MainScreen(
                 }
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                 StopAllBanner(viewModel)
+                StopRestoredBanner(viewModel)
             }
         },
         bottomBar = {

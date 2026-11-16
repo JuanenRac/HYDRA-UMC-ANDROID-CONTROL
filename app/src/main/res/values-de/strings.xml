@@ -53,6 +53,7 @@
     <string name="stop_all_one_by_one">Roboter für Roboter gesendet (der Server hat den globalen Aufruf begrenzt)</string>
     <string name="stop_all_robot_failed">%1$s wurde nicht angehalten: %2$s</string>
     <string name="stop_all_robot_reserved">%1$s ist von %2$s reserviert (trotzdem angehalten)</string>
+    <string name="stop_restored_after_restart">Nach einem Serverneustart angehalten: ein Administrator muss ihn freigeben</string>
     <string name="stop_all_not_confirmed">STOP NICHT BESTÄTIGT: STOP erneut drücken oder den physischen Not-Aus benutzen</string>
     <string name="stop_hold_to_confirm">Zum Bestätigen von STOP gedrückt halten</string>
     <string name="error_command_not_applied">Der Server hat %1$s nicht angewendet: %2$s (Änderung rückgängig gemacht)</string>

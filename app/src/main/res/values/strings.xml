@@ -53,6 +53,7 @@
     <string name="stop_all_one_by_one">Sent robot by robot (the server limited the global call)</string>
     <string name="stop_all_robot_failed">%1$s did not stop: %2$s</string>
     <string name="stop_all_robot_reserved">%1$s is reserved by %2$s (stopped anyway)</string>
+    <string name="stop_restored_after_restart">Stopped after a server restart: an administrator must release it</string>
     <string name="stop_all_not_confirmed">STOP NOT CONFIRMED: tap STOP again or use the physical emergency stop</string>
     <string name="stop_hold_to_confirm">Hold to confirm STOP</string>
     <string name="error_command_not_applied">The server did not apply %1$s: %2$s (change reverted)</string>
