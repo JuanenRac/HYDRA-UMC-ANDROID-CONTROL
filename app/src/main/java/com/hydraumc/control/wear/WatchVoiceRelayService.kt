@@ -42,6 +42,8 @@ object WatchRelayPaths {
     const val CANOTA_PROGRESS = "/hydra-umc/canota-progress/v1"
     /** Phone -> watch: a newer release exists (read only; the watch downloads and installs nothing). */
     const val RELEASE_NOTICE = "/hydra-umc/release-notice/v1"
+    /** Phone -> watch: whether the server is stopped only because it restarted while stopped (read only). */
+    const val STOP_RESTORED = "/hydra-umc/stop-restored/v1"
 }
 
 private const val TAG = "WatchVoiceRelay"

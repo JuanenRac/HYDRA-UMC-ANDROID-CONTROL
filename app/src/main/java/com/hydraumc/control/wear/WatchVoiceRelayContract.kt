@@ -243,6 +243,37 @@ data class WatchCanOtaProgress(
 }
 
 /**
+ * Read-only notice for the watch that the server is stopped only because it restarted while stopped ([restored] true; false clears the line). The phone
+ * reads it from the server (`stop-state`); the watch only shows a line, and nothing in it can release the stop. Same rules as the watch applies when it
+ * receives it (docs/watch_relay_contract.json, "stop_restored_status").
+ */
+data class WatchStopRestored(
+    val restored: Boolean,
+    val protocolVersion: Int = PROTOCOL_VERSION,
+) {
+    init {
+        require(protocolVersion == PROTOCOL_VERSION) { "unsupported stop notice protocol version" }
+    }
+
+    fun toJson(): JSONObject = JSONObject()
+        .put("type", "stop_restored_status")
+        .put("protocolVersion", protocolVersion)
+        .put("restored", restored)
+
+    companion object {
+        const val PROTOCOL_VERSION = 1
+
+        fun fromJson(json: JSONObject): WatchStopRestored {
+            require(json.getString("type") == "stop_restored_status") { "unexpected stop notice type" }
+            return WatchStopRestored(
+                restored = json.get("restored") as? Boolean ?: throw IllegalArgumentException("restored must be true or false"),
+                protocolVersion = json.getInt("protocolVersion"),
+            )
+        }
+    }
+}
+
+/**
  * Read-only notice for the watch that a newer release exists: the number of the release as two to four groups of digits. The phone decides (it reads the
  * release feed through the shared gate); the watch only shows a line, and only when its own switch is on. Same rules as the watch applies when it
  * receives it (docs/watch_relay_contract.json, "release_notice").

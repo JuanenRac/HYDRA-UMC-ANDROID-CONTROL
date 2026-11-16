@@ -396,6 +396,8 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
     /** Where the progress of a flash cycle goes on the wrist (with the option of the alerts of the watch on). */
     var watchCanOtaSink: com.hydraumc.control.wear.WatchCanOtaSink = com.hydraumc.control.wear.WearCanOtaSink(application)
     private val canOtaWatchPolicy = com.hydraumc.control.wear.CanOtaWatchPolicy()
+    var watchStopRestoredSink: com.hydraumc.control.wear.WatchStopRestoredSink = com.hydraumc.control.wear.WearStopRestoredSink(application)
+    private val stopRestoredWatchPolicy = com.hydraumc.control.wear.StopRestoredWatchPolicy()
     private val watchAlertRules = WatchAlertRules()
     private var watchAlertJob: kotlinx.coroutines.Job? = null
 
@@ -1794,6 +1796,20 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
                 throw e
             } catch (e: Exception) {
                 logTelemetry("Watch flash progress failed: ${e.javaClass.simpleName}")
+            }
+        }
+    }
+
+    /** Tells the watch whether the stop was restored after a restart, once per change; only while the option of the alerts of the watch is on. */
+    private fun passStopRestoredToWatch(restored: Boolean) {
+        if (!watchAlertsEnabled.value || !stopRestoredWatchPolicy.accept(restored)) return
+        viewModelScope.launch {
+            try {
+                watchStopRestoredSink.send(com.hydraumc.control.wear.WatchStopRestored(restored))
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                logTelemetry("Watch stop notice failed: ${e.javaClass.simpleName}")
             }
         }
     }

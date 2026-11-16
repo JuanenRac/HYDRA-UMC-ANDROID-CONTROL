@@ -24,7 +24,9 @@
     {"type": "canota_progress_status", "protocolVersion": 1, "phase": "transferring", "percent": 40},
     {"type": "canota_progress_status", "protocolVersion": 1, "phase": "done"},
     {"type": "release_notice", "protocolVersion": 1, "version": "0.5.2"},
-    {"type": "release_notice", "protocolVersion": 1, "version": "0.8.0.1"}
+    {"type": "release_notice", "protocolVersion": 1, "version": "0.8.0.1"},
+    {"type": "stop_restored_status", "protocolVersion": 1, "restored": true},
+    {"type": "stop_restored_status", "protocolVersion": 1, "restored": false}
   ],
   "invalid": [
     {"why": "request id with a space", "type": "voice_turn", "requestId": "a b", "transcript": "hello", "locale": "en"},
@@ -53,6 +55,10 @@
     {"why": "release notice with a text instead of a number", "type": "release_notice", "protocolVersion": 1, "version": "latest"},
     {"why": "release notice with a single group", "type": "release_notice", "protocolVersion": 1, "version": "5"},
     {"why": "release notice with five groups", "type": "release_notice", "protocolVersion": 1, "version": "1.2.3.4.5"},
-    {"why": "release notice with a link inside", "type": "release_notice", "protocolVersion": 1, "version": "0.5.2 https://x.example"}
+    {"why": "release notice with a link inside", "type": "release_notice", "protocolVersion": 1, "version": "0.5.2 https://x.example"},
+    {"why": "stop notice of another protocol version", "type": "stop_restored_status", "protocolVersion": 2, "restored": true},
+    {"why": "stop notice without the flag", "type": "stop_restored_status", "protocolVersion": 1},
+    {"why": "stop notice with a text instead of a flag", "type": "stop_restored_status", "protocolVersion": 1, "restored": "yes"},
+    {"why": "stop notice with a number instead of a flag", "type": "stop_restored_status", "protocolVersion": 1, "restored": 1}
   ]
 }
