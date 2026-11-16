@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- **The global STOP falls back to stopping each robot when its route fails inside the server (5xx), and the 3D viewer is tighter:** a 500 from `/api/stop-all` no longer ends as "not confirmed" without trying the one-by-one stops; the 3D viewer no longer opens local files, and a failed load is logged without the part of the address after `#`.
 - **A STOP of a robot refused because the session had expired is sent again after the renewal:** like the global stop, the stop and the safe-mode disable of one robot wait for the session to be renewed and go out once more; if that does not work the fixed notice "STOP not confirmed" is shown. A unit test covers which commands are sent again.
 - **"Listen only" also holds for the watch relay when the app is closed:** the relay reads the switch (general or for that server) from storage before it sends a voice turn, a confirmation or the presence beat, so those are refused as they are with the app open.
 - **The saved session stays with its server:** the token, the refresh token and the password kept with "remember me" are sent only to the server that issued them. Another server (found on the network, picked from the list, or reached by a pairing link) gets none of them and the person signs in to it. A session saved before this belongs to the server that was saved then. Tests cover the rule in the renewal.

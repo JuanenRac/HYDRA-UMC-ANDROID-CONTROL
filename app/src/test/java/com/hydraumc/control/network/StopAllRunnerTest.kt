@@ -87,6 +87,14 @@ class StopAllRunnerTest {
     }
 
     @Test
+    fun aServerErrorOfTheGlobalRouteFallsBackToTheStopOfEachRobot() {
+        val broken = Endpoint({ throw HydraApiException("boom", httpCode = 500) })
+        val status = run(broken) as StopAllStatus.Done
+        assertEquals(listOf(1, 2), broken.robotsStopped)
+        assertTrue(status.result.viaFallback)
+    }
+
+    @Test
     fun theFallbackReportsTheRobotsThatRefused() {
         val limited = Endpoint({ throw HydraApiException("missing", httpCode = 404) }, { id -> if (id == 2) throw HydraApiException("no", httpCode = 500, serverMessage = "locked") else JSONObject() })
         val status = run(limited) as StopAllStatus.Done
