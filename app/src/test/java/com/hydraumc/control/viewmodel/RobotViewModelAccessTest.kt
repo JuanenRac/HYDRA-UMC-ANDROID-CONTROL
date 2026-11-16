@@ -195,6 +195,8 @@ class RobotViewModelAccessTest {
 
         assertTrue(viewModel.lastError.value!!.contains("not armed"))
         assertFalse("not read as a missing permission", viewModel.lastError.value!!.contains("Permission"))
+        // the error and the end of the arming are two writes: wait for the second instead of racing it
+        waitUntil { viewModel.jogArmedUntilMs.value[1] == null }
         assertNull(viewModel.jogArmedUntilMs.value[1])
     }
 
