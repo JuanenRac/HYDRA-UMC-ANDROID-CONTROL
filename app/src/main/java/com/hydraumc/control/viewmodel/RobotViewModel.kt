@@ -1514,6 +1514,22 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
                     // An expired session is renewed (once, whoever notices first);
                     // only a failed renewal returns to the login screen.
                     if (failure.renewSession) renewSessionOrLogout()
+                    // A stop refused only because the session had expired goes out once more when the renewal is done.
+                    if (CommandSender.resendAfterRenewal(command, failure)) {
+                        reloginJob?.join()
+                        val fresh = apiClient
+                        if (isLoggedIn.value && fresh != null) {
+                            try {
+                                commands.send(robotId, command, payload) { id, body, urgent, ifMatch -> fresh.postRobotCommand(id, body, urgent, ifMatch) }
+                                logTelemetry("TX OK [$command] -> robot $robotId (after renewing the session)")
+                                lastError.value = null
+                                return@submit
+                            } catch (again: Exception) {
+                                logTelemetry("TX Error [$command] after renewing: ${again.message}")
+                            }
+                        }
+                        lastError.value = getApplication<Application>().getString(R.string.error_stop_not_confirmed)
+                    }
                     rollback()
                 } catch (e: Exception) {
                     // Not a HydraApiException (a timeout or a socket failure): the message is generic and the change is rolled back too.

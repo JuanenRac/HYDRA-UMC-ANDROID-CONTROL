@@ -38,6 +38,15 @@ class CommandSenderTest {
     }
 
     @Test
+    fun aStopRefusedForAnExpiredSessionIsSentAgainAfterTheRenewal() {
+        val expired = error(401)
+        assertTrue(CommandSender.resendAfterRenewal(RobotCommandContract.STOP, CommandSender.classify(RobotCommandContract.STOP, expired)))
+        assertTrue(CommandSender.resendAfterRenewal(RobotCommandContract.DISABLE, CommandSender.classify(RobotCommandContract.DISABLE, expired)))
+        assertFalse(CommandSender.resendAfterRenewal(RobotCommandContract.JOG, CommandSender.classify(RobotCommandContract.JOG, expired)))
+        assertFalse(CommandSender.resendAfterRenewal(RobotCommandContract.STOP, CommandSender.classify(RobotCommandContract.STOP, error(500))))
+    }
+
+    @Test
     fun aJogThatIsNotArmedDisarmsTheScreen() {
         val f = CommandSender.classify(RobotCommandContract.JOG, error(403, "jog-not-armed"))
         assertTrue(f.disarmJog)

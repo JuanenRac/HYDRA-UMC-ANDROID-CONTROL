@@ -36,4 +36,11 @@ object CommandSender {
         disarmJog = error.isJogNotArmed,
         renewSession = error.isSessionProblem,
     )
+
+    /**
+     * A stop (and the safe-mode disable) of a robot is sent once more after the session was renewed, like the global stop:
+     * a stop that was refused only because the token had expired must not be lost.
+     */
+    fun resendAfterRenewal(command: String, failure: CommandFailure): Boolean =
+        failure.renewSession && (command == RobotCommandContract.STOP || command == RobotCommandContract.DISABLE)
 }
