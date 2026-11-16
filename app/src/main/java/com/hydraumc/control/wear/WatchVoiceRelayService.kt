@@ -101,6 +101,9 @@ class WatchVoiceRelayService : WearableListenerService() {
             ?: throw IllegalStateException("paired phone has no Server session")
         // The phone app may not be running: read the TLS choices of the user from storage.
         TlsSettingsStore.current = TlsPrefs(applicationContext).load()
+        // "Listen only" is a switch of the view model: with the app closed it is read from storage here, so the relay never writes what the person made read-only (it is only ever turned on from here).
+        val listenPrefs = ConnectionPrefs(applicationContext)
+        if (com.hydraumc.control.network.ListenOnly.effective(listenPrefs.loadListenOnly(), listenPrefs.loadListenOnlyServers(), com.hydraumc.control.network.ListenOnly.serverKey(connection.first, port))) com.hydraumc.control.network.ListenOnly.enabled = true
         return HydraApiClient(connection.first, port).also { it.authToken = token }
     }
 }
