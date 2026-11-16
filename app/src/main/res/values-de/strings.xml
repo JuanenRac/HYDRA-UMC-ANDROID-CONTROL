@@ -46,7 +46,7 @@
     <string name="stop_all_caption">Alle stoppen</string>
     <string name="stop_all_description">STOP: alle Roboter sofort anhalten</string>
     <string name="stop_all_action">STOP · Alle stoppen</string>
-    <string name="stop_all_sending">Alle Roboter werden angehalten…</string>
+    <string name="stop_all_sending">STOP gesendet, noch keine Antwort…</string>
     <string name="stop_all_done">STOP bestätigt: %1$d Roboter angehalten</string>
     <string name="stop_all_incomplete">STOP UNVOLLSTÄNDIG: %1$d angehalten, %2$d nicht angehalten</string>
     <string name="stop_all_not_saved">Der Stopp-Zustand konnte auf dem Server nicht gespeichert werden: er hält evtl. nach einem Neustart nicht</string>

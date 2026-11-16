@@ -107,6 +107,7 @@ class HydraApiException(
 
     /** The server does not have the route (an older server answers 404). */
     val isNotFound: Boolean get() = httpCode == 404
+    val isServerError: Boolean get() = (httpCode ?: 0) in 500..599
 
     /** The server refused the command itself (an unknown command, a value it cannot take). */
     val isRejectedCommand: Boolean get() = httpCode == 400

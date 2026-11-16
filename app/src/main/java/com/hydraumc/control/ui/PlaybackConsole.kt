@@ -44,6 +44,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import com.hydraumc.control.ui.ObscuredTouchPolicy.stopTouchZone
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -126,6 +127,7 @@ fun EStopButton(viewModel: RobotViewModel, modifier: Modifier = Modifier) {
     val stopDescription = stringResource(R.string.stop_all_description)
     Box(
         modifier = modifier
+            .stopTouchZone()
             .size(64.dp)
             .background(Color.Red.copy(alpha = pulseAlpha), CircleShape)
             .border(2.dp, pulseBorder, CircleShape)

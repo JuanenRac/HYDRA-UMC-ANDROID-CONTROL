@@ -236,14 +236,30 @@ class RobotViewModelGlobalStopTest {
     }
 
     @Test
-    fun `a server refusal other than rate limit is not confirmed and not retried`() {
+    fun `a server error on the global call falls back to stopping robot by robot`() {
         server.enqueue(MockResponse().setResponseCode(500).setBody("""{"error":"boom"}"""))
+        server.enqueue(MockResponse().setResponseCode(200).setBody("{}"))
+        server.enqueue(MockResponse().setResponseCode(200).setBody("{}"))
         val viewModel = newViewModel()
 
         viewModel.globalStop()
         waitUntil { finished(viewModel) }
 
-        assertEquals(1, server.requestCount)
-        assertTrue(viewModel.stopAllStatus.value is StopAllStatus.NotConfirmed)
+        assertEquals("/api/stop-all", server.takeRequest(1, TimeUnit.SECONDS)!!.path)
+        assertEquals(3, server.requestCount)
+        val done = viewModel.stopAllStatus.value as StopAllStatus.Done
+        assertTrue(done.result.viaFallback)
+        assertEquals(2, done.result.robots.size)
+    }
+
+    @Test
+    fun `the first status shown is the sent, no reply yet one`() {
+        server.enqueue(MockResponse().setResponseCode(200).setBody(cleanAnswer).setBodyDelay(300, TimeUnit.MILLISECONDS))
+        val viewModel = newViewModel()
+
+        viewModel.globalStop()
+
+        assertTrue(viewModel.stopAllStatus.value is StopAllStatus.Sending)
+        waitUntil { finished(viewModel) }
     }
 }

@@ -5,8 +5,16 @@
 // =============================================================================
 package com.hydraumc.control.ui
 
+import android.graphics.RectF
 import android.view.MotionEvent
 import android.view.View
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.composed
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.onGloballyPositioned
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Protection against a touch given to a button that another app hides (clickjacking). While the switch is on, the system drops
@@ -20,6 +28,32 @@ object ObscuredTouchPolicy {
     /** True when a touch with these MotionEvent [flags] is dropped: the window is covered (wholly or in part) and the switch is on. */
     fun drops(flags: Int, enabled: Boolean): Boolean =
         enabled && (flags and (MotionEvent.FLAG_WINDOW_IS_OBSCURED or FLAG_WINDOW_IS_PARTIALLY_OBSCURED)) != 0
+
+    // Where the STOP buttons are on screen. A touch on one is never dropped: an overlay that steals a STOP only makes it
+    // safe, so the stop must stay reachable even through a covered window.
+    private val stopZones = ConcurrentHashMap<Any, RectF>()
+
+    fun setStopZone(key: Any, bounds: RectF) {
+        stopZones[key] = bounds
+    }
+
+    fun clearStopZone(key: Any) {
+        stopZones.remove(key)
+    }
+
+    /** True when the touch at ([x], [y]) is dropped: covered window, switch on and the point is not on a STOP button. */
+    fun dropsOutsideStop(flags: Int, enabled: Boolean, x: Float, y: Float): Boolean =
+        drops(flags, enabled) && stopZones.values.none { it.contains(x, y) }
+
+    /** Marks the composable as a STOP button for [dropsOutsideStop]. */
+    fun Modifier.stopTouchZone(): Modifier = composed {
+        val key = remember { Any() }
+        DisposableEffect(key) { onDispose { clearStopZone(key) } }
+        onGloballyPositioned {
+            val b = it.boundsInWindow()
+            setStopZone(key, RectF(b.left, b.top, b.right, b.bottom))
+        }
+    }
 
     /** Sets the system filter of [view] (the decor view of the window) to the state of the switch. */
     fun apply(view: View, enabled: Boolean) {

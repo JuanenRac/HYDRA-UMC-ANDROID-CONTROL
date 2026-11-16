@@ -46,7 +46,7 @@
     <string name="stop_all_caption">Tout arrêter</string>
     <string name="stop_all_description">STOP : arrêter tous les robots maintenant</string>
     <string name="stop_all_action">STOP · Tout arrêter</string>
-    <string name="stop_all_sending">Arrêt de tous les robots…</string>
+    <string name="stop_all_sending">STOP envoyé, pas encore de réponse…</string>
     <string name="stop_all_done">STOP confirmé : %1$d robots arrêtés</string>
     <string name="stop_all_incomplete">STOP INCOMPLET : %1$d arrêtés, %2$d non arrêtés</string>
     <string name="stop_all_not_saved">L\'état d\'arrêt n\'a pas pu être enregistré sur le serveur : il peut ne pas tenir après un redémarrage</string>

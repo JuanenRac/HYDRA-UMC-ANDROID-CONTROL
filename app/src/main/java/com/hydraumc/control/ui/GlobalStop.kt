@@ -39,6 +39,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.hydraumc.control.ui.ObscuredTouchPolicy.stopTouchZone
 import com.hydraumc.control.R
 import com.hydraumc.control.network.StopAllResult
 import com.hydraumc.control.network.StopAllStatus
@@ -70,6 +71,7 @@ fun GlobalStopButton(viewModel: RobotViewModel, modifier: Modifier = Modifier) {
     )
     Column(
         modifier = modifier
+            .stopTouchZone()
             .height(40.dp)
             .widthIn(min = 64.dp)
             .background(StopRed.copy(alpha = glow), RoundedCornerShape(8.dp))

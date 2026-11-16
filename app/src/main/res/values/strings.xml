@@ -46,7 +46,7 @@
     <string name="stop_all_caption">Stop all</string>
     <string name="stop_all_description">STOP: stop every robot now</string>
     <string name="stop_all_action">STOP · Stop all</string>
-    <string name="stop_all_sending">Stopping every robot…</string>
+    <string name="stop_all_sending">STOP sent, no reply yet…</string>
     <string name="stop_all_done">STOP confirmed: %1$d robots stopped</string>
     <string name="stop_all_incomplete">STOP INCOMPLETE: %1$d stopped, %2$d did not stop</string>
     <string name="stop_all_not_saved">The stopped state could not be saved on the server: it may not hold after a restart</string>
