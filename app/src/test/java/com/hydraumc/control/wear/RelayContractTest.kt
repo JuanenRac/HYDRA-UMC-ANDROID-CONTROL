@@ -137,6 +137,31 @@ class RelayContractTest {
     }
 
     @Test
+    fun `valid stop notices are written back as the file writes them`() {
+        val valid = vectors("valid").filter { it.getString("type") == "stop_restored_status" }
+        assertEquals(true, valid.size >= 2)
+        for (vector in valid) {
+            val written = WatchStopRestored.fromJson(vector).toJson()
+            assertEquals(vector.keys().asSequence().toSet(), written.keys().asSequence().toSet())
+            for (key in vector.keys()) assertEquals(key, vector.get(key).toString(), written.get(key).toString())
+        }
+    }
+
+    @Test
+    fun `invalid stop notices are refused`() {
+        val invalid = vectors("invalid").filter { it.getString("type") == "stop_restored_status" }
+        assertEquals(true, invalid.size >= 4)
+        for (vector in invalid) {
+            try {
+                WatchStopRestored.fromJson(expanded(vector))
+                fail("accepted an invalid stop notice (${vector.getString("why")})")
+            } catch (_: Exception) {
+                // refused (a missing field is refused too), as the contract says
+            }
+        }
+    }
+
+    @Test
     fun `valid replies and statuses are written with the same fields and values`() {
         for (vector in vectors("valid")) {
             val written = when (vector.getString("type")) {
