@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- **The watch release notice switch keeps what the person just chose:** the saved value read when the screen starts no longer overwrites a change made before the read finished.
 - **A release notice for the watch is used up only when a watch took it:** with no watch connected the version is no longer counted as told, so the next update check tells it again.
 - **The 3D viewer is tighter:** it no longer opens local files, and a failed load is logged without the part of the address after `#`.
 - **A STOP of a robot refused because the session had expired is sent again after the renewal:** like the global stop, the stop and the safe-mode disable of one robot wait for the session to be renewed and go out once more; if that does not work the fixed notice "STOP not confirmed" is shown. A unit test covers which commands are sent again.
