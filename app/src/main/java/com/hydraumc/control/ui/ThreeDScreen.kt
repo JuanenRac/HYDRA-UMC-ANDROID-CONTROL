@@ -235,7 +235,7 @@ fun ThreeDScreen(viewModel: RobotViewModel) {
                         settings.domStorageEnabled = true
                         @Suppress("DEPRECATION")
                         settings.databaseEnabled = true
-                        settings.allowFileAccess = true
+                        settings.allowFileAccess = false
                         settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
                         // Real, defensible fix against a whole class of
                         // "this WebView shows a stale build" bugs (one
@@ -280,7 +280,7 @@ fun ThreeDScreen(viewModel: RobotViewModel) {
                             override fun onReceivedError(view: WebView, request: WebResourceRequest, error: WebResourceError) {
                                 super.onReceivedError(view, request, error)
                                 if (request.isForMainFrame) {
-                                    Log.e("ThreeDScreen", "Main frame load failed for ${request.url}: ${error.description}")
+                                    Log.e("ThreeDScreen", "Main frame load failed for ${request.url.toString().substringBefore('#')}: ${error.description}")
                                 }
                             }
 

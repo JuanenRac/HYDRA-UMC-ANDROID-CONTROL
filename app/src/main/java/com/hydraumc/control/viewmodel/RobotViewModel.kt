@@ -380,6 +380,14 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
     /** Alerts pushed to the paired watch (on by default, rationed); the relays of presence and confirmation are off by default. */
     val watchAlertsEnabled = mutableStateOf(RobotCommandContract.WATCH_ALERTS_ENABLED_BY_DEFAULT)
     /** Whether the phone tells the watch that a newer release exists (on as it ships; the watch has its own switch, off by default). */
+    // Set once the person changes the switch: the late read of the saved value must not undo that.
+    @Volatile private var watchReleaseNoticeTouched = false
+    // The same for the other switches that init reads from the saved choices: a switch the person changed
+    // while that read was still running keeps the new value (the late read must not undo it).
+    private val switchesTouched = HashSet<String>()
+    private fun touchSwitch(key: String, set: () -> Unit) = synchronized(switchesTouched) { switchesTouched.add(key); set() }
+    private fun loadSwitchUnlessTouched(key: String, saved: Boolean, set: (Boolean) -> Unit) =
+        synchronized(switchesTouched) { if (key !in switchesTouched) set(saved) }
     val watchReleaseNoticeEnabled = mutableStateOf(RobotCommandContract.WATCH_ALERTS_RELEASE_NOTICE_ENABLED_BY_DEFAULT)
     val presenceRelayEnabled = mutableStateOf(RobotCommandContract.PRESENCE_RELAY_ENABLED_BY_DEFAULT)
     val voiceConfirmRelayEnabled = mutableStateOf(RobotCommandContract.VOICE_CONFIRM_ENABLED_BY_DEFAULT)
@@ -627,7 +635,8 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
         NotificationHelper.createChannel(application)
 
         viewModelScope.launch {
-            notificationsEnabled.value = notificationPrefs.isEnabled()
+            val notificationsSaved = notificationPrefs.isEnabled()
+            loadSwitchUnlessTouched("notifications", notificationsSaved) { notificationsEnabled.value = it }
         }
 
         ProcessLifecycleOwner.get().lifecycle.addObserver(appLifecycleObserver)
@@ -656,15 +665,16 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
             if (!listenOnlyTouched) { listenOnlyGeneral = listenOnlySaved; listenOnlyServers.value = listenOnlyServersSaved; refreshListenOnly() }
             val homeResetSaved = prefs.loadHomeReset(RobotCommandContract.HOME_RESET_ENABLED_BY_DEFAULT)
             if (!homeResetTouched) homeResetEnabled.value = homeResetSaved
-            deadMan.enabled.value = prefs.loadFlag(ConnectionPrefs.Flags.DEAD_MAN_JOG, RobotCommandContract.DEAD_MAN_JOG_ENABLED_BY_DEFAULT)
-            deadMan.blockOnBadLink.value = prefs.loadFlag(ConnectionPrefs.Flags.LINK_BLOCK_JOG, RobotCommandContract.LINK_HEALTH_BLOCK_JOG_ON_BAD_LINK_DEFAULT)
-            deadMan.indicator.value = prefs.loadFlag(ConnectionPrefs.Flags.LINK_INDICATOR, RobotCommandContract.LINK_HEALTH_INDICATOR_ENABLED_BY_DEFAULT)
-            filterObscuredTouches.value = prefs.loadFlag(ConnectionPrefs.Flags.FILTER_OBSCURED_TOUCHES, ObscuredTouchPolicy.ENABLED_BY_DEFAULT)
-            pairingEnabled.value = prefs.loadFlag(ConnectionPrefs.Flags.PAIRING, RobotCommandContract.PAIRING_ENABLED_BY_DEFAULT)
-            watchAlertsEnabled.value = prefs.loadFlag(ConnectionPrefs.Flags.WATCH_ALERTS, RobotCommandContract.WATCH_ALERTS_ENABLED_BY_DEFAULT)
-            watchReleaseNoticeEnabled.value = prefs.loadFlag(ConnectionPrefs.Flags.WATCH_RELEASE_NOTICE, RobotCommandContract.WATCH_ALERTS_RELEASE_NOTICE_ENABLED_BY_DEFAULT)
-            presenceRelayEnabled.value = prefs.loadFlag(ConnectionPrefs.Flags.PRESENCE_RELAY, RobotCommandContract.PRESENCE_RELAY_ENABLED_BY_DEFAULT)
-            voiceConfirmRelayEnabled.value = prefs.loadFlag(ConnectionPrefs.Flags.VOICE_CONFIRM_RELAY, RobotCommandContract.VOICE_CONFIRM_ENABLED_BY_DEFAULT)
+            loadSwitchUnlessTouched(ConnectionPrefs.Flags.DEAD_MAN_JOG, prefs.loadFlag(ConnectionPrefs.Flags.DEAD_MAN_JOG, RobotCommandContract.DEAD_MAN_JOG_ENABLED_BY_DEFAULT)) { deadMan.enabled.value = it }
+            loadSwitchUnlessTouched(ConnectionPrefs.Flags.LINK_BLOCK_JOG, prefs.loadFlag(ConnectionPrefs.Flags.LINK_BLOCK_JOG, RobotCommandContract.LINK_HEALTH_BLOCK_JOG_ON_BAD_LINK_DEFAULT)) { deadMan.blockOnBadLink.value = it }
+            loadSwitchUnlessTouched(ConnectionPrefs.Flags.LINK_INDICATOR, prefs.loadFlag(ConnectionPrefs.Flags.LINK_INDICATOR, RobotCommandContract.LINK_HEALTH_INDICATOR_ENABLED_BY_DEFAULT)) { deadMan.indicator.value = it }
+            loadSwitchUnlessTouched(ConnectionPrefs.Flags.FILTER_OBSCURED_TOUCHES, prefs.loadFlag(ConnectionPrefs.Flags.FILTER_OBSCURED_TOUCHES, ObscuredTouchPolicy.ENABLED_BY_DEFAULT)) { filterObscuredTouches.value = it }
+            loadSwitchUnlessTouched(ConnectionPrefs.Flags.PAIRING, prefs.loadFlag(ConnectionPrefs.Flags.PAIRING, RobotCommandContract.PAIRING_ENABLED_BY_DEFAULT)) { pairingEnabled.value = it }
+            loadSwitchUnlessTouched(ConnectionPrefs.Flags.WATCH_ALERTS, prefs.loadFlag(ConnectionPrefs.Flags.WATCH_ALERTS, RobotCommandContract.WATCH_ALERTS_ENABLED_BY_DEFAULT)) { watchAlertsEnabled.value = it }
+            val releaseNoticeSaved = prefs.loadFlag(ConnectionPrefs.Flags.WATCH_RELEASE_NOTICE, RobotCommandContract.WATCH_ALERTS_RELEASE_NOTICE_ENABLED_BY_DEFAULT)
+            if (!watchReleaseNoticeTouched) watchReleaseNoticeEnabled.value = releaseNoticeSaved
+            loadSwitchUnlessTouched(ConnectionPrefs.Flags.PRESENCE_RELAY, prefs.loadFlag(ConnectionPrefs.Flags.PRESENCE_RELAY, RobotCommandContract.PRESENCE_RELAY_ENABLED_BY_DEFAULT)) { presenceRelayEnabled.value = it }
+            loadSwitchUnlessTouched(ConnectionPrefs.Flags.VOICE_CONFIRM_RELAY, prefs.loadFlag(ConnectionPrefs.Flags.VOICE_CONFIRM_RELAY, RobotCommandContract.VOICE_CONFIRM_ENABLED_BY_DEFAULT)) { voiceConfirmRelayEnabled.value = it }
             pairingFlagsLoaded = true
             pairingTextWaiting?.let { waiting ->
                 pairingTextWaiting = null
@@ -963,7 +973,7 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
 
     /** Toggles the in-app notifications preference - see NotificationPrefs.kt's own header comment. */
     fun setNotificationsEnabled(enabled: Boolean) {
-        notificationsEnabled.value = enabled
+        touchSwitch("notifications") { notificationsEnabled.value = enabled }
         viewModelScope.launch {
             notificationPrefs.setEnabled(enabled)
         }
@@ -1514,6 +1524,22 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
                     // An expired session is renewed (once, whoever notices first);
                     // only a failed renewal returns to the login screen.
                     if (failure.renewSession) renewSessionOrLogout()
+                    // A stop refused only because the session had expired goes out once more when the renewal is done.
+                    if (CommandSender.resendAfterRenewal(command, failure)) {
+                        reloginJob?.join()
+                        val fresh = apiClient
+                        if (isLoggedIn.value && fresh != null) {
+                            try {
+                                commands.send(robotId, command, payload) { id, body, urgent, ifMatch -> fresh.postRobotCommand(id, body, urgent, ifMatch) }
+                                logTelemetry("TX OK [$command] -> robot $robotId (after renewing the session)")
+                                lastError.value = null
+                                return@submit
+                            } catch (again: Exception) {
+                                logTelemetry("TX Error [$command] after renewing: ${again.message}")
+                            }
+                        }
+                        lastError.value = getApplication<Application>().getString(R.string.error_stop_not_confirmed)
+                    }
                     rollback()
                 } catch (e: Exception) {
                     // Not a HydraApiException (a timeout or a socket failure): the message is generic and the change is rolled back too.
@@ -1636,24 +1662,24 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
     private fun linkProbeActive(): Boolean = connectionState.value == WsStatus.CONNECTED && isAppInForeground
 
     fun setDeadManEnabled(on: Boolean) {
-        deadMan.enabled.value = on
+        touchSwitch(ConnectionPrefs.Flags.DEAD_MAN_JOG) { deadMan.enabled.value = on }
         if (!on) deadMan.interrupt()
         deadMan.ensureProbe { linkProbeActive() }
         viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) { prefs.saveFlag(ConnectionPrefs.Flags.DEAD_MAN_JOG, on) }
     }
 
     fun setLinkBlockOnBadLink(on: Boolean) {
-        deadMan.blockOnBadLink.value = on
+        touchSwitch(ConnectionPrefs.Flags.LINK_BLOCK_JOG) { deadMan.blockOnBadLink.value = on }
         viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) { prefs.saveFlag(ConnectionPrefs.Flags.LINK_BLOCK_JOG, on) }
     }
 
     fun setFilterObscuredTouches(on: Boolean) {
-        filterObscuredTouches.value = on
+        touchSwitch(ConnectionPrefs.Flags.FILTER_OBSCURED_TOUCHES) { filterObscuredTouches.value = on }
         viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) { prefs.saveFlag(ConnectionPrefs.Flags.FILTER_OBSCURED_TOUCHES, on) }
     }
 
     fun setLinkIndicator(on: Boolean) {
-        deadMan.indicator.value = on
+        touchSwitch(ConnectionPrefs.Flags.LINK_INDICATOR) { deadMan.indicator.value = on }
         deadMan.ensureProbe { linkProbeActive() }
         viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) { prefs.saveFlag(ConnectionPrefs.Flags.LINK_INDICATOR, on) }
     }
@@ -1668,7 +1694,7 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
     // ---- pairing by QR code or link ----------------------------------------------------------------------------
 
     fun setPairingEnabled(on: Boolean) {
-        pairingEnabled.value = on
+        touchSwitch(ConnectionPrefs.Flags.PAIRING) { pairingEnabled.value = on }
         if (!on) pairingOffer.value = null
         viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) { prefs.saveFlag(ConnectionPrefs.Flags.PAIRING, on) }
     }
@@ -1714,23 +1740,24 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
     // ---- the watch ---------------------------------------------------------------------------------------------
 
     fun setWatchAlertsEnabled(on: Boolean) {
-        watchAlertsEnabled.value = on
+        touchSwitch(ConnectionPrefs.Flags.WATCH_ALERTS) { watchAlertsEnabled.value = on }
         if (on) ensureWatchAlertLoop()
         viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) { prefs.saveFlag(ConnectionPrefs.Flags.WATCH_ALERTS, on) }
     }
 
     fun setWatchReleaseNoticeEnabled(on: Boolean) {
+        watchReleaseNoticeTouched = true
         watchReleaseNoticeEnabled.value = on
         viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) { prefs.saveFlag(ConnectionPrefs.Flags.WATCH_RELEASE_NOTICE, on) }
     }
 
     fun setPresenceRelayEnabled(on: Boolean) {
-        presenceRelayEnabled.value = on
+        touchSwitch(ConnectionPrefs.Flags.PRESENCE_RELAY) { presenceRelayEnabled.value = on }
         viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) { prefs.saveFlag(ConnectionPrefs.Flags.PRESENCE_RELAY, on) }
     }
 
     fun setVoiceConfirmRelayEnabled(on: Boolean) {
-        voiceConfirmRelayEnabled.value = on
+        touchSwitch(ConnectionPrefs.Flags.VOICE_CONFIRM_RELAY) { voiceConfirmRelayEnabled.value = on }
         viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) { prefs.saveFlag(ConnectionPrefs.Flags.VOICE_CONFIRM_RELAY, on) }
     }
 
