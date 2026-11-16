@@ -2384,9 +2384,14 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
                     if (discoveredServers.value.none { (it.host == server.host) && (it.port == server.port) }) {
                         discoveredServers.value += server
                     }
-                    if (connectionState.value == WsStatus.DISCONNECTED && discoveredServers.value.size == 1) {
-                        logTelemetry("Auto-connecting to first discovered server: ${server.displayName}")
+                    // Only the server saved on this phone is connected by itself; any other one waits for a tap on it in the list, because
+                    // connecting sends the stored session and password there.
+                    val saved = prefs.load()?.let { it.first to (it.second.toIntOrNull() ?: 3000) }
+                    if (connectionState.value == WsStatus.DISCONNECTED && AutoConnectPolicy.allows(saved, server.host, server.port)) {
+                        logTelemetry("Auto-connecting to the saved server: ${server.displayName}")
                         connectToDiscovered(server)
+                    } else if (connectionState.value == WsStatus.DISCONNECTED) {
+                        logTelemetry("Server found, tap it to connect: ${server.displayName}")
                     }
                 }
             } finally {

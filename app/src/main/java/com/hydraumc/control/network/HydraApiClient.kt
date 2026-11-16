@@ -124,7 +124,7 @@ class HydraApiClient(
     port: Int,
     private val client: OkHttpClient = HydraHttp.client(),
     /** How to reach the server (see [TlsMode]); the user's setting at the time the client is made. */
-    private val tlsMode: TlsMode = TlsSettingsStore.current.mode,
+    private val tlsMode: TlsMode = TlsSettingsStore.current.effectiveMode,
 ) : LoginEndpoint {
 
     /** Base URL of the target HYDRA-UMC server - starts as plain HTTP, and

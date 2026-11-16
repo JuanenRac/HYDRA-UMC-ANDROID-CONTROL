@@ -204,6 +204,7 @@
     <string name="tls_mode_required">Richiedi TLS</string>
     <string name="tls_mode_off">Solo non cifrato</string>
     <string name="tls_mode_auto_hint">Prova prima HTTP non cifrato e passa a HTTPS quando il server risponde solo via TLS (predefinito).</string>
+    <string name="tls_auto_as_required_notice">Con un\'impronta del certificato o una CA personalizzata impostata, Automatico funziona come Obbligatorio: un server che parla solo HTTP non cifrato non si collegherà.</string>
     <string name="tls_mode_required_hint">Solo HTTPS e WSS. Un server senza TLS non viene usato.</string>
     <string name="tls_mode_off_hint">Solo HTTP e WS non cifrati; HTTPS non viene mai provato. Chiunque sulla rete può leggere il traffico.</string>
     <string name="tls_pin_label">Impronta del certificato del server (SHA-256)</string>

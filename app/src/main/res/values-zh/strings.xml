@@ -204,6 +204,7 @@
     <string name="tls_mode_required">强制使用TLS</string>
     <string name="tls_mode_off">仅明文</string>
     <string name="tls_mode_auto_hint">先尝试明文HTTP,当服务器只通过TLS响应时切换到HTTPS(默认)。</string>
+    <string name="tls_auto_as_required_notice">设置了证书指纹或自定义CA时,“自动”按“必须”处理:只支持明文HTTP的服务器将无法连接。</string>
     <string name="tls_mode_required_hint">仅HTTPS和WSS。不使用没有TLS的服务器。</string>
     <string name="tls_mode_off_hint">仅明文HTTP和WS,从不尝试HTTPS。网络上的任何人都可以读取流量。</string>
     <string name="tls_pin_label">服务器证书指纹 (SHA-256)</string>

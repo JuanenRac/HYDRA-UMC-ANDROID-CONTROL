@@ -40,6 +40,13 @@ data class TlsSettings(
      */
     val allowPlainRemote: Boolean = false,
 ) {
+    /**
+     * The mode that is applied. With a fingerprint or a custom CA set, the person asked for an identity check, which plain HTTP cannot give, so
+     * [TlsMode.AUTO] works as [TlsMode.REQUIRED] (a server that only speaks plain HTTP does not connect). The other modes are applied as chosen.
+     */
+    val effectiveMode: TlsMode
+        get() = if (mode == TlsMode.AUTO && (pinnedFingerprint.isNotBlank() || customCaPem.isNotBlank())) TlsMode.REQUIRED else mode
+
     /** The first problem found, or null when the settings can be saved. Blank fields are fine. */
     fun validate(): TlsProblem? {
         if (pinnedFingerprint.isNotBlank() && TlsFingerprint.normalize(pinnedFingerprint) == null) return TlsProblem.FINGERPRINT_INVALID

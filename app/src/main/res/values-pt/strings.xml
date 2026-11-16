@@ -204,6 +204,7 @@
     <string name="tls_mode_required">Exigir TLS</string>
     <string name="tls_mode_off">Apenas sem cifra</string>
     <string name="tls_mode_auto_hint">Tenta primeiro HTTP sem cifra e passa a HTTPS quando o servidor só responde por TLS (predefinição).</string>
+    <string name="tls_auto_as_required_notice">Com uma impressão digital de certificado ou uma AC própria definida, Automático funciona como Obrigatório: um servidor que só fala HTTP sem cifra não se ligará.</string>
     <string name="tls_mode_required_hint">Apenas HTTPS e WSS. Um servidor sem TLS não é utilizado.</string>
     <string name="tls_mode_off_hint">Apenas HTTP e WS sem cifra; o HTTPS nunca é tentado. Qualquer pessoa na rede pode ler o tráfego.</string>
     <string name="tls_pin_label">Impressão digital do certificado do servidor (SHA-256)</string>

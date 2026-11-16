@@ -54,6 +54,9 @@ fun SecuritySettings(viewModel: RobotViewModel) {
         TlsModeRow(mode == TlsMode.AUTO, R.string.tls_mode_auto, R.string.tls_mode_auto_hint) { mode = TlsMode.AUTO }
         TlsModeRow(mode == TlsMode.REQUIRED, R.string.tls_mode_required, R.string.tls_mode_required_hint) { mode = TlsMode.REQUIRED }
         TlsModeRow(mode == TlsMode.OFF, R.string.tls_mode_off, R.string.tls_mode_off_hint) { mode = TlsMode.OFF }
+        if (mode == TlsMode.AUTO && (pin.isNotBlank() || ca.isNotBlank())) {
+            Text(stringResource(R.string.tls_auto_as_required_notice), style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+        }
 
         Spacer(modifier = Modifier.height(16.dp))
         OutlinedTextField(

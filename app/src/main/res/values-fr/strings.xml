@@ -204,6 +204,7 @@
     <string name="tls_mode_required">Exiger TLS</string>
     <string name="tls_mode_off">Non chiffré uniquement</string>
     <string name="tls_mode_auto_hint">Essaie d\'abord HTTP non chiffré et passe à HTTPS quand le serveur ne répond qu\'en TLS (par défaut).</string>
+    <string name="tls_auto_as_required_notice">Avec une empreinte de certificat ou une AC personnalisée définie, Automatique fonctionne comme Obligatoire : un serveur qui ne parle qu\'en HTTP non chiffré ne se connectera pas.</string>
     <string name="tls_mode_required_hint">HTTPS et WSS uniquement. Un serveur sans TLS n\'est pas utilisé.</string>
     <string name="tls_mode_off_hint">HTTP et WS non chiffrés uniquement ; HTTPS n\'est jamais essayé. Toute personne sur le réseau peut lire le trafic.</string>
     <string name="tls_pin_label">Empreinte du certificat du serveur (SHA-256)</string>
