@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- **Every switch read from storage at start keeps a change made before the read ends:** the dead-man jog, the link health options, the obscured-touch filter, pairing links, the watch alerts, the presence and voice relays and the notifications switch no longer fall back to the saved value when the person changes them while it is still being read. A test covers all of them.
 - **The watch release notice switch keeps what the person just chose:** the saved value read when the screen starts no longer overwrites a change made before the read finished.
 - **A release notice for the watch is used up only when a watch took it:** with no watch connected the version is no longer counted as told, so the next update check tells it again.
 - **The 3D viewer is tighter:** it no longer opens local files, and a failed load is logged without the part of the address after `#`.
