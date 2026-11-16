@@ -178,7 +178,12 @@ class MainActivity : FragmentActivity() {
         setContent {
             // A touch is dropped by the system while another app draws over this window (clickjacking), unless the person turned it off.
             val obscuredFilter = robotViewModel.filterObscuredTouches.value
-            LaunchedEffect(obscuredFilter) { ObscuredTouchPolicy.apply(window.decorView, obscuredFilter) }
+            // The window-wide system filter would also drop a STOP, so it stays off and dispatchTouchEvent applies the
+            // same rule except on the STOP buttons.
+            LaunchedEffect(obscuredFilter) {
+                ObscuredTouchPolicy.apply(window.decorView, false)
+                obscuredFilterOn = obscuredFilter
+            }
             // Remove native splash right away to show our custom Compose splash screen
             LaunchedEffect(Unit) {
                 keepNativeSplash = false
@@ -238,6 +243,23 @@ class MainActivity : FragmentActivity() {
                 }
             }
         }
+    }
+
+    @Volatile
+    private var obscuredFilterOn = ObscuredTouchPolicy.ENABLED_BY_DEFAULT
+    private var droppingGesture = false
+
+    override fun dispatchTouchEvent(ev: android.view.MotionEvent): Boolean {
+        if (ev.actionMasked == android.view.MotionEvent.ACTION_DOWN) {
+            droppingGesture = ObscuredTouchPolicy.dropsOutsideStop(ev.flags, obscuredFilterOn, ev.rawX, ev.rawY)
+        }
+        if (droppingGesture) {
+            if (ev.actionMasked == android.view.MotionEvent.ACTION_UP || ev.actionMasked == android.view.MotionEvent.ACTION_CANCEL) {
+                droppingGesture = false
+            }
+            return true
+        }
+        return super.dispatchTouchEvent(ev)
     }
 
     override fun onNewIntent(intent: Intent) {

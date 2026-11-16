@@ -46,7 +46,7 @@
     <string name="stop_all_caption">全停止</string>
     <string name="stop_all_description">STOP：すべてのロボットを今すぐ停止</string>
     <string name="stop_all_action">STOP · 全停止</string>
-    <string name="stop_all_sending">すべてのロボットを停止しています…</string>
+    <string name="stop_all_sending">STOP を送信しました。応答待ちです…</string>
     <string name="stop_all_done">STOP を確認しました：%1$d 台のロボットが停止</string>
     <string name="stop_all_incomplete">STOP が不完全です：%1$d 台が停止、%2$d 台は停止せず</string>
     <string name="stop_all_not_saved">停止状態をサーバーに保存できませんでした：再起動後は維持されない可能性があります</string>

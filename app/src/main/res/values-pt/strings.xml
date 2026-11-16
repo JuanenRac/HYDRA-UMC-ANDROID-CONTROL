@@ -46,7 +46,7 @@
     <string name="stop_all_caption">Parar tudo</string>
     <string name="stop_all_description">STOP: parar todos os robôs agora</string>
     <string name="stop_all_action">STOP · Parar tudo</string>
-    <string name="stop_all_sending">A parar todos os robôs…</string>
+    <string name="stop_all_sending">STOP enviado, sem resposta…</string>
     <string name="stop_all_done">STOP confirmado: %1$d robôs parados</string>
     <string name="stop_all_incomplete">STOP INCOMPLETO: %1$d parados, %2$d não pararam</string>
     <string name="stop_all_not_saved">Não foi possível guardar o estado de paragem no servidor: pode não se manter após um reinício</string>

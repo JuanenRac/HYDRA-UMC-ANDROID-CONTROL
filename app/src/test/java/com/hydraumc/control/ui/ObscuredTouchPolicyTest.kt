@@ -46,6 +46,19 @@ class ObscuredTouchPolicyTest {
     }
 
     @Test
+    fun aStopButtonIsNeverDroppedByTheFilter() {
+        val key = Any()
+        ObscuredTouchPolicy.setStopZone(key, android.graphics.RectF(10f, 10f, 100f, 60f))
+        try {
+            assertFalse(ObscuredTouchPolicy.dropsOutsideStop(MotionEvent.FLAG_WINDOW_IS_OBSCURED, true, 50f, 30f))
+            assertTrue(ObscuredTouchPolicy.dropsOutsideStop(MotionEvent.FLAG_WINDOW_IS_OBSCURED, true, 500f, 300f))
+        } finally {
+            ObscuredTouchPolicy.clearStopZone(key)
+        }
+        assertTrue(ObscuredTouchPolicy.dropsOutsideStop(MotionEvent.FLAG_WINDOW_IS_OBSCURED, true, 50f, 30f))
+    }
+
+    @Test
     fun theSwitchSetsTheFilterOfTheView() {
         val view = View(ApplicationProvider.getApplicationContext<Application>())
         ObscuredTouchPolicy.apply(view, true)
