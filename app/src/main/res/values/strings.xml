@@ -204,6 +204,7 @@
     <string name="tls_mode_required">Require TLS</string>
     <string name="tls_mode_off">Plain only</string>
     <string name="tls_mode_auto_hint">Tries plain HTTP first and switches to HTTPS when the server only answers over TLS (default).</string>
+    <string name="tls_auto_as_required_notice">With a certificate fingerprint or a custom CA set, Automatic works as Required: a server that only speaks plain HTTP will not connect.</string>
     <string name="tls_mode_required_hint">Only HTTPS and WSS. A server without TLS is not used.</string>
     <string name="tls_mode_off_hint">Only plain HTTP and WS; HTTPS is never tried. Anyone on the network can read the traffic.</string>
     <string name="tls_pin_label">Server certificate fingerprint (SHA-256)</string>

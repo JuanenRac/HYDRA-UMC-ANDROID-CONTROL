@@ -204,6 +204,7 @@
     <string name="tls_mode_required">TLSを必須にする</string>
     <string name="tls_mode_off">暗号化なしのみ</string>
     <string name="tls_mode_auto_hint">まず暗号化なしのHTTPを試し、サーバーがTLSでしか応答しない場合はHTTPSに切り替えます(既定)。</string>
+    <string name="tls_auto_as_required_notice">証明書のフィンガープリントまたは独自CAを設定している場合、「自動」は「必須」として動作します。暗号化なしのHTTPしか話さないサーバーには接続しません。</string>
     <string name="tls_mode_required_hint">HTTPSとWSSのみ。TLSのないサーバーは使用しません。</string>
     <string name="tls_mode_off_hint">暗号化なしのHTTPとWSのみ。HTTPSは試しません。ネットワーク上の誰でも通信内容を読めます。</string>
     <string name="tls_pin_label">サーバー証明書のフィンガープリント (SHA-256)</string>

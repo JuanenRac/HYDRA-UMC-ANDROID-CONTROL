@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **The app connects by itself only to the server it saved:** a server found on the network that is not the saved one waits for a tap on it in the list, and the first start, with nothing saved, no longer connects to the first server that answers, because connecting sends the stored session and password there.
+- **Automatic TLS works as Required when a certificate fingerprint or a custom CA is set:** the identity check cannot be had over plain HTTP, so a server that only speaks plain HTTP no longer connects in that case, and the security screen says so in the eight languages.
 - **The paired watch is told when the server is stopped only because it restarted:** while the option of the watch alerts is on, the phone passes the same notice it shows (a read-only message on its own path, `stop_restored_status`, true or false) once per change and clears it when the connection closes. The shared contract file lists the valid and the refused messages.
 
 - **A server error on the global STOP no longer stops the attempt:** when `POST /api/stop-all` answers with a 5xx status the app now stops the known robots one by one, as it already did for a rate limit or a missing route, and the banner starts with "STOP sent, no reply yet" (in the eight languages) until an answer arrives. Tests cover the fallback and the first status.

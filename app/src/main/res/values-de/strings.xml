@@ -204,6 +204,7 @@
     <string name="tls_mode_required">TLS erzwingen</string>
     <string name="tls_mode_off">Nur unverschlüsselt</string>
     <string name="tls_mode_auto_hint">Versucht zuerst unverschlüsseltes HTTP und wechselt zu HTTPS, wenn der Server nur über TLS antwortet (Standard).</string>
+    <string name="tls_auto_as_required_notice">Ist ein Zertifikat-Fingerabdruck oder eine eigene CA gesetzt, arbeitet Automatisch wie Erforderlich: Ein Server, der nur unverschlüsseltes HTTP spricht, verbindet sich nicht.</string>
     <string name="tls_mode_required_hint">Nur HTTPS und WSS. Ein Server ohne TLS wird nicht verwendet.</string>
     <string name="tls_mode_off_hint">Nur unverschlüsseltes HTTP und WS; HTTPS wird nie versucht. Jeder im Netzwerk kann den Datenverkehr mitlesen.</string>
     <string name="tls_pin_label">Fingerabdruck des Serverzertifikats (SHA-256)</string>
