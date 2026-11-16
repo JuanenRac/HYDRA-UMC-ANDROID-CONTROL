@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **The paired watch is told when the server is stopped only because it restarted:** while the option of the watch alerts is on, the phone passes the same notice it shows (a read-only message on its own path, `stop_restored_status`, true or false) once per change and clears it when the connection closes. The shared contract file lists the valid and the refused messages.
+
 - **A server error on the global STOP no longer stops the attempt:** when `POST /api/stop-all` answers with a 5xx status the app now stops the known robots one by one, as it already did for a rate limit or a missing route, and the banner starts with "STOP sent, no reply yet" (in the eight languages) until an answer arrives. Tests cover the fallback and the first status.
 - **The obscured-touch filter no longer drops a STOP:** the filter that ignores touches while another app draws over this one now skips the STOP buttons, so a covered window can still be stopped; every other control keeps the protection. A test covers the rule.
 - **Every switch read from storage at start keeps a change made before the read ends:** the dead-man jog, the link health options, the obscured-touch filter, pairing links, the watch alerts, the presence and voice relays and the notifications switch no longer fall back to the saved value when the person changes them while it is still being read. A test covers all of them.
