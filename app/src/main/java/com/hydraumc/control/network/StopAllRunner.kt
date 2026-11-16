@@ -48,8 +48,8 @@ class StopAllRunner(
                 return StopAllStatus.Done(endpoint.stopAll())
             } catch (e: HydraApiException) {
                 when {
-                    // 429: over the server's rate limit. 404: a server that does not have the route yet. 5xx: that route failed inside the server, and the one-by-one stops use another route.
-                    e.isRateLimited || e.isNotFound || (e.httpCode ?: 0) >= 500 -> return stopRobotsOneByOne(endpoint, knownRobots())
+                    // 429: over the server's rate limit. 404: a server that does not have the route yet.
+                    e.isRateLimited || e.isNotFound -> return stopRobotsOneByOne(endpoint, knownRobots())
                     e.isSessionProblem && !sessionRenewed -> {
                         sessionRenewed = true
                         if (!relogin()) {
