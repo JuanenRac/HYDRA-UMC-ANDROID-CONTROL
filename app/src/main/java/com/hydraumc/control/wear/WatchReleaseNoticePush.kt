@@ -38,6 +38,14 @@ class ReleaseNoticeWatchPolicy {
         return true
     }
 
+    /** The last version told, or null. */
+    val told: SemanticVersion? get() = lastTold
+
+    /** Puts back the version told before [version] was accepted, because no watch took the message. */
+    fun forget(version: SemanticVersion, before: SemanticVersion?) {
+        if (lastTold == version) lastTold = before
+    }
+
     /** Forgets what was told: the next newer release is sent whatever it is. */
     fun reset() {
         lastTold = null
@@ -54,9 +62,13 @@ suspend fun announceReleaseToWatch(result: UpdateCheckResult, policy: ReleaseNot
     if (!enabled) return false // the person switched the notice off: nothing is sent and the version is not remembered, so turning it on again tells the next check
     val available = result as? UpdateCheckResult.Available ?: return false
     val version = available.update.version
+    val before = policy.told
     if (!policy.accept(version)) return false
-    val notice = runCatching { WatchReleaseNotice(version.toString()) }.getOrNull() ?: return false
-    return sink.send(notice)
+    val notice = runCatching { WatchReleaseNotice(version.toString()) }.getOrNull()
+    val taken = notice != null && sink.send(notice)
+    // Told only when a watch took it: with none connected the next check tells it again.
+    if (!taken) policy.forget(version, before)
+    return taken
 }
 
 /**

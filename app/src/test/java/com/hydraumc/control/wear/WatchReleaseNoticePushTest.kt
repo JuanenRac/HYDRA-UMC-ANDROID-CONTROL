@@ -85,9 +85,11 @@ class WatchReleaseNoticePushTest {
     }
 
     @Test
-    fun `no watch means false and a fourth component compares as zero`() = runBlocking {
+    fun `no watch means false, the version is not used up, and a fourth component compares as zero`() = runBlocking {
         val policy = ReleaseNoticeWatchPolicy()
         assertFalse(announceReleaseToWatch(available(SemanticVersion(0, 5, 2)), policy, Recorder(takes = false)))
+        val sink = Recorder()
+        assertTrue("the next check tells it again", announceReleaseToWatch(available(SemanticVersion(0, 5, 2)), policy, sink))
         assertFalse("0.5.2.0 is not newer than 0.5.2", policy.accept(SemanticVersion(0, 5, 2, 0)))
         assertTrue(policy.accept(SemanticVersion(0, 5, 2, 1)))
     }
