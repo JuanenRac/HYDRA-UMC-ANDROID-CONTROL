@@ -91,7 +91,12 @@ class WatchVoiceRelayService : WearableListenerService() {
             ?: throw IllegalStateException("paired phone has no Server connection")
         val port = connection.second.toIntOrNull()?.takeIf { it in 1..65535 }
             ?: throw IllegalStateException("paired phone has an invalid Server port")
-        val token = (sharedServicesOrNull()?.authStore ?: AuthPrefs(applicationContext)).loadAuth().token
+        val store = sharedServicesOrNull()?.authStore ?: AuthPrefs(applicationContext)
+        val bound = store.sessionServer()
+        if (bound.isNotEmpty() && bound != com.hydraumc.control.network.SessionBinding.id(connection.first, port)) {
+            throw IllegalStateException("paired phone's session belongs to another Server")
+        }
+        val token = store.loadAuth().token
             .takeIf { it.isNotBlank() }
             ?: throw IllegalStateException("paired phone has no Server session")
         // The phone app may not be running: read the TLS choices of the user from storage.

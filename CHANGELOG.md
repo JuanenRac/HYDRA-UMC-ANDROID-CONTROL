@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **The saved session stays with its server:** the token, the refresh token and the password kept with "remember me" are sent only to the server that issued them. Another server (found on the network, picked from the list, or reached by a pairing link) gets none of them and the person signs in to it. A session saved before this belongs to the server that was saved then. Tests cover the rule in the renewal.
+
 
 ## [0.8.0.5]
 

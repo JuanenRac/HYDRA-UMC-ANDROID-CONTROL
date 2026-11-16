@@ -50,6 +50,7 @@ private const val KEY_BIOMETRIC_STRONG = "biometric_strong"
 private const val KEY_SEALED_PASSWORD = "sealed_password"
 private const val KEY_TOKEN = SessionKeys.TOKEN
 private const val KEY_REFRESH_TOKEN = SessionKeys.REFRESH_TOKEN
+private const val KEY_SESSION_SERVER = "session_server"
 
 /**
  * Manages user authentication and profile persistence, encrypted at rest.
@@ -209,6 +210,15 @@ class AuthPrefs(private val context: Context) : AuthStore {
             .putBoolean(KEY_BIOMETRIC_STRONG, profile.isStrongBiometric)
             .putString(KEY_SEALED_PASSWORD, profile.sealedPassword)
             .apply()
+        Unit
+    }
+
+    override suspend fun sessionServer(): String = withContext(authPrefsDispatcher) {
+        openEncryptedPrefs().getString(KEY_SESSION_SERVER, "") ?: ""
+    }
+
+    override suspend fun bindSessionServer(id: String) = withContext(authPrefsDispatcher) {
+        openEncryptedPrefs().edit().putString(KEY_SESSION_SERVER, id).apply()
         Unit
     }
 

@@ -23,6 +23,17 @@ interface AuthStore {
 
     /** Forgets the stored session; the password too when [wipePassword]. */
     suspend fun clearAuth(wipePassword: Boolean = true) {}
+
+    /** The server (see [SessionBinding.id]) the stored session was issued by; empty for a session stored before this was kept. */
+    suspend fun sessionServer(): String = ""
+
+    /** Remembers which server the stored session belongs to. */
+    suspend fun bindSessionServer(id: String) {}
+}
+
+/** The stored token, refresh token and password belong to one server: they are never sent to another one. */
+object SessionBinding {
+    fun id(host: String, port: Int): String = host.trim().lowercase() + ":" + port
 }
 
 /**
@@ -34,6 +45,8 @@ class SessionRenewer(
     private val store: AuthStore,
     private val onToken: (String) -> Unit,
     private val log: (String) -> Unit,
+    /** False when the stored session belongs to another server than the one being talked to: then nothing stored is sent. */
+    private val allowed: suspend () -> Boolean = { true },
 ) {
     private var savedCredentialsRefused = false
 
@@ -44,6 +57,7 @@ class SessionRenewer(
     /** True when a new token was stored in [client]; false is the caller's cue to send the person back to the sign-in. */
     suspend fun renew(client: SessionEndpoint): Boolean {
         return try {
+            if (!allowed()) { log("Stored session belongs to another server: not used"); return false }
             val profile = store.loadAuth()
             val refresh = client.refreshToken ?: profile.refreshToken.ifEmpty { null }
             var response: JSONObject? = null
