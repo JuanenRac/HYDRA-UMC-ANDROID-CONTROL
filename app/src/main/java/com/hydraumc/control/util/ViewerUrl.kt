@@ -19,5 +19,14 @@ object ViewerUrl {
         return if (token.isEmpty()) base else "$base#token=${encode(token)}"
     }
 
+    /** True when the viewer must refuse plain-HTTP parts inside an HTTPS page (a session that is HTTPS keeps all of it encrypted). */
+    fun blocksMixedContent(scheme: String): Boolean = scheme.equals("https", ignoreCase = true)
+
+    /** True when [target] is an address on the server the viewer was opened from; anything else is not followed inside the viewer. */
+    fun staysOnServer(target: String?, host: String): Boolean {
+        val parsed = runCatching { java.net.URI(target ?: return false) }.getOrNull() ?: return false
+        return parsed.host.equals(host, ignoreCase = true)
+    }
+
     private fun encode(value: String): String = URLEncoder.encode(value, "UTF-8")
 }

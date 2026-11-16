@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **The 3D viewer keeps an HTTPS session fully encrypted and stays on the server:** with an HTTPS connection the viewer no longer loads plain-HTTP parts into the page, and a link or a redirect to another host is not followed inside it.
+
 - **The paired watch is told when the server is stopped only because it restarted:** while the option of the watch alerts is on, the phone passes the same notice it shows (a read-only message on its own path, `stop_restored_status`, true or false) once per change and clears it when the connection closes. The shared contract file lists the valid and the refused messages.
 
 - **A server error on the global STOP no longer stops the attempt:** when `POST /api/stop-all` answers with a 5xx status the app now stops the known robots one by one, as it already did for a rate limit or a missing route, and the banner starts with "STOP sent, no reply yet" (in the eight languages) until an answer arrives. Tests cover the fallback and the first status.

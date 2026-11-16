@@ -236,7 +236,9 @@ fun ThreeDScreen(viewModel: RobotViewModel) {
                         @Suppress("DEPRECATION")
                         settings.databaseEnabled = true
                         settings.allowFileAccess = false
-                        settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+                        // An HTTPS session keeps all of the page encrypted: plain-HTTP parts are not loaded into it.
+                        settings.mixedContentMode =
+                            if (ViewerUrl.blocksMixedContent(scheme)) WebSettings.MIXED_CONTENT_NEVER_ALLOW else WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
                         // Real, defensible fix against a whole class of
                         // "this WebView shows a stale build" bugs (one
                         // honest candidate for the reported Android/STUDIO
@@ -277,6 +279,10 @@ fun ThreeDScreen(viewModel: RobotViewModel) {
                         setLayerType(android.view.View.LAYER_TYPE_HARDWARE, null)
 
                         webViewClient = object : WebViewClient() {
+                            // The viewer shows the server's own page: a link or a redirect to another host is not followed here.
+                            override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean =
+                                !ViewerUrl.staysOnServer(request.url.toString(), ip)
+
                             override fun onReceivedError(view: WebView, request: WebResourceRequest, error: WebResourceError) {
                                 super.onReceivedError(view, request, error)
                                 if (request.isForMainFrame) {
