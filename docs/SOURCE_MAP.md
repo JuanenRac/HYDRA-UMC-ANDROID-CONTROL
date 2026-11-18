@@ -28,6 +28,8 @@ Every file of the repository with a line on what it does: the annotated tree tha
 │   │   │   │   ├── HydraBleClient.kt      # Bluetooth GATT client, alternative transport to Wi-Fi
 │   │   │   │   ├── BleContract.kt / BleGatt.kt / AndroidBleGatt.kt   # BLE contract, GATT abstraction and its Android implementation
 │   │   │   │   ├── TlsSettings.kt / HydraHttp.kt / TlsPrefs.kt      # Optional TLS: modes, pinned fingerprint, custom CA, storage
+│   │   │   │   ├── TotpEndpoint.kt         # What the second-factor screen needs from the server (the REST client in the app, a fake in the tests)
+│   │   │   │   ├── TotpRules.kt            # Rules of the second sign-in factor: how a refusal is told apart, how a typed code is cleaned, how the key is shown, what an answer must look like
 │   │   │   │   ├── HydraWebSocket.kt      # Live state-delta push over WS, reconnect handling
 │   │   │   │   ├── StateCache.kt          # Last-known-state cache (DataStore) for offline dashboard viewing
 │   │   │   │   ├── StopAllResult.kt       # Result of the global STOP (per-robot answer, status)
@@ -62,6 +64,7 @@ Every file of the repository with a line on what it does: the annotated tree tha
 │   │   │   │   ├── theme/
 │   │   │   │   │   ├── Color.kt, Theme.kt, Typography.kt   # Material 3 color scheme, theme wrapper, type scale
 │   │   │   │   │   └── HydraButton.kt, IndustrialComponents.kt, IndustrialStyle.kt   # Shared industrial-styled UI building blocks
+│   │   │   │   ├── TotpSection.kt                                                # Settings > Security: the second sign-in factor (key, recovery codes, turn on and off)
 │   │   │   │   └── SecuritySettings.kt                                           # Settings > Security: optional, configurable TLS (mode, pinned fingerprint, CA)
 │   │   │   ├── update/
 │   │   │   │   ├── GitHubReleaseUpdater.kt   # Safe GitHub Release update client
@@ -76,6 +79,7 @@ Every file of the repository with a line on what it does: the annotated tree tha
 │   │   │   │   ├── DeadManJog.kt           # Continuous jog: when it is refused, the speed bounds and the watchdog of the heartbeat
 │   │   │   │   ├── LinkHealth.kt           # Round-trip times towards the server and the level of the link (good, slow, bad, lost)
 │   │   │   │   ├── PairingLink.kt          # Reads and checks a pairing link (address, port, certificate fingerprint, name)
+│   │   │   │   ├── TotpPrefs.kt            # The one switch of the second-factor screen: keep it out of screenshots while a key or recovery codes are shown (on by default)
 │   │   │   │   ├── WorkFiles.kt            # Work files: the folder, the list, the points checked like the server does, when one may be loaded
 │   │   │   │   ├── HomeReset.kt            # HOME/RESET: when it is refused and the confirmation in steps
 │   │   │   │   ├── PlayConfirmation.kt     # When PLAY asks first: the rules of the confirmation before a trajectory starts
@@ -87,6 +91,7 @@ Every file of the repository with a line on what it does: the annotated tree tha
 │   │   │   │   ├── RobotViewModel.kt   # Shared ViewModel - networking, auth, discovery, atomic command dispatch, all UI state
 │   │   │   │   ├── CommandErrorText.kt # The texts of a failed command, in the language of the phone
 │   │   │   │   ├── DeadManJogController.kt # What the screen sees of the continuous jog and of the link: switches, held controls, level
+│   │   │   │   ├── TotpFlow.kt             # The steps of the second-factor screen: status, turn on (password, key, first code, recovery codes), turn off, new recovery codes
 │   │   │   │   └── BleScanController.kt # The Bluetooth LE scan: checks, filter, stop after a few seconds
 │   │   │   ├── wear/
 │   │   │   │   ├── BoundedRequestScope.kt     # Per-requestId in-flight job scope; a superseded attempt is cancelled, cancelAll() on service destroy
