@@ -49,7 +49,7 @@ object TotpRules {
 
     private val SECRET = Regex("^[A-Z2-7]{16,128}$")
     private val RECOVERY_CODE = Regex("^[0-9a-f]{5}-[0-9a-f]{5}$")
-    private val SIX_DIGITS = Regex("^\d{6}$")
+    private val SIX_DIGITS = Regex("^[0-9]{6}$")
 
     /** True when the account has so few recovery codes left that new ones should be made. */
     fun recoveryLow(left: Long): Boolean = left <= RECOVERY_LOW
@@ -57,7 +57,7 @@ object TotpRules {
     /** A code typed with spaces or dashes out of place: the six digits of an app code are kept as six digits, a recovery code is lower-cased as typed. */
     fun normalizeCode(text: String): String {
         val trimmed = text.trim()
-        val digits = trimmed.replace(Regex("[\s-]"), "")
+        val digits = trimmed.replace(Regex("[ \t\r\n-]"), "")
         return if (SIX_DIGITS.matches(digits)) digits else trimmed.lowercase()
     }
 
