@@ -562,6 +562,10 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
     val loginPassword = mutableStateOf(value = "")
     val loginEmail = mutableStateOf(value = "")
     val loginRememberMe = mutableStateOf(value = false)
+    /** True once the server said the account has a second factor: the sign-in form then shows the field of the code. */
+    val loginNeedsCode = mutableStateOf(value = false)
+    /** The second factor of the signed-in account (Settings > Security); it holds a key or recovery codes only while they are on the screen. */
+    val totp = TotpFlow(viewModelScope) { apiClient }
     val isBiometricEnabled = mutableStateOf(value = false)
     // Strong biometric mode (off by default): the password lives only sealed in the Keystore, is never put in
     // loginPassword and is opened by a fingerprint through a CryptoObject (LoginScreen).
@@ -782,7 +786,7 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
         isBtEnabled.value = bluetoothManager.adapter?.isEnabled ?: false
     }
 
-    fun login(user: String, pass: String, remember: Boolean) {
+    fun login(user: String, pass: String, remember: Boolean, totpCode: String? = null) {
         // The same validation connect() applies: without it an empty host/port fell through silently, an invalid port
         // never surfaced error_invalid_port, and an empty credential went to the server as an empty string.
         val check = authManager.check(ipAddress.value, port.value, user, pass)
@@ -801,12 +805,13 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
 
         viewModelScope.launch {
             logTelemetry("Logging in to ${check.host}:${check.port}...")
-            when (val result = authManager.signIn(client, user, pass, remember, loginEmail.value, isBiometricEnabled.value, isStrongBiometric.value)) {
+            when (val result = authManager.signIn(client, user, pass, remember, loginEmail.value, isBiometricEnabled.value, isStrongBiometric.value, totp = totpCode)) {
                 is SignInResult.Success -> {
                     runCatching { authPrefs.bindSessionServer(SessionBinding.id(check.host, check.port)) }
                     activeSessionServer = SessionBinding.id(check.host, check.port)
                     authTokenState.value = result.token
                     isLoggedIn.value = true
+                    loginNeedsCode.value = false
                     renewalBudget.reset()
                     sessionRenewer.forgetRefusal()
                     loginUsername.value = user
@@ -820,6 +825,18 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
                     connect() // Proceed to full sync
                 }
                 SignInResult.Rejected -> lastError.value = "Login failed: Server rejected credentials"
+                SignInResult.NeedsCode -> {
+                    loginNeedsCode.value = true
+                    lastError.value = getApplication<Application>().getString(R.string.login_code_needed)
+                }
+                SignInResult.WrongCode -> {
+                    loginNeedsCode.value = true
+                    lastError.value = getApplication<Application>().getString(R.string.login_code_wrong)
+                }
+                is SignInResult.Wait -> {
+                    loginNeedsCode.value = true
+                    lastError.value = getApplication<Application>().getString(R.string.login_code_wait, result.seconds)
+                }
                 is SignInResult.Failed -> {
                     logTelemetry("Login error: ${result.log}")
                     lastError.value = result.message
@@ -870,6 +887,8 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
     fun refreshWatchSystemStatus() = voice.refreshWatchSystemStatus()
 
     fun logout() {
+        totp.clear()
+        loginNeedsCode.value = false
         isLoggedIn.value = false
         // The session ends for real: no live socket, no polling, no client
         // that the widget or the notification could still send commands with.

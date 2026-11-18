@@ -6,12 +6,19 @@
 package com.hydraumc.control.network
 
 import com.hydraumc.common.optStr
+import org.json.JSONObject
 import kotlin.coroutines.cancellation.CancellationException
 
 /** What signing in and out need from the REST client (the client in the app, a fake in the tests). */
 interface LoginEndpoint : SessionEndpoint {
     /** Revokes the refresh token on the server; best effort, never throws. */
     suspend fun logout(token: String)
+
+    /**
+     * Signs in with the code of the second factor of the account ([totp], an app code or a recovery code); null sends none. An endpoint that
+     * knows no second factor ignores it.
+     */
+    suspend fun login(username: String, password: String, totp: String?): JSONObject = login(username, password)
 }
 
 /** Locks a password so that only a strong biometric opens it again (the Keystore in the app, a fake in the tests). */
@@ -40,6 +47,15 @@ sealed class SignInResult {
 
     /** The server answered, but not with a session. */
     object Rejected : SignInResult()
+
+    /** The account has a second factor and the sign-in carried no code: the form asks for one. */
+    object NeedsCode : SignInResult()
+
+    /** The code sent was refused (it is wrong, or already used). */
+    object WrongCode : SignInResult()
+
+    /** Too many wrong codes: the server asks to wait [seconds]. */
+    data class Wait(val seconds: Int) : SignInResult()
 
     /** The call failed; [message] is what to show (the server's own text when it sent one) and [log] what to write in the log. */
     data class Failed(val message: String?, val log: String?) : SignInResult()
@@ -86,9 +102,10 @@ class AuthManager(private val store: AuthStore, private val sealer: PasswordSeal
         email: String,
         biometric: Boolean,
         strong: Boolean = false,
+        totp: String? = null,
     ): SignInResult {
         return try {
-            val response = client.login(user, password)
+            val response = client.login(user, password, totp?.let(TotpRules::normalizeCode)?.takeIf { it.isNotEmpty() })
             if (!response.optBoolean("success")) return SignInResult.Rejected
             val token = response.optStr("token")
             val refresh = response.optStr("refreshToken").ifEmpty { null }
@@ -112,6 +129,12 @@ class AuthManager(private val store: AuthStore, private val sealer: PasswordSeal
             SignInResult.Success(token, refresh)
         } catch (cancelled: CancellationException) {
             throw cancelled
+        } catch (e: HydraApiException) {
+            when {
+                e.httpCode == 429 && e.totpRequired -> SignInResult.Wait(e.retryAfterSeconds?.takeIf { it > 0 } ?: TotpRules.DEFAULT_WAIT_SECONDS)
+                e.httpCode == 401 && e.totpRequired -> if (totp.isNullOrBlank()) SignInResult.NeedsCode else SignInResult.WrongCode
+                else -> SignInResult.Failed(e.serverMessage ?: e.message, e.message)
+            }
         } catch (e: Exception) {
             SignInResult.Failed((e as? HydraApiException)?.serverMessage ?: e.message, e.message)
         }
