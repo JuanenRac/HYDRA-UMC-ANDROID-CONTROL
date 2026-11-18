@@ -104,6 +104,12 @@ fun SecuritySettings(viewModel: RobotViewModel) {
             Text(message, style = MaterialTheme.typography.bodySmall)
         }
 
+        // The second sign-in factor of the signed-in account (off until its owner turns it on).
+        if (viewModel.isLoggedIn.value) {
+            Spacer(modifier = Modifier.height(24.dp))
+            TotpSection(viewModel.totp)
+        }
+
         // The access options of the server itself: only an administrator can read or change them.
         if (viewModel.isAdmin()) ServerOptionsSection(viewModel)
     }

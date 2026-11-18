@@ -58,6 +58,9 @@ fun LoginScreen(viewModel: RobotViewModel) {
     var username by remember { mutableStateOf(viewModel.loginUsername.value) }
     var password by remember { mutableStateOf("") }
     var rememberMe by remember { mutableStateOf(viewModel.loginRememberMe.value) }
+    // The code of the second step: asked for only once the server says the account has one; never kept after the sign-in
+    var secondCode by remember { mutableStateOf("") }
+    val needsCode = viewModel.loginNeedsCode.value
     var passwordVisible by rememberSaveable { mutableStateOf(false) }
     // Server address/port entered right here instead of requiring a trip
     // through Settings first - prefilled from whatever ConnectionPrefs
@@ -169,6 +172,20 @@ fun LoginScreen(viewModel: RobotViewModel) {
                         colors = fieldColors,
                     )
 
+                    if (needsCode) {
+                        OutlinedTextField(
+                            value = secondCode,
+                            onValueChange = { secondCode = it },
+                            label = { Text(stringResource(R.string.login_code_label)) },
+                            supportingText = { Text(stringResource(R.string.login_code_hint)) },
+                            leadingIcon = { Icon(Icons.Filled.Lock, null) },
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = fieldColors,
+                        )
+                    }
+
                     Row(
                         modifier = Modifier.fillMaxWidth().clickable(role = Role.Checkbox) { rememberMe = !rememberMe },
                         verticalAlignment = Alignment.CenterVertically,
@@ -190,7 +207,7 @@ fun LoginScreen(viewModel: RobotViewModel) {
                             // ends up persisting once connect() succeeds.
                             viewModel.ipAddress.value = ipAddress.trim()
                             viewModel.port.value = port.trim()
-                            viewModel.login(username, password, rememberMe)
+                            viewModel.login(username, password, rememberMe, secondCode.takeIf { needsCode })
                         },
                         modifier = Modifier.fillMaxWidth().height(52.dp),
                         shape = buttonShape,
@@ -223,6 +240,7 @@ fun LoginScreen(viewModel: RobotViewModel) {
                                                     viewModel.loginUsername.value,
                                                     opened,
                                                     viewModel.loginRememberMe.value,
+                                                    secondCode.takeIf { needsCode },
                                                 )
                                             }
                                         },
@@ -255,6 +273,7 @@ fun LoginScreen(viewModel: RobotViewModel) {
                                             viewModel.loginUsername.value,
                                             viewModel.loginPassword.value,
                                             viewModel.loginRememberMe.value,
+                                            secondCode.takeIf { needsCode },
                                         )
                                     },
                                     onError = { /* User cancelled or failed */ },
