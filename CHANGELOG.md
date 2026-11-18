@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- **The SDK is pinned to its newest release and the generated server client follows it:** the vendored client now includes the route that issues new recovery codes of the second factor and the confirmation proof, and the continuous check compares it with the pinned release.
 - **The vendored server answers follow the SDK contract again:** they now include the answers of the route that issues new recovery codes of the second factor, so the nightly family check finds no drift.
 
 - **The app connects by itself only to the server it saved:** a server found on the network that is not the saved one waits for a tap on it in the list, and the first start, with nothing saved, no longer connects to the first server that answers, because connecting sends the stored session and password there.
