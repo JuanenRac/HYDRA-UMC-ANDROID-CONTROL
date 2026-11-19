@@ -302,14 +302,7 @@ class HydraApiClient(
     }
 
     /** Every active reservation (GET /api/claims): who controls which robot. */
-    suspend fun getClaims(): List<ClaimInfo> = withContext(Dispatchers.IO) {
-        val request = Request.Builder()
-            .url("$baseUrl/api/claims")
-            .header("Authorization", "Bearer ${authToken ?: ""}")
-            .get()
-            .build()
-        ClaimInfo.listFromJson(executeExpectingJson(request))
-    }
+    suspend fun getClaims(): List<ClaimInfo> = typedCall { api -> ClaimInfo.listFromJson(asJson(api.getClaims().toJson())) }
 
     /**
      * Reserves a robot for this account on this controller. [ttlMs] null lets the server pick its
@@ -393,17 +386,10 @@ class HydraApiClient(
     }
 
     /** The safety limits the server holds for one robot's model (GET /api/safety-limits?robotId=); null from an older server without the route. */
-    suspend fun getRobotSafety(robotId: Int): RobotSafety? = withContext(Dispatchers.IO) {
-        val request = Request.Builder()
-            .url("$baseUrl/api/safety-limits?robotId=$robotId")
-            .header("Authorization", "Bearer ${authToken ?: ""}")
-            .get()
-            .build()
-        try {
-            RobotSafety.fromJson(executeExpectingJson(request))
-        } catch (e: HydraApiException) {
-            if (e.isNotFound) null else throw e
-        }
+    suspend fun getRobotSafety(robotId: Int): RobotSafety? = try {
+        typedCall { api -> RobotSafety.fromJson(asJson(api.getSafetyLimits(robotId.toString()).toJson())) }
+    } catch (e: HydraApiException) {
+        if (e.isNotFound) null else throw e
     }
 
     private fun controlRequest(path: String, body: JSONObject, ifMatch: String? = null): Request = Request.Builder()
