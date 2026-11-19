@@ -501,7 +501,7 @@
     <string name="watch_alerts_switch_label">向手表发送警报</string>
     <string name="watch_alerts_switch_hint">当与服务器的连接丢失、机器人离线或进入安全模式,或 STOP 未得到确认时,通知已配对的手表。重复警报会受到限制。</string>
     <string name="watch_release_notice_switch_label">向手表通知新版本</string>
-    <string name="watch_release_notice_switch_hint">当更新检查发现更新的版本时,会针对每个版本向已配对的手表通知一次。仅当手表自己的开关打开时,手表才会显示该通知。关闭后,手机将不再发送。</string>
+    <string name="watch_release_notice_switch_hint">当更新检查发现更新的版本时,会针对每个版本向已配对的手表通知一次。仅当手表自己的开关打开时,手表才会显示该通知。默认关闭:打开后手机才会发送。</string>
     <string name="presence_relay_switch_label">将手表的操作员在场信号转发给服务器</string>
     <string name="presence_relay_switch_hint">操作员在工作单元内时,手表会发送心跳;手机负责转发,心跳丢失的含义由服务器决定。默认关闭。</string>
     <string name="voice_confirm_switch_label">将手表的两步确认转发给服务器</string>

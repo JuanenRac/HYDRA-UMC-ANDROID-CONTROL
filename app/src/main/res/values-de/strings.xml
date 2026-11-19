@@ -501,7 +501,7 @@
     <string name="watch_alerts_switch_label">Warnungen an die Uhr senden</string>
     <string name="watch_alerts_switch_hint">Meldet der gekoppelten Uhr, wenn die Verbindung zum Server verloren geht, ein Roboter offline oder in den sicheren Modus geht oder ein STOP nicht bestätigt wird. Wiederholte Warnungen werden begrenzt.</string>
     <string name="watch_release_notice_switch_label">Uhr über neue Version informieren</string>
-    <string name="watch_release_notice_switch_hint">Findet die Update-Prüfung eine neuere Version, erfährt die gekoppelte Uhr einmal pro Version davon. Die Uhr zeigt den Hinweis nur an, wenn ihr eigener Schalter eingeschaltet ist. Ausschalten, damit das Telefon ihn nie sendet.</string>
+    <string name="watch_release_notice_switch_hint">Findet die Update-Prüfung eine neuere Version, erfährt die gekoppelte Uhr einmal pro Version davon. Die Uhr zeigt den Hinweis nur an, wenn ihr eigener Schalter eingeschaltet ist. Standardmäßig aus: einschalten, damit das Telefon ihn sendet.</string>
     <string name="presence_relay_switch_label">Anwesenheit des Bedieners von der Uhr an den Server weitergeben</string>
     <string name="presence_relay_switch_hint">Die Uhr sendet einen Herzschlag, solange der Bediener in der Zelle ist; das Telefon leitet ihn weiter, und der Server entscheidet, was ein Ausbleiben bedeutet. Standardmäßig aus.</string>
     <string name="voice_confirm_switch_label">Zweistufige Bestätigung der Uhr an den Server weitergeben</string>
