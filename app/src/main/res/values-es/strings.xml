@@ -501,7 +501,7 @@
     <string name="watch_alerts_switch_label">Enviar alertas al reloj</string>
     <string name="watch_alerts_switch_hint">Avisa al reloj emparejado cuando se pierde la conexión con el servidor, un robot queda sin conexión o en modo seguro, o un STOP no se confirma. Las alertas repetidas se limitan.</string>
     <string name="watch_release_notice_switch_label">Avisar al reloj de una versión nueva</string>
-    <string name="watch_release_notice_switch_hint">Cuando la comprobación de actualizaciones encuentra una versión más reciente, se avisa al reloj emparejado una vez por versión. El reloj solo muestra el aviso si su propio interruptor está activado. Desactívalo para que el móvil no lo envíe nunca.</string>
+    <string name="watch_release_notice_switch_hint">Cuando la comprobación de actualizaciones encuentra una versión más reciente, se avisa al reloj emparejado una vez por versión. El reloj solo muestra el aviso si su propio interruptor está activado. Viene desactivado: actívalo para que el móvil lo envíe.</string>
     <string name="presence_relay_switch_label">Pasar al servidor la presencia del operador del reloj</string>
     <string name="presence_relay_switch_hint">El reloj envía un latido mientras el operador está en la celda; el teléfono lo reenvía y el servidor decide qué significa perderlo. Desactivado por defecto.</string>
     <string name="voice_confirm_switch_label">Pasar al servidor la confirmación en dos pasos del reloj</string>

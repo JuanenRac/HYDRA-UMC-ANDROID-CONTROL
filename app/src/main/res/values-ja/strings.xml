@@ -501,7 +501,7 @@
     <string name="watch_alerts_switch_label">ウォッチにアラートを送る</string>
     <string name="watch_alerts_switch_hint">サーバーとの接続が切れたとき、ロボットがオフラインまたはセーフモードになったとき、STOPが未確認のときに、ペアリング済みのウォッチへ知らせます。繰り返しのアラートは制限されます。</string>
     <string name="watch_release_notice_switch_label">新しいバージョンをウォッチに通知する</string>
-    <string name="watch_release_notice_switch_hint">アップデートの確認でより新しいリリースが見つかると、ペアリングされたウォッチにバージョンごとに一度だけ通知します。ウォッチは、自身のスイッチがオンのときだけ通知を表示します。オフにすると、スマートフォンは通知を送信しません。</string>
+    <string name="watch_release_notice_switch_hint">アップデートの確認でより新しいリリースが見つかると、ペアリングされたウォッチにバージョンごとに一度だけ通知します。ウォッチは、自身のスイッチがオンのときだけ通知を表示します。初期状態ではオフです。オンにするとスマートフォンが通知を送信します。</string>
     <string name="presence_relay_switch_label">ウォッチのオペレーター在席情報をサーバーへ中継</string>
     <string name="presence_relay_switch_hint">オペレーターがセル内にいる間、ウォッチがハートビートを送ります。スマートフォンが中継し、途絶えた場合の扱いはサーバーが決めます。初期設定ではオフです。</string>
     <string name="voice_confirm_switch_label">ウォッチの2段階確認をサーバーへ中継</string>
