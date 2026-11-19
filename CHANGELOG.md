@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **The reservations and the safety limits of a robot go through the typed client of the SDK:** `GET /api/claims` and `GET /api/safety-limits` are no longer written by hand; a reservation list or a limits answer that does not have the shape of the contract is a `HydraApiException`, an older server without the safety route still answers null. New `TypedClaimsAndLimitsTest`.
+
 - **The README describes the two-step sign-in screen:** the features list the full screen of Settings > Security (turn the second factor on and off, recovery codes shown once, new codes, the code field of the sign-in form, and the switch that keeps the screen out of screenshots), and the source map lists its files. The README and its seven translations are regenerated.
 
 - **Two-step sign-in has a full screen in the app:** Settings > Security now lets the signed-in account turn the second factor on (the password, then the key to put in an authenticator app, then the first code), shows the one-time recovery codes once, tells how many are left, warns when two or fewer remain and makes a new set (the old ones stop working), and turns the second factor off with the password and a code. The key and the codes stay hidden until the person asks to see them, are never written to a log, a store or the saved state of the screen, and are dropped as soon as the step ends. The key can be handed to an authenticator app on the phone or copied marked as sensitive. A switch keeps the screen out of screenshots, screen recordings and the recent apps view while a key or codes are shown; it is on by default. Texts are in the eight languages.
