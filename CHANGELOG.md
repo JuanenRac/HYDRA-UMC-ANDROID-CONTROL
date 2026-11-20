@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.8.0.6]
+
 - **The reservations and the safety limits of a robot go through the typed client of the SDK:** `GET /api/claims` and `GET /api/safety-limits` are no longer written by hand; a reservation list or a limits answer that does not have the shape of the contract is a `HydraApiException`, an older server without the safety route still answers null. New `TypedClaimsAndLimitsTest`.
 
 - **The README describes the two-step sign-in screen:** the features list the full screen of Settings > Security (turn the second factor on and off, recovery codes shown once, new codes, the code field of the sign-in form, and the switch that keeps the screen out of screenshots), and the source map lists its files. The README and its seven translations are regenerated.
@@ -25,6 +27,7 @@
 - **"Listen only" also holds for the watch relay when the app is closed:** the relay reads the switch (general or for that server) from storage before it sends a voice turn, a confirmation or the presence beat, so those are refused as they are with the app open.
 - **The saved session stays with its server:** the token, the refresh token and the password kept with "remember me" are sent only to the server that issued them. Another server (found on the network, picked from the list, or reached by a pairing link) gets none of them and the person signs in to it. A session saved before this belongs to the server that was saved then. Tests cover the rule in the renewal.
 
+- Build version synchronized with `hydra-umc.project.json` and the repository-native version source.
 
 ## [0.8.0.5]
 
