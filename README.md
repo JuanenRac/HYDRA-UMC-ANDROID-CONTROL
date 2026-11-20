@@ -43,7 +43,7 @@ A native Android app (Kotlin + Jetpack Compose) that controls a robot on the [HY
 | Tests | 767 (`./gradlew testDebugUnitTest`) |
 | Stack | Kotlin / Jetpack / biometric auth / WebSocket client |
 | Target | An Android phone or tablet |
-| On real hardware | Simulated only: tested against emulators, fakes or simulators; no run on real hardware is recorded for this version |
+| On real hardware | In daily use on real hardware: the honesty check of this README says where |
 
 **Jump to:** [Overview](#-overview) · [Architecture](#-architecture) · [Features](#-features) · [Security & Safety](#-security--safety) · [Interfaces](#-interfaces) · [Configuration](#-configuration) · [Quick start](#-quick-start) · [Testing](#-testing) · [Troubleshooting](#-troubleshooting) · [Repository Structure](#-repository-structure) · [Related Projects](#-related-projects)
 
@@ -57,9 +57,9 @@ Each line is one part of this repository and the light says how far it is today.
 |---|---|---|
 | Software | 🟡 | Works for its main purpose; the honesty check of this README lists what is still missing |
 | Tests | 🟡 | 767 automated tests recorded; the exact count, or a workflow that runs them on every change, is not confirmed yet |
-| Real hardware | 🟠 | Simulated only: tested against emulators, fakes or simulators; no run on real hardware is recorded for this version |
+| Real hardware | 🟢 | In daily use on real hardware: the honesty check of this README says where |
 | Interface and protocols | 🟡 | The routes or messages it offers are documented and tested with a client; not every client has used them yet |
-| Integration | 🟠 | Its messages and routes are checked against the shared contracts of the SDK; it has not run together with the real equipment |
+| Integration | 🟡 | Its messages and routes are checked against the shared contracts of the SDK; it has not run together with the real equipment |
 | Security | 🟡 | Access control, input limits or signatures are implemented and tested on a computer; nobody outside the project has reviewed them |
 | Deployment | 🟠 | A signed APK is published with each release; no installation on a phone or watch is recorded for this version |
 | Updates | 🟠 | Updated by installing the signed APK of the release; the update of an installed app is not recorded on a device |

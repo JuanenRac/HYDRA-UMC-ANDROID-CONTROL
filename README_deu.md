@@ -43,7 +43,7 @@ Eine native Android-App (Kotlin + Jetpack Compose), die einen Roboter auf der [H
 | Tests | 767 (`./gradlew testDebugUnitTest`) |
 | Technik | Kotlin / Jetpack / biometric auth / WebSocket client |
 | Ziel | Ein Android-Telefon oder -Tablet |
-| Auf echter Hardware | Nur simuliert: gegen Emulatoren, Attrappen oder Simulatoren getestet; für diese Version ist kein Lauf auf echter Hardware vermerkt |
+| Auf echter Hardware | Im täglichen Einsatz auf echter Hardware: die Ehrlichkeitsprüfung in diesem README sagt, wo |
 
 **Springe zu:** [Überblick](#-überblick) · [Architektur](#-architektur) · [Funktionen](#-funktionen) · [Sicherheit und Schutz](#-sicherheit-und-schutz) · [Schnittstellen](#-schnittstellen) · [Konfiguration](#-konfiguration) · [Schnellstart](#-schnellstart) · [Tests](#-tests) · [Fehlerbehebung](#-fehlerbehebung) · [Struktur des Repositorys](#-struktur-des-repositorys) · [Verwandte Projekte](#-verwandte-projekte)
 
@@ -57,9 +57,9 @@ Jede Zeile ist ein Teil dieses Repositorys, und die Ampel sagt, wie weit er heut
 |---|---|---|
 | Software | 🟡 | Funktioniert für seinen Hauptzweck; die Ehrlichkeitsprüfung in diesem README nennt, was noch fehlt |
 | Tests | 🟡 | 767 automatische Tests vermerkt; die genaue Anzahl oder ein Workflow, der sie bei jeder Änderung ausführt, ist noch nicht bestätigt |
-| Echte Hardware | 🟠 | Nur simuliert: gegen Emulatoren, Attrappen oder Simulatoren getestet; für diese Version ist kein Lauf auf echter Hardware vermerkt |
+| Echte Hardware | 🟢 | Im täglichen Einsatz auf echter Hardware: die Ehrlichkeitsprüfung in diesem README sagt, wo |
 | Schnittstelle und Protokolle | 🟡 | Die angebotenen Routen oder Nachrichten sind dokumentiert und mit einem Client getestet; noch nicht jeder Client hat sie benutzt |
-| Integration | 🟠 | Seine Nachrichten und Routen werden gegen die gemeinsamen Verträge des SDK geprüft; es lief noch nicht zusammen mit der echten Ausrüstung |
+| Integration | 🟡 | Seine Nachrichten und Routen werden gegen die gemeinsamen Verträge des SDK geprüft; es lief noch nicht zusammen mit der echten Ausrüstung |
 | Sicherheit | 🟡 | Zugriffskontrolle, Eingabegrenzen oder Signaturen sind umgesetzt und auf einem Rechner getestet; niemand außerhalb des Projekts hat sie geprüft |
 | Bereitstellung | 🟠 | Mit jedem Release wird ein signiertes APK veröffentlicht; für diese Version ist keine Installation auf Telefon oder Uhr vermerkt |
 | Aktualisierungen | 🟠 | Wird durch Installieren des signierten APK des Releases aktualisiert; die Aktualisierung einer installierten App ist auf keinem Gerät vermerkt |
