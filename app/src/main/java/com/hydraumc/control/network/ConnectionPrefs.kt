@@ -103,6 +103,14 @@ class ConnectionPrefs(private val context: Context) {
         context.connectionDataStore.edit { prefs -> prefs[booleanPreferencesKey("flag_$name")] = on }
     }
 
+    /** A random identity of this installation, made once, so the server keeps one watch notice entry per phone. It says nothing about the device. */
+    suspend fun watchNoticeDeviceId(): String {
+        val key = stringPreferencesKey("watch_notice_device_id")
+        context.connectionDataStore.data.first()[key]?.let { return it }
+        context.connectionDataStore.edit { prefs -> if (prefs[key] == null) prefs[key] = java.util.UUID.randomUUID().toString() }
+        return context.connectionDataStore.data.first()[key].orEmpty()
+    }
+
     /** The names of the switches kept with [loadFlag] and [saveFlag]. */
     object Flags {
         const val DEAD_MAN_JOG = "dead_man_jog"

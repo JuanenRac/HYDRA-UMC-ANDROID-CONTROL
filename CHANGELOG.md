@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- **The phone tells the server about the watch notice:** on connecting, and when the switch changes, the app sends whether it tells the watch about a newer release (with a random identity of this installation), so an administrator can see it. A server without that route is ignored.
 - **The 3D viewer keeps an HTTPS session fully encrypted and stays on the server:** with an HTTPS connection the viewer no longer loads plain-HTTP parts into the page, and a link or a redirect to another host is not followed inside it.
 
 ## [0.8.0.6]
