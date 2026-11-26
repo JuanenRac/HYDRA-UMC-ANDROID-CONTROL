@@ -119,6 +119,22 @@ android {
             // Robolectric loads the classes of the app through its own class loader, which the coverage agent does not see unless it is told to
             // include classes without a source location; without this the view model and the screens show as never run.
             all { test ->
+                // An exception that no coroutine handles is only reported by whichever later test starts a runTest, and fails that one. Every such
+                // exception is written down (UncaughtCoroutineRecorder), printed after the run and fails it, with the stack of its real source.
+                val uncaught = layout.buildDirectory.file("uncaught-coroutines-${test.name}.log").get().asFile
+                test.systemProperty("hydraUmc.uncaughtCoroutineLog", uncaught.absolutePath)
+                test.doFirst { uncaught.delete() }
+                test.addTestListener(object : org.gradle.api.tasks.testing.TestListener {
+                    override fun beforeSuite(suite: org.gradle.api.tasks.testing.TestDescriptor) {}
+                    override fun beforeTest(testDescriptor: org.gradle.api.tasks.testing.TestDescriptor) {}
+                    override fun afterTest(testDescriptor: org.gradle.api.tasks.testing.TestDescriptor, result: org.gradle.api.tasks.testing.TestResult) {}
+                    override fun afterSuite(suite: org.gradle.api.tasks.testing.TestDescriptor, result: org.gradle.api.tasks.testing.TestResult) {
+                        if (suite.parent == null && uncaught.length() > 0) println("Exceptions that no coroutine handled:\n" + uncaught.readText().take(12000))
+                    }
+                })
+                test.doLast {
+                    if (uncaught.length() > 0) throw GradleException("An exception that no coroutine handled escaped a unit test; see the list printed above and ${uncaught.path}")
+                }
                 // A failed test prints its whole cause chain in the log of the CI, so a failure that only shows on a runner can be read there.
                 test.testLogging {
                     events("failed")
