@@ -28,4 +28,19 @@ class ViewerUrlTest {
         val url = ViewerUrl.build("http", "10.0.0.5", "3000", "1", "a b&c=d#e")
         assertEquals("http://10.0.0.5:3000/?hideUI=true&robotId=1#token=a+b%26c%3Dd%23e", url)
     }
+
+    @Test fun `an https session blocks mixed content and a plain one does not`() {
+        assertTrue(ViewerUrl.blocksMixedContent("https"))
+        assertTrue(ViewerUrl.blocksMixedContent("HTTPS"))
+        assertFalse(ViewerUrl.blocksMixedContent("http"))
+    }
+
+    @Test fun `only addresses on the server stay inside the viewer`() {
+        assertTrue(ViewerUrl.staysOnServer("http://192.168.0.180:3000/?hideUI=true#token=x", "192.168.0.180"))
+        assertTrue(ViewerUrl.staysOnServer("https://Robot.local:443/a", "robot.local"))
+        assertFalse(ViewerUrl.staysOnServer("https://example.org/", "robot.local"))
+        assertFalse(ViewerUrl.staysOnServer("http://192.168.0.181:3000/", "192.168.0.180"))
+        assertFalse(ViewerUrl.staysOnServer("not a url", "robot.local"))
+        assertFalse(ViewerUrl.staysOnServer(null, "robot.local"))
+    }
 }
