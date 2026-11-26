@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "ecosystem": "HYDRA-UMC",
   "name": "HYDRA-UMC-ANDROID-CONTROL",
-  "version": "0.8.0.5",
+  "version": "0.8.0.6",
   "role": "ui",
   "stack": "android",
   "technologies": [
@@ -13,7 +13,8 @@
   ],
   "deployment_target": "mobile",
   "maturity": "functional",
-  "evidence": "simulator",
+  "evidence": "field",
+  "evidence_record": "Tried by the maintainer on his bench with real hardware; details of the setup are not published.",
   "family": "Core Backend & Clients",
   "parent": "HYDRA-UMC-SERVER",
   "build": "./gradlew assembleDebug. Needs Android SDK.",

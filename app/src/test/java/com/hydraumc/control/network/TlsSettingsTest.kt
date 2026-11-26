@@ -75,4 +75,12 @@ class TlsSettingsTest {
         assertFalse(TlsPolicy.isPlainRemote("192.168.1.20", usesTls = false))
         assertFalse(TlsPolicy.isPlainRemote("hydra.local", usesTls = false))
     }
+
+    @Test fun `automatic works as required when a fingerprint or a custom CA is set`() {
+        assertEquals(TlsMode.AUTO, TlsSettings().effectiveMode)
+        assertEquals(TlsMode.REQUIRED, TlsSettings(pinnedFingerprint = "ab".repeat(32)).effectiveMode)
+        assertEquals(TlsMode.REQUIRED, TlsSettings(customCaPem = "-----BEGIN CERTIFICATE-----").effectiveMode)
+        assertEquals(TlsMode.REQUIRED, TlsSettings(mode = TlsMode.REQUIRED).effectiveMode)
+        assertEquals("plain HTTP stays what the person chose", TlsMode.OFF, TlsSettings(mode = TlsMode.OFF, pinnedFingerprint = "ab".repeat(32)).effectiveMode)
+    }
 }

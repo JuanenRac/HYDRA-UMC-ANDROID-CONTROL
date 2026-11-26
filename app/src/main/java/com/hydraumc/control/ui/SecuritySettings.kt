@@ -54,6 +54,9 @@ fun SecuritySettings(viewModel: RobotViewModel) {
         TlsModeRow(mode == TlsMode.AUTO, R.string.tls_mode_auto, R.string.tls_mode_auto_hint) { mode = TlsMode.AUTO }
         TlsModeRow(mode == TlsMode.REQUIRED, R.string.tls_mode_required, R.string.tls_mode_required_hint) { mode = TlsMode.REQUIRED }
         TlsModeRow(mode == TlsMode.OFF, R.string.tls_mode_off, R.string.tls_mode_off_hint) { mode = TlsMode.OFF }
+        if (mode == TlsMode.AUTO && (pin.isNotBlank() || ca.isNotBlank())) {
+            Text(stringResource(R.string.tls_auto_as_required_notice), style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+        }
 
         Spacer(modifier = Modifier.height(16.dp))
         OutlinedTextField(
@@ -99,6 +102,12 @@ fun SecuritySettings(viewModel: RobotViewModel) {
         if (message != null) {
             Spacer(modifier = Modifier.height(8.dp))
             Text(message, style = MaterialTheme.typography.bodySmall)
+        }
+
+        // The second sign-in factor of the signed-in account (off until its owner turns it on).
+        if (viewModel.isLoggedIn.value) {
+            Spacer(modifier = Modifier.height(24.dp))
+            TotpSection(viewModel.totp)
         }
 
         // The access options of the server itself: only an administrator can read or change them.

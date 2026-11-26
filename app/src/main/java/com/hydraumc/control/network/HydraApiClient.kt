@@ -30,6 +30,14 @@ package com.hydraumc.control.network
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import hydra.umc.client.HydraPostRobotByIdJogArmBody
+import hydra.umc.client.HydraPostTotpBeginBody
+import hydra.umc.client.HydraPostTotpConfirmBody
+import hydra.umc.client.HydraPostTotpDisableBody
+import hydra.umc.client.HydraPostTotpRecoveryCodesBody
+import hydra.umc.client.HydraSuccess
+import hydra.umc.client.HydraTotpConfirmed
+import hydra.umc.client.HydraTotpEnrolment
+import hydra.umc.client.HydraTotpStatus
 import hydra.umc.client.HydraServerClient
 import okhttp3.Headers
 import okhttp3.MediaType.Companion.toMediaType
@@ -64,6 +72,10 @@ class HydraApiException(
     val serverMessage: String? = null,
     /** The revision the server put in a 412 answer: the one the robot is at now. */
     val revision: String? = null,
+    /** The sign-in answered `totpRequired`: the account has a second factor and a code is needed (or the one sent was wrong). */
+    val totpRequired: Boolean = false,
+    /** Seconds of the `Retry-After` header of the answer (a 429), when it sent one. */
+    val retryAfterSeconds: Int? = null,
 ) : IOException(message, cause) {
     /** 412 `revision-mismatch`: the robot changed since this phone read it, so a conditional write was refused and nothing was applied. */
     val isRevisionMismatch: Boolean get() = httpCode == 412 || serverCode == "revision-mismatch"
@@ -124,8 +136,8 @@ class HydraApiClient(
     port: Int,
     private val client: OkHttpClient = HydraHttp.client(),
     /** How to reach the server (see [TlsMode]); the user's setting at the time the client is made. */
-    private val tlsMode: TlsMode = TlsSettingsStore.current.mode,
-) : LoginEndpoint {
+    private val tlsMode: TlsMode = TlsSettingsStore.current.effectiveMode,
+) : LoginEndpoint, TotpEndpoint {
 
     /** Base URL of the target HYDRA-UMC server - starts as plain HTTP, and
      * getHydraInfo() below switches it to HTTPS the first time a plain-HTTP
@@ -183,12 +195,30 @@ class HydraApiClient(
         }
     }
 
-    override suspend fun login(username: String, password: String): JSONObject = withContext(Dispatchers.IO) {
+    override suspend fun login(username: String, password: String): JSONObject = login(username, password, null)
+
+    /** Signs in; [totp] is the code of the second factor (an app code or a recovery code), sent only when the account asked for it. */
+    override suspend fun login(username: String, password: String, totp: String?): JSONObject = withContext(Dispatchers.IO) {
         val payload = JSONObject().put("username", username).put("password", password)
+        if (!totp.isNullOrBlank()) payload.put("totp", totp)
         val body = payload.toString().toRequestBody(JSON_MEDIA_TYPE)
         val request = Request.Builder().url("$baseUrl/api/login").post(body).build()
         executeExpectingJson(request)
     }
+
+    // The second factor of the account (the typed client of the SDK carries the five calls). The key and the codes of the answers are handed to the
+    // caller and never written anywhere here.
+    override suspend fun totpStatus(): HydraTotpStatus = typedCall { api -> api.getTotpStatus() }
+
+    override suspend fun totpBegin(password: String): HydraTotpEnrolment = typedCall { api -> api.postTotpBegin(HydraPostTotpBeginBody(password)) }
+
+    override suspend fun totpConfirm(code: String): HydraTotpConfirmed = typedCall { api -> api.postTotpConfirm(HydraPostTotpConfirmBody(code)) }
+
+    override suspend fun totpDisable(password: String, code: String): HydraSuccess =
+        typedCall { api -> api.postTotpDisable(HydraPostTotpDisableBody(password, code)) }
+
+    override suspend fun totpNewRecoveryCodes(password: String, code: String): HydraTotpConfirmed =
+        typedCall { api -> api.postTotpRecoveryCodes(HydraPostTotpRecoveryCodesBody(password, code)) }
 
     /** 
      * Performs a one-shot probe to identify a HYDRA-UMC server. 
@@ -272,14 +302,7 @@ class HydraApiClient(
     }
 
     /** Every active reservation (GET /api/claims): who controls which robot. */
-    suspend fun getClaims(): List<ClaimInfo> = withContext(Dispatchers.IO) {
-        val request = Request.Builder()
-            .url("$baseUrl/api/claims")
-            .header("Authorization", "Bearer ${authToken ?: ""}")
-            .get()
-            .build()
-        ClaimInfo.listFromJson(executeExpectingJson(request))
-    }
+    suspend fun getClaims(): List<ClaimInfo> = typedCall { api -> ClaimInfo.listFromJson(asJson(api.getClaims().toJson())) }
 
     /**
      * Reserves a robot for this account on this controller. [ttlMs] null lets the server pick its
@@ -363,17 +386,10 @@ class HydraApiClient(
     }
 
     /** The safety limits the server holds for one robot's model (GET /api/safety-limits?robotId=); null from an older server without the route. */
-    suspend fun getRobotSafety(robotId: Int): RobotSafety? = withContext(Dispatchers.IO) {
-        val request = Request.Builder()
-            .url("$baseUrl/api/safety-limits?robotId=$robotId")
-            .header("Authorization", "Bearer ${authToken ?: ""}")
-            .get()
-            .build()
-        try {
-            RobotSafety.fromJson(executeExpectingJson(request))
-        } catch (e: HydraApiException) {
-            if (e.isNotFound) null else throw e
-        }
+    suspend fun getRobotSafety(robotId: Int): RobotSafety? = try {
+        typedCall { api -> RobotSafety.fromJson(asJson(api.getSafetyLimits(robotId.toString()).toJson())) }
+    } catch (e: HydraApiException) {
+        if (e.isNotFound) null else throw e
     }
 
     private fun controlRequest(path: String, body: JSONObject, ifMatch: String? = null): Request = Request.Builder()
@@ -622,6 +638,8 @@ class HydraApiClient(
                     serverCode = errorBody?.optStr("code")?.ifEmpty { null },
                     serverMessage = errorBody?.optStr("error")?.ifEmpty { null },
                     revision = revisionOf(errorBody),
+                    totpRequired = errorBody?.optBoolean("totpRequired", false) == true,
+                    retryAfterSeconds = it.header("Retry-After")?.trim()?.toIntOrNull(),
                 )
             }
             if (bodyString == null) {

@@ -19,8 +19,8 @@ GPL-3.0-or-later - see LICENSE
   <img src="https://img.shields.io/badge/Language-Kotlin-7F52FF.svg" alt="Language">
   <img src="https://img.shields.io/badge/UI-Jetpack%20Compose-4285F4.svg" alt="UI">
   <img src="https://img.shields.io/badge/Platform-Android-3DDC84.svg" alt="Platform">
-  <img src="https://img.shields.io/badge/Tests-731%20passing-2ea44f.svg" alt="Tests">
-  <img src="https://img.shields.io/badge/Version-0.8.0.5-0f6cbd.svg" alt="Version">
+  <img src="https://img.shields.io/badge/Tests-767%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Version-0.8.0.6-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-functional-0F6CBD.svg" alt="Maturity">
 </p>
 
@@ -28,7 +28,7 @@ GPL-3.0-or-later - see LICENSE
 
 一款原生 Android 应用（Kotlin + Jetpack Compose），通过 Wi-Fi 或蓝牙控制 [HYDRA-UMC](https://github.com/JuanenRac/HYDRA-UMC) 平台上的机器人，使用与 [HYDRA-UMC SUITE](https://github.com/JuanenRac/HYDRA-UMC-SUITE) 完全相同的 [`REMOTE_API.md`](https://github.com/JuanenRac/HYDRA-UMC-SERVER/blob/main/docs/REMOTE_API.md) 契约——针对运行中的 [HYDRA-UMC-SERVER](https://github.com/JuanenRac/HYDRA-UMC-SERVER) 后端（与 [HYDRA-UMC STUDIO](https://github.com/JuanenRac/HYDRA-UMC-STUDIO) 自身网页仪表盘所通信的同一个后端）进行发现、完整状态读写以及实时 WebSocket 同步。是 [HYDRA-UMC-IOS-CONTROL](https://github.com/JuanenRac/HYDRA-UMC-IOS-CONTROL) 的直接 Android 版本对应物。完整设计参见 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)。
 
-> **诚实检查——今天真正可运行的部分：** 核心业务逻辑——Parol6 运动学（`kinematics/Parol6Kinematics.kt`）、settings 树状态契约（`model/HydraState.kt`）、原子命令下发与语音中继（`viewmodel/RobotViewModel.kt`）、WebSocket 重连处理（`network/HydraWebSocket.kt`）、MJPEG 帧解析（`ui/MjpegPlayer.kt`）、应用内更新通道（`update/GitHubReleaseUpdater.kt`、`ReleaseMetadataParser.kt`、`SemanticVersion.kt`），以及 Wear 语音中继请求管理（`wear/BoundedRequestScope.kt`、`WatchCompanionProtocol.kt`）都是真实的，并由 731 个通过的 JVM/Robolectric 单元测试覆盖（`./gradlew testDebugUnitTest`）。这些测试在结构上无法触及——而这个仅有 Windows 的开发环境也没有实体 Android 设备可以验证——的是 `network/AuthPrefs.kt` 中真正基于 Keystore 的 `EncryptedSharedPreferences`、`androidx.biometric` 的指纹/面部提示、`network/HydraBleClient.kt` 的蓝牙 GATT 传输，以及 `MjpegStreamParser` 中 API 28+ 的硬件 `ImageDecoder` 路径：这些都是真实、已编译的代码，但自编写以来尚未在真实硬件上重新验证过。早期版本的基本启动/登录*确实*在真实设备上得到过现场确认（见 `CHANGELOG.md` 的 `v0.3.2`/`v0.3.3` 条目），但那早于蓝牙、生物识别和硬件解码路径。具体已交付的内容见 `CHANGELOG.md`，其中每条记录也附有关于哪些部分仍未经硬件验证的说明。
+> **诚实检查——今天真正可运行的部分：** 核心业务逻辑——Parol6 运动学（`kinematics/Parol6Kinematics.kt`）、settings 树状态契约（`model/HydraState.kt`）、原子命令下发与语音中继（`viewmodel/RobotViewModel.kt`）、WebSocket 重连处理（`network/HydraWebSocket.kt`）、MJPEG 帧解析（`ui/MjpegPlayer.kt`）、应用内更新通道（`update/GitHubReleaseUpdater.kt`、`ReleaseMetadataParser.kt`、`SemanticVersion.kt`），以及 Wear 语音中继请求管理（`wear/BoundedRequestScope.kt`、`WatchCompanionProtocol.kt`）都是真实的，并由 767 个通过的 JVM/Robolectric 单元测试覆盖（`./gradlew testDebugUnitTest`）。这些测试在结构上无法触及——而这个仅有 Windows 的开发环境也没有实体 Android 设备可以验证——的是 `network/AuthPrefs.kt` 中真正基于 Keystore 的 `EncryptedSharedPreferences`、`androidx.biometric` 的指纹/面部提示、`network/HydraBleClient.kt` 的蓝牙 GATT 传输，以及 `MjpegStreamParser` 中 API 28+ 的硬件 `ImageDecoder` 路径：这些都是真实、已编译的代码，但自编写以来尚未在真实硬件上重新验证过。早期版本的基本启动/登录*确实*在真实设备上得到过现场确认（见 `CHANGELOG.md` 的 `v0.3.2`/`v0.3.3` 条目），但那早于蓝牙、生物识别和硬件解码路径。具体已交付的内容见 `CHANGELOG.md`，其中每条记录也附有关于哪些部分仍未经硬件验证的说明。
 
 > **安全与安防现状:**本生态系统不是经认证的安全系统。目前尚无硬件 E-STOP 通路,没有由固件强制执行的限位或联锁,也没有经过验证的运动指令;固件映像使用 CRC-32 和 Ed25519 签名校验,发布构建会拒绝已公开的开发密钥(中继之后的 URTC 引导程序不再使用共享密钥:主板用公钥表校验 Ed25519 记录,扩展板只有在主板确认了该确切映像之后才会安装它);TLS 与双向 TLS 均为可选项,默认关闭;自制电路板尚未组装或测试。在依赖此处任何说法来保障人身安全之前,请先阅读[安全基线](https://github.com/JuanenRac/HYDRA-UMC-DOCS/blob/main/docs/SECURITY_BASELINE.md)和[威胁模型](https://github.com/JuanenRac/HYDRA-UMC-DOCS/blob/main/docs/THREAT_MODEL.md)。
 
@@ -38,12 +38,12 @@ GPL-3.0-or-later - see LICENSE
 
 | | |
 |---|---|
-| 版本 | `0.8.0.5` |
+| 版本 | `0.8.0.6` |
 | 成熟度 | 可用 |
-| 测试 | 731 (`./gradlew testDebugUnitTest`) |
+| 测试 | 767 (`./gradlew testDebugUnitTest`) |
 | 技术栈 | Kotlin / Jetpack / biometric auth / WebSocket client |
 | 目标 | Android 手机或平板 |
-| 真实硬件 | 仅模拟：使用模拟器、替身或仿真测试；此版本没有在真实硬件上运行的记录 |
+| 真实硬件 | 在真实硬件上日常使用：本 README 中的诚实性检查说明了在哪里 |
 
 **跳转：** [概述](#-概述) · [架构](#-架构) · [功能](#-功能) · [安全与防护](#-安全与防护) · [接口](#-接口) · [配置](#-配置) · [快速开始](#-快速开始) · [测试](#-测试) · [故障排除](#-故障排除) · [仓库结构](#-仓库结构) · [相关项目](#-相关项目)
 
@@ -56,10 +56,10 @@ GPL-3.0-or-later - see LICENSE
 | 领域 | 状态 | 在这里的含义 |
 |---|---|---|
 | 软件 | 🟡 | 主要用途可用；本 README 中的诚实性检查列出了仍然缺少的内容 |
-| 测试 | 🟢 | 731 项自动测试，每次变更都会运行 |
-| 真实硬件 | 🟠 | 仅模拟：使用模拟器、替身或仿真测试；此版本没有在真实硬件上运行的记录 |
+| 测试 | 🟡 | 已记录 767 项自动测试；确切数量，或每次变更都运行它们的工作流，尚未确认 |
+| 真实硬件 | 🟢 | 在真实硬件上日常使用：本 README 中的诚实性检查说明了在哪里 |
 | 接口与协议 | 🟡 | 提供的路由或消息已有文档，并用客户端测试过；尚未被所有客户端使用 |
-| 集成 | 🟠 | 其消息和路由已对照 SDK 的共享契约检查；尚未与真实设备一起运行 |
+| 集成 | 🟡 | 其消息和路由已对照 SDK 的共享契约检查；尚未与真实设备一起运行 |
 | 安全性 | 🟡 | 访问控制、输入限制或签名已实现并在计算机上测试；项目之外无人审查过 |
 | 部署 | 🟠 | 每个发布版本都会发布已签名的 APK；此版本没有在手机或手表上安装的记录 |
 | 更新 | 🟠 | 通过安装发布版本的已签名 APK 来更新；在设备上更新已安装应用没有记录 |
@@ -110,6 +110,7 @@ GPL-3.0-or-later - see LICENSE
 - **应用内语音助手**(`ui/VoiceAssistantDialog.kt`)—— 顶部栏中的麦克风图标会打开一个对话框,可输入问题/指令,或使用本手机自带的语音识别(`RecognizerIntent`,与手表语音按钮已使用的真实模式相同)。识别出的文字会通过与手表中继相同的 `POST /api/voice/turn` 路由发送,但作为本手机自身的普通流量(`HydraApiClient.postVoiceTurn()`)而非中继 —— 因此“配置 > 远程访问”可以独立于配对的手表来允许/阻止此按钮。绝不上传音频,回复也绝不会直接发出机器人指令。
 - **工具链与项目质量** —— AGP 9.3.1、Kotlin 2.2.10、Gradle 9.7.0、compileSdk 36、**JDK 21**（`compileOptions`、`gradle-daemon-jvm.properties`,以及 `.idea/`/`.vscode/` 项目文件都实际以此为目标,而不仅仅是这行文档）。构建输出干净,零警告,经过优化的 R8 生产变体,以及高级的 **Roborazzi** 截图测试。
 - **命令通道**（`network/RobotCommandRepository.kt`、`network/StopAllRunner.kt`、`network/RobotCommandContract.kt`）- 所有对机器人的写入都经过同一个仓库：保存每台机器人的修订号（If-Match），无人应答时重发停止命令，对不认识 `table` 的旧服务器把该移动改为点动发送，统计仍在传输中的点动，按命令名对连续命令去抖，并测量每次应答的耗时；全局停止有自己的执行器。命令名称及其上限（速度 10 到 500，点动和点动步长最大 1000）由 `tools/gen_command_contract.py` 从 `docs/robot_command_contract.json` 生成（HYDRA-UMC-IOS-CONTROL 保存同一个文件），生成文件不一致时校验失败。已在 JVM 上针对模拟服务器和本地 HTTP 服务器测试，急停按钮在屏幕上检查。
+- **两步登录**（`ui/TotpSection.kt`、`viewmodel/TotpFlow.kt`、`network/TotpRules.kt`、`network/TotpEndpoint.kt`、`util/TotpPrefs.kt`）- **设置 → 安全** 为已登录账户开启第二重验证（先输入密码，再得到用于验证器应用的密钥，然后输入第一个验证码；一个按钮把密钥交给手机上的验证器应用，另一个按钮以敏感内容标记复制）；一次性恢复码只显示一次，并说明还剩多少个（两个或更少时给出警告），可生成新的一组（旧的随即失效），并用密码和一个验证码关闭第二重验证。当服务器表明账户启用了第二重验证时，登录表单会要求输入应用验证码或恢复码，并把错误验证码和错误次数过多后的等待与密码错误区分开来。密钥和验证码在用户要求查看之前保持隐藏，绝不写入日志、存储或界面的保存状态，步骤结束即丢弃；一个开关（默认开启）在显示密钥或验证码时，使该界面不出现在截图、录屏和最近应用视图中。
 
 **状态：Wi-Fi、蓝牙、生物识别和通知均已实现。** 本应用是一款工业操作员控制台；蓝牙仍处于实验阶段，任何屏幕都不能取代物理急停。
 
@@ -173,7 +174,7 @@ GPL-3.0-or-later - see LICENSE
 
 ## 🧪 测试
 
-运行 `./gradlew testDebugUnitTest` 会执行 731 个自动测试。 不需要硬件，也不需要这台机器以外的任何东西。
+运行 `./gradlew testDebugUnitTest` 会执行 767 个自动测试。 不需要硬件，也不需要这台机器以外的任何东西。
 
 CI 运行 `HYDRA_UMC_CI=1 python tools/ci_validate.py`，检查清单、文档、八个 README 和图片。
 

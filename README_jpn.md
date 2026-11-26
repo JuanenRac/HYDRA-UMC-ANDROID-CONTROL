@@ -19,8 +19,8 @@ GPL-3.0-or-later - see LICENSE
   <img src="https://img.shields.io/badge/Language-Kotlin-7F52FF.svg" alt="Language">
   <img src="https://img.shields.io/badge/UI-Jetpack%20Compose-4285F4.svg" alt="UI">
   <img src="https://img.shields.io/badge/Platform-Android-3DDC84.svg" alt="Platform">
-  <img src="https://img.shields.io/badge/Tests-731%20passing-2ea44f.svg" alt="Tests">
-  <img src="https://img.shields.io/badge/Version-0.8.0.5-0f6cbd.svg" alt="Version">
+  <img src="https://img.shields.io/badge/Tests-767%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Version-0.8.0.6-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-functional-0F6CBD.svg" alt="Maturity">
 </p>
 
@@ -38,12 +38,12 @@ Wi-Fi または Bluetooth 経由で [HYDRA-UMC](https://github.com/JuanenRac/HYD
 
 | | |
 |---|---|
-| バージョン | `0.8.0.5` |
+| バージョン | `0.8.0.6` |
 | 成熟度 | 機能する |
-| テスト | 731 (`./gradlew testDebugUnitTest`) |
+| テスト | 767 (`./gradlew testDebugUnitTest`) |
 | 技術 | Kotlin / Jetpack / biometric auth / WebSocket client |
 | 対象 | Android のスマートフォンまたはタブレット |
-| 実機での確認 | シミュレーションのみ：エミュレーター、模擬部品、シミュレーターで試験済み。このバージョンについて実機での動作記録はありません |
+| 実機での確認 | 実機で日常的に使用：この README の正直さの確認に、どこで使っているかが書かれています |
 
 **移動：** [概要](#-概要) · [アーキテクチャ](#-アーキテクチャ) · [機能](#-機能) · [セキュリティと安全](#-セキュリティと安全) · [インターフェース](#-インターフェース) · [設定](#-設定) · [クイックスタート](#-クイックスタート) · [テスト](#-テスト) · [トラブルシューティング](#-トラブルシューティング) · [リポジトリの構成](#-リポジトリの構成) · [関連プロジェクト](#-関連プロジェクト)
 
@@ -56,10 +56,10 @@ Wi-Fi または Bluetooth 経由で [HYDRA-UMC](https://github.com/JuanenRac/HYD
 | 領域 | 状態 | ここでの意味 |
 |---|---|---|
 | ソフトウェア | 🟡 | 主な目的では動作します。足りない点はこの README の正直さの確認に書かれています |
-| テスト | 🟢 | 自動テスト 731 件。変更のたびに実行されます |
-| 実機 | 🟠 | シミュレーションのみ：エミュレーター、模擬部品、シミュレーターで試験済み。このバージョンについて実機での動作記録はありません |
+| テスト | 🟡 | 自動テスト 767 件を記録済み。正確な件数、または変更のたびに実行するワークフローはまだ確認されていません |
+| 実機 | 🟢 | 実機で日常的に使用：この README の正直さの確認に、どこで使っているかが書かれています |
 | インターフェースとプロトコル | 🟡 | 提供するルートやメッセージは文書化され、クライアントで試験済みです。すべてのクライアントがまだ使ったわけではありません |
-| 連携 | 🟠 | メッセージとルートは SDK の共通契約に照らして検証されていますが、実機と一緒に動かしたことはありません |
+| 連携 | 🟡 | メッセージとルートは SDK の共通契約に照らして検証されていますが、実機と一緒に動かしたことはありません |
 | セキュリティ | 🟡 | アクセス制御、入力の制限、署名のいずれかは実装されコンピューター上で試験済みですが、プロジェクト外の誰もレビューしていません |
 | デプロイ | 🟠 | リリースごとに署名付き APK を公開しますが、この版でスマートフォンや時計に入れた記録はありません |
 | アップデート | 🟠 | リリースの署名付き APK を入れて更新します。インストール済みアプリの更新を実機で行った記録はありません |
@@ -110,6 +110,7 @@ Wi-Fi または Bluetooth 経由で [HYDRA-UMC](https://github.com/JuanenRac/HYD
 - **アプリ内音声アシスタント**(`ui/VoiceAssistantDialog.kt`)—— 上部バーのマイクアイコンをタップするとダイアログが開き、質問や指示を入力するか、この端末自体の音声認識(`RecognizerIntent`、Watch の音声ボタンで既に使われているのと同じ実際のパターン)を使用できます。認識されたテキストは、Watch リレーと同じ `POST /api/voice/turn` ルートを経由して送信されますが、リレーとしてではなくこの端末自身の通常トラフィック(`HydraApiClient.postVoiceTurn()`)として扱われます —— そのため設定 > リモートアクセスは、ペアリングされた Watch とは独立してこのボタンを許可/ブロックできます。音声がアップロードされることは一切なく、返信が直接ロボットコマンドを発行することもありません。
 - **ツールチェーンとプロジェクト品質** —— AGP 9.3.1、Kotlin 2.2.10、Gradle 9.7.0、compileSdk 36、**JDK 21**（`compileOptions`、`gradle-daemon-jvm.properties`、そして `.idea/`/`.vscode/` のプロジェクトファイルもすべて、このドキュメントの記述だけでなく実際にそれをターゲットとしています）。警告ゼロのクリーンなビルド出力、最適化された R8 プロダクションバリアント、高度な **Roborazzi** スクリーンショットテスト。
 - **コマンド経路**（`network/RobotCommandRepository.kt`、`network/StopAllRunner.kt`、`network/RobotCommandContract.kt`）- ロボットへの書き込みはすべて1つのリポジトリを通ります。各ロボットのリビジョン（If-Match）を保持し、応答がないときは停止を再送し、`table` 移動を知らない古いサーバーにはジョグとして送り、送信中のジョグを数え、連続コマンドをコマンド名ごとにまとめ、各応答にかかった時間を測定します。全体停止は専用の実行部を持ちます。コマンド名と上限（速度10〜500、ジョグとジョグ幅は1000まで）は `tools/gen_command_contract.py` が `docs/robot_command_contract.json`（HYDRA-UMC-IOS-CONTROL も同じファイルを持ちます）から生成し、生成ファイルが異なると検証が失敗します。JVM上で偽サーバーとローカルHTTPサーバーに対してテスト済みで、非常停止ボタンは画面上で確認します。
+- **2 段階ログイン**（`ui/TotpSection.kt`、`viewmodel/TotpFlow.kt`、`network/TotpRules.kt`、`network/TotpEndpoint.kt`、`util/TotpPrefs.kt`）- **設定 → セキュリティ** で、ログイン中のアカウントの第 2 要素を有効にします（パスワード、認証アプリ用のキー、最初のコードの順。ボタンの 1 つはキーを端末の認証アプリに渡し、もう 1 つは機密扱いでコピーします）。使い捨てのリカバリーコードは一度だけ表示され、残りの数を示し（2 つ以下なら警告）、新しい一式を作り（古いものは無効）、パスワードとコードで第 2 要素を無効にします。サーバーがアカウントに第 2 要素があると伝えると、ログインフォームはアプリのコードまたはリカバリーコードを求め、誤ったコードと誤りが多すぎたあとの待ち時間を、誤ったパスワードと区別して伝えます。キーとコードは見たいと操作するまで隠れ、ログ・ストア・画面の保存状態には書かれず、手順が終わると破棄されます。スイッチ（既定でオン）により、キーやコードの表示中はスクリーンショット・画面録画・最近使ったアプリの表示から画面が外れます。
 
 **状態：Wi-Fi、Bluetooth、生体認証、通知が実装済み。** 本アプリは産業用オペレーターコンソールです。Bluetooth はまだ実験的で、どの画面も物理的な非常停止の代わりにはなりません。
 
@@ -173,7 +174,7 @@ JDK 21 と Android SDK（Android Studio に両方含まれます）、および 
 
 ## 🧪 テスト
 
-`./gradlew testDebugUnitTest` で自動テスト 731 件を実行します。 ハードウェアも、このマシンの外にあるものも必要ありません。
+`./gradlew testDebugUnitTest` で自動テスト 767 件を実行します。 ハードウェアも、このマシンの外にあるものも必要ありません。
 
 CI は `HYDRA_UMC_CI=1 python tools/ci_validate.py` を実行し、マニフェスト、文書、8 つの README、図を検査します。
 

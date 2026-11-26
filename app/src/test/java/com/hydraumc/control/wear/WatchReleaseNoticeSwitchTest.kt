@@ -43,11 +43,11 @@ class WatchReleaseNoticeSwitchTest {
     private val context: Application get() = ApplicationProvider.getApplicationContext()
 
     @Test
-    fun `the default is the one of the contract and it keeps what the app did`() {
+    fun `the default is the one of the contract and the watch is not told until the person turns it on`() {
         val contract = JSONObject(File("../docs/robot_command_contract.json").readText()).getJSONObject("watchAlerts")
         assertEquals(contract.getBoolean("releaseNoticeEnabledByDefault"), RobotCommandContract.WATCH_ALERTS_RELEASE_NOTICE_ENABLED_BY_DEFAULT)
-        assertTrue(RobotCommandContract.WATCH_ALERTS_RELEASE_NOTICE_ENABLED_BY_DEFAULT)
-        assertTrue(RobotViewModel(context, EmptyAuthStore).watchReleaseNoticeEnabled.value)
+        assertFalse(RobotCommandContract.WATCH_ALERTS_RELEASE_NOTICE_ENABLED_BY_DEFAULT)
+        assertFalse(RobotViewModel(context, EmptyAuthStore).watchReleaseNoticeEnabled.value)
     }
 
     @Test
@@ -65,9 +65,9 @@ class WatchReleaseNoticeSwitchTest {
     @Test
     fun `the update screen reads the switch of the settings`() = runBlocking {
         val screen = AppUpdateViewModel(context)
-        assertTrue(screen.releaseNoticeSwitch())
-        ConnectionPrefs(context).saveFlag(ConnectionPrefs.Flags.WATCH_RELEASE_NOTICE, false)
         assertFalse(screen.releaseNoticeSwitch())
+        ConnectionPrefs(context).saveFlag(ConnectionPrefs.Flags.WATCH_RELEASE_NOTICE, true)
+        assertTrue(screen.releaseNoticeSwitch())
         ConnectionPrefs(context).saveFlag(ConnectionPrefs.Flags.WATCH_RELEASE_NOTICE, true)
     }
 
