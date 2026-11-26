@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **The 3D viewer keeps an HTTPS session fully encrypted and stays on the server:** with an HTTPS connection the viewer no longer loads plain-HTTP parts into the page, and a link or a redirect to another host is not followed inside it.
+
 ## [0.8.0.6]
 
 - **The reservations and the safety limits of a robot go through the typed client of the SDK:** `GET /api/claims` and `GET /api/safety-limits` are no longer written by hand; a reservation list or a limits answer that does not have the shape of the contract is a `HydraApiException`, an older server without the safety route still answers null. New `TypedClaimsAndLimitsTest`.
