@@ -9,7 +9,8 @@
     "/api/totp/confirm",
     "/api/totp/disable",
     "/api/totp/recovery-codes",
-    "/api/totp/status"
+    "/api/totp/status",
+    "/api/watch/release-notice"
   ],
   "by_hand": {
     "/api/admin/server-config": "the answer is kept as text on purpose (the audit hash, the history and the options are read from the exact text), and the typed client returns a parsed model",

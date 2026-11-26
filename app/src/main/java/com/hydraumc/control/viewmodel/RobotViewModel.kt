@@ -1117,6 +1117,7 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
                 client.refreshToken = if (sameServer) (apiClient?.refreshToken ?: profile.refreshToken.ifEmpty { null }) else null
                 apiClient = client
                 authTokenState.value = token
+                reportWatchReleaseNotice()
                 prefs.save(host, portValue)
                 logTelemetry("Connecting to $host:$portInt...")
                 object : ConnectSource {
@@ -1770,6 +1771,23 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
         watchReleaseNoticeTouched = true
         watchReleaseNoticeEnabled.value = on
         viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) { prefs.saveFlag(ConnectionPrefs.Flags.WATCH_RELEASE_NOTICE, on) }
+        reportWatchReleaseNotice()
+    }
+
+    /** Tells the connected server the position of the watch notice switch; a server without the route, or no session, is not an error. */
+    private fun reportWatchReleaseNotice() {
+        val client = apiClient ?: return
+        if (client.authToken.isNullOrEmpty()) return
+        val on = watchReleaseNoticeEnabled.value
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            try {
+                client.postWatchReleaseNotice(prefs.watchNoticeDeviceId(), on)
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                // information only: the next connection tells it again
+            }
+        }
     }
 
     fun setPresenceRelayEnabled(on: Boolean) {

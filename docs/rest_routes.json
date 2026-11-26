@@ -28,5 +28,6 @@
   "/api/totp/status",
   "/api/voice/confirm",
   "/api/voice/turn",
+  "/api/watch/release-notice",
   "/api/watch/system-status"
 ]

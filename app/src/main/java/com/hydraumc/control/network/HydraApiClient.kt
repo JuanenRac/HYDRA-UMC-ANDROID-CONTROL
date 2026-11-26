@@ -34,6 +34,7 @@ import hydra.umc.client.HydraPostTotpBeginBody
 import hydra.umc.client.HydraPostTotpConfirmBody
 import hydra.umc.client.HydraPostTotpDisableBody
 import hydra.umc.client.HydraPostTotpRecoveryCodesBody
+import hydra.umc.client.HydraPostWatchReleaseNoticeBody
 import hydra.umc.client.HydraSuccess
 import hydra.umc.client.HydraTotpConfirmed
 import hydra.umc.client.HydraTotpEnrolment
@@ -208,6 +209,11 @@ class HydraApiClient(
 
     // The second factor of the account (the typed client of the SDK carries the five calls). The key and the codes of the answers are handed to the
     // caller and never written anywhere here.
+    /** Tells the server whether this phone tells its watch about a newer release (shown to an administrator; nothing else happens). */
+    suspend fun postWatchReleaseNotice(deviceId: String, notifiesWatch: Boolean) {
+        typedCall { api -> api.postWatchReleaseNotice(HydraPostWatchReleaseNoticeBody(deviceId, "android", notifiesWatch)) }
+    }
+
     override suspend fun totpStatus(): HydraTotpStatus = typedCall { api -> api.getTotpStatus() }
 
     override suspend fun totpBegin(password: String): HydraTotpEnrolment = typedCall { api -> api.postTotpBegin(HydraPostTotpBeginBody(password)) }
