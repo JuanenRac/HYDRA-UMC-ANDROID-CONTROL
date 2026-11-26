@@ -123,6 +123,13 @@ class HydraWebSocket(
     @Volatile
     private var webSocket: WebSocket? = null
     /**
+     * The number of the connection attempt in use. A callback belongs to the current connection when its attempt still has this number. OkHttp may call
+     * the listener before `newWebSocket` has returned, so comparing the socket with [webSocket] would drop the first callbacks of a fast server.
+     */
+    private var attempt = 0
+    /** Makes "is this attempt still the current one" and the change of [webSocket] one step. */
+    private val attemptLock = Any()
+    /**
      * True only between a real onOpen and the next onClosing/onClosed/
      * onFailure/disconnect() for THAT SAME [webSocket] instance - not merely
      * "webSocket is non-null". Before this field existed, [webSocket] stayed
@@ -202,10 +209,18 @@ class HydraWebSocket(
         }
         isSocketOpen = false
         var opened = false
-        webSocket = client.newWebSocket(request, object : WebSocketListener() {
+        val own = synchronized(attemptLock) { ++attempt }
+        val created = client.newWebSocket(request, object : WebSocketListener() {
+            /** True while this attempt is the current one; its socket is then the one [send] uses, even before `newWebSocket` has returned. */
+            private fun adopt(ws: WebSocket): Boolean = synchronized(attemptLock) {
+                if (own != attempt) return@synchronized false
+                webSocket = ws
+                true
+            }
+
             // Every callback below takes its own `ws` parameter rather than
-            // shadowing the outer `webSocket` field, and checks `ws ===
-            // webSocket` before touching any shared state. Without that
+            // shadowing the outer `webSocket` field, and checks that its attempt
+            // is the current one before touching any shared state. Without that
             // check, a stale callback from a superseded attempt (e.g. a slow
             // onFailure arriving just after a fresh reconnect already
             // succeeded and replaced [webSocket]) could flip isSocketOpen/
@@ -213,7 +228,11 @@ class HydraWebSocket(
             // reality, still open - "un callback viejo no altera la conexion
             // nueva" (this project's own acceptance criterion).
             override fun onOpen(ws: WebSocket, response: Response) {
-                if (ws !== webSocket) return
+                if (!adopt(ws)) {
+                    // opened for an attempt that was replaced or disconnected meanwhile: nobody else would close it
+                    ws.close(1000, null)
+                    return
+                }
                 opened = true
                 isSocketOpen = true
                 // A reconnect can miss deltas: the first full snapshot after it
@@ -223,18 +242,18 @@ class HydraWebSocket(
             }
 
             override fun onMessage(ws: WebSocket, text: String) {
-                if (ws !== webSocket) return
+                if (!adopt(ws)) return
                 handleMessage(text)
             }
 
             override fun onClosing(ws: WebSocket, code: Int, reason: String) {
-                if (ws !== webSocket) return
+                if (!adopt(ws)) return
                 isSocketOpen = false
                 ws.close(1000, null)
             }
 
             override fun onClosed(ws: WebSocket, code: Int, reason: String) {
-                if (ws !== webSocket) return
+                if (!adopt(ws)) return
                 isSocketOpen = false
                 mainScope.launch { onStatus(WsStatus.DISCONNECTED) }
                 if (code == WS_CLOSE_POLICY_VIOLATION && reason.contains("token in the address", ignoreCase = true)) {
@@ -274,7 +293,7 @@ class HydraWebSocket(
             }
 
             override fun onFailure(ws: WebSocket, t: Throwable, response: Response?) {
-                if (ws !== webSocket) return
+                if (!adopt(ws)) return
                 isSocketOpen = false
                 if (!opened && token != null && !useQueryToken && !closingByUser && response != null) {
                     // The server answered the upgrade but refused it before it ever opened: an older server that only
@@ -291,6 +310,8 @@ class HydraWebSocket(
                 scheduleReconnect()
             }
         })
+        // unless a callback has already started a newer attempt (the token fallbacks do, from inside the listener) or disconnect() ran
+        synchronized(attemptLock) { if (own == attempt) webSocket = created }
     }
 
     /** 
@@ -393,8 +414,11 @@ class HydraWebSocket(
         closingByUser = true
         isSocketOpen = false
         reconnectJob?.cancel()
-        webSocket?.close(1000, "App closed")
-        webSocket = null
+        synchronized(attemptLock) {
+            attempt++
+            webSocket?.close(1000, "App closed")
+            webSocket = null
+        }
         scope.cancel()
         mainScope.cancel()
     }

@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- **A server that answers very fast no longer loses the first events of the live connection:** the socket callbacks could run before the app had stored the socket, and were then dropped (no "connected" state, or no sign-in request after a rejected session). Each connection attempt now has a number and a socket that opens after a disconnect is closed. The unit tests also record any exception that no coroutine handled and fail with its real source, instead of failing a later unrelated test.
 - **The vendored files follow the SDK contract again:** the SDK is pinned to its newest release and the vendored server answers now include the routes of the watch release notice, so the nightly family check finds no drift.
 - **The phone tells the server about the watch notice:** on connecting, and when the switch changes, the app sends whether it tells the watch about a newer release (with a random identity of this installation), so an administrator can see it. A server without that route is ignored.
 - **The 3D viewer keeps an HTTPS session fully encrypted and stays on the server:** with an HTTPS connection the viewer no longer loads plain-HTTP parts into the page, and a link or a redirect to another host is not followed inside it.
