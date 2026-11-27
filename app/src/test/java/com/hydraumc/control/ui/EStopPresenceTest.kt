@@ -8,8 +8,12 @@ package com.hydraumc.control.ui
 import android.app.Application
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithContentDescription
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.test.core.app.ApplicationProvider
 import com.hydraumc.control.R
 import com.hydraumc.control.network.AuthStore
@@ -70,6 +74,32 @@ class EStopPresenceTest {
 
         // No server is connected here: the stop must say so instead of looking done.
         assertTrue(model.stopAllStatus.value is StopAllStatus.NotConfirmed)
+    }
+
+    @Test
+    fun everyScreenOfTheNavigationKeepsTheStopOfTheHeader() {
+        val app = ApplicationProvider.getApplicationContext<Application>()
+        val model = viewModel()
+        val updates = com.hydraumc.control.viewmodel.AppUpdateViewModel(app)
+        composeTestRule.setContent { com.hydraumc.control.MainScreen(model, updates) }
+        composeTestRule.waitForIdle()
+        fun stopOnScreen() {
+            composeTestRule.onAllNodesWithContentDescription(stopDescription())[0].assertIsDisplayed()
+        }
+        stopOnScreen()
+        for (tab in com.hydraumc.control.items) {
+            composeTestRule.onNodeWithTag("tab-" + tab.route).performClick()
+            composeTestRule.waitForIdle()
+            stopOnScreen()
+        }
+        // the screens behind the cards of More
+        for (card in listOf(R.string.tab_3d_view, R.string.tab_telemetry, R.string.more_connection_title, R.string.more_security_title)) {
+            composeTestRule.onNodeWithTag("tab-more").performClick()
+            composeTestRule.waitForIdle()
+            composeTestRule.onAllNodesWithText(app.getString(card))[0].performScrollTo().performClick()
+            composeTestRule.waitForIdle()
+            stopOnScreen()
+        }
     }
 
     @Test

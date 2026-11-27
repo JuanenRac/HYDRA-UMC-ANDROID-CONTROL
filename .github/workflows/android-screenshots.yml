@@ -1,0 +1,57 @@
+# =============================================================================
+# HYDRA-UMC-ANDROID-CONTROL - Pictures of the screens
+# Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
+# GPL-3.0-or-later - see LICENSE
+# =============================================================================
+# Draws the screens of the app with invented data (ScreenshotsTest, on the JVM, no emulator, phone, robot or server) and keeps the pictures as
+# an artifact, so a change of the look can be seen before it is merged. Runs by hand and on a pull request to main that changes the app.
+# Nothing is built for release, nothing is signed and no version changes (HYDRA_UMC_CI=1).
+name: Android screenshots
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths:
+      - "app/**"
+      - ".github/workflows/android-screenshots.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-screenshots-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  screenshots:
+    name: Draw the screens
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Java
+        uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+      - name: Draw the screens
+        env:
+          HYDRA_UMC_CI: "1"
+          HYDRA_UMC_SCREENSHOTS: "1"
+        shell: bash
+        run: |
+          set -euo pipefail
+          chmod +x gradlew
+          ./gradlew --no-daemon testDebugUnitTest --tests 'com.hydraumc.control.ui.ScreenshotsTest'
+      - name: Keep the pictures
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: screenshots
+          path: app/build/screenshots
+          retention-days: 3
+          if-no-files-found: error

@@ -7,7 +7,6 @@ package com.hydraumc.control
 
 import android.content.res.Configuration
 import com.hydraumc.control.ui.LocalStopViewModel
-import com.hydraumc.control.ui.StopDropdownMenu
 import com.hydraumc.control.ui.StopAlertDialog
 import androidx.annotation.StringRes
 import androidx.compose.foundation.background
@@ -16,52 +15,59 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
+import com.hydraumc.control.ui.theme.HydraColors
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.withStyle
 import com.hydraumc.control.R
 import com.hydraumc.control.ui.*
-import com.hydraumc.control.ui.theme.metallicIndustrial
 import com.hydraumc.control.viewmodel.RobotViewModel
 import com.hydraumc.control.viewmodel.AppUpdateState
 import com.hydraumc.control.viewmodel.AppUpdateViewModel
 
 /**
- * Sealed class defining the different screens available for navigation.
+ * The screens of the app.
  * @property route The navigation route string.
- * @property titleRes The string resource ID for the tab label.
- * @property icon The icon representing the tab.
+ * @property titleRes The string resource ID for the label.
+ * @property icon The icon representing the screen.
  */
 sealed class Screen(val route: String, @param:StringRes val titleRes: Int, val icon: androidx.compose.ui.graphics.vector.ImageVector) {
-    /** The Dashboard screen. */
-    object Dashboard : Screen("dashboard", R.string.tab_dashboard, Icons.Filled.Dashboard)
+    /** The home screen: the state of the cell. */
+    object Dashboard : Screen("dashboard", R.string.tab_home, Icons.Filled.Home)
     /** The Manual Control screen. */
     object Control : Screen("control", R.string.tab_control, Icons.Filled.ControlCamera)
     /** The Camera Feed screen. */
-    object Camera : Screen("camera", R.string.tab_camera, Icons.Filled.CameraAlt)
-    /** The 3D Simulation screen. */
+    object Camera : Screen("camera", R.string.tab_cameras, Icons.Filled.Videocam)
+    /** What happened, when and what to do. */
+    object Alerts : Screen("notices", R.string.tab_notices, Icons.Filled.Notifications)
+    /** The tools and settings, as explained cards. */
+    object More : Screen("more", R.string.tab_more, Icons.Filled.Apps)
+    /** The 3D Simulation screen (from More or Control). */
     object ThreeD : Screen("threed", R.string.tab_3d_view, Icons.Filled.ViewInAr)
-    /** The Industrial Telemetry screen. */
+    /** The Industrial Telemetry screen (from More). */
     object Telemetry : Screen("telemetry", R.string.tab_telemetry, Icons.Filled.Terminal)
-    /** The Application Settings screen. */
+    /** Help by screen and level (from the header and More). */
+    object Help : Screen("help", R.string.help_title, Icons.Filled.Info)
+    /** The Application Settings screen (from More). */
     object Settings : Screen("settings", R.string.tab_settings, Icons.Filled.Settings)
 }
 
 /** List of screen items to display in the Bottom Navigation Bar. */
-val items = listOf(Screen.Dashboard, Screen.Control, Screen.Camera, Screen.ThreeD)
+val items = listOf(Screen.Dashboard, Screen.Control, Screen.Camera, Screen.Alerts, Screen.More)
+
+/** The screens reached from More: the bar keeps More selected while one of them is open. */
+private val moreRoutes = setOf(Screen.ThreeD.route, Screen.Telemetry.route, Screen.Settings.route, Screen.Help.route)
 
 /**
  * Main application screen that provides the scaffold for navigation and global UI components.
@@ -94,9 +100,18 @@ private fun MainScreenContent(
     var showAboutDialog by remember { mutableStateOf(value = false) }
     var showProfileDialog by remember { mutableStateOf(value = false) }
     var showVoiceAssistantDialog by remember { mutableStateOf(value = false) }
-    var serverDropdownExpanded by remember { mutableStateOf(value = false) }
-    val discoveredServers = viewModel.discoveredServers.value
     val updateState by updateViewModel.state.collectAsState()
+    val unseen = com.hydraumc.control.util.Notices.unseen(viewModel.notices.value)
+    // The notices screen is filled from what the phone sees while the app is on screen.
+    LaunchedEffect(viewModel) {
+        while (true) {
+            viewModel.noticesTick()
+            kotlinx.coroutines.delay(1_000)
+        }
+    }
+    LaunchedEffect(updateState) {
+        (updateState as? AppUpdateState.Available)?.let { viewModel.noteUpdate(it.update.version.toString()) }
+    }
 
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
@@ -145,6 +160,38 @@ private fun MainScreenContent(
         )
     }
 
+    // A tab keeps what was on it; More always opens its list of cards.
+    val openTab: (Screen) -> Unit = { screen ->
+        navController.navigate(screen.route) {
+            popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+            launchSingleTop = true
+            restoreState = screen != Screen.More
+        }
+    }
+    // A screen of More is opened above it: Back returns to where it was asked from.
+    val openAbove: (Screen) -> Unit = { screen -> navController.navigate(screen.route) { launchSingleTop = true } }
+    var settingsTab by rememberSaveable { mutableIntStateOf(SettingsTab.CONNECTION) }
+    val openSettings: (Int) -> Unit = { tab ->
+        settingsTab = tab
+        openAbove(Screen.Settings)
+    }
+
+    // The help opens on the topic of the screen it is asked from.
+    var helpTopic by rememberSaveable { mutableStateOf<HelpTopic?>(null) }
+    val openHelp: () -> Unit = {
+        if (currentDestination?.route != Screen.Help.route) {
+            helpTopic = when (currentDestination?.route) {
+                Screen.Dashboard.route -> HelpTopic.HOME
+                Screen.Control.route, Screen.ThreeD.route -> HelpTopic.CONTROL
+                Screen.Camera.route -> HelpTopic.CAMERAS
+                Screen.Alerts.route -> HelpTopic.NOTICES
+                Screen.Settings.route -> HelpTopic.ACCOUNT
+                else -> null
+            }
+            openAbove(Screen.Help)
+        }
+    }
+
     // Startup checks only fetch release metadata. The actual APK transfer and
     // Android installer are both initiated by the operator from this prompt.
     if (updateState is AppUpdateState.Available) {
@@ -163,11 +210,7 @@ private fun MainScreenContent(
                     // own Updates tab for exactly this in-flight state (see
                     // SettingsScreen.kt's own initialTabIndex comment).
                     updateViewModel.downloadAndInstall(update)
-                    navController.navigate(Screen.Settings.route) {
-                        popUpTo(navController.graph.findStartDestination().id) { saveState = true }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
+                    openSettings(SettingsTab.UPDATES)
                 }
             },
             confirmButton = {},
@@ -182,202 +225,39 @@ private fun MainScreenContent(
     Scaffold(
         topBar = {
             Column {
-                CenterAlignedTopAppBar(
-                    title = { 
-                        Box(
-                            modifier = Modifier
-                                .padding(vertical = 4.dp)
-                                .metallicIndustrial(
-                                    backgroundColor = MaterialTheme.colorScheme.surfaceVariant,
-                                    borderColor = MaterialTheme.colorScheme.primary,
-                                )
-                                .padding(horizontal = 8.dp, vertical = 4.dp),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Text(
-                                text = buildAnnotatedString {
-                                    withStyle(style = SpanStyle(color = Color.White)) {
-                                        append("HYDRA")
-                                    }
-                                    withStyle(style = SpanStyle(color = Color(0xFF00C853))) {
-                                        append("-UM")
-                                    }
-                                    withStyle(style = SpanStyle(color = Color.Red)) {
-                                        append("C")
-                                    }
-                                    withStyle(style = SpanStyle(color = Color.LightGray)) {
-                                        append(" CONTROL")
-                                    }
-                                },
-                                style = MaterialTheme.typography.titleLarge.copy(
-                                    shadow = androidx.compose.ui.graphics.Shadow(
-                                        color = Color.Black,
-                                        offset = androidx.compose.ui.geometry.Offset(2f, 2f),
-                                        blurRadius = 4f,
-                                    ),
-                                    letterSpacing = 1.sp,
-                                ),
-                                fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
-                                fontWeight = androidx.compose.ui.text.font.FontWeight.ExtraBold,
-                            )
-                        }
-                    },
-                    // The global STOP lives here so it is on screen on every tab.
-                    actions = {
-                        GlobalStopButton(viewModel, Modifier.padding(end = 8.dp))
-                    },
-                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.background,
-                        titleContentColor = MaterialTheme.colorScheme.primary,
-                    )
-                )
-
-                // Sub-header Row with Server Selector and Icons
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    // Server Selector (Left) - real bug found live: this Box had no
-                    // width limit of its own, and this outer Row has no weights at
-                    // all - in a locale whose translated server_selector_with_count/
-                    // _none string is wide enough (Spanish "Servidores (N)" vs English
-                    // "Servers (N)", for one real example), this button's own natural
-                    // width grew past what's left on screen, pushing the icon Row
-                    // below partly off the right edge - NOT actually shrinking any
-                    // icon's own size, just clipping most of the last one (About)
-                    // off-screen, which reads exactly like "the About icon is tiny".
-                    // weight(1f, fill = false) caps this Box at its fair share of the
-                    // row instead of its full unbounded natural width, so the icon
-                    // Row (unweighted, real fixed content) always gets to keep its
-                    // own full natural width - the label truncates with an ellipsis
-                    // instead, in whichever locale ever needs to.
-                    Box(modifier = Modifier.weight(1f, fill = false)) {
-                        OutlinedButton(
-                            onClick = { serverDropdownExpanded = true },
-                            modifier = Modifier.height(40.dp),
-                            contentPadding = PaddingValues(horizontal = 8.dp)
-                        ) {
-                            Icon(Icons.Default.Dns, contentDescription = null, modifier = Modifier.size(18.dp))
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = if (discoveredServers.isNotEmpty())
-                                    stringResource(R.string.server_selector_with_count, discoveredServers.size)
-                                else
-                                    stringResource(R.string.server_selector_none),
-                                style = MaterialTheme.typography.labelMedium,
-                                maxLines = 1,
-                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-                                modifier = Modifier.weight(1f, fill = false)
-                            )
-                            Icon(Icons.Default.ArrowDropDown, contentDescription = null)
-                        }
-
-                        StopDropdownMenu(
-                            expanded = serverDropdownExpanded,
-                            onDismissRequest = { serverDropdownExpanded = false }
-                        ) {
-                            if (discoveredServers.isEmpty()) {
-                                DropdownMenuItem(
-                                    text = { Text(stringResource(R.string.no_servers_found)) },
-                                    onClick = { serverDropdownExpanded = false }
-                                )
-                            } else {
-                                discoveredServers.forEach { server ->
-                                    DropdownMenuItem(
-                                        text = { Text("${server.displayName} (${server.host})") },
-                                        onClick = {
-                                            viewModel.connectToDiscovered(server)
-                                            serverDropdownExpanded = false
-                                        }
-                                    )
-                                }
-                            }
-                        }
-                    }
-
-                    // Icons (Right)
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        IconButton(onClick = { showProfileDialog = true }) {
-                            Icon(Icons.Default.Person, contentDescription = stringResource(R.string.user_profile_title), tint = MaterialTheme.colorScheme.primary)
-                        }
-                        IconButton(onClick = { showVoiceAssistantDialog = true }) {
-                            Icon(Icons.Default.Mic, contentDescription = stringResource(R.string.voice_assistant_title), tint = MaterialTheme.colorScheme.primary)
-                        }
-                        IconButton(
-                            onClick = { 
-                                navController.navigate(Screen.Telemetry.route) {
-                                    popUpTo(navController.graph.findStartDestination().id) { saveState = true }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
-                            }
-                        ) {
-                            Icon(Icons.Default.Terminal, contentDescription = stringResource(R.string.tab_telemetry), tint = MaterialTheme.colorScheme.primary)
-                        }
-                        IconButton(
-                            onClick = { 
-                                navController.navigate(Screen.Settings.route) {
-                                    popUpTo(navController.graph.findStartDestination().id) { saveState = true }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
-                            }
-                        ) {
-                            Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.tab_settings), tint = MaterialTheme.colorScheme.primary)
-                        }
-                        IconButton(onClick = { showAboutDialog = true }) {
-                            // Real feedback from live testing: Icons.Default.Info renders
-                            // visibly smaller than Person/Mic/Terminal/Settings even though
-                            // all 5 share the same default 24dp Icon size here - Material's
-                            // own "Info" glyph just draws with more internal padding inside
-                            // its 24x24 viewBox than the others. Sized up explicitly so it
-                            // reads as the same size as its neighbors, not adjusted for real
-                            // touch-target concerns (IconButton's own 48dp minimum still
-                            // applies either way).
-                            Icon(
-                                Icons.Default.Info,
-                                contentDescription = stringResource(R.string.about_title),
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(28.dp)
-                            )
-                        }
-                    }
-                }
+                HydraTopBar(viewModel, onVoice = { showVoiceAssistantDialog = true }, onProfile = { showProfileDialog = true }, onHelp = openHelp)
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                 StopAllBanner(viewModel)
             }
         },
         bottomBar = {
-            NavigationBar(
-                containerColor = MaterialTheme.colorScheme.surface,
-                tonalElevation = 8.dp
-            ) {
-                // navBackStackEntry/currentDestination now hoisted above,
-                // reused here rather than re-declared - same state, one
-                // source of truth for both this nav bar's selected-tab
-                // highlight and the landscape/isOnThreeDScreen check above.
+            NavigationBar(containerColor = MaterialTheme.colorScheme.surface, tonalElevation = 0.dp) {
+                // currentDestination is hoisted above: one source of truth for this bar and the landscape check.
                 items.forEach { screen ->
+                    val selected = currentDestination?.hierarchy?.any {
+                        it.route == screen.route || (screen == Screen.More && it.route in moreRoutes)
+                    } == true
                     NavigationBarItem(
-                        icon = { Icon(screen.icon, contentDescription = null) },
-                        label = { 
-                            Text(
-                                text = stringResource(screen.titleRes),
-                                style = MaterialTheme.typography.labelSmall,
-                                maxLines = 1,
-                                softWrap = false
-                            ) 
-                        },
-                        selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
-                        onClick = {
-                            navController.navigate(screen.route) {
-                                popUpTo(navController.graph.findStartDestination().id) { saveState = true }
-                                launchSingleTop = true
-                                restoreState = true
+                        modifier = Modifier.testTag("tab-" + screen.route),
+                        icon = {
+                            if (screen == Screen.Alerts && unseen > 0) {
+                                BadgedBox(badge = { Badge { Text(unseen.toString()) } }) { Icon(screen.icon, contentDescription = null) }
+                            } else {
+                                Icon(screen.icon, contentDescription = null)
                             }
-                        }
+                        },
+                        label = {
+                            Text(text = stringResource(screen.titleRes), style = MaterialTheme.typography.labelSmall, maxLines = 1, softWrap = false)
+                        },
+                        selected = selected,
+                        onClick = { openTab(screen) },
+                        colors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = HydraColors.Accent,
+                            selectedTextColor = HydraColors.Accent,
+                            indicatorColor = MaterialTheme.colorScheme.primaryContainer,
+                            unselectedIconColor = HydraColors.Muted,
+                            unselectedTextColor = HydraColors.Muted,
+                        ),
                     )
                 }
             }
@@ -420,12 +300,42 @@ private fun MainScreenContent(
             )
         }
         NavHost(navController, startDestination = Screen.Dashboard.route, Modifier.weight(1f).fillMaxWidth()) {
-            composable(Screen.Dashboard.route) { DashboardScreen(viewModel) }
-            composable(Screen.Control.route) { ControlScreen(viewModel) }
+            composable(Screen.Dashboard.route) {
+                DashboardScreen(viewModel, onOpenControl = { openTab(Screen.Control) }, onOpenSettings = { openSettings(SettingsTab.CONNECTION) }, onOpenSecurity = { openSettings(SettingsTab.SECURITY) }, onOpenNotices = { openTab(Screen.Alerts) })
+            }
+            composable(Screen.Control.route) { ControlScreen(viewModel, onOpenThreeD = { openAbove(Screen.ThreeD) }) }
             composable(Screen.Camera.route) { CameraScreen(viewModel) }
             composable(Screen.ThreeD.route) { ThreeDScreen(viewModel) }
             composable(Screen.Telemetry.route) { TelemetryScreen(viewModel) }
-            composable(Screen.Settings.route) { SettingsScreen(viewModel, updateViewModel, onEnableBluetooth) }
+            composable(Screen.Settings.route) { SettingsScreen(viewModel, updateViewModel, onEnableBluetooth, openTab = settingsTab) }
+            composable(Screen.Alerts.route) {
+                NoticesScreen(viewModel.notices.value, onMarkSeen = viewModel::markNoticesSeen, onSettings = { openSettings(SettingsTab.NOTICES) })
+            }
+            composable(Screen.Help.route) {
+                HelpScreen(helpTopic) { topic ->
+                    when (topic) {
+                        HelpTopic.HOME -> openTab(Screen.Dashboard)
+                        HelpTopic.CONTROL -> openTab(Screen.Control)
+                        HelpTopic.CAMERAS -> openTab(Screen.Camera)
+                        HelpTopic.NOTICES -> openTab(Screen.Alerts)
+                        HelpTopic.ACCOUNT -> openSettings(SettingsTab.SECURITY)
+                        else -> Unit
+                    }
+                }
+            }
+            composable(Screen.More.route) {
+                MoreScreen(
+                    onThreeD = { openAbove(Screen.ThreeD) },
+                    onTelemetry = { openAbove(Screen.Telemetry) },
+                    onSettings = openSettings,
+                    onAccount = { showProfileDialog = true },
+                    onHelp = {
+                        helpTopic = null
+                        openAbove(Screen.Help)
+                    },
+                    onAbout = { showAboutDialog = true },
+                )
+            }
         }
         }
     }

@@ -101,7 +101,7 @@ fun EndstopIndicator(label: String, active: Boolean) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ControlScreen(viewModel: RobotViewModel) {
+fun ControlScreen(viewModel: RobotViewModel, onOpenThreeD: (() -> Unit)? = null) {
     val context = LocalContext.current
     val vibrator = remember { context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator }
 
@@ -219,6 +219,13 @@ fun ControlScreen(viewModel: RobotViewModel) {
             }
 
             Spacer(modifier = Modifier.height(16.dp))
+
+            onOpenThreeD?.let { open ->
+                androidx.compose.material3.FilledTonalButton(onClick = open, modifier = Modifier.fillMaxWidth()) {
+                    Text(stringResource(R.string.open_3d_view))
+                }
+                Spacer(modifier = Modifier.height(10.dp))
+            }
 
             // Robot Selector Card
             Box(modifier = Modifier.fillMaxWidth().metallicIndustrial(backgroundColor = Color(0xFF111827))) {

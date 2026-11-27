@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
@@ -29,7 +30,9 @@ import com.hydraumc.control.widget.refreshGlobalStopWidgets
 import android.net.wifi.WifiManager
 import androidx.activity.result.contract.ActivityResultContracts
 import com.hydraumc.control.ui.CustomSplashScreen
-import com.hydraumc.control.ui.LoginScreen
+import com.hydraumc.control.ui.NoticesStep
+import com.hydraumc.control.ui.SignInFlow
+import com.hydraumc.control.util.FirstRun
 import com.hydraumc.control.ui.theme.HydraTheme
 import com.hydraumc.control.viewmodel.RobotViewModel
 import com.hydraumc.control.viewmodel.AppUpdateViewModel
@@ -225,10 +228,18 @@ class MainActivity : FragmentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background,
                 ) {
+                    // Known only once the stored session has been read: a phone that never signed in gets the welcome and,
+                    // right after its first sign-in, the step of the notices.
+                    var firstUse by rememberSaveable { mutableStateOf<Boolean?>(null) }
+                    if (!showSplash && firstUse == null) {
+                        firstUse = !isLoggedIn && FirstRun.isFirst(this@MainActivity, robotViewModel.loginUsername.value)
+                    }
                     if (showSplash) {
                         CustomSplashScreen { splashTimerDone = true }
                     } else if (!isLoggedIn) {
-                        LoginScreen(robotViewModel)
+                        SignInFlow(robotViewModel, firstRun = firstUse == true)
+                    } else if (firstUse == true) {
+                        NoticesStep(robotViewModel) { firstUse = false }
                     } else {
                         MainScreen(
                             robotViewModel,

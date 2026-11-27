@@ -399,6 +399,11 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
     var watchStopRestoredSink: com.hydraumc.control.wear.WatchStopRestoredSink = com.hydraumc.control.wear.WearStopRestoredSink(application)
     private val stopRestoredWatchPolicy = com.hydraumc.control.wear.StopRestoredWatchPolicy()
     private val watchAlertRules = WatchAlertRules()
+    // The list of the notices screen: its own copy of the same rules, so it does not depend on the watch being on.
+    private val noticeLog = com.hydraumc.control.util.NoticeLog(application)
+    private val noticeRules = WatchAlertRules()
+    private var noticesRaw = noticeLog.raw()
+    val notices = mutableStateOf(com.hydraumc.control.util.Notices.decode(noticesRaw))
     private var watchAlertJob: kotlinx.coroutines.Job? = null
 
     /** The work files (trajectories) of the selected robot's folder; null before the list was read. */
@@ -1325,8 +1330,9 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
                 // narrow enough (needs a specific prior-session state) not to
                 // block fixing the common case, and the underlying gap is in
                 // HYDRA-UMC-SERVER's server.ts, not this app.
-                if ((oldRobot != null) && oldRobot.isPlaying && !robot.isPlaying && robot.isFinished && notificationsEnabled.value) {
-                    NotificationHelper.sendAlert(
+                if ((oldRobot != null) && oldRobot.isPlaying && !robot.isPlaying && robot.isFinished) {
+                    noticeLog.add(com.hydraumc.control.util.NoticeKind.JOB_DONE, robot.name)
+                    if (notificationsEnabled.value) NotificationHelper.sendAlert(
                         getApplication(),
                         "Robot ${robot.name}",
                         "Job sequence completed successfully.",
@@ -1821,6 +1827,33 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
             else -> WatchAlertStop.NONE
         },
     )
+
+    /** One look at the plant for the notices screen, and the entries a push message may have added meanwhile. Nothing is sent anywhere. */
+    fun noticesTick() {
+        for (event in noticeRules.observe(watchAlertInput())) {
+            val kind = com.hydraumc.control.util.NoticeKind.entries.firstOrNull { it.name == event.kind.name } ?: continue
+            noticeLog.add(kind, event.robotName.orEmpty())
+        }
+        refreshNotices()
+    }
+
+    fun noteUpdate(version: String) {
+        noticeLog.addOnce(com.hydraumc.control.util.NoticeKind.UPDATE, version)
+        refreshNotices()
+    }
+
+    fun markNoticesSeen() {
+        noticeLog.markAllSeen()
+        refreshNotices()
+    }
+
+    private fun refreshNotices() {
+        val raw = noticeLog.raw()
+        if (raw != noticesRaw) {
+            noticesRaw = raw
+            notices.value = com.hydraumc.control.util.Notices.decode(raw)
+        }
+    }
 
     /** One look at the plant: the alerts that deserve the wrist are sent. A failure to deliver is not an error of the app. */
     suspend fun watchAlertsTick() {

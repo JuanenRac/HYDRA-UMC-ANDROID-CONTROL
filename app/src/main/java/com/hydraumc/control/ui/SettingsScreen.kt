@@ -50,6 +50,7 @@ fun SettingsScreen(
     viewModel: RobotViewModel,
     updateViewModel: AppUpdateViewModel,
     onEnableBluetooth: () -> Unit = {},
+    openTab: Int = SettingsTab.CONNECTION,
 ) {
     val updateState by updateViewModel.state.collectAsState()
     // Tapping "Download and install" on the update dialog (MainScreen.kt)
@@ -67,8 +68,8 @@ fun SettingsScreen(
     // composes, the outcome is the same tab.
     val initialTabIndex = when (updateState) {
         is AppUpdateState.Available, is AppUpdateState.Downloading,
-        is AppUpdateState.InstallPermissionRequired, AppUpdateState.Installing -> 3
-        else -> 0
+        is AppUpdateState.InstallPermissionRequired, AppUpdateState.Installing -> SettingsTab.UPDATES
+        else -> openTab
     }
     /** Index of the currently selected settings tab. */
     var selectedTabIndex by remember { mutableIntStateOf(initialTabIndex) }
@@ -82,17 +83,14 @@ fun SettingsScreen(
     )
 
     Column(modifier = Modifier.fillMaxSize()) {
-        // With 4 tabs, a text label would wrap or get clipped mid-word
-        // inside its narrow quarter-width slot. The tabs are icon-only,
-        // at double the default size, so the row stays legible
-        // regardless of language/label length - the title is kept as the
-        // icon's contentDescription instead, for screen readers.
-        TabRow(selectedTabIndex = selectedTabIndex) {
+        // Icon and words: the row scrolls sideways when the words of a language do not fit.
+        ScrollableTabRow(selectedTabIndex = selectedTabIndex, edgePadding = 8.dp, containerColor = MaterialTheme.colorScheme.background) {
             tabs.forEachIndexed { index, tab ->
                 Tab(
                     selected = selectedTabIndex == index,
                     onClick = { selectedTabIndex = index },
-                    icon = { Icon(tab.icon, contentDescription = tab.title, modifier = Modifier.size(48.dp)) },
+                    icon = { Icon(tab.icon, contentDescription = null) },
+                    text = { Text(tab.title, maxLines = 1) },
                 )
             }
         }
@@ -107,6 +105,14 @@ fun SettingsScreen(
             }
         }
     }
+}
+
+/** The tabs of Settings, in their order. */
+object SettingsTab {
+    const val CONNECTION = 0
+    const val NOTICES = 2
+    const val UPDATES = 3
+    const val SECURITY = 4
 }
 
 /** 

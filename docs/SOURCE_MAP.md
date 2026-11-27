@@ -49,9 +49,14 @@ Every file of the repository with a line on what it does: the annotated tree tha
 │   │   │   │   ├── AuditDialog.kt           # Audit record of the server (administrators), with the chain check
 │   │   │   │   ├── CameraScreen.kt         # Per-robot MJPEG camera feed + vision on/off switch
 │   │   │   │   ├── ControlScreen.kt        # Manual jog controls, E-STOP/play/pause/stop with long-press protection
-│   │   │   │   ├── DashboardScreen.kt      # 3D carousel robot picker + system health + module matrix
+│   │   │   │   ├── DashboardScreen.kt      # Home: state of the cell, figures, next steps, robot list; health card of the server
 │   │   │   │   ├── GlobalStop.kt           # Global STOP button + result banner (one tap, every robot)
 │   │   │   │   ├── Joystick3D.kt           # Reusable 2-axis joystick control component
+│   │   │   │   ├── HydraTopBar.kt          # Header of every screen: mark, global STOP, server in use, voice, account
+│   │   │   │   ├── NoticesScreen.kt        # What happened: filters, mark seen, link to the settings
+│   │   │   │   ├── HelpScreen.kt           # Help by screen and level, with search
+│   │   │   │   ├── MoreScreen.kt           # "More": the tools and settings as explained cards
+│   │   │   │   ├── EntryScreens.kt         # First use: welcome, server search, notices step, help to reach the server
 │   │   │   │   ├── LoginScreen.kt          # Username/password + IP/port entry, biometric login
 │   │   │   │   ├── MjpegPlayer.kt          # MJPEG stream parser + Canvas renderer
 │   │   │   │   ├── PlaybackConsole.kt      # Shared floating STOP/play/pause/stop console
@@ -63,6 +68,7 @@ Every file of the repository with a line on what it does: the annotated tree tha
 │   │   │   │   ├── VoiceAssistantDialog.kt # In-app mic/text button to HYDRA-UMC-VOICE-UI
 │   │   │   │   ├── theme/
 │   │   │   │   │   ├── Color.kt, Theme.kt, Typography.kt   # Material 3 color scheme, theme wrapper, type scale
+│   │   │   │   │   ├── Pieces.kt   # Shared pieces: card, icon disc, status light, screen title, figure, menu row
 │   │   │   │   │   └── HydraButton.kt, IndustrialComponents.kt, IndustrialStyle.kt   # Shared industrial-styled UI building blocks
 │   │   │   │   ├── TotpSection.kt                                                # Settings > Security: the second sign-in factor (key, recovery codes, turn on and off)
 │   │   │   │   └── SecuritySettings.kt                                           # Settings > Security: optional, configurable TLS (mode, pinned fingerprint, CA)
@@ -71,6 +77,9 @@ Every file of the repository with a line on what it does: the annotated tree tha
 │   │   │   │   ├── ControlRelease.kt         # Names this app's APK asset; the gate is in the shared Kotlin module (common/)
 │   │   │   │   └── SemanticVersion.kt        # Strict semantic version parser for updates
 │   │   │   ├── util/
+│   │   │   │   ├── DiagnosticReport.kt     # The report "Share diagnostic" prepares: app and phone only
+│   │   │   │   ├── FirstRun.kt             # Whether this phone has signed in before
+│   │   │   │   ├── NoticeLog.kt            # The notices kept on the phone (the last 100)
 │   │   │   │   ├── BiometricHelper.kt      # androidx.biometric prompt wrapper
 │   │   │   │   ├── NotificationHelper.kt   # Job-complete/safety push notifications
 │   │   │   │   ├── NotificationPrefs.kt    # Persistent storage for the in-app notifications toggle
@@ -91,6 +100,7 @@ Every file of the repository with a line on what it does: the annotated tree tha
 │   │   │   │   ├── RobotViewModel.kt   # Shared ViewModel - networking, auth, discovery, atomic command dispatch, all UI state
 │   │   │   │   ├── CommandErrorText.kt # The texts of a failed command, in the language of the phone
 │   │   │   │   ├── DeadManJogController.kt # What the screen sees of the continuous jog and of the link: switches, held controls, level
+│   │   │   │   ├── HomeSummary.kt          # What the home screen says: state of the cell and next steps (pure rules)
 │   │   │   │   ├── TotpFlow.kt             # The steps of the second-factor screen: status, turn on (password, key, first code, recovery codes), turn off, new recovery codes
 │   │   │   │   └── BleScanController.kt # The Bluetooth LE scan: checks, filter, stop after a few seconds
 │   │   │   ├── wear/

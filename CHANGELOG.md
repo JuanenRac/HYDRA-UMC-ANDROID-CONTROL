@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+- **Help by screen and level:** the "?" of the header opens the help of the screen you are on; it is also in More and on the sign-in. Basic, advanced, technical or all (the choice is remembered), with a search and a button to go to the screen. The texts are inside the app, in the eight languages.
+- **Settings in order:** More lists Connection and Bluetooth, Notifications, Security and Updates, each with a line that explains it, and the tabs of Settings now carry words next to their icons.
+- **Notices screen:** a new tab keeps what happened and when: connection lost and restored, robots without connection or in safe mode, STOP confirmed or not, finished jobs, push messages of the server and new versions, with filters, a counter on the tab and on the home screen and Mark seen. The list is the phone's own (the last 100, from what it sees while the app is open and the messages it receives); nothing new is asked to the server.
+- **New home screen:** one line says how the cell is (ready, moving, robots without connection or in safe mode), two figures, the next steps of the installation (what is not known is never shown as pending) and the robots in a list that opens their details and Control. Without a connection it offers to retry or choose the server. The health of the server moved to the telemetry screen.
+- **First use and sign-in:** a phone that never signed in gets a welcome with three steps, a search for the servers of the network (choosing one only fills in its address) and, once in, a step with the notification switches, which keep their values, and the STOP. The sign-in has the search, help on how to reach the server and About.
+- **About and diagnostic:** About has the new look and can share a short report about the app and the phone, with no address, user name, password or token.
+- **New navigation:** the bottom bar has Home, Control, Cameras and More. More explains each entry in a card: 3D view, telemetry, settings, account and About; the 3D view also opens from Control. The header shows the mark and the name, then the server in use with its state, the voice assistant and the account.
+- **A bigger STOP:** the STOP of the header and of every dialog and menu is larger, and so is the round one of Control and of the 3D view. It works as before.
+- **A new look, first step:** the app keeps its metallic blue and takes the structure of the sister apps of the family: one type scale in the font of the phone, raised cards with a thin border, and the shared pieces the next screens are built with (card, icon disc, status light, screen title, figure and menu row). No command, protection or text changes.
+- **Pictures of the screens:** a new workflow draws the main screens with invented data and keeps them as an artifact.
 - **Push messages from the server:** a new switch in Settings, Notifications (off by default) registers this phone, with the signed-in session, to be told through Firebase when a job finishes, a global stop is issued or the operator heartbeat is lost, even with the app closed. The messages only inform: nothing can be commanded from them. Switching it off or signing out takes the registration back. Only a build given the Firebase configuration (the secret or an ignored file) has it; any other build says so. Not tried on a real phone.
 
 ## [0.8.0.8] - STOP in every dialog and menu

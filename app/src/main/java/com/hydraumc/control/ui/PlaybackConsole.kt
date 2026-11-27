@@ -127,7 +127,7 @@ fun EStopButton(viewModel: RobotViewModel, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .stopTouchZone()
-            .size(64.dp)
+            .size(84.dp)
             .background(Color.Red.copy(alpha = pulseAlpha), CircleShape)
             .border(2.dp, pulseBorder, CircleShape)
             .clickable(
@@ -141,8 +141,8 @@ fun EStopButton(viewModel: RobotViewModel, modifier: Modifier = Modifier) {
         contentAlignment = Alignment.Center,
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Icon(Icons.Default.Dangerous, contentDescription = stopDescription, tint = Color.White, modifier = Modifier.size(28.dp))
-            Text(stringResource(R.string.stop_all_label), color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Black)
+            Icon(Icons.Default.Dangerous, contentDescription = stopDescription, tint = Color.White, modifier = Modifier.size(36.dp))
+            Text(stringResource(R.string.stop_all_label), color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.Black)
         }
     }
 }
