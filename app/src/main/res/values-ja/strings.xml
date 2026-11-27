@@ -98,7 +98,6 @@
     <string name="app_version">バージョン %1$s</string>
     <string name="developed_by">JuanenRac による開発</string>
     <string name="company_name">Electro Hobby 3D</string>
-    <string name="app_description">HYDRA-UMC ロボティクスプラットフォーム向けのプロフェッショナルなネイティブ制御アプリ。</string>
     <string name="close_button">閉じる</string>
     <string name="telemetry_title">産業用テレメトリ</string>
     <string name="system_health">システムヘルス</string>
@@ -568,6 +567,39 @@
     <string name="more_about_hint">インストール版と作者</string>
     <string name="open_3d_view">3Dビューを開く</string>
     <string name="header_server_line">%1$s · %2$s</string>
+    <string name="login_search_servers">このネットワークのサーバーを検索</string>
+    <string name="login_cannot_connect">接続できない場合：サーバーへの到達方法</string>
+    <string name="login_footer">「ログイン情報を保存」を選ばない限りパスワードは保存されません。このアプリは物理的な非常停止ボタンの代わりにはなりません。</string>
+    <string name="reach_title">サーバーへの到達方法</string>
+    <string name="reach_text">1. 自宅や作業場では、スマートフォンをサーバーと同じ Wi-Fi に接続し、サーバーが起動していることを確認します。
+2. サーバーを検索するか、アドレスとポートを入力します。
+3. 外出先からは、そのネットワークへの VPN か、TLS を使う https アドレスを利用します。アプリはパスワードを暗号化せずにインターネットへ送りません。</string>
+    <string name="welcome_subtitle">このスマートフォンでは初めてです</string>
+    <string name="welcome_step1">1 · サーバーを見つける</string>
+    <string name="welcome_step1_hint">サーバーと同じ Wi-Fi で</string>
+    <string name="welcome_step2">2 · アカウントでログイン</string>
+    <string name="welcome_step2_hint">管理者が作成したもの</string>
+    <string name="welcome_step3">3 · 通知を選ぶ</string>
+    <string name="welcome_step3_hint">後で設定から変更できます</string>
+    <string name="welcome_search">このネットワークを検索</string>
+    <string name="welcome_manual">アドレスを手入力</string>
+    <string name="discovery_title">サーバーを探す</string>
+    <string name="discovery_step">ステップ %1$d / 3</string>
+    <string name="discovery_choose">選択</string>
+    <string name="discovery_searching">検索中…</string>
+    <string name="discovery_again">もう一度検索</string>
+    <string name="discovery_missing_title">見つからない場合</string>
+    <string name="discovery_missing_text">1. スマートフォンが作業場の Wi-Fi を使っているか確認します。
+2. サーバーが起動しているか確認します。
+3. アドレスを手入力します。</string>
+    <string name="notices_title">通知を選ぶ</string>
+    <string name="notices_stop_title">アプリの STOP</string>
+    <string name="notices_stop_text">すべての画面の上部にあり、ダイアログやメニューの上でも使えます。確認なしで一度のタップで作動します。物理的な非常停止の代わりにはなりません。</string>
+    <string name="notices_start">開始</string>
+    <string name="about_tagline">スマートフォンからロボットを操作：状態とカメラの確認、保護機能付きの手動操作と実行、ワンタップで全停止。</string>
+    <string name="about_share">診断情報を共有</string>
+    <string name="about_share_hint">レポートにはパスワード、アドレス、ユーザー名、トークンは含まれません。送信するアプリは自分で選びます。</string>
+    <string name="about_license">フリーソフトウェア（GPL-3.0 ライセンス）。</string>
     <!-- Common texts of the apps: written by tools/i18n_common.py of HYDRA-UMC-SDK, not by hand -->
     <string name="common_confirm">確認</string>
     <string name="common_cancel">キャンセル</string>

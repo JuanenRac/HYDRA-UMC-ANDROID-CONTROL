@@ -98,8 +98,7 @@
     <string name="app_version">Version %1$s</string>
     <string name="developed_by">Developed by JuanenRac</string>
     <string name="company_name">Electro Hobby 3D</string>
-    <string name="app_description">Professional native control for HYDRA-UMC robotic platforms.</string>
-    <string name="close_button">CLOSE</string>
+    <string name="close_button">Close</string>
     <string name="telemetry_title">Industrial Telemetry</string>
     <string name="system_health">SYSTEM HEALTH</string>
     <string name="host_label">Host: %s</string>
@@ -110,7 +109,7 @@
     <string name="no_telemetry_data">NO TELEMETRY DATA RECEIVED</string>
     <string name="clear_logs_desc">Clear Logs</string>
     <string name="remember_me_label">Remember me</string>
-    <string name="login_button_label">LOGIN</string>
+    <string name="login_button_label">Sign in</string>
     <string name="biometric_login_button">USE BIOMETRICS</string>
     <string name="biometric_prompt_title">Industrial Authentication</string>
     <string name="biometric_prompt_subtitle">Verify your identity to access control</string>
@@ -568,6 +567,39 @@
     <string name="more_about_hint">Installed version and authorship</string>
     <string name="open_3d_view">Open the 3D view</string>
     <string name="header_server_line">%1$s · %2$s</string>
+    <string name="login_search_servers">Search for servers on this network</string>
+    <string name="login_cannot_connect">Cannot connect? How to reach your server</string>
+    <string name="login_footer">The password is not kept unless you tick Remember me. This app does not replace the physical emergency stop.</string>
+    <string name="reach_title">How to reach your server</string>
+    <string name="reach_text">1. At home or in the workshop, put the phone on the same Wi-Fi as the server and check that the server is on.
+2. Search for servers, or type its address and port.
+3. From outside, use a VPN into that network, or an https address with TLS. The app does not send a password unencrypted over the Internet.</string>
+    <string name="welcome_subtitle">First time on this phone</string>
+    <string name="welcome_step1">1 · Find the server</string>
+    <string name="welcome_step1_hint">On the same Wi-Fi as the server</string>
+    <string name="welcome_step2">2 · Sign in with your account</string>
+    <string name="welcome_step2_hint">The one the administrator created</string>
+    <string name="welcome_step3">3 · Choose the notices</string>
+    <string name="welcome_step3_hint">They can be changed later in Settings</string>
+    <string name="welcome_search">Search on this network</string>
+    <string name="welcome_manual">Type the address by hand</string>
+    <string name="discovery_title">Find the server</string>
+    <string name="discovery_step">Step %1$d of 3</string>
+    <string name="discovery_choose">Choose</string>
+    <string name="discovery_searching">Still searching…</string>
+    <string name="discovery_again">Search again</string>
+    <string name="discovery_missing_title">Not there?</string>
+    <string name="discovery_missing_text">1. Check that the phone uses the Wi-Fi of the workshop.
+2. Check that the server is on.
+3. Type its address by hand.</string>
+    <string name="notices_title">Choose the notices</string>
+    <string name="notices_stop_title">The STOP of the app</string>
+    <string name="notices_stop_text">At the top of every screen, also over dialogs and menus. One touch, no confirmation. It does not replace the physical emergency stop.</string>
+    <string name="notices_start">Start</string>
+    <string name="about_tagline">Control your robots from the phone: watch their state and cameras, jog and run them with their protections, and stop them all with one touch.</string>
+    <string name="about_share">Share diagnostic</string>
+    <string name="about_share_hint">The report carries no password, address, user name or token; you choose the app that sends it.</string>
+    <string name="about_license">Free software, GPL-3.0 license.</string>
     <!-- Common texts of the apps: written by tools/i18n_common.py of HYDRA-UMC-SDK, not by hand -->
     <string name="common_confirm">Confirm</string>
     <string name="common_cancel">Cancel</string>

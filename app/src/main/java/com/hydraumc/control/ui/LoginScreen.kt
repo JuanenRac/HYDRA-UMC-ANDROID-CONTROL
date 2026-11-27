@@ -10,7 +10,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -18,6 +17,8 @@ import androidx.compose.material.icons.automirrored.filled.Login
 import androidx.compose.material.icons.filled.Dns
 import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.Fingerprint
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Radar
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Visibility
@@ -27,7 +28,6 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -37,11 +37,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.fragment.app.FragmentActivity
 import com.hydraumc.control.R
-import com.hydraumc.control.ui.theme.*
+import com.hydraumc.control.ui.theme.HydraColors
+import com.hydraumc.control.ui.theme.Panel
 import com.hydraumc.control.util.BiometricHelper
 import com.hydraumc.control.util.StrongBiometricVault
 import com.hydraumc.control.viewmodel.RobotViewModel
@@ -52,7 +54,9 @@ import com.hydraumc.control.viewmodel.RobotViewModel
  * @param viewModel The shared RobotViewModel.
  */
 @Composable
-fun LoginScreen(viewModel: RobotViewModel) {
+fun LoginScreen(viewModel: RobotViewModel, onSearch: (() -> Unit)? = null, onAbout: (() -> Unit)? = null) {
+    var reachHelp by rememberSaveable { mutableStateOf(false) }
+    if (reachHelp) ReachHelpDialog { reachHelp = false }
     val context = LocalContext.current
     val activity = context as? FragmentActivity
     var username by remember { mutableStateOf(viewModel.loginUsername.value) }
@@ -89,12 +93,14 @@ fun LoginScreen(viewModel: RobotViewModel) {
         focusedTextColor = Color.White,
         unfocusedTextColor = Color.White,
     )
-    val buttonShape = RoundedCornerShape(14.dp)
+    val buttonShape = BigButtonShape
 
-    Box(
-        Modifier.fillMaxSize()
-            .background(Brush.verticalGradient(listOf(Color(0xFF0A2A33), DarkBackground, DarkBackground))),
-    ) {
+    Box(Modifier.fillMaxSize().background(entryBackdrop())) {
+        onAbout?.let { open ->
+            IconButton(onClick = open, Modifier.align(Alignment.TopEnd).statusBarsPadding().padding(8.dp)) {
+                Icon(Icons.Filled.Info, contentDescription = stringResource(R.string.about_title), tint = HydraColors.Muted)
+            }
+        }
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -109,15 +115,15 @@ fun LoginScreen(viewModel: RobotViewModel) {
             Image(painter = painterResource(id = R.drawable.ic_hydra_logo), contentDescription = null, modifier = Modifier.size(84.dp))
             Spacer(Modifier.height(14.dp))
             Text("HYDRA-UMC", fontSize = 28.sp, fontWeight = FontWeight.Black, letterSpacing = 5.sp, color = Color(0xFFEDF7FF))
-            Text(stringResource(R.string.splash_tagline), color = IndustrialSteel, fontSize = 13.sp)
+            Text(stringResource(R.string.splash_tagline), color = HydraColors.Muted, fontSize = 13.sp)
             Spacer(Modifier.height(28.dp))
 
-            Box(modifier = Modifier.fillMaxWidth().metallicIndustrial()) {
+            Panel(Modifier.fillMaxWidth()) {
                 Column(
                     modifier = Modifier.fillMaxWidth().padding(18.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    Text(stringResource(R.string.login_subtitle), color = IndustrialSteel, style = MaterialTheme.typography.bodyMedium)
+                    Text(stringResource(R.string.login_subtitle), color = HydraColors.Muted, style = MaterialTheme.typography.bodyMedium)
 
                     // IP/port right on this screen - the owner shouldn't have to
                     // visit Settings first just to point the app at a server.
@@ -140,6 +146,14 @@ fun LoginScreen(viewModel: RobotViewModel) {
                             modifier = Modifier.width(96.dp),
                             colors = fieldColors,
                         )
+                    }
+
+                    onSearch?.let { search ->
+                        TextButton(onClick = search, modifier = Modifier.align(Alignment.CenterHorizontally)) {
+                            Icon(Icons.Filled.Radar, null, tint = HydraColors.Accent)
+                            Spacer(Modifier.width(8.dp))
+                            Text(stringResource(R.string.login_search_servers), color = HydraColors.Accent)
+                        }
                     }
 
                     OutlinedTextField(
@@ -292,12 +306,16 @@ fun LoginScreen(viewModel: RobotViewModel) {
                         Text(
                             text = stringResource(R.string.biometric_hint),
                             style = MaterialTheme.typography.labelSmall,
-                            color = IndustrialSteel,
+                            color = HydraColors.Muted,
                         )
                     }
 
                     // Pairing by the QR code of the admin page of the server: off until switched on, asks before it keeps anything.
                     PairingSection(viewModel)
+
+                    TextButton(onClick = { reachHelp = true }, modifier = Modifier.align(Alignment.CenterHorizontally)) {
+                        Text(stringResource(R.string.login_cannot_connect), color = HydraColors.Accent, textAlign = TextAlign.Center)
+                    }
 
                     lastError?.let { error ->
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -307,6 +325,8 @@ fun LoginScreen(viewModel: RobotViewModel) {
                     }
                 }
             }
+            Spacer(Modifier.height(14.dp))
+            Text(stringResource(R.string.login_footer), color = HydraColors.Muted, style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center)
         }
     }
 }

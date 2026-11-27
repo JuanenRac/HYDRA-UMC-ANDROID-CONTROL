@@ -88,7 +88,27 @@ class ScreenshotsTest {
     @Test
     fun signIn() {
         val model = viewModel()
-        shot("01_sign_in") { LoginScreen(model) }
+        shot("01_sign_in") { LoginScreen(model, onSearch = {}, onAbout = {}) }
+    }
+
+    @Test
+    fun welcome() {
+        shot("02a_welcome") { WelcomeScreen({}, {}) }
+    }
+
+    @Test
+    fun discovery() {
+        val found = listOf(
+            com.hydraumc.control.model.ServerInfo(host = "192.168.1.50", hostname = "example-cell", controllerCount = 1, robotCount = 4),
+            com.hydraumc.control.model.ServerInfo(host = "192.168.1.61", hostname = "test-bench", controllerCount = 1, robotCount = 1),
+        )
+        shot("02b_discovery") { DiscoveryScreen(found, true, {}, {}, {}) }
+    }
+
+    @Test
+    fun notices() {
+        val model = viewModel()
+        shot("02c_notices") { NoticesStep(model) {} }
     }
 
     @Test

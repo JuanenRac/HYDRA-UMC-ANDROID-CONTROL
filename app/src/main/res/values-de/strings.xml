@@ -98,8 +98,7 @@
     <string name="app_version">Version %1$s</string>
     <string name="developed_by">Entwickelt von JuanenRac</string>
     <string name="company_name">Electro Hobby 3D</string>
-    <string name="app_description">Professionelle native Steuerung für HYDRA-UMC Robotikplattformen.</string>
-    <string name="close_button">SCHLIESSEN</string>
+    <string name="close_button">Schließen</string>
     <string name="telemetry_title">Industrielle Telemetrie</string>
     <string name="system_health">SYSTEMSTATUS</string>
     <string name="host_label">Host: %s</string>
@@ -110,7 +109,7 @@
     <string name="no_telemetry_data">KEINE TELEMETRIEDATEN EMPFANGEN</string>
     <string name="clear_logs_desc">Logs löschen</string>
     <string name="remember_me_label">Zugangsdaten speichern</string>
-    <string name="login_button_label">ANMELDEN</string>
+    <string name="login_button_label">Anmelden</string>
     <string name="biometric_login_button">BIOMETRIE NUTZEN</string>
     <string name="biometric_prompt_title">Industrielle Authentifizierung</string>
     <string name="biometric_prompt_subtitle">Identität bestätigen</string>
@@ -568,6 +567,39 @@
     <string name="more_about_hint">Installierte Version und Urheber</string>
     <string name="open_3d_view">3D-Ansicht öffnen</string>
     <string name="header_server_line">%1$s · %2$s</string>
+    <string name="login_search_servers">Server in diesem Netz suchen</string>
+    <string name="login_cannot_connect">Keine Verbindung? So erreichen Sie Ihren Server</string>
+    <string name="login_footer">Das Passwort wird nur gespeichert, wenn Sie „Angemeldet bleiben“ wählen. Diese App ersetzt nicht den physischen Not-Halt.</string>
+    <string name="reach_title">So erreichen Sie Ihren Server</string>
+    <string name="reach_text">1. Zu Hause oder in der Werkstatt muss das Telefon im selben WLAN wie der Server sein, und der Server muss laufen.
+2. Suchen Sie Server oder geben Sie Adresse und Port ein.
+3. Von außen nutzen Sie ein VPN in dieses Netz oder eine https-Adresse mit TLS. Die App sendet kein Passwort unverschlüsselt über das Internet.</string>
+    <string name="welcome_subtitle">Erstes Mal auf diesem Telefon</string>
+    <string name="welcome_step1">1 · Server finden</string>
+    <string name="welcome_step1_hint">Im selben WLAN wie der Server</string>
+    <string name="welcome_step2">2 · Mit Ihrem Konto anmelden</string>
+    <string name="welcome_step2_hint">Das vom Administrator angelegte</string>
+    <string name="welcome_step3">3 · Meldungen wählen</string>
+    <string name="welcome_step3_hint">Später in den Einstellungen änderbar</string>
+    <string name="welcome_search">In diesem Netz suchen</string>
+    <string name="welcome_manual">Adresse von Hand eingeben</string>
+    <string name="discovery_title">Server suchen</string>
+    <string name="discovery_step">Schritt %1$d von 3</string>
+    <string name="discovery_choose">Wählen</string>
+    <string name="discovery_searching">Suche läuft…</string>
+    <string name="discovery_again">Erneut suchen</string>
+    <string name="discovery_missing_title">Nicht dabei?</string>
+    <string name="discovery_missing_text">1. Prüfen Sie, ob das Telefon das WLAN der Werkstatt nutzt.
+2. Prüfen Sie, ob der Server läuft.
+3. Geben Sie die Adresse von Hand ein.</string>
+    <string name="notices_title">Meldungen wählen</string>
+    <string name="notices_stop_title">Der STOP der App</string>
+    <string name="notices_stop_text">Oben auf jedem Bildschirm, auch über Dialogen und Menüs. Ein Tippen, ohne Bestätigung. Er ersetzt nicht den physischen Not-Halt.</string>
+    <string name="notices_start">Loslegen</string>
+    <string name="about_tagline">Steuern Sie Ihre Roboter vom Telefon: Zustand und Kameras ansehen, sie mit ihren Schutzfunktionen bewegen und ausführen und alle mit einem Tippen anhalten.</string>
+    <string name="about_share">Diagnose teilen</string>
+    <string name="about_share_hint">Der Bericht enthält kein Passwort, keine Adresse, keinen Benutzernamen und kein Token; Sie wählen die App, die ihn sendet.</string>
+    <string name="about_license">Freie Software, GPL-3.0-Lizenz.</string>
     <!-- Common texts of the apps: written by tools/i18n_common.py of HYDRA-UMC-SDK, not by hand -->
     <string name="common_confirm">Bestätigen</string>
     <string name="common_cancel">Abbrechen</string>

@@ -54,6 +54,7 @@ Every file of the repository with a line on what it does: the annotated tree tha
 │   │   │   │   ├── Joystick3D.kt           # Reusable 2-axis joystick control component
 │   │   │   │   ├── HydraTopBar.kt          # Header of every screen: mark, global STOP, server in use, voice, account
 │   │   │   │   ├── MoreScreen.kt           # "More": the tools and settings as explained cards
+│   │   │   │   ├── EntryScreens.kt         # First use: welcome, server search, notices step, help to reach the server
 │   │   │   │   ├── LoginScreen.kt          # Username/password + IP/port entry, biometric login
 │   │   │   │   ├── MjpegPlayer.kt          # MJPEG stream parser + Canvas renderer
 │   │   │   │   ├── PlaybackConsole.kt      # Shared floating STOP/play/pause/stop console
@@ -74,6 +75,8 @@ Every file of the repository with a line on what it does: the annotated tree tha
 │   │   │   │   ├── ControlRelease.kt         # Names this app's APK asset; the gate is in the shared Kotlin module (common/)
 │   │   │   │   └── SemanticVersion.kt        # Strict semantic version parser for updates
 │   │   │   ├── util/
+│   │   │   │   ├── DiagnosticReport.kt     # The report "Share diagnostic" prepares: app and phone only
+│   │   │   │   ├── FirstRun.kt             # Whether this phone has signed in before
 │   │   │   │   ├── BiometricHelper.kt      # androidx.biometric prompt wrapper
 │   │   │   │   ├── NotificationHelper.kt   # Job-complete/safety push notifications
 │   │   │   │   ├── NotificationPrefs.kt    # Persistent storage for the in-app notifications toggle

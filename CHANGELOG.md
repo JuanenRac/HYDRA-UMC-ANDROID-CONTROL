@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **First use and sign-in:** a phone that never signed in gets a welcome with three steps, a search for the servers of the network (choosing one only fills in its address) and, once in, a step with the notification switches, which keep their values, and the STOP. The sign-in has the search, help on how to reach the server and About.
+- **About and diagnostic:** About has the new look and can share a short report about the app and the phone, with no address, user name, password or token.
 - **New navigation:** the bottom bar has Home, Control, Cameras and More. More explains each entry in a card: 3D view, telemetry, settings, account and About; the 3D view also opens from Control. The header shows the mark and the name, then the server in use with its state, the voice assistant and the account.
 - **A bigger STOP:** the STOP of the header and of every dialog and menu is larger, and so is the round one of Control and of the 3D view. It works as before.
 - **A new look, first step:** the app keeps its metallic blue and takes the structure of the sister apps of the family: one type scale in the font of the phone, raised cards with a thin border, and the shared pieces the next screens are built with (card, icon disc, status light, screen title, figure and menu row). No command, protection or text changes.

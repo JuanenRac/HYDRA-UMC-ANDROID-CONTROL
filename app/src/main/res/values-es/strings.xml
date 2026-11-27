@@ -98,8 +98,7 @@
     <string name="app_version">Versión %1$s</string>
     <string name="developed_by">Desarrollado por JuanenRac</string>
     <string name="company_name">Electro Hobby 3D</string>
-    <string name="app_description">Control nativo profesional para plataformas robóticas HYDRA-UMC.</string>
-    <string name="close_button">CERRAR</string>
+    <string name="close_button">Cerrar</string>
     <string name="telemetry_title">Telemetría Industrial</string>
     <string name="system_health">SALUD DEL SISTEMA</string>
     <string name="host_label">Host: %s</string>
@@ -110,7 +109,7 @@
     <string name="no_telemetry_data">NO SE HAN RECIBIDO DATOS DE TELEMETRÍA</string>
     <string name="clear_logs_desc">Limpiar Logs</string>
     <string name="remember_me_label">Recuérdame</string>
-    <string name="login_button_label">ENTRAR</string>
+    <string name="login_button_label">Entrar</string>
     <string name="biometric_login_button">USAR BIOMETRÍA</string>
     <string name="biometric_prompt_title">Autenticación Industrial</string>
     <string name="biometric_prompt_subtitle">Verifica tu identidad para acceder al control</string>
@@ -568,6 +567,39 @@
     <string name="more_about_hint">Versión instalada y autoría</string>
     <string name="open_3d_view">Abrir la vista 3D</string>
     <string name="header_server_line">%1$s · %2$s</string>
+    <string name="login_search_servers">Buscar servidores en esta red</string>
+    <string name="login_cannot_connect">¿No conecta? Cómo llegar a tu servidor</string>
+    <string name="login_footer">La contraseña no se guarda salvo que marques Recuérdame. Esta app no sustituye a la seta de emergencia física.</string>
+    <string name="reach_title">Cómo llegar a tu servidor</string>
+    <string name="reach_text">1. En casa o en el taller, pon el teléfono en la misma wifi que el servidor y comprueba que está encendido.
+2. Busca servidores, o escribe su dirección y su puerto.
+3. Desde fuera, usa una VPN hacia esa red, o una dirección https con TLS. La app no envía una contraseña sin cifrar por Internet.</string>
+    <string name="welcome_subtitle">Primera vez en este teléfono</string>
+    <string name="welcome_step1">1 · Encontrar el servidor</string>
+    <string name="welcome_step1_hint">En la misma wifi que el servidor</string>
+    <string name="welcome_step2">2 · Entrar con tu cuenta</string>
+    <string name="welcome_step2_hint">La que creó el administrador</string>
+    <string name="welcome_step3">3 · Elegir los avisos</string>
+    <string name="welcome_step3_hint">Se cambian después en Ajustes</string>
+    <string name="welcome_search">Buscar en esta red</string>
+    <string name="welcome_manual">Escribir la dirección a mano</string>
+    <string name="discovery_title">Buscar el servidor</string>
+    <string name="discovery_step">Paso %1$d de 3</string>
+    <string name="discovery_choose">Elegir</string>
+    <string name="discovery_searching">Buscando todavía…</string>
+    <string name="discovery_again">Buscar otra vez</string>
+    <string name="discovery_missing_title">¿No aparece?</string>
+    <string name="discovery_missing_text">1. Comprueba que el teléfono usa la wifi del taller.
+2. Comprueba que el servidor está encendido.
+3. Escribe su dirección a mano.</string>
+    <string name="notices_title">Elegir los avisos</string>
+    <string name="notices_stop_title">El STOP de la app</string>
+    <string name="notices_stop_text">Arriba en todas las pantallas, también sobre ventanas y menús. Un toque, sin confirmación. No sustituye a la seta de emergencia física.</string>
+    <string name="notices_start">Empezar</string>
+    <string name="about_tagline">Controla tus robots desde el móvil: mira su estado y sus cámaras, muévelos y ejecútalos con sus protecciones y páralos todos con un toque.</string>
+    <string name="about_share">Compartir diagnóstico</string>
+    <string name="about_share_hint">El informe no lleva contraseñas, direcciones, nombre de usuario ni tokens; tú eliges la aplicación que lo envía.</string>
+    <string name="about_license">Software libre, licencia GPL-3.0.</string>
     <!-- Common texts of the apps: written by tools/i18n_common.py of HYDRA-UMC-SDK, not by hand -->
     <string name="common_confirm">Confirmar</string>
     <string name="common_cancel">Cancelar</string>

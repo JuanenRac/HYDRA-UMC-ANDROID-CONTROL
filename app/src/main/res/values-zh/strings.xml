@@ -98,7 +98,6 @@
     <string name="app_version">版本 %1$s</string>
     <string name="developed_by">由 JuanenRac 开发</string>
     <string name="company_name">Electro Hobby 3D</string>
-    <string name="app_description">面向 HYDRA-UMC 机器人平台的专业原生控制应用。</string>
     <string name="close_button">关闭</string>
     <string name="telemetry_title">工业遥测</string>
     <string name="system_health">系统健康状态</string>
@@ -568,6 +567,39 @@
     <string name="more_about_hint">已安装版本与作者</string>
     <string name="open_3d_view">打开 3D 视图</string>
     <string name="header_server_line">%1$s · %2$s</string>
+    <string name="login_search_servers">搜索本网络中的服务器</string>
+    <string name="login_cannot_connect">连不上？如何访问你的服务器</string>
+    <string name="login_footer">只有勾选“记住我”才会保存密码。本应用不能代替实体急停按钮。</string>
+    <string name="reach_title">如何访问你的服务器</string>
+    <string name="reach_text">1. 在家或车间时，让手机连接与服务器相同的 Wi-Fi，并确认服务器已开机。
+2. 搜索服务器，或输入其地址和端口。
+3. 在外部时，请使用接入该网络的 VPN，或带 TLS 的 https 地址。应用不会在互联网上以明文发送密码。</string>
+    <string name="welcome_subtitle">首次在此手机上使用</string>
+    <string name="welcome_step1">1 · 查找服务器</string>
+    <string name="welcome_step1_hint">与服务器处于同一 Wi-Fi</string>
+    <string name="welcome_step2">2 · 用你的账户登录</string>
+    <string name="welcome_step2_hint">由管理员创建的账户</string>
+    <string name="welcome_step3">3 · 选择通知</string>
+    <string name="welcome_step3_hint">之后可在设置中更改</string>
+    <string name="welcome_search">在本网络中搜索</string>
+    <string name="welcome_manual">手动输入地址</string>
+    <string name="discovery_title">查找服务器</string>
+    <string name="discovery_step">第 %1$d 步，共 3 步</string>
+    <string name="discovery_choose">选择</string>
+    <string name="discovery_searching">仍在搜索…</string>
+    <string name="discovery_again">重新搜索</string>
+    <string name="discovery_missing_title">没有出现？</string>
+    <string name="discovery_missing_text">1. 确认手机使用的是车间的 Wi-Fi。
+2. 确认服务器已开机。
+3. 手动输入其地址。</string>
+    <string name="notices_title">选择通知</string>
+    <string name="notices_stop_title">应用中的 STOP</string>
+    <string name="notices_stop_text">位于每个屏幕顶部，对话框和菜单之上也可用。点一下即生效，无需确认。不能代替实体急停按钮。</string>
+    <string name="notices_start">开始</string>
+    <string name="about_tagline">用手机控制机器人：查看状态与摄像头，在保护机制下点动和运行，一键全部停止。</string>
+    <string name="about_share">分享诊断信息</string>
+    <string name="about_share_hint">报告不含密码、地址、用户名或令牌；由你选择用哪个应用发送。</string>
+    <string name="about_license">自由软件，GPL-3.0 许可证。</string>
     <!-- Common texts of the apps: written by tools/i18n_common.py of HYDRA-UMC-SDK, not by hand -->
     <string name="common_confirm">确认</string>
     <string name="common_cancel">取消</string>

@@ -98,8 +98,7 @@
     <string name="app_version">Versione %1$s</string>
     <string name="developed_by">Sviluppato da JuanenRac</string>
     <string name="company_name">Electro Hobby 3D</string>
-    <string name="app_description">Controllo nativo professionale per piattaforme robotiche HYDRA-UMC.</string>
-    <string name="close_button">CHIUDI</string>
+    <string name="close_button">Chiudi</string>
     <string name="telemetry_title">Telemetria Industriale</string>
     <string name="system_health">STATO DEL SISTEMA</string>
     <string name="host_label">Host: %s</string>
@@ -110,7 +109,7 @@
     <string name="no_telemetry_data">NESSUN DATO DI TELEMETRIA RICEVUTO</string>
     <string name="clear_logs_desc">Cancella log</string>
     <string name="remember_me_label">Ricordami</string>
-    <string name="login_button_label">ACCEDI</string>
+    <string name="login_button_label">Accedi</string>
     <string name="biometric_login_button">USA BIOMETRIA</string>
     <string name="biometric_prompt_title">Autenticazione Industriale</string>
     <string name="biometric_prompt_subtitle">Verifica la tua identità per accedere al controllo</string>
@@ -568,6 +567,39 @@
     <string name="more_about_hint">Versione installata e autore</string>
     <string name="open_3d_view">Apri la vista 3D</string>
     <string name="header_server_line">%1$s · %2$s</string>
+    <string name="login_search_servers">Cerca server in questa rete</string>
+    <string name="login_cannot_connect">Non si connette? Come raggiungere il server</string>
+    <string name="login_footer">La password viene salvata solo se si spunta Ricordami. Questa app non sostituisce il fungo di emergenza fisico.</string>
+    <string name="reach_title">Come raggiungere il server</string>
+    <string name="reach_text">1. A casa o in officina, collegare il telefono alla stessa rete Wi-Fi del server e verificare che sia acceso.
+2. Cercare i server oppure scrivere indirizzo e porta.
+3. Da fuori, usare una VPN verso quella rete o un indirizzo https con TLS. L’app non invia password in chiaro su Internet.</string>
+    <string name="welcome_subtitle">Prima volta su questo telefono</string>
+    <string name="welcome_step1">1 · Trovare il server</string>
+    <string name="welcome_step1_hint">Sulla stessa Wi-Fi del server</string>
+    <string name="welcome_step2">2 · Accedere con il proprio account</string>
+    <string name="welcome_step2_hint">Quello creato dall’amministratore</string>
+    <string name="welcome_step3">3 · Scegliere gli avvisi</string>
+    <string name="welcome_step3_hint">Modificabili poi nelle impostazioni</string>
+    <string name="welcome_search">Cerca in questa rete</string>
+    <string name="welcome_manual">Scrivere l’indirizzo a mano</string>
+    <string name="discovery_title">Cerca il server</string>
+    <string name="discovery_step">Passo %1$d di 3</string>
+    <string name="discovery_choose">Scegli</string>
+    <string name="discovery_searching">Ricerca in corso…</string>
+    <string name="discovery_again">Cerca di nuovo</string>
+    <string name="discovery_missing_title">Non compare?</string>
+    <string name="discovery_missing_text">1. Verificare che il telefono usi il Wi-Fi dell’officina.
+2. Verificare che il server sia acceso.
+3. Scrivere il suo indirizzo a mano.</string>
+    <string name="notices_title">Scegli gli avvisi</string>
+    <string name="notices_stop_title">Lo STOP dell’app</string>
+    <string name="notices_stop_text">In alto in ogni schermata, anche sopra finestre e menu. Un tocco, senza conferma. Non sostituisce il fungo di emergenza fisico.</string>
+    <string name="notices_start">Inizia</string>
+    <string name="about_tagline">Controlla i robot dal telefono: stato e telecamere, movimento ed esecuzione con le protezioni, e arresto di tutti con un tocco.</string>
+    <string name="about_share">Condividi diagnostica</string>
+    <string name="about_share_hint">Il rapporto non contiene password, indirizzi, nome utente o token; l’app che lo invia la scegli tu.</string>
+    <string name="about_license">Software libero, licenza GPL-3.0.</string>
     <!-- Common texts of the apps: written by tools/i18n_common.py of HYDRA-UMC-SDK, not by hand -->
     <string name="common_confirm">Conferma</string>
     <string name="common_cancel">Annulla</string>

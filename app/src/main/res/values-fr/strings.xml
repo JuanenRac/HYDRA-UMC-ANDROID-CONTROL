@@ -98,8 +98,7 @@
     <string name="app_version">Version %1$s</string>
     <string name="developed_by">Développé par JuanenRac</string>
     <string name="company_name">Electro Hobby 3D</string>
-    <string name="app_description">Contrôle natif professionnel pour les plateformes robotiques HYDRA-UMC.</string>
-    <string name="close_button">FERMER</string>
+    <string name="close_button">Fermer</string>
     <string name="telemetry_title">Télémétrie Industrielle</string>
     <string name="system_health">SANTÉ DU SYSTÈME</string>
     <string name="host_label">Hôte: %s</string>
@@ -110,7 +109,7 @@
     <string name="no_telemetry_data">AUCUNE DONNÉE DE TÉLÉMÉTRIE REÇUE</string>
     <string name="clear_logs_desc">Effacer les logs</string>
     <string name="remember_me_label">Se souvenir de moi</string>
-    <string name="login_button_label">CONNEXION</string>
+    <string name="login_button_label">Se connecter</string>
     <string name="biometric_login_button">UTILISER LA BIOMÉTRIE</string>
     <string name="biometric_prompt_title">Authentification Industrielle</string>
     <string name="biometric_prompt_subtitle">Vérifiez votre identité pour accéder au contrôle</string>
@@ -568,6 +567,39 @@
     <string name="more_about_hint">Version installée et auteur</string>
     <string name="open_3d_view">Ouvrir la vue 3D</string>
     <string name="header_server_line">%1$s · %2$s</string>
+    <string name="login_search_servers">Chercher des serveurs sur ce réseau</string>
+    <string name="login_cannot_connect">Pas de connexion ? Comment joindre votre serveur</string>
+    <string name="login_footer">Le mot de passe n’est gardé que si vous cochez Se souvenir de moi. Cette application ne remplace pas l’arrêt d’urgence physique.</string>
+    <string name="reach_title">Comment joindre votre serveur</string>
+    <string name="reach_text">1. À la maison ou à l’atelier, mettez le téléphone sur le même Wi-Fi que le serveur et vérifiez qu’il est allumé.
+2. Cherchez des serveurs ou saisissez son adresse et son port.
+3. De l’extérieur, utilisez un VPN vers ce réseau, ou une adresse https avec TLS. L’application n’envoie pas de mot de passe en clair sur Internet.</string>
+    <string name="welcome_subtitle">Première fois sur ce téléphone</string>
+    <string name="welcome_step1">1 · Trouver le serveur</string>
+    <string name="welcome_step1_hint">Sur le même Wi-Fi que le serveur</string>
+    <string name="welcome_step2">2 · Se connecter avec votre compte</string>
+    <string name="welcome_step2_hint">Celui créé par l’administrateur</string>
+    <string name="welcome_step3">3 · Choisir les avis</string>
+    <string name="welcome_step3_hint">Modifiables ensuite dans les réglages</string>
+    <string name="welcome_search">Chercher sur ce réseau</string>
+    <string name="welcome_manual">Saisir l’adresse à la main</string>
+    <string name="discovery_title">Trouver le serveur</string>
+    <string name="discovery_step">Étape %1$d sur 3</string>
+    <string name="discovery_choose">Choisir</string>
+    <string name="discovery_searching">Recherche en cours…</string>
+    <string name="discovery_again">Chercher à nouveau</string>
+    <string name="discovery_missing_title">Il n’apparaît pas ?</string>
+    <string name="discovery_missing_text">1. Vérifiez que le téléphone utilise le Wi-Fi de l’atelier.
+2. Vérifiez que le serveur est allumé.
+3. Saisissez son adresse à la main.</string>
+    <string name="notices_title">Choisir les avis</string>
+    <string name="notices_stop_title">Le STOP de l’application</string>
+    <string name="notices_stop_text">En haut de chaque écran, aussi au-dessus des dialogues et des menus. Un toucher, sans confirmation. Il ne remplace pas l’arrêt d’urgence physique.</string>
+    <string name="notices_start">Commencer</string>
+    <string name="about_tagline">Contrôlez vos robots depuis le téléphone : état et caméras, déplacement et exécution avec leurs protections, et arrêt de tous d’un toucher.</string>
+    <string name="about_share">Partager le diagnostic</string>
+    <string name="about_share_hint">Le rapport ne contient ni mot de passe, ni adresse, ni nom d’utilisateur, ni jeton ; vous choisissez l’application qui l’envoie.</string>
+    <string name="about_license">Logiciel libre, licence GPL-3.0.</string>
     <!-- Common texts of the apps: written by tools/i18n_common.py of HYDRA-UMC-SDK, not by hand -->
     <string name="common_confirm">Confirmer</string>
     <string name="common_cancel">Annuler</string>
