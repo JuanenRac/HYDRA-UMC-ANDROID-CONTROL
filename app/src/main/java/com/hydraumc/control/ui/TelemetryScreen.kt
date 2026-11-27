@@ -51,6 +51,7 @@ fun TelemetryScreen(viewModel: RobotViewModel) {
     var selectedTabIndex by remember { mutableIntStateOf(0) }
 
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+        SystemHealthCard(viewModel)
         TabRow(selectedTabIndex = selectedTabIndex) {
             Tab(
                 selected = selectedTabIndex == 0,

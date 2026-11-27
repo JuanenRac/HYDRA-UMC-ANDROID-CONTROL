@@ -257,7 +257,9 @@ private fun MainScreenContent(
             )
         }
         NavHost(navController, startDestination = Screen.Dashboard.route, Modifier.weight(1f).fillMaxWidth()) {
-            composable(Screen.Dashboard.route) { DashboardScreen(viewModel) }
+            composable(Screen.Dashboard.route) {
+                DashboardScreen(viewModel, onOpenControl = { openTab(Screen.Control) }, onOpenSettings = { openAbove(Screen.Settings) })
+            }
             composable(Screen.Control.route) { ControlScreen(viewModel, onOpenThreeD = { openAbove(Screen.ThreeD) }) }
             composable(Screen.Camera.route) { CameraScreen(viewModel) }
             composable(Screen.ThreeD.route) { ThreeDScreen(viewModel) }

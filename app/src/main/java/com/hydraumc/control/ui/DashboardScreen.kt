@@ -1,247 +1,277 @@
 // =============================================================================
-// HYDRA-UMC CONTROL - Main dashboard providing an overview of all robots
+// HYDRA-UMC CONTROL - The home screen and the health of the server
 // Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
 // GPL-3.0-or-later - see LICENSE
 // =============================================================================
 package com.hydraumc.control.ui
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.util.lerp
-import com.hydraumc.control.viewmodel.RobotViewModel
 import com.hydraumc.control.R
 import com.hydraumc.control.network.WsStatus
-import com.hydraumc.control.ui.theme.metallicIndustrial
-import com.hydraumc.control.ui.theme.StatusLed
+import com.hydraumc.control.ui.theme.HydraColors
+import com.hydraumc.control.ui.theme.IconBadge
+import com.hydraumc.control.ui.theme.Panel
+import com.hydraumc.control.ui.theme.ScreenTitle
+import com.hydraumc.control.ui.theme.StatTile
+import com.hydraumc.control.viewmodel.HomeState
+import com.hydraumc.control.viewmodel.RobotState
+import com.hydraumc.control.viewmodel.RobotViewModel
+import com.hydraumc.control.viewmodel.SetupStep
+import com.hydraumc.control.viewmodel.SetupSteps
+import com.hydraumc.control.viewmodel.TotpStep
+import java.text.DateFormat
+import java.util.Date
 import java.util.Locale
-import kotlin.math.absoluteValue
 
 /**
- * Main dashboard screen displaying a summary of all connected robots in a carousel.
- * 
- * @param viewModel The shared RobotViewModel.
+ * The home screen: one line that says how the cell is, two figures, the next steps of the installation and the robots in
+ * a list. Touching a robot opens its details and the way to Control.
  */
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
-fun DashboardScreen(viewModel: RobotViewModel) {
-    /** Current list of robots fetched from the system state. */
+fun DashboardScreen(viewModel: RobotViewModel, onOpenControl: () -> Unit = {}, onOpenSettings: () -> Unit = {}) {
     val robots = viewModel.robots.value
-    /** Current server connection status. */
-    val connectionState = viewModel.connectionState.value
-    /** Current active server info. */
-    val activeServer = viewModel.activeServer.value
-    /** Current system metrics. */
-    val metrics = viewModel.metrics.value
-    /** Boolean flag indicating if the app is successfully connected to a server. */
-    val isConnected = connectionState == WsStatus.CONNECTED
+    val connection = viewModel.connectionState.value
+    val connected = connection == WsStatus.CONNECTED
+    val state = HomeState.of(connection, robots)
+    val totp by viewModel.totp.state.collectAsState()
+    var openRobot by rememberSaveable { mutableStateOf<Int?>(null) }
+    // The second factor is read once; the screen of Settings reads it again when it opens.
+    LaunchedEffect(connected) { if (connected && viewModel.totp.state.value.step == TotpStep.LOADING) viewModel.totp.load() }
+
+    val time = viewModel.stateAtMs.value?.let { DateFormat.getTimeInstance(DateFormat.SHORT).format(Date(it)) }
+    val subtitle = when {
+        time == null -> stringResource(R.string.home_waiting)
+        viewModel.isShowingStaleData -> stringResource(R.string.home_saved, time)
+        else -> stringResource(R.string.home_updated, time)
+    }
 
     Column(
-        modifier = Modifier.fillMaxSize().padding(16.dp).verticalScroll(rememberScrollState()),
+        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 14.dp).padding(bottom = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            StatusLed(
-                isOn = isConnected,
-                activeColor = com.hydraumc.control.ui.theme.MetallicCyan,
-                size = 16.dp,
-            )
-            Text(stringResource(R.string.dashboard_title), style = MaterialTheme.typography.headlineMedium)
-        }
-        
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                text = stringResource(R.string.server_status, "").trim(),
-                style = MaterialTheme.typography.bodyMedium,
-                color = Color.White,
-            )
-            val statusColor = when (connectionState) {
-                WsStatus.CONNECTED -> Color(0xFF00C853)
-                WsStatus.CONNECTING -> Color(0xFFFFA000)
-                WsStatus.DISCONNECTED -> Color.Red
+        ScreenTitle(Icons.Filled.Home, stringResource(R.string.dashboard_title), subtitle)
+        StatusCard(state)
+
+        if (state == HomeState.NotConnected) {
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                Button(onClick = { viewModel.connect() }, modifier = Modifier.weight(1f).height(48.dp), shape = BigButtonShape) {
+                    Text(stringResource(R.string.common_retry))
+                }
+                FilledTonalButton(onClick = onOpenSettings, modifier = Modifier.weight(1f).height(48.dp), shape = BigButtonShape) {
+                    Text(stringResource(R.string.home_choose_server))
+                }
             }
-            Text(
-                text = " ${connectionState.label()}",
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Bold,
-                color = statusColor,
-            )
-        }
-        
-        viewModel.canOtaProgress.value?.let { CanOtaProgressCard(it) }
-
-        if (isConnected && (activeServer != null)) {
-            Spacer(modifier = Modifier.height(8.dp))
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .metallicIndustrial(backgroundColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-                    .padding(8.dp)
-            ) {
-                Column {
-                    Text(
-                        text = stringResource(R.string.system_health),
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = MaterialTheme.colorScheme.primary,
-                    )
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                    ) {
-                        Column {
-                            Text(stringResource(R.string.host_label, activeServer.hostname), style = MaterialTheme.typography.bodySmall)
-                            Text(stringResource(R.string.uptime_label, formatUptime(activeServer.uptimeSeconds)), style = MaterialTheme.typography.bodySmall)
-                        }
-                        Column(horizontalAlignment = Alignment.End) {
-                            Text(stringResource(R.string.controllers_label, activeServer.controllerCount), style = MaterialTheme.typography.bodySmall)
-                            Text(stringResource(R.string.robots_label, activeServer.robotCount), style = MaterialTheme.typography.bodySmall)
-                        }
-                    }
-
-                    if (metrics != null) {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            MetricItem(label = "CPU", value = "${metrics.cpuLoad}%", color = if (metrics.cpuLoad > 80) Color.Red else Color.Green)
-                            MetricItem(label = "MEM", value = "${metrics.memoryUsage}%", color = if (metrics.memoryUsage > 80) Color.Red else Color.Green)
-                            MetricItem(label = "TEMP", value = "${metrics.temp.toInt()}°C", color = if (metrics.temp > 70) Color.Red else Color.Green)
-                        }
-                    }
+            Panel(Modifier.fillMaxWidth(), tint = HydraColors.Alert) {
+                Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(stringResource(R.string.home_stop_title), fontWeight = FontWeight.SemiBold)
+                    Text(stringResource(R.string.home_stop_text), style = MaterialTheme.typography.bodySmall, color = HydraColors.Muted)
                 }
             }
         }
-        
+
+        viewModel.canOtaProgress.value?.let { CanOtaProgressCard(it) }
+
+        if (robots.isNotEmpty()) {
+            val online = robots.count { it.online }
+            val moving = robots.count { HomeState.moving(it) }
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                StatTile(
+                    Icons.Filled.PrecisionManufacturing, "$online/${robots.size}", stringResource(R.string.home_robots_online),
+                    if (online < robots.size) HydraColors.Amber else HydraColors.Ok, Modifier.weight(1f), onOpenControl,
+                )
+                StatTile(
+                    Icons.Filled.PlayCircle, moving.toString(), stringResource(R.string.home_robots_moving_label),
+                    HydraColors.Accent, Modifier.weight(1f), onOpenControl,
+                )
+            }
+        }
+
+        if (connected) {
+            val server = viewModel.activeServer.value
+            val steps = SetupSteps.of(
+                server = true,
+                controller = server?.let { it.controllerCount > 0 },
+                robot = if (robots.isNotEmpty()) true else server?.let { it.robotCount > 0 },
+                secondFactor = when (totp.step) {
+                    TotpStep.ON, TotpStep.RECOVERY -> true
+                    TotpStep.OFF, TotpStep.ENROLLING -> false
+                    else -> null
+                },
+            )
+            if (steps.pending.isNotEmpty()) NextSteps(steps, onOpenSettings)
+        }
+
         if (robots.isEmpty()) {
-            Spacer(modifier = Modifier.height(24.dp))
-            Text(stringResource(R.string.no_robots), style = MaterialTheme.typography.bodyLarge)
+            Text(stringResource(R.string.no_robots), style = MaterialTheme.typography.bodyMedium, color = HydraColors.Muted)
         } else {
-            /** State for the horizontal pager (carousel). */
-            val pagerState = rememberPagerState { robots.size }
-            
-            HorizontalPager(
-                state = pagerState,
-                contentPadding = PaddingValues(horizontal = 32.dp),
-                modifier = Modifier.fillMaxWidth().height(450.dp), // Snug height
-                beyondViewportPageCount = 1,
-                verticalAlignment = Alignment.Top, // Align cards to the top of the pager
-            ) { page ->
-                /** The specific robot data for this pager item. */
-                val robot = robots[page]
-                
-                Box(
-                    modifier = Modifier
-                        .graphicsLayer {
-                            /** Calculate offset for 3D transition effect. */
-                            val pageOffset = (
-                                    (pagerState.currentPage - page) + pagerState
-                                        .currentPageOffsetFraction
-                                    ).absoluteValue
-                            
-                            // 3D fashion effect: scale and alpha
-                            alpha = lerp(
-                                start = 0.5f,
-                                stop = 1f,
-                                fraction = 1f - pageOffset.coerceIn(0f, 1f),
-                            )
-                            scaleX = lerp(
-                                start = 0.8f,
-                                stop = 1f,
-                                fraction = 1f - pageOffset.coerceIn(0f, 1f),
-                            )
-                            scaleY = lerp(
-                                start = 0.8f,
-                                stop = 1f,
-                                fraction = 1f - pageOffset.coerceIn(0f, 1f),
-                            )
-                        }
-                        .fillMaxWidth()
-                        .padding(8.dp)
-                        .metallicIndustrial(),
-                ) {
-                    Column {
-                        Text(robot.name, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
-                        
-                        Text(
-                            text = "${robot.manufacturer} | ${robot.model}",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.primary,
-                        )
-                        
-                        Spacer(modifier = Modifier.height(8.dp))
-                        
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(stringResource(R.string.role_label, robot.role), style = MaterialTheme.typography.bodySmall)
-                            Spacer(modifier = Modifier.weight(1f))
-                            StatusLed(
-                                isOn = robot.online,
-                                activeColor = Color(0xFF2E7D32),
-                                label = if (robot.online) stringResource(R.string.online) else stringResource(R.string.offline),
-                            )
-                        }
-                        
-                        Spacer(modifier = Modifier.height(12.dp))
-                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-                        Spacer(modifier = Modifier.height(12.dp))
+            robots.forEach { robot ->
+                RobotRow(
+                    robot,
+                    open = openRobot == robot.id,
+                    onToggle = { openRobot = if (openRobot == robot.id) null else robot.id },
+                    onControl = {
+                        viewModel.selectedRobotId.value = robot.id
+                        onOpenControl()
+                    },
+                )
+            }
+        }
+    }
+}
 
-                        // Modules Row
-                        FlowRow(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(6.dp),
-                            verticalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            ModuleIndicator(label = "CAM", active = robot.hasCamera)
-                            ModuleIndicator(label = "XY", active = robot.hasXYTable)
-                            ModuleIndicator(label = "ATC", active = robot.hasAtc)
-                            ModuleIndicator(label = "PNP", active = robot.hasPnP)
-                            ModuleIndicator(label = "CNC", active = robot.hasCNC)
-                            ModuleIndicator(label = "LSR", active = robot.hasLaser)
-                            ModuleIndicator(label = "BED", active = robot.hasHeatedBed)
-                            ModuleIndicator(label = "VAC", active = robot.hasVacuumTable)
-                            ModuleIndicator(label = "RCK", active = robot.hasRack)
-                        }
+@Composable
+private fun StatusCard(state: HomeState) {
+    val icon: ImageVector
+    val tint: Color
+    val title: String
+    val hint: String?
+    when (state) {
+        HomeState.Connecting -> { icon = Icons.Filled.Sync; tint = HydraColors.Amber; title = stringResource(R.string.common_connecting); hint = null }
+        HomeState.NotConnected -> { icon = Icons.Filled.CloudOff; tint = HydraColors.Amber; title = stringResource(R.string.status_disconnected); hint = null }
+        HomeState.NoRobots -> { icon = Icons.Filled.Info; tint = HydraColors.Accent; title = stringResource(R.string.status_connected); hint = null }
+        is HomeState.SafeMode -> {
+            icon = Icons.Filled.Warning; tint = HydraColors.Alert
+            title = stringResource(R.string.home_safe_mode, state.count); hint = stringResource(R.string.home_safe_mode_hint)
+        }
+        is HomeState.Offline -> {
+            icon = Icons.Filled.CloudOff; tint = HydraColors.Amber
+            title = stringResource(R.string.home_offline_robots, state.count); hint = stringResource(R.string.home_offline_robots_hint)
+        }
+        is HomeState.Moving -> {
+            icon = Icons.Filled.PlayCircle; tint = HydraColors.Accent
+            title = stringResource(R.string.home_moving, state.count); hint = stringResource(R.string.home_moving_hint)
+        }
+        is HomeState.Ready -> {
+            icon = Icons.Filled.Check; tint = HydraColors.Ok
+            title = stringResource(R.string.home_ready); hint = stringResource(R.string.home_ready_hint, state.robots)
+        }
+    }
+    Panel(Modifier.fillMaxWidth(), tint = tint) {
+        Row(Modifier.padding(18.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+            IconBadge(icon, tint, size = 60.dp)
+            Column {
+                Text(title, style = MaterialTheme.typography.headlineSmall)
+                if (hint != null) Text(hint, style = MaterialTheme.typography.bodySmall, color = HydraColors.Muted)
+            }
+        }
+    }
+}
 
-                        Spacer(modifier = Modifier.height(16.dp))
-                        
-                        Text(stringResource(R.string.tool, robot.currentTool), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        
-                        Spacer(modifier = Modifier.height(8.dp))
-                        
-                        Text(stringResource(R.string.pos_arm), fontWeight = FontWeight.Bold)
-                        Text("X: ${formatCoord(robot.posX)} | Y: ${formatCoord(robot.posY)} | Z: ${formatCoord(robot.posZ)}", style = MaterialTheme.typography.bodyMedium)
-                        
-                        if (robot.hasXYTable) {
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(stringResource(R.string.pos_xy), fontWeight = FontWeight.Bold)
-                            Text("X: ${formatCoord(robot.xyPosX)} | Y: ${formatCoord(robot.xyPosY)}", style = MaterialTheme.typography.bodyMedium)
-                        }
-                        
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text(stringResource(R.string.speed, robot.speed.toInt().toString()), style = MaterialTheme.typography.bodySmall)
-                            Text(stringResource(R.string.accel, robot.acceleration.toInt().toString()), style = MaterialTheme.typography.bodySmall)
-                        }
-                        
-                        if (robot.isPlaying) {
-                            Spacer(modifier = Modifier.height(8.dp))
-                            LinearProgressIndicator(modifier = Modifier.fillMaxWidth(), color = MaterialTheme.colorScheme.tertiary)
-                            Text(stringResource(R.string.playing_status), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.tertiary)
-                        }
+@Composable
+private fun NextSteps(steps: SetupSteps, onOpenSettings: () -> Unit) {
+    Panel(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Text(stringResource(R.string.home_next_steps), fontWeight = FontWeight.SemiBold)
+                Text(stringResource(R.string.home_steps_done, steps.done, steps.known), style = MaterialTheme.typography.bodySmall, color = HydraColors.Muted)
+            }
+            steps.pending.forEach { step ->
+                val (icon, title, hint) = when (step) {
+                    SetupStep.SERVER -> Triple(Icons.Filled.Dns, R.string.home_step_server, R.string.home_step_studio_hint)
+                    SetupStep.CONTROLLER -> Triple(Icons.Filled.Memory, R.string.home_step_controller, R.string.home_step_studio_hint)
+                    SetupStep.ROBOT -> Triple(Icons.Filled.PrecisionManufacturing, R.string.home_step_robot, R.string.home_step_studio_hint)
+                    SetupStep.SECOND_FACTOR -> Triple(Icons.Filled.Shield, R.string.home_step_second_factor, R.string.home_step_second_factor_hint)
+                }
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    IconBadge(icon, size = 40.dp)
+                    Column(Modifier.weight(1f)) {
+                        Text(stringResource(title), fontWeight = FontWeight.Medium)
+                        Text(stringResource(hint), style = MaterialTheme.typography.bodySmall, color = HydraColors.Muted)
                     }
+                    // Only the second factor can be done from the phone.
+                    if (step == SetupStep.SECOND_FACTOR) TextButton(onClick = onOpenSettings) { Text(stringResource(R.string.home_step_do), color = HydraColors.Accent) }
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun RobotRow(robot: RobotState, open: Boolean, onToggle: () -> Unit, onControl: () -> Unit) {
+    val attention = !robot.online || !robot.isEnabled
+    val tint = if (!robot.isEnabled) HydraColors.Alert else HydraColors.Amber
+    val line = when {
+        !robot.isEnabled -> stringResource(R.string.watch_alert_robot_safe_mode, robot.name)
+        !robot.online -> stringResource(R.string.common_offline)
+        robot.isPlaying && !robot.isPaused -> stringResource(R.string.playing_status)
+        else -> stringResource(R.string.home_robot_online_line, formatCoord(robot.posX), formatCoord(robot.posY), formatCoord(robot.posZ))
+    }
+    Panel(Modifier.fillMaxWidth(), tint = if (attention) tint else null, onClick = onToggle) {
+        Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                IconBadge(Icons.Filled.PrecisionManufacturing, if (attention) tint else HydraColors.Ok, size = 40.dp)
+                Column(Modifier.weight(1f)) {
+                    Text(if (robot.role.isBlank()) robot.name else "${robot.name} · ${robot.role}", fontWeight = FontWeight.SemiBold)
+                    Text(line, style = MaterialTheme.typography.bodySmall, color = HydraColors.Muted)
+                }
+                Icon(if (open) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore, contentDescription = null, tint = HydraColors.Muted)
+            }
+            if (open) {
+                Text("${robot.manufacturer} | ${robot.model}", style = MaterialTheme.typography.bodySmall, color = HydraColors.Accent)
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    ModuleIndicator(label = "CAM", active = robot.hasCamera)
+                    ModuleIndicator(label = "XY", active = robot.hasXYTable)
+                    ModuleIndicator(label = "ATC", active = robot.hasAtc)
+                    ModuleIndicator(label = "PNP", active = robot.hasPnP)
+                    ModuleIndicator(label = "CNC", active = robot.hasCNC)
+                    ModuleIndicator(label = "LSR", active = robot.hasLaser)
+                    ModuleIndicator(label = "BED", active = robot.hasHeatedBed)
+                    ModuleIndicator(label = "VAC", active = robot.hasVacuumTable)
+                    ModuleIndicator(label = "RCK", active = robot.hasRack)
+                }
+                Text(stringResource(R.string.tool, robot.currentTool), style = MaterialTheme.typography.bodySmall)
+                if (robot.hasXYTable) {
+                    Text(stringResource(R.string.pos_xy) + " X ${formatCoord(robot.xyPosX)} · Y ${formatCoord(robot.xyPosY)}", style = MaterialTheme.typography.bodySmall)
+                }
+                Text(
+                    stringResource(R.string.speed, robot.speed.toInt().toString()) + " · " + stringResource(R.string.accel, robot.acceleration.toInt().toString()),
+                    style = MaterialTheme.typography.bodySmall,
+                )
+                FilledTonalButton(onClick = onControl, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.home_robot_open_control)) }
+            }
+        }
+    }
+}
+
+/** The health of the server in use: host, uptime, counts and load. Shown on the telemetry screen. */
+@Composable
+fun SystemHealthCard(viewModel: RobotViewModel) {
+    val server = viewModel.activeServer.value ?: return
+    if (viewModel.connectionState.value != WsStatus.CONNECTED) return
+    val metrics = viewModel.metrics.value
+    Panel(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Text(stringResource(R.string.system_health), fontWeight = FontWeight.SemiBold)
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Column {
+                    Text(stringResource(R.string.host_label, server.hostname), style = MaterialTheme.typography.bodySmall)
+                    Text(stringResource(R.string.uptime_label, formatUptime(server.uptimeSeconds)), style = MaterialTheme.typography.bodySmall)
+                }
+                Column(horizontalAlignment = Alignment.End) {
+                    Text(stringResource(R.string.controllers_label, server.controllerCount), style = MaterialTheme.typography.bodySmall)
+                    Text(stringResource(R.string.robots_label, server.robotCount), style = MaterialTheme.typography.bodySmall)
+                }
+            }
+            if (metrics != null) {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    MetricItem(label = "CPU", value = "${metrics.cpuLoad}%", color = if (metrics.cpuLoad > 80) HydraColors.Alert else HydraColors.Ok)
+                    MetricItem(label = "MEM", value = "${metrics.memoryUsage}%", color = if (metrics.memoryUsage > 80) HydraColors.Alert else HydraColors.Ok)
+                    MetricItem(label = "TEMP", value = "${metrics.temp.toInt()}°C", color = if (metrics.temp > 70) HydraColors.Alert else HydraColors.Ok)
                 }
             }
         }

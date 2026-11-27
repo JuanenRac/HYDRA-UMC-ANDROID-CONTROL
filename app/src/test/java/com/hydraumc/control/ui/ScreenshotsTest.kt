@@ -119,6 +119,14 @@ class ScreenshotsTest {
     }
 
     @Test
+    fun homeWithoutConnection() {
+        val model = viewModel()
+        model.connectionState.value = WsStatus.DISCONNECTED
+        val updates = AppUpdateViewModel(app)
+        shot("08_home_offline") { MainScreen(model, updates) }
+    }
+
+    @Test
     fun more() {
         viewModel()
         shot("06_more") { MoreScreen({}, {}, {}, {}, {}) }

@@ -49,7 +49,7 @@ Every file of the repository with a line on what it does: the annotated tree tha
 │   │   │   │   ├── AuditDialog.kt           # Audit record of the server (administrators), with the chain check
 │   │   │   │   ├── CameraScreen.kt         # Per-robot MJPEG camera feed + vision on/off switch
 │   │   │   │   ├── ControlScreen.kt        # Manual jog controls, E-STOP/play/pause/stop with long-press protection
-│   │   │   │   ├── DashboardScreen.kt      # 3D carousel robot picker + system health + module matrix
+│   │   │   │   ├── DashboardScreen.kt      # Home: state of the cell, figures, next steps, robot list; health card of the server
 │   │   │   │   ├── GlobalStop.kt           # Global STOP button + result banner (one tap, every robot)
 │   │   │   │   ├── Joystick3D.kt           # Reusable 2-axis joystick control component
 │   │   │   │   ├── HydraTopBar.kt          # Header of every screen: mark, global STOP, server in use, voice, account
@@ -97,6 +97,7 @@ Every file of the repository with a line on what it does: the annotated tree tha
 │   │   │   │   ├── RobotViewModel.kt   # Shared ViewModel - networking, auth, discovery, atomic command dispatch, all UI state
 │   │   │   │   ├── CommandErrorText.kt # The texts of a failed command, in the language of the phone
 │   │   │   │   ├── DeadManJogController.kt # What the screen sees of the continuous jog and of the link: switches, held controls, level
+│   │   │   │   ├── HomeSummary.kt          # What the home screen says: state of the cell and next steps (pure rules)
 │   │   │   │   ├── TotpFlow.kt             # The steps of the second-factor screen: status, turn on (password, key, first code, recovery codes), turn off, new recovery codes
 │   │   │   │   └── BleScanController.kt # The Bluetooth LE scan: checks, filter, stop after a few seconds
 │   │   │   ├── wear/
