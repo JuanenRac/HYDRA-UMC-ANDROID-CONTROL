@@ -6,6 +6,9 @@
 package com.hydraumc.control
 
 import android.content.res.Configuration
+import com.hydraumc.control.ui.LocalStopViewModel
+import com.hydraumc.control.ui.StopDropdownMenu
+import com.hydraumc.control.ui.StopAlertDialog
 import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -65,13 +68,26 @@ val items = listOf(Screen.Dashboard, Screen.Control, Screen.Camera, Screen.Three
  * @param viewModel The shared robot view model.
  * @param onEnableBluetooth Callback to request enabling Bluetooth.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
     viewModel: RobotViewModel,
     updateViewModel: AppUpdateViewModel,
     onEnableBluetooth: () -> Unit = {},
     onStartVoiceRecognition: () -> Unit = {},
+) {
+    // Every dialog and menu below carries the global STOP of this view model (ui/StopWindows.kt).
+    CompositionLocalProvider(LocalStopViewModel provides viewModel) {
+        MainScreenContent(viewModel, updateViewModel, onEnableBluetooth, onStartVoiceRecognition)
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun MainScreenContent(
+    viewModel: RobotViewModel,
+    updateViewModel: AppUpdateViewModel,
+    onEnableBluetooth: () -> Unit,
+    onStartVoiceRecognition: () -> Unit,
 ) {
     /** The navigation controller for the entire app. */
     val navController = rememberNavController()
@@ -133,7 +149,7 @@ fun MainScreen(
     // Android installer are both initiated by the operator from this prompt.
     if (updateState is AppUpdateState.Available) {
         val update = (updateState as AppUpdateState.Available).update
-        AlertDialog(
+        StopAlertDialog(
             onDismissRequest = updateViewModel::dismiss,
             title = { Text(stringResource(R.string.app_updates)) },
             text = {
@@ -259,7 +275,7 @@ fun MainScreen(
                             Icon(Icons.Default.ArrowDropDown, contentDescription = null)
                         }
 
-                        DropdownMenu(
+                        StopDropdownMenu(
                             expanded = serverDropdownExpanded,
                             onDismissRequest = { serverDropdownExpanded = false }
                         ) {

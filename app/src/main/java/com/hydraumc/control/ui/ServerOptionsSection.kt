@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Switch
@@ -138,7 +137,7 @@ fun ServerOptionsSection(viewModel: RobotViewModel) {
     }
 
     asking?.let { list ->
-        AlertDialog(
+        StopAlertDialog(
             onDismissRequest = { asking = null },
             title = { Text(stringResource(R.string.server_options_confirm_title)) },
             text = { Column { list.forEach { Text("- " + stringResource(loweringRes(it))) } } },

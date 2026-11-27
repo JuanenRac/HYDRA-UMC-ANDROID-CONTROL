@@ -7,7 +7,6 @@ package com.hydraumc.control.ui
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -44,7 +43,7 @@ fun HomeResetControl(viewModel: RobotViewModel, robot: RobotState, nowMs: Long) 
 
     if (dialog in 1..RobotCommandContract.HOME_RESET_CONFIRM_STEPS) {
         val last = dialog >= RobotCommandContract.HOME_RESET_CONFIRM_STEPS
-        AlertDialog(
+        StopAlertDialog(
             onDismissRequest = { confirmation.cancel(); dialog = 0 },
             title = { Text(if (last) stringResource(R.string.home_reset_step2_title) else stringResource(R.string.home_reset_step1_title, robot.name)) },
             text = { Text(if (last) stringResource(R.string.home_reset_step2_message, robot.name) else stringResource(R.string.home_reset_step1_message)) },

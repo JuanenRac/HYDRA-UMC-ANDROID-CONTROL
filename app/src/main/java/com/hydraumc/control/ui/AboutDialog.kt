@@ -26,7 +26,7 @@ import com.hydraumc.control.ui.theme.HydraButton
  */
 @Composable
 fun AboutDialog(onDismiss: () -> Unit) {
-    AlertDialog(
+    StopAlertDialog(
         onDismissRequest = onDismiss,
         confirmButton = {}, // Custom button inside text
         title = {

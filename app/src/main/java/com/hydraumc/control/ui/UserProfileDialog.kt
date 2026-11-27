@@ -43,7 +43,7 @@ fun UserProfileDialog(viewModel: RobotViewModel, onDismiss: () -> Unit) {
     val hasBiometricHardware = BiometricHelper.isBiometricAvailable(context)
     val hasStrongBiometric = BiometricHelper.isStrongBiometricAvailable(context)
 
-    AlertDialog(
+    StopAlertDialog(
         onDismissRequest = onDismiss,
         confirmButton = {}, // Custom button inside text
         title = {

@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -19,6 +18,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -98,7 +98,9 @@ fun PairingSection(viewModel: RobotViewModel) {
 @Composable
 fun PairingDialog(viewModel: RobotViewModel) {
     val offer = viewModel.pairingOffer.value ?: return
-    AlertDialog(
+    // This dialog also opens over the sign-in screen, where there is nothing to stop yet.
+    CompositionLocalProvider(LocalStopViewModel provides viewModel.takeIf { it.isLoggedIn.value }) {
+    StopAlertDialog(
         onDismissRequest = { viewModel.dismissPairing() },
         title = { Text(stringResource(R.string.pairing_dialog_title)) },
         text = {
@@ -113,4 +115,5 @@ fun PairingDialog(viewModel: RobotViewModel) {
         confirmButton = { Button(onClick = { viewModel.confirmPairing() }) { Text(stringResource(R.string.pairing_dialog_confirm)) } },
         dismissButton = { TextButton(onClick = { viewModel.dismissPairing() }) { Text(stringResource(R.string.cancel_button)) } },
     )
+    }
 }

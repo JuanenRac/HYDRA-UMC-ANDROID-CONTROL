@@ -58,7 +58,7 @@ private const val CLEAN_BANNER_MS = 6_000L
  * [RobotViewModel.globalStop]). The label stays the universal word STOP.
  */
 @Composable
-fun GlobalStopButton(viewModel: RobotViewModel, modifier: Modifier = Modifier) {
+fun GlobalStopButton(viewModel: RobotViewModel, modifier: Modifier = Modifier, touchZone: Boolean = true) {
     val context = LocalContext.current
     val vibrator = remember { context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator }
     val description = stringResource(R.string.stop_all_description)
@@ -71,7 +71,7 @@ fun GlobalStopButton(viewModel: RobotViewModel, modifier: Modifier = Modifier) {
     )
     Column(
         modifier = modifier
-            .stopTouchZone()
+            .let { if (touchZone) it.stopTouchZone() else it }
             .height(40.dp)
             .widthIn(min = 64.dp)
             .background(StopRed.copy(alpha = glow), RoundedCornerShape(8.dp))

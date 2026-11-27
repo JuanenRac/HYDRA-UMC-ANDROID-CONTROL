@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **The STOP can be pressed with a dialog or a menu open:** a dialog or a menu of Android is a window of its own above the screen, so the STOP of the top bar could not be pressed while one was open. Every dialog of the app now carries the global STOP above its title, with what it did, and every menu carries it in its first row; one tap stops and the window stays. The dialogs of the system itself (permissions, installer, fingerprint) are not of the app and have none. New `StopWindowsTest`, which also fails when a screen opens a dialog or a menu without it.
+
 ## [0.8.0.7]
 
 - **Another app can no longer trigger the global stop:** the notification, the home screen widget and the quick settings tile add a random value kept in the private storage of the app to their request, and the main screen obeys a stop request only with it. Widgets already on the home screen are refreshed when the app is opened; until then an old one only opens the app.

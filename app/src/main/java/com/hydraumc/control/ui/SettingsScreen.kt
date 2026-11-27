@@ -260,7 +260,7 @@ fun UpdateAvailableContent(
  */
 @Composable
 private fun ReleaseNotesDialog(update: com.hydraumc.common.AvailableUpdate, onDismiss: () -> Unit) {
-    androidx.compose.ui.window.Dialog(onDismissRequest = onDismiss) {
+    StopDialog(onDismissRequest = onDismiss) {
         Surface(
             shape = MaterialTheme.shapes.large,
             tonalElevation = 4.dp,
