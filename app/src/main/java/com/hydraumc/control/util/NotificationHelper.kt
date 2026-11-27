@@ -16,6 +16,38 @@ import com.hydraumc.control.MainActivity
 import com.hydraumc.control.R
 
 /**
+ * The global stop that the notification, the home screen widget and the quick settings tile ask MainActivity for.
+ * MainActivity is exported (it is the launcher), so any app can send it an intent with this action. Only an intent that
+ * carries the random value kept in the private storage of this app is obeyed.
+ */
+object GlobalStopRequest {
+    const val ACTION = "ACTION_GLOBAL_ESTOP"
+    private const val EXTRA = "com.hydraumc.control.extra.STOP_PROOF"
+    private const val PREFS = "hydra_stop_request"
+    private const val KEY = "proof"
+
+    @Synchronized
+    private fun proof(context: Context): String {
+        val prefs = context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        prefs.getString(KEY, null)?.let { return it }
+        val bytes = ByteArray(32).also { java.security.SecureRandom().nextBytes(it) }
+        val made = bytes.joinToString("") { "%02x".format(it) }
+        prefs.edit().putString(KEY, made).commit()
+        return made
+    }
+
+    /** Makes [intent] a global stop request of this app. */
+    fun stamp(context: Context, intent: Intent): Intent = intent.setAction(ACTION).putExtra(EXTRA, proof(context))
+
+    /** True only for a request that this app made itself. */
+    fun isOurs(context: Context, intent: Intent?): Boolean {
+        if (intent?.action != ACTION) return false
+        val given = intent.getStringExtra(EXTRA) ?: return false
+        return java.security.MessageDigest.isEqual(given.toByteArray(), proof(context).toByteArray())
+    }
+}
+
+/**
  * Manages system notifications for robotic events.
  */
 object NotificationHelper {
@@ -95,8 +127,7 @@ object NotificationHelper {
         )
 
         // Intent for E-STOP action
-        val estopIntent = Intent(context, MainActivity::class.java).apply {
-            action = "ACTION_GLOBAL_ESTOP"
+        val estopIntent = GlobalStopRequest.stamp(context, Intent(context, MainActivity::class.java)).apply {
             // Reaches the running activity (launchMode singleTop) instead of stacking a second one.
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
         }

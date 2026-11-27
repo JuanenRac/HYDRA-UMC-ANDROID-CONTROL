@@ -24,6 +24,8 @@ import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import android.bluetooth.BluetoothAdapter
 import android.content.Intent
+import com.hydraumc.control.util.GlobalStopRequest
+import com.hydraumc.control.widget.refreshGlobalStopWidgets
 import android.net.wifi.WifiManager
 import androidx.activity.result.contract.ActivityResultContracts
 import com.hydraumc.control.ui.CustomSplashScreen
@@ -156,6 +158,7 @@ class MainActivity : FragmentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         handleIntent(intent)
+        refreshGlobalStopWidgets(this)
 
         // Ask up front, not lazily on first use - see the launcher's own
         // comment above for why a manifest declaration alone isn't enough.
@@ -285,7 +288,8 @@ class MainActivity : FragmentActivity() {
                 lifecycleScope.launch { robotViewModel.receivePairing(link) }
             }
         }
-        if (intent?.action == "ACTION_GLOBAL_ESTOP") {
+        // The activity is exported: the stop is taken only from the notification, widget and tile of this app.
+        if (GlobalStopRequest.isOurs(this, intent)) {
             // Just flag it - the LaunchedEffect in setContent{} above sends the
             // global STOP once the connection exists. See pendingGlobalEstop's
             // own comment for why that matters on a cold start.

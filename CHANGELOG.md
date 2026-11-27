@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **Another app can no longer trigger the global stop:** the notification, the home screen widget and the quick settings tile add a random value kept in the private storage of the app to their request, and the main screen obeys a stop request only with it. Widgets already on the home screen are refreshed when the app is opened; until then an old one only opens the app.
+
 ## [0.8.0.7]
 
 - **Reserving and releasing a robot go through the typed client of the SDK:** `POST /api/robot/{id}/claim` and `POST /api/robot/{id}/release` are no longer written by hand. The request is the same (token, controller id, `If-Match`), a refusal is the same `HydraApiException`, and an answer without the shape of the contract is one too. A server that sends no revision, and the release of a robot that was never reserved (no history), are still accepted.

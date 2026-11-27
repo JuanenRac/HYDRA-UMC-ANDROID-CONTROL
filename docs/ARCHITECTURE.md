@@ -100,7 +100,8 @@ Settings > Security (`ui/SecuritySettings.kt`, `network/TlsSettings.kt`, `networ
   or a robot reserved by someone else stays visible, and `StopAllStatus.NotConfirmed` ("STOP NOT CONFIRMED") stays and cannot be
   dismissed until a later STOP succeeds.
 - **Home-screen widget and notification action** (`widget/GlobalStopWidget.kt`, a classic `AppWidgetProvider` with
-  `RemoteViews`; `util/NotificationHelper.kt`): a tap fires an `ACTION_GLOBAL_ESTOP` intent that reaches `MainActivity`
+  `RemoteViews`; `util/NotificationHelper.kt`): a tap fires an `ACTION_GLOBAL_ESTOP` intent (carrying a random value kept
+  in the private storage of the app: `MainActivity` is exported, and an intent without it, from another app, is ignored) that reaches `MainActivity`
   (`singleTop`). `MainActivity` sets `pendingGlobalEstop`; a `LaunchedEffect` waits for the server connection (`apiClient`
   non-null, at most `GLOBAL_ESTOP_TIMEOUT_MS`, 15 s) and then calls `globalStop()`, which needs no robot list. With no connection
   it records STOP NOT CONFIRMED instead of leaving the tap silently pending. This still opens the Activity rather than sending
