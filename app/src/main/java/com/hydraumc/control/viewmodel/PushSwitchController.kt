@@ -21,8 +21,16 @@ import kotlinx.coroutines.launch
 
 private class PreferencesTokenStore(context: Context) : PushTokenStore {
     private val preferences = context.applicationContext.getSharedPreferences("hydra_push", Context.MODE_PRIVATE)
-    override fun load(): String? = preferences.getString("token", null)
-    override fun save(token: String?) = preferences.edit().putString("token", token).apply()
+    override fun load(server: String): String? = preferences.getString(PREFIX + server, null)
+    override fun save(server: String, token: String?) {
+        preferences.edit().apply { if (token == null) remove(PREFIX + server) else putString(PREFIX + server, token) }.apply()
+    }
+    override fun servers(): Set<String> = preferences.all.keys.filter { it.startsWith(PREFIX) }.map { it.removePrefix(PREFIX) }.toSet()
+    override fun clear() = preferences.edit().clear().apply()
+
+    private companion object {
+        const val PREFIX = "token|"
+    }
 }
 
 class PushSwitchController(
@@ -51,26 +59,42 @@ class PushSwitchController(
         touched = true
         enabled.value = on && available
         result.value = null
+        val current = session()
         val server = endpoint()
         scope.launch {
             preferences.setPushEnabled(enabled.value)
-            if (enabled.value) sync() else registration.remove(server)
+            if (enabled.value) sync() else registration.removeAll(server, current?.serverId)
         }
     }
 
     /** Tells the server of the signed-in session, when the switch is on. */
     fun sync() {
         if (!enabled.value || !available) return
+        val current = session() ?: return
         val server = endpoint() ?: return
         val language = app.resources.configuration.locales[0].language
-        scope.launch { result.value = registration.register(server, language) }
+        scope.launch { result.value = registration.register(server, current.serverId, language) }
     }
 
-    /** The session ends: the registration is taken back. [client] is the one of the session that ends, if there still is one. */
-    fun signedOut(client: HydraApiClient?) {
+    /** The session of the server [serverId] ends: its registration is taken back. [client] is the one of that session, if there still is one. */
+    fun signedOut(client: HydraApiClient?, serverId: String?) {
         result.value = null
-        val server = client?.takeIf { !it.authToken.isNullOrEmpty() }?.asPushEndpoint()
-        scope.launch { registration.remove(server) }
+        if (serverId == null) return
+        val server = client?.takeIf { !it.authToken.isNullOrEmpty() && it.serverId == serverId }?.asPushEndpoint()
+        scope.launch { registration.remove(server, serverId) }
+    }
+
+    /** Another server is in use now: how the last attempt ended was about the one before. */
+    fun serverChanged() {
+        result.value = null
+    }
+
+    /** A kept server was removed without a session to tell it: the token of the phone is dropped, and the one in use registers again. */
+    fun serverForgotten(serverId: String) {
+        scope.launch {
+            registration.remove(null, serverId)
+            sync()
+        }
     }
 
     private fun endpoint(): PushEndpoint? = session()?.takeIf { !it.authToken.isNullOrEmpty() }?.asPushEndpoint()

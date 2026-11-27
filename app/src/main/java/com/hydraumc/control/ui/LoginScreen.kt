@@ -43,6 +43,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.fragment.app.FragmentActivity
 import com.hydraumc.control.R
+import com.hydraumc.control.network.SessionBinding
 import com.hydraumc.control.ui.theme.HydraColors
 import com.hydraumc.control.ui.theme.Panel
 import com.hydraumc.control.util.BiometricHelper
@@ -78,6 +79,14 @@ fun LoginScreen(viewModel: RobotViewModel, onSearch: (() -> Unit)? = null, onAbo
         ipAddress = viewModel.ipAddress.value
         port = viewModel.port.value
     }
+    // The user name kept for the server just picked.
+    androidx.compose.runtime.LaunchedEffect(viewModel.credentialsServer.value) {
+        if (viewModel.loginUsername.value.isNotEmpty()) username = viewModel.loginUsername.value
+    }
+    // A stored password is offered only to the server it was kept for, never to whatever address is typed.
+    val ownCredentials = viewModel.credentialsServer.value.let {
+        it.isEmpty() || it == SessionBinding.id(ipAddress, port.trim().toIntOrNull() ?: 3000)
+    }
     val isBiometricEnabled = viewModel.isBiometricEnabled.value
     val lastError = viewModel.lastError.value
 
@@ -85,8 +94,8 @@ fun LoginScreen(viewModel: RobotViewModel, onSearch: (() -> Unit)? = null, onAbo
     val biometricPromptSubtitle = stringResource(R.string.biometric_prompt_subtitle)
     val strongUnavailableText = stringResource(R.string.biometric_strong_unavailable)
     val strongMode = isBiometricEnabled && viewModel.isStrongBiometric.value
-    val showBiometric = isBiometricEnabled && !strongMode && BiometricHelper.isBiometricAvailable(context)
-    val showStrongBiometric = strongMode && viewModel.sealedPassword.value.isNotEmpty() &&
+    val showBiometric = ownCredentials && isBiometricEnabled && !strongMode && BiometricHelper.isBiometricAvailable(context)
+    val showStrongBiometric = ownCredentials && strongMode && viewModel.sealedPassword.value.isNotEmpty() &&
         BiometricHelper.isStrongBiometricAvailable(context)
     val biometricSupportedButDisabled = !isBiometricEnabled && BiometricHelper.isBiometricAvailable(context)
 
@@ -132,6 +141,23 @@ fun LoginScreen(viewModel: RobotViewModel, onSearch: (() -> Unit)? = null, onAbo
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     Text(stringResource(R.string.login_subtitle), color = HydraColors.Muted, style = MaterialTheme.typography.bodyMedium)
+
+                    val kept = viewModel.savedServers.value
+                    if (kept.size > 1 || kept.any { it.id != viewModel.currentServerId }) {
+                        Text(stringResource(R.string.servers_saved_title), color = HydraColors.Muted, style = MaterialTheme.typography.labelMedium)
+                        kept.forEach { server ->
+                            TextButton(
+                                onClick = {
+                                    // what was typed was meant for the server before
+                                    password = ""
+                                    secondCode = ""
+                                    username = ""
+                                    viewModel.selectServer(server)
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                            ) { Text(server.label, color = HydraColors.Accent, textAlign = TextAlign.Center) }
+                        }
+                    }
 
                     // IP/port right on this screen - the owner shouldn't have to
                     // visit Settings first just to point the app at a server.

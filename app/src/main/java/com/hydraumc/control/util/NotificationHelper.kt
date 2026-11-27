@@ -151,7 +151,7 @@ object NotificationHelper {
     }
 
     /** Shows a persistent notification with an E-STOP action. */
-    fun showSafetyNotification(context: Context) {
+    fun showSafetyNotification(context: Context, server: String = "") {
         val intent = Intent(context, MainActivity::class.java)
         val pendingIntent = PendingIntent.getActivity(
             context,
@@ -175,7 +175,7 @@ object NotificationHelper {
         val builder = NotificationCompat.Builder(context, ESTOP_CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setContentTitle(context.getString(R.string.notification_safety_title))
-            .setContentText(context.getString(R.string.notification_safety_text))
+            .setContentText(if (server.isBlank()) context.getString(R.string.notification_safety_text) else context.getString(R.string.notification_safety_server_text, server))
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setOngoing(true) // Persistent
             .setContentIntent(pendingIntent)

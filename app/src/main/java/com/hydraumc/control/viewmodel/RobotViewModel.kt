@@ -70,6 +70,9 @@ import com.hydraumc.control.network.TlsSettings
 import com.hydraumc.control.network.TlsSettingsStore
 import com.hydraumc.control.util.bleErrorMessage
 import com.hydraumc.control.network.StateCache
+import com.hydraumc.control.network.SavedServer
+import com.hydraumc.control.network.SavedServerList
+import com.hydraumc.control.network.SavedServerStore
 import com.hydraumc.control.network.StopAllResult
 import com.hydraumc.control.network.StopAllRobot
 import com.hydraumc.control.network.StopAllStatus
@@ -314,6 +317,7 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
     @Volatile private var listenOnlyGeneral = false
     val listenOnlyServers = mutableStateOf<Set<String>>(emptySet())
     private fun activeServerKey(): String? = activeServer.value?.let { ListenOnly.serverKey(it.host, it.port) }
+        ?: apiClient?.let { ListenOnly.serverKey(it.serverHost, it.serverPort) }
     private fun refreshListenOnly() {
         val on = ListenOnly.effective(listenOnlyGeneral, listenOnlyServers.value, activeServerKey())
         listenOnly.value = on
@@ -337,8 +341,15 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
     val deadMan = DeadManJogController(
         scope = viewModelScope,
         poster = CommandPoster { id, body, urgent, ifMatch ->
-            if (!ListenOnly.allows(listenOnly.value, body.optString("command"))) throw HydraApiException("listen only")
-            (apiClient ?: throw HydraApiException("not connected")).postRobotCommand(id, body, urgent, ifMatch)
+            // The jog belongs to the server it was started on: its heartbeat and its stop never go to another one.
+            val command = body.optString("command")
+            val current = apiClient
+            val started = jogClients[id]
+            val elsewhere = command != RobotCommandContract.JOG_START && started != null && started.serverId != current?.serverId
+            val target = if (elsewhere) started else current
+            if (!elsewhere && !ListenOnly.allows(listenOnly.value, command)) throw HydraApiException("listen only")
+            if (command == RobotCommandContract.JOG_START && target != null) jogClients[id] = target
+            (target ?: throw HydraApiException("not connected")).postRobotCommand(id, body, urgent, ifMatch)
         },
         pinger = { (apiClient ?: throw HydraApiException("not connected")).pingRoundTripMs(RobotCommandContract.LINK_HEALTH_PROBE_TIMEOUT_MS) },
         situation = { robotId, switchedOn, running, linkBlocks, supports ->
@@ -398,10 +409,10 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
     private val canOtaWatchPolicy = com.hydraumc.control.wear.CanOtaWatchPolicy()
     var watchStopRestoredSink: com.hydraumc.control.wear.WatchStopRestoredSink = com.hydraumc.control.wear.WearStopRestoredSink(application)
     private val stopRestoredWatchPolicy = com.hydraumc.control.wear.StopRestoredWatchPolicy()
-    private val watchAlertRules = WatchAlertRules()
+    private var watchAlertRules = WatchAlertRules()
     // The list of the notices screen: its own copy of the same rules, so it does not depend on the watch being on.
     private val noticeLog = com.hydraumc.control.util.NoticeLog(application)
-    private val noticeRules = WatchAlertRules()
+    private var noticeRules = WatchAlertRules()
     private var noticesRaw = noticeLog.raw()
     val notices = mutableStateOf(com.hydraumc.control.util.Notices.decode(noticesRaw))
     private var watchAlertJob: kotlinx.coroutines.Job? = null
@@ -472,6 +483,11 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
             hasRobots = robots.value.isNotEmpty(),
         )
     var apiClient: HydraApiClient? = null
+        set(value) {
+            field = value
+            if (value != null) lastServerId = value.serverId
+            stopTargetName.value = value?.let { shortNameOf(it.serverId) }.orEmpty()
+        }
     // Real, Compose-observable mirror of apiClient?.authToken - apiClient
     // itself is a plain var and HydraApiClient.authToken is a plain var on
     // it too, so reassigning either (auto-login from a saved profile,
@@ -502,6 +518,160 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
     private val notificationPrefs = com.hydraumc.control.util.NotificationPrefs(application)
     private val stateCache = StateCache(application)
 
+    // ---- the servers this phone keeps ------------------------------------------------------------------------------
+    private val savedServerStore = SavedServerStore(application)
+    /** The servers a sign-in worked on, each with its own TLS settings, session and push registration. */
+    val savedServers = mutableStateOf(savedServerStore.load())
+    /** The short name of the server the next STOP goes to; empty with no server. */
+    val stopTargetName = mutableStateOf("")
+    /** Which server the last global STOP went to; null before the first one. */
+    val stopAllServer = mutableStateOf<String?>(null)
+    /** The server the stored user name and password on this screen belong to; empty before any is known. */
+    val credentialsServer = mutableStateOf("")
+    // The server of the last client, and how many times the app has moved to another one: an answer that arrives after a move
+    // belongs to the server before and changes nothing here.
+    private var lastServerId: String? = null
+    private var serverGeneration = 0
+    private val jogClients = java.util.concurrent.ConcurrentHashMap<Int, HydraApiClient>()
+
+    /** What the screens call the server [id]: its kept name and address. */
+    fun serverLabel(id: String): String = savedServers.value.firstOrNull { it.id == id }?.label ?: id
+
+    private fun shortNameOf(id: String): String = savedServers.value.firstOrNull { it.id == id }?.shortName ?: id
+
+    /** The id of the server the app is using, or about to use. */
+    val currentServerId: String get() = apiClient?.serverId ?: SessionBinding.id(ipAddress.value, port.value.trim().toIntOrNull() ?: 3000)
+
+    private fun stale(client: HydraApiClient): Boolean = apiClient?.serverId.let { it != null && it != client.serverId } || (apiClient == null && lastServerId != client.serverId)
+
+    private fun keepServers(list: List<SavedServer>) {
+        savedServers.value = list
+        savedServerStore.save(list)
+        stopTargetName.value = apiClient?.let { shortNameOf(it.serverId) }.orEmpty()
+    }
+
+    /** A sign-in to this server works: it is kept, with the TLS settings it works with. */
+    private fun rememberServer(host: String, portNumber: Int, name: String?) {
+        val id = SessionBinding.id(host, portNumber)
+        val kept = savedServers.value.firstOrNull { it.id == id }
+        val shown = name?.takeIf { it.isNotBlank() } ?: kept?.name ?: host
+        val next = SavedServer(host, portNumber, shown, tlsSettings.value)
+        if (next != kept) keepServers(SavedServerList.upsert(savedServers.value, next))
+    }
+
+    /** Applies TLS settings to the clients made from now on, without touching what any kept server holds. */
+    private fun applyTlsSettings(settings: com.hydraumc.control.network.TlsSettings) {
+        if (settings == tlsSettings.value && settings == TlsSettingsStore.current) return
+        TlsSettingsStore.current = settings
+        tlsSettings.value = settings
+        viewModelScope.launch { tlsPrefs.save(settings) }
+    }
+
+    /**
+     * The app is about to talk to the server [next]. Nothing of the one before stays on screen, and nothing meant for it
+     * (a held jog, a waiting command, a renewal) goes anywhere else. Does nothing when [next] is the same server.
+     */
+    private fun leaveServer(next: String) {
+        val last = lastServerId ?: return
+        if (last == next) return
+        deadMan.interrupt() // its stop goes to the server the jog started on
+        state.allRobots.forEach { commandQueue.cancelWaitingJogs(it.id) }
+        serverGeneration++
+        lastServerId = next
+        reloginJob?.cancel()
+        connection.cancelConnect()
+        connection.stopMetrics()
+        connection.isSwitching = true // the close of the old socket is not an error of the new server
+        liveSocket.close()
+        stateCacheJob?.cancel()
+        NotificationHelper.hideSafetyNotification(getApplication())
+        apiClient = null
+        authTokenState.value = null
+        connectionState.value = WsStatus.DISCONNECTED
+        isLoggedIn.value = false
+        loginNeedsCode.value = false
+        state = HydraState.empty()
+        robots.value = emptyList()
+        jobs.value = emptyList()
+        selectedRobotId.value = null
+        stateIsLive.value = false
+        stateAtMs.value = null
+        metrics.value = null
+        ecosystemProjects.value = emptyList()
+        ecosystemAvailable.value = false
+        claims.value = emptyList()
+        claimsPushedAtMs = 0L
+        safetyByRobot.value = emptyMap()
+        jogArmedUntilMs.value = emptyMap()
+        canOtaProgress.value = null
+        canOtaWatchPolicy.reset()
+        activeServer.value = null
+        plainRemoteHost.value = null
+        workFiles.value = null
+        workServerSupports.value = true
+        homeResetServerSupports.value = true
+        homeResetConfirmation.cancel()
+        commands.revisions.forget()
+        commands.tableCommandSupported = true
+        totp.clear()
+        admin.clear()
+        voice.clearReply()
+        push.serverChanged()
+        // A change of server is not a lost connection or a robot gone offline.
+        watchAlertRules = WatchAlertRules()
+        noticeRules = WatchAlertRules()
+        // A STOP that was not confirmed stays on screen, with the name of its server; a finished one is over.
+        if (stopAllStatus.value is StopAllStatus.Done) stopAllStatus.value = null
+        lastError.value = null
+        renewalBudget.reset()
+        sessionRenewer.forgetRefusal()
+        viewModelScope.launch { stateCache.clear() }
+        refreshListenOnly()
+    }
+
+    /** Puts the stored session of [here] in use, parking the one of the server before. Returns the profile then in use. */
+    private suspend fun activateSession(here: String): UserProfile {
+        activeSessionServer = here
+        // Binds a session stored before the server was kept with it, so a switch parks it under the right one.
+        if (!sessionBelongsTo(here)) {
+            authPrefs.switchServer(here)
+            val profile = authPrefs.loadAuth()
+            if (sessionBelongsTo(here)) showStoredProfile(profile, here)
+            return profile
+        }
+        return authPrefs.loadAuth().also { credentialsServer.value = here }
+    }
+
+    private fun showStoredProfile(profile: UserProfile, server: String) {
+        credentialsServer.value = server
+        loginUsername.value = profile.username
+        loginPassword.value = profile.password
+        loginEmail.value = profile.email
+        loginRememberMe.value = profile.rememberMe
+        isBiometricEnabled.value = profile.isBiometricEnabled
+        isStrongBiometric.value = profile.isStrongBiometric
+        sealedPassword.value = profile.sealedPassword
+    }
+
+    /** The person picked a kept server: its own TLS settings, then its own session, or the sign-in when it has none. */
+    fun selectServer(server: SavedServer) {
+        if (apiClient?.serverId == server.id && isLoggedIn.value && connectionState.value == WsStatus.CONNECTED) return
+        ipAddress.value = server.host
+        port.value = server.port.toString()
+        connect()
+    }
+
+    /**
+     * Removes a kept server that is not in use: its parked session, and its push registration (the token of the phone is
+     * dropped, so it cannot go on sending). Nothing is sent to it.
+     */
+    fun forgetServer(id: String) {
+        if (id == currentServerId) return
+        keepServers(SavedServerList.remove(savedServers.value, id))
+        push.serverForgotten(id)
+        viewModelScope.launch { authPrefs.forgetServer(id) }
+    }
+
     // The connect sequence, the "switching server" flag and the metrics poll live in ConnectionManager: a new connect
     // cancels the previous one, and starting the poll again cancels the previous loop, so a reconnect (server switch,
     // manual reconnect) never leaves an old loop polling a server that is no longer the active one. Declared before the
@@ -521,7 +691,11 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
     private val renewalBudget = com.hydraumc.control.util.RenewalBudget()
 
     // Sign-in, stored profile and sign-out (see AuthManager); the store is injected, so it is tested without a keystore.
-    private val authManager = AuthManager(authPrefs, com.hydraumc.control.util.StrongBiometricVault)
+    private val authManager = AuthManager(
+        authPrefs,
+        com.hydraumc.control.util.StrongBiometricVault,
+        otherServers = { savedServers.value.map { it.id }.filter { it != activeSessionServer } },
+    )
 
     // Gets a new token by refresh token or by the saved "remember me" login; a password the server refused once is not tried again until the person signs in by hand.
     private val sessionRenewer = SessionRenewer(
@@ -725,6 +899,13 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
             sealedPassword.value = profile.sealedPassword
             
             activeSessionServer = SessionBinding.id(ipAddress.value, port.value.toIntOrNull() ?: 3000)
+            credentialsServer.value = runCatching { authPrefs.sessionServer() }.getOrDefault("").ifEmpty { activeSessionServer!! }
+            // A phone that was signed in before the list existed: the server in use is the first of it.
+            if ((profile.token.isNotEmpty() || profile.username.isNotEmpty()) && credentialsServer.value == activeSessionServer &&
+                savedServers.value.none { it.id == activeSessionServer } && prefs.load() != null
+            ) {
+                rememberServer(ipAddress.value.trim(), port.value.trim().toIntOrNull() ?: 3000, null)
+            }
             if (profile.token.isNotEmpty() && sessionBelongsTo(activeSessionServer!!)) {
                 val client = HydraApiClient(ipAddress.value, port.value.toIntOrNull() ?: 3000)
                 client.authToken = profile.token
@@ -808,15 +989,23 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
         }
         check as LoginCheck.Valid
 
+        val here = SessionBinding.id(check.host, check.port)
+        leaveServer(here)
+        // A kept server is checked with its own TLS settings.
+        savedServers.value.firstOrNull { it.id == here }?.let { applyTlsSettings(it.tls) }
         val client = HydraApiClient(check.host, check.port)
         apiClient = client
 
         viewModelScope.launch {
+            // The session of another server is parked first: this sign-in must not overwrite it.
+            try { activateSession(here) } catch (e: kotlinx.coroutines.CancellationException) { throw e } catch (e: Exception) { logTelemetry("Stored login unreadable: ${e.javaClass.simpleName}") }
             logTelemetry("Logging in to ${check.host}:${check.port}...")
             when (val result = authManager.signIn(client, user, pass, remember, loginEmail.value, isBiometricEnabled.value, isStrongBiometric.value, totp = totpCode)) {
                 is SignInResult.Success -> {
-                    runCatching { authPrefs.bindSessionServer(SessionBinding.id(check.host, check.port)) }
-                    activeSessionServer = SessionBinding.id(check.host, check.port)
+                    runCatching { authPrefs.bindSessionServer(here) }
+                    activeSessionServer = here
+                    credentialsServer.value = here
+                    rememberServer(check.host, check.port, null)
                     authTokenState.value = result.token
                     isLoggedIn.value = true
                     loginNeedsCode.value = false
@@ -910,7 +1099,7 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
         val client = apiClient
         apiClient = null
         authTokenState.value = null
-        push.signedOut(client)
+        push.signedOut(client, client?.serverId ?: activeSessionServer)
         val keepPassword = isBiometricEnabled.value
         if (!keepPassword) loginPassword.value = ""
         viewModelScope.launch {
@@ -955,12 +1144,14 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
         // EncryptedSharedPreferences/AndroidKeyStore and can genuinely throw on
         // a real device, and a failure here must degrade to the forced logout
         // below the caller already has, never to a silently dead app.
+        val generation = serverGeneration
         return try {
             val host = ipAddress.value.trim()
             val portInt = port.value.trim().toIntOrNull() ?: return false
             val client = HydraApiClient(host, portInt)
             activeSessionServer = SessionBinding.id(host, portInt)
             if (!sessionRenewer.renew(client)) return false
+            if (generation != serverGeneration) return false
             apiClient = client
             logTelemetry("Session silently renewed after token expiry")
             // Reuses the exact same reconnect path a manual "Retry" would.
@@ -985,7 +1176,7 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
             connectionState.value = WsStatus.DISCONNECTED
             lastError.value = "The server keeps rejecting the session right after renewing it. Sign in again; if it repeats, check the server."
             liveSocket.close()
-            push.signedOut(null)
+            push.signedOut(null, activeSessionServer)
             return
         }
         reloginJob = viewModelScope.launch {
@@ -993,7 +1184,7 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
                 isLoggedIn.value = false
                 connectionState.value = WsStatus.DISCONNECTED
                 liveSocket.close()
-                push.signedOut(null)
+                push.signedOut(null, activeSessionServer)
             }
         }
     }
@@ -1030,6 +1221,7 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
         viewModelScope.launch {
             try {
                 val response = client.getEcosystemStatus()
+                if (stale(client)) return@launch
                 ecosystemAvailable.value = response.optBoolean("available", false)
                 val arr = response.optJSONArray("projects")
                 val projects = mutableListOf<EcosystemProject>()
@@ -1103,6 +1295,13 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
             return
         }
 
+        val here = SessionBinding.id(host, portInt)
+        val moving = lastServerId != null && lastServerId != here
+        val wasSignedIn = isLoggedIn.value
+        leaveServer(here)
+        // A kept server is checked with its own TLS settings, never with those of the one before.
+        savedServers.value.firstOrNull { it.id == here }?.let { applyTlsSettings(it.tls) }
+
         connectionState.value = WsStatus.CONNECTING
         lastError.value = null
         plainRemoteHost.value = null
@@ -1115,18 +1314,20 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
         lateinit var client: HydraApiClient
         connection.connect(
             prepare = {
-                // Ensure token is carried over or reloaded from persistence
-                val profile = authPrefs.loadAuth()
-                // The token, the refresh token and the saved password go only to the server that issued them: another server gets none and the person signs in to it.
-                val here = SessionBinding.id(host, portInt)
-                activeSessionServer = here
+                // Ensure token is carried over or reloaded from persistence.
+                // The token, the refresh token and the saved password go only to the server that issued them: each server has its own, and one with none gets none.
+                val profile = activateSession(here)
                 val sameServer = sessionBelongsTo(here)
                 if (!sameServer) logTelemetry("This is not the server of the saved session: sign in again")
-                val token = if (sameServer) (apiClient?.authToken ?: profile.token) else ""
+                val previous = apiClient?.takeIf { it.serverId == here }
+                val token = if (sameServer) (previous?.authToken ?: profile.token) else ""
                 client = HydraApiClient(host, portInt)
                 client.authToken = token
-                client.refreshToken = if (sameServer) (apiClient?.refreshToken ?: profile.refreshToken.ifEmpty { null }) else null
+                client.refreshToken = if (sameServer) (previous?.refreshToken ?: profile.refreshToken.ifEmpty { null }) else null
                 apiClient = client
+                refreshListenOnly()
+                // Coming from another server: with a session of its own the app stays in; with none, the sign-in of this one.
+                if (moving) isLoggedIn.value = token.isNotEmpty() && (wasSignedIn || (profile.isLoggedIn && profile.rememberMe))
                 authTokenState.value = token
                 reportWatchReleaseNotice()
                 prefs.save(host, portValue)
@@ -1160,11 +1361,17 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
 
                 override fun onSynced() {
                     onInitialConnectSucceeded?.invoke()
+                    if (!client.authToken.isNullOrEmpty()) {
+                        rememberServer(host, portInt, activeServer.value?.displayName)
+                        if (moving) isLoggedIn.value = true
+                    }
                     push.sync()
                 }
 
                 override fun onSyncFailed(error: HydraApiException) {
                     lastError.value = error.message
+                    // The kept session of this server is no longer accepted: its sign-in, not an empty home.
+                    if (moving && error.isSessionProblem) isLoggedIn.value = false
                     onInitialConnectFailed?.invoke()
                 }
 
@@ -1199,7 +1406,7 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
                 WsStatus.CONNECTED -> {
                     logTelemetry("WebSocket CONNECTED")
                     if (notificationsEnabled.value) {
-                        NotificationHelper.showSafetyNotification(getApplication())
+                        NotificationHelper.showSafetyNotification(getApplication(), apiClient?.let { serverLabel(it.serverId) }.orEmpty())
                     }
                 }
                 WsStatus.DISCONNECTED -> {
@@ -1521,6 +1728,13 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
         }
 
         val isJog = CommandPreflight.isMotion(command)
+        val generation = serverGeneration
+        // The app moved to another server meanwhile: the answer changes nothing here; a stop that failed is still said, with its server.
+        fun answeredAfterMove(failed: Boolean) {
+            if (failed && command == RobotCommandContract.STOP) {
+                lastError.value = getApplication<Application>().getString(R.string.error_stop_not_confirmed_server, serverLabel(client.serverId))
+            }
+        }
         val send: () -> Unit = {
             if (isJog) commands.jogStarted(robotId)
             val skipsLine = CommandPreflight.interruptsHeldJog(command)
@@ -1532,6 +1746,10 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
                 try {
                     val answer = commands.send(robotId, command, payload) { id, body, urgent, ifMatch -> client.postRobotCommand(id, body, urgent, ifMatch) }
                     val warnings = RobotCommandRepository.warningsOf(answer)
+                    if (generation != serverGeneration) {
+                        answeredAfterMove(failed = warnings != null)
+                        return@submit
+                    }
                     if (warnings != null) {
                         // The server answered 200 but applied nothing (a speed
                         // outside its range, a malformed jog): same as a failure.
@@ -1547,6 +1765,10 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
                     lastError.value = null
                 } catch (e: HydraApiException) {
                     logTelemetry("TX Error [$command]: ${e.message}")
+                    if (generation != serverGeneration) {
+                        answeredAfterMove(failed = true)
+                        return@submit
+                    }
                     lastError.value = CommandErrorText.describe(getApplication(), command, e)
                     val failure = CommandSender.classify(command, e)
                     // The robot changed since this app read it: read it again so the screen shows what it is now.
@@ -1562,6 +1784,10 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
                     // A stop refused only because the session had expired goes out once more when the renewal is done.
                     if (CommandSender.resendAfterRenewal(command, failure)) {
                         reloginJob?.join()
+                        if (generation != serverGeneration) {
+                            answeredAfterMove(failed = true)
+                            return@submit
+                        }
                         val fresh = apiClient
                         if (isLoggedIn.value && fresh != null) {
                             try {
@@ -1579,6 +1805,10 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
                 } catch (e: Exception) {
                     // Not a HydraApiException (a timeout or a socket failure): the message is generic and the change is rolled back too.
                     logTelemetry("TX Error [$command]: ${e.message}")
+                    if (generation != serverGeneration) {
+                        answeredAfterMove(failed = true)
+                        return@submit
+                    }
                     lastError.value = getApplication<Application>().getString(
                         if (command == "stop") R.string.error_stop_not_confirmed else R.string.error_command_failed,
                         command,
@@ -1615,6 +1845,7 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
         viewModelScope.launch {
             try {
                 val read = client.getRobot(robotId) ?: return@launch
+                if (stale(client)) return@launch
                 revisions.learn(robotId, read.revision)
                 val controllerId = controllerIdOf(robotId) ?: return@launch
                 applyRobotDelta(JSONObject().put("controllerId", controllerId).put("robotId", robotId).put("patch", read.robot))
@@ -1764,7 +1995,13 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
         pairingOffer.value = null
         ipAddress.value = offer.host
         port.value = offer.port.toString()
-        saveTlsSettings(tlsSettings.value.copy(mode = TlsMode.REQUIRED, pinnedFingerprint = offer.fingerprint))
+        val pinned = (savedServers.value.firstOrNull { it.id == SessionBinding.id(offer.host, offer.port) }?.tls ?: tlsSettings.value)
+            .copy(mode = TlsMode.REQUIRED, pinnedFingerprint = offer.fingerprint)
+        // The pin belongs to the server of the offer: the one in use keeps its own.
+        savedServers.value.firstOrNull { it.id == SessionBinding.id(offer.host, offer.port) }?.let {
+            keepServers(SavedServerList.upsert(savedServers.value, it.copy(tls = pinned)))
+        }
+        applyTlsSettings(pinned)
         connect()
     }
 
@@ -1948,7 +2185,9 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
         workFiles.value = null
         viewModelScope.launch {
             try {
-                workFiles.value = WorkFiles.parseIndex(client.getWorkIndexBody(folder)) ?: emptyList()
+                val index = WorkFiles.parseIndex(client.getWorkIndexBody(folder)) ?: emptyList()
+                if (stale(client)) return@launch
+                workFiles.value = index
             } catch (e: HydraApiException) {
                 // A folder that does not exist yet is an empty list, not an error.
                 if (WorkFileFlow.listOutcome(e) == WorkFileFlow.ListOutcome.EMPTY_LIST) workFiles.value = emptyList() else lastError.value = getApplication<Application>().getString(R.string.work_load_failed)
@@ -1984,7 +2223,9 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
         workBusy.value = true
         viewModelScope.launch {
             try {
-                when (val loaded = WorkFiles.parsePoints(client.getWorkFileBody(folder, file))) {
+                val body = client.getWorkFileBody(folder, file)
+                if (stale(client)) return@launch
+                when (val loaded = WorkFiles.parsePoints(body)) {
                     is WorkFiles.Loaded.Refused -> lastError.value = app.getString(R.string.work_invalid_file, file)
                     is WorkFiles.Loaded.Ok -> {
                         val block = workBlock(robotId, tableMissing = loaded.usesTable && state.robotById(robotId)?.hasXYTable != true)
@@ -2079,8 +2320,11 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
             // The server pushes the reservations when they change: while a push is fresh the poll does not ask for them.
             if (!(fromPoll && claimsArePushed())) {
                 try {
-                    claims.value = client.getClaims()
+                    val list = client.getClaims()
+                    if (stale(client)) return@launch
+                    claims.value = list
                 } catch (e: HydraApiException) {
+                    if (stale(client)) return@launch
                     if (e.isSessionProblem) renewSessionOrLogout()
                 } catch (_: Exception) {
                 }
@@ -2088,6 +2332,7 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
             if (robotId == null) return@launch
             try {
                 val safety = client.getRobotSafety(robotId) ?: return@launch
+                if (stale(client)) return@launch
                 safetyByRobot.value = safetyByRobot.value + (robotId to safety)
                 val until = safety.jogArmedUntil
                 val now = System.currentTimeMillis()
@@ -2201,6 +2446,7 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
         // The jogs that still wait their turn behind another write are dropped: they must not move a robot after the stop.
         state.allRobots.forEach { commandQueue.cancelWaitingJogs(it.id) }
         val first = apiClient
+        stopAllServer.value = first?.let { serverLabel(it.serverId) }
         if (first == null) {
             val reason = app.getString(R.string.error_not_connected)
             stopAllStatus.value = StopAllStatus.NotConfirmed(reason)
@@ -2208,15 +2454,24 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
             return
         }
         stopAllStatus.value = StopAllStatus.Sending
+        val generation = serverGeneration
+        val robotsThere = state.allRobots.map { it.id to it.name }
+        val server = serverLabel(first.serverId)
         viewModelScope.launch {
+            // After a move to another server this STOP goes on with its own client and its own robots, never with the new ones.
             val outcome = stopAllRunner.run(
                 start = first.asStopAllEndpoint(),
-                knownRobots = { state.allRobots.map { it.id to it.name } },
-                relogin = { attemptSilentRelogin() },
-                currentEndpoint = { apiClient?.asStopAllEndpoint() },
-                onSessionLost = { renewSessionOrLogout() },
+                knownRobots = { if (generation == serverGeneration) state.allRobots.map { it.id to it.name } else robotsThere },
+                relogin = { generation == serverGeneration && attemptSilentRelogin() },
+                currentEndpoint = { if (generation == serverGeneration) apiClient?.asStopAllEndpoint() else first.asStopAllEndpoint() },
+                onSessionLost = { if (generation == serverGeneration) renewSessionOrLogout() },
             )
+            stopAllServer.value = server
             stopAllStatus.value = outcome
+            if (generation != serverGeneration) {
+                logTelemetry("STOP answer of $server")
+                return@launch
+            }
             if (outcome is StopAllStatus.Done) {
                 // Show the stop at once; the next state broadcast confirms or corrects it.
                 outcome.result.robots.filter { it.stopped }.forEach { r -> state.robotById(r.robotId)?.stop() }
@@ -2561,6 +2816,10 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
                 tlsSettings.value = clean
                 tlsSettingsMessage.value = app.getString(R.string.tls_saved)
                 viewModelScope.launch { tlsPrefs.save(clean) }
+                // These are the settings of the server in use; the other kept servers keep theirs.
+                savedServers.value.firstOrNull { it.id == currentServerId }?.let {
+                    keepServers(SavedServerList.upsert(savedServers.value, it.copy(tls = clean)))
+                }
             }
         }
     }

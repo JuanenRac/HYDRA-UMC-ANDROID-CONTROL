@@ -222,6 +222,18 @@ class AuthPrefs(private val context: Context) : AuthStore {
         Unit
     }
 
+    override suspend fun switchServer(id: String) = withContext(authPrefsDispatcher) {
+        ServerSessions.switchTo(SharedPreferencesKv(openEncryptedPrefs()), id)
+    }
+
+    override suspend fun forgetServer(id: String) = withContext(authPrefsDispatcher) {
+        ServerSessions.forget(SharedPreferencesKv(openEncryptedPrefs()), id)
+    }
+
+    override suspend fun hasSealedPassword(ids: List<String>): Boolean = withContext(authPrefsDispatcher) {
+        ServerSessions.anySealed(SharedPreferencesKv(openEncryptedPrefs()), ids)
+    }
+
     override suspend fun clearAuth(wipePassword: Boolean) = withContext(authPrefsDispatcher) {
         // Clears the bearer token too, not just the "logged in" flag - without
         // this, connect()/setupWebSocket() (which read loadAuth().token

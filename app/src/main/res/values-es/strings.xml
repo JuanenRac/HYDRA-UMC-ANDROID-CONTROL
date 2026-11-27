@@ -37,6 +37,17 @@
     <string name="stop_all_label">STOP</string>
     <string name="stop_all_caption">Parar todo</string>
     <string name="stop_all_description">STOP: detener todos los robots ahora</string>
+    <string name="stop_all_server">Servidor: %1$s</string>
+    <string name="notification_safety_server_text">Conectado a %1$s. E-STOP rápido disponible.</string>
+    <string name="error_stop_not_confirmed_server">STOP sin confirmar en %1$s. Comprueba el robot.</string>
+    <string name="servers_saved_title">Servidores guardados</string>
+    <string name="servers_saved_hint">Cada uno guarda su sesión, sus ajustes de certificado y sus avisos. El STOP va al que está en uso.</string>
+    <string name="servers_current">En uso</string>
+    <string name="servers_current_line">%1$s (en uso)</string>
+    <string name="servers_use">Usar</string>
+    <string name="servers_forget">Olvidar</string>
+    <string name="servers_forget_title">¿Olvidar este servidor?</string>
+    <string name="servers_forget_message">%1$s y su sesión guardada se borran de este teléfono. No se le envía nada.</string>
     <string name="stop_all_action">STOP · Parar todo</string>
     <string name="stop_all_sending">STOP enviado, sin respuesta…</string>
     <string name="stop_all_done">STOP confirmado: %1$d robots detenidos</string>

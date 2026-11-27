@@ -31,6 +31,7 @@ Every file of the repository with a line on what it does: the annotated tree tha
 │   │   │   │   ├── TotpEndpoint.kt         # What the second-factor screen needs from the server (the REST client in the app, a fake in the tests)
 │   │   │   │   ├── TotpRules.kt            # Rules of the second sign-in factor: how a refusal is told apart, how a typed code is cleaned, how the key is shown, what an answer must look like
 │   │   │   │   ├── HydraWebSocket.kt      # Live state-delta push over WS, reconnect handling
+│   │   │   │   ├── SavedServers.kt / ServerSessions.kt   # The kept servers and one stored session for each of them
 │   │   │   │   ├── StateCache.kt          # Last-known-state cache (DataStore) for offline dashboard viewing
 │   │   │   │   ├── StopAllResult.kt       # Result of the global STOP (per-robot answer, status)
 │   │   │   │   ├── StopAllRunner.kt       # The global STOP without the screen: retry, renewal of the session, per-robot fallback
@@ -44,6 +45,7 @@ Every file of the repository with a line on what it does: the annotated tree tha
 │   │   │   │   ├── AboutDialog.kt          # App/version info dialog
 │   │   │   │   ├── DeadManJogControl.kt    # Hold-to-move buttons of the continuous jog and the link indicator
 │   │   │   │   ├── LinkAndWatchSettings.kt # Switches of the continuous jog, the link, the watch and the pairing; the pairing dialog
+│   │   │   │   ├── SavedServersSection.kt  # The kept servers in Settings: use one, forget one
 │   │   │   │   ├── WorkSelector.kt         # The Work loaded in the robot and the list to pick another from
 │   │   │   │   ├── AccessPanel.kt          # Reservation and jog-arming panel of the Control screen
 │   │   │   │   ├── AuditDialog.kt           # Audit record of the server (administrators), with the chain check
