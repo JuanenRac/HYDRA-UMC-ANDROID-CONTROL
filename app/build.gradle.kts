@@ -278,6 +278,9 @@ dependencies {
     // services accepts only the same applicationId signed with the same key.
     implementation(libs.play.services.wearable)
 
+    // Reads the pairing QR code (ui/PairingScanner.kt): the scanner screen of Google Play services, so the app needs no camera permission.
+    implementation(libs.play.services.code.scanner)
+
     // Push messages of the server (see push/FirebasePush.kt). The app starts Firebase itself from the build constants, so
     // the Google Services plugin is not needed.
     implementation(platform(libs.firebase.bom))

@@ -504,9 +504,11 @@
     <string name="watch_alert_stop_confirmed">STOP confirmed by the server</string>
     <string name="watch_confirm_relay_off">Confirmation from the watch is switched off on the phone.</string>
     <string name="pairing_switch_label">Allow pairing by QR code or link</string>
-    <string name="pairing_switch_hint">The admin page of the server shows a QR code with its address and certificate fingerprint. Scan it with the phone camera, or paste the link here. The app shows what it read and asks before it keeps anything. Off by default.</string>
+    <string name="pairing_switch_hint">The admin page of the server shows a QR code with its address and certificate fingerprint. Scan it from here or with the phone camera, or paste the link. The camera opens only when you tap Scan. The app shows what it read and asks before it keeps anything. Off by default.</string>
     <string name="pairing_paste_label">Pairing link</string>
     <string name="pairing_paste_button">Read link</string>
+    <string name="pairing_scan_button">Scan the QR code</string>
+    <string name="pairing_scan_unavailable">This phone could not open the code reader. Paste the link instead.</string>
     <string name="pairing_off">Pairing is switched off. Turn it on in the Access panel.</string>
     <string name="pairing_dialog_title">Pair with this server?</string>
     <string name="pairing_dialog_message">%1$s at %2$s, port %3$d.</string>

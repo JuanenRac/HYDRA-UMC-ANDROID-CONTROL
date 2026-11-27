@@ -504,9 +504,11 @@
     <string name="watch_alert_stop_confirmed">STOP confermato dal server</string>
     <string name="watch_confirm_relay_off">La conferma dall\'orologio è disattivata sul telefono.</string>
     <string name="pairing_switch_label">Consenti l\'abbinamento tramite codice QR o link</string>
-    <string name="pairing_switch_hint">La pagina di amministrazione del server mostra un codice QR con indirizzo e impronta del certificato. Scansionalo con la fotocamera del telefono o incolla qui il link. L\'app mostra ciò che ha letto e chiede conferma prima di salvare qualsiasi cosa. Disattivato per impostazione predefinita.</string>
+    <string name="pairing_switch_hint">La pagina di amministrazione del server mostra un codice QR con indirizzo e impronta del certificato. Scansionalo da qui o con la fotocamera del telefono, oppure incolla il link. La fotocamera si apre solo quando tocchi Scansiona. L\'app mostra ciò che ha letto e chiede conferma prima di salvare qualsiasi cosa. Disattivato per impostazione predefinita.</string>
     <string name="pairing_paste_label">Link di abbinamento</string>
     <string name="pairing_paste_button">Leggi il link</string>
+    <string name="pairing_scan_button">Scansiona il codice QR</string>
+    <string name="pairing_scan_unavailable">Questo telefono non ha potuto aprire il lettore di codici. Incolla invece il link.</string>
     <string name="pairing_off">L\'abbinamento è disattivato. Attivalo nel pannello di accesso.</string>
     <string name="pairing_dialog_title">Abbinare a questo server?</string>
     <string name="pairing_dialog_message">%1$s a %2$s, porta %3$d.</string>
