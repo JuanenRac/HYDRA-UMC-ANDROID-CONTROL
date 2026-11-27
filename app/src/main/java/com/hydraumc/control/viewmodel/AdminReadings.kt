@@ -56,6 +56,19 @@ class AdminReadings(
     val serverOptionsFailure = mutableStateOf<ServerOptionsFailure?>(null)
     val serverOptionsSaved = mutableStateOf(false)
 
+    /** Forgets everything read: it was about the server before. */
+    fun clear() {
+        auditRead.value = null
+        auditChain.value = null
+        auditFailure.value = null
+        connectionClients.value = null
+        connectionEvents.value = null
+        connectionsFailure.value = null
+        serverOptions.value = null
+        serverOptionsFailure.value = null
+        serverOptionsSaved.value = false
+    }
+
     /**
      * Reads the audit record (administrators only): the newest lines for a filter, and with [verify] the server checks the
      * whole record while this app checks the chain of the lines it was given. Never raises an error on the screen:

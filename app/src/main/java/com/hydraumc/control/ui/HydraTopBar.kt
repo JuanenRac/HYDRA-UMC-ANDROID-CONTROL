@@ -46,6 +46,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hydraumc.control.R
+import com.hydraumc.control.network.SessionBinding
 import com.hydraumc.control.network.WsStatus
 import com.hydraumc.control.ui.theme.HydraColors
 import com.hydraumc.control.ui.theme.StatusDot
@@ -91,8 +92,19 @@ fun HydraTopBar(viewModel: RobotViewModel, onVoice: () -> Unit, onProfile: () ->
                     Icon(Icons.Filled.ArrowDropDown, contentDescription = null, tint = HydraColors.Muted)
                 }
                 StopDropdownMenu(expanded = serverMenu, onDismissRequest = { serverMenu = false }) {
-                    val found = viewModel.discoveredServers.value
-                    if (found.isEmpty()) {
+                    val kept = viewModel.savedServers.value
+                    val current = viewModel.currentServerId
+                    kept.forEach { server ->
+                        DropdownMenuItem(
+                            text = { Text(if (server.id == current) stringResource(R.string.servers_current_line, server.label) else server.label) },
+                            onClick = {
+                                viewModel.selectServer(server)
+                                serverMenu = false
+                            },
+                        )
+                    }
+                    val found = viewModel.discoveredServers.value.filter { server -> kept.none { it.id == SessionBinding.id(server.host, server.port) } }
+                    if (found.isEmpty() && kept.isEmpty()) {
                         DropdownMenuItem(text = { Text(stringResource(R.string.no_servers_found)) }, onClick = { serverMenu = false })
                     } else {
                         found.forEach { server ->

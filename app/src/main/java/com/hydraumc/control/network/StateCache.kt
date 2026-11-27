@@ -65,6 +65,14 @@ class StateCache(private val context: Context) {
         }
     }
 
+    /** Forgets the stored copy (the app changes server: one server's robots are never shown as another's). */
+    suspend fun clear() {
+        context.cacheDataStore.edit { prefs ->
+            prefs.remove(KEY_LAST_STATE)
+            prefs.remove(KEY_SAVED_AT)
+        }
+    }
+
     /** Loads the last known state from disk. */
     suspend fun loadState(): JSONObject? {
         val prefs = context.cacheDataStore.data.first()

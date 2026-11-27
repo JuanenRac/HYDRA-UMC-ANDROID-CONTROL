@@ -29,6 +29,10 @@ and says that this build has no Firebase configuration.
 The phone is registered with the account of the signed-in session. Switching the messages off or signing out takes the token
 back. With **Listen only** on, the phone is not registered.
 
+With several servers kept, each one is registered with its own session when it is used, and signing out of one takes back only
+its registration. The token of the phone is the same for all of them: switching the messages off drops it, and so does leaving a
+server that cannot be told (or forgetting one), after which the others register again the next time they are used.
+
 ## What is tested, and what is not
 
 The registration, its removal and the answers of the server are covered by unit tests against a simulated server. No message has

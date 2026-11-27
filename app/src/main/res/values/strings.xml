@@ -37,6 +37,17 @@
     <string name="stop_all_label">STOP</string>
     <string name="stop_all_caption">Stop all</string>
     <string name="stop_all_description">STOP: stop every robot now</string>
+    <string name="stop_all_server">Server: %1$s</string>
+    <string name="notification_safety_server_text">Connected to %1$s. Quick E-STOP available.</string>
+    <string name="error_stop_not_confirmed_server">STOP not confirmed on %1$s. Check the robot.</string>
+    <string name="servers_saved_title">Saved servers</string>
+    <string name="servers_saved_hint">Each one keeps its own sign-in, certificate settings and notifications. STOP goes to the one in use.</string>
+    <string name="servers_current">In use</string>
+    <string name="servers_current_line">%1$s (in use)</string>
+    <string name="servers_use">Use</string>
+    <string name="servers_forget">Forget</string>
+    <string name="servers_forget_title">Forget this server?</string>
+    <string name="servers_forget_message">%1$s and its saved sign-in are removed from this phone. Nothing is sent to it.</string>
     <string name="stop_all_action">STOP · Stop all</string>
     <string name="stop_all_sending">STOP sent, no reply yet…</string>
     <string name="stop_all_done">STOP confirmed: %1$d robots stopped</string>

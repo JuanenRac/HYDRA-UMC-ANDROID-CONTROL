@@ -65,18 +65,24 @@ sealed class SignInResult {
  * The sign-in, the stored profile and the sign-out, away from the view model. The stored login is reached only through
  * [AuthStore], so all of it is tested on the JVM with a fake store (the encrypted store needs a real keystore).
  */
-class AuthManager(private val store: AuthStore, private val sealer: PasswordSealer? = null) {
+class AuthManager(
+    private val store: AuthStore,
+    private val sealer: PasswordSealer? = null,
+    /** The other kept servers: the key behind sealed passwords is not dropped while one of them still needs it. */
+    private val otherServers: () -> List<String> = { emptyList() },
+) {
 
     /**
      * What is stored of the password: the plain text (only for "remember me" or the weak fingerprint sign-in) and the
      * sealed one. In the strong mode the plain text is never stored; a sealer that cannot seal stores nothing.
      */
-    private fun passwordFields(password: String, remember: Boolean, biometric: Boolean, strong: Boolean, keepSealed: String): Pair<String, String> {
+    private suspend fun passwordFields(password: String, remember: Boolean, biometric: Boolean, strong: Boolean, keepSealed: String): Pair<String, String> {
         if (biometric && strong) {
             if (password.isBlank()) return "" to keepSealed
             return "" to (sealer?.seal(password) ?: "")
         }
-        sealer?.forget()
+        val others = otherServers()
+        if (others.isEmpty() || !store.hasSealedPassword(others)) sealer?.forget()
         return (if (remember || biometric) password else "") to ""
     }
 

@@ -358,7 +358,14 @@ private fun WifiSettings(viewModel: RobotViewModel) {
     /** Last reported connection error message. */
     val lastError = viewModel.lastError.value
 
-    Column {
+    // Follows a server picked from the list below or from the header.
+    LaunchedEffect(viewModel.ipAddress.value, viewModel.port.value) {
+        ipAddress = viewModel.ipAddress.value
+        port = viewModel.port.value
+    }
+
+    Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+        SavedServersSection(viewModel)
         Text(stringResource(R.string.connection_settings), style = MaterialTheme.typography.titleLarge)
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -415,8 +422,8 @@ private fun WifiSettings(viewModel: RobotViewModel) {
         if (discoveredServers.isEmpty() && !isScanning) {
             Text(stringResource(R.string.no_results_yet), style = MaterialTheme.typography.bodySmall, color = Color.Gray)
         } else {
-            LazyColumn(modifier = Modifier.fillMaxWidth()) {
-                items(discoveredServers) { server ->
+            Column(modifier = Modifier.fillMaxWidth()) {
+                discoveredServers.forEach { server ->
                     ServerCard(server) {
                         ipAddress = server.host
                         port = server.port.toString()

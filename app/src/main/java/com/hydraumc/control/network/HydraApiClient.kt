@@ -136,8 +136,8 @@ class HydraApiException(
  * @property client The OkHttpClient instance to use.
  */
 class HydraApiClient(
-    host: String,
-    port: Int,
+    val serverHost: String,
+    val serverPort: Int,
     private val client: OkHttpClient = HydraHttp.client(),
     /** How to reach the server (see [TlsMode]); the user's setting at the time the client is made. */
     private val tlsMode: TlsMode = TlsSettingsStore.current.effectiveMode,
@@ -146,8 +146,11 @@ class HydraApiClient(
     /** Base URL of the target HYDRA-UMC server - starts as plain HTTP, and
      * getHydraInfo() below switches it to HTTPS the first time a plain-HTTP
      * probe gets no answer at all and an HTTPS one does. */
-    var baseUrl: String = (if (startsWithTls(tlsMode)) "https" else "http") + "://$host:$port"
+    var baseUrl: String = (if (startsWithTls(tlsMode)) "https" else "http") + "://$serverHost:$serverPort"
         private set
+
+    /** The server this client was made for (see [SessionBinding.id]): nothing of it is ever sent anywhere else. */
+    val serverId: String = SessionBinding.id(serverHost, serverPort)
 
     /** True once getHydraInfo() has confirmed this server only answers over
      * HTTPS (server.ts's own optional TLS_CERT_PATH/TLS_KEY_PATH - see that

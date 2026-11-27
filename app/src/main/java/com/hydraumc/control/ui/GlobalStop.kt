@@ -34,10 +34,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hydraumc.control.ui.ObscuredTouchPolicy.stopTouchZone
@@ -93,11 +95,15 @@ fun GlobalStopButton(viewModel: RobotViewModel, modifier: Modifier = Modifier, t
             fontSize = 20.sp,
             maxLines = 1,
         )
+        // With more than one server kept, the button names the one it stops.
+        val target = viewModel.stopTargetName.value.takeIf { viewModel.savedServers.value.size > 1 && it.isNotEmpty() }
         Text(
-            stringResource(R.string.stop_all_caption),
+            target ?: stringResource(R.string.stop_all_caption),
             color = Color.White,
             fontSize = 10.sp,
             maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.widthIn(max = 96.dp).testTag("stop-target"),
         )
     }
 }
@@ -135,7 +141,9 @@ fun StopAllBanner(viewModel: RobotViewModel, modifier: Modifier = Modifier) {
             .let { if (dismissible) it.clickable { viewModel.dismissStopAllStatus() } else it }
             .padding(horizontal = 16.dp, vertical = 6.dp),
     ) {
-        lines.forEachIndexed { i, line ->
+        val server = viewModel.stopAllServer.value?.let { stringResource(R.string.stop_all_server, it) }
+        // The second line says which server this STOP went to.
+        (lines.take(1) + listOfNotNull(server) + lines.drop(1)).forEachIndexed { i, line ->
             Text(
                 line,
                 color = Color.White,

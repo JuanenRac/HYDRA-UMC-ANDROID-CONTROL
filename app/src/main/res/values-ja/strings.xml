@@ -37,6 +37,17 @@
     <string name="stop_all_label">STOP</string>
     <string name="stop_all_caption">全停止</string>
     <string name="stop_all_description">STOP：すべてのロボットを今すぐ停止</string>
+    <string name="stop_all_server">サーバー: %1$s</string>
+    <string name="notification_safety_server_text">%1$s に接続中。クイック非常停止が使えます。</string>
+    <string name="error_stop_not_confirmed_server">%1$s の停止は確認されていません。ロボットを確認してください。</string>
+    <string name="servers_saved_title">保存済みサーバー</string>
+    <string name="servers_saved_hint">サーバーごとにサインイン、証明書の設定、通知を保持します。停止は使用中のサーバーに送られます。</string>
+    <string name="servers_current">使用中</string>
+    <string name="servers_current_line">%1$s(使用中)</string>
+    <string name="servers_use">使う</string>
+    <string name="servers_forget">削除</string>
+    <string name="servers_forget_title">このサーバーを削除しますか?</string>
+    <string name="servers_forget_message">%1$s と保存されたサインインをこの端末から削除します。サーバーには何も送りません。</string>
     <string name="stop_all_action">STOP · 全停止</string>
     <string name="stop_all_sending">STOP を送信しました。応答待ちです…</string>
     <string name="stop_all_done">STOP を確認しました：%1$d 台のロボットが停止</string>

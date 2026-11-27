@@ -37,6 +37,17 @@
     <string name="stop_all_label">STOP</string>
     <string name="stop_all_caption">全部停止</string>
     <string name="stop_all_description">STOP：立即停止所有机器人</string>
+    <string name="stop_all_server">服务器:%1$s</string>
+    <string name="notification_safety_server_text">已连接到 %1$s。可快速急停。</string>
+    <string name="error_stop_not_confirmed_server">%1$s 上的停止未得到确认。请检查机器人。</string>
+    <string name="servers_saved_title">已保存的服务器</string>
+    <string name="servers_saved_hint">每台服务器保留各自的登录、证书设置和通知。停止指令发送给正在使用的服务器。</string>
+    <string name="servers_current">使用中</string>
+    <string name="servers_current_line">%1$s(使用中)</string>
+    <string name="servers_use">使用</string>
+    <string name="servers_forget">忘记</string>
+    <string name="servers_forget_title">忘记这台服务器?</string>
+    <string name="servers_forget_message">将从此手机移除 %1$s 及其保存的登录。不会向它发送任何内容。</string>
     <string name="stop_all_action">STOP · 全部停止</string>
     <string name="stop_all_sending">已发送停止指令，尚无响应…</string>
     <string name="stop_all_done">STOP 已确认：%1$d 台机器人已停止</string>

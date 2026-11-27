@@ -29,6 +29,15 @@ interface AuthStore {
 
     /** Remembers which server the stored session belongs to. */
     suspend fun bindSessionServer(id: String) {}
+
+    /** Parks the active session under its server and activates the one of [id] (see [ServerSessions]). */
+    suspend fun switchServer(id: String) {}
+
+    /** Drops the parked session of the server [id]. */
+    suspend fun forgetServer(id: String) {}
+
+    /** Whether a parked session of one of [ids] holds a sealed password: the key that opens it must then stay. */
+    suspend fun hasSealedPassword(ids: List<String>): Boolean = false
 }
 
 /** The stored token, refresh token and password belong to one server: they are never sent to another one. */

@@ -15,10 +15,14 @@ interface PushEndpoint {
     suspend fun removePush(token: String)
 }
 
-/** The token last told to a server, so that it can be taken back. */
+/** The token last told to each server, so that it can be taken back from that one. */
 interface PushTokenStore {
-    fun load(): String?
-    fun save(token: String?)
+    fun load(server: String): String?
+    fun save(server: String, token: String?)
+
+    /** The servers that still hold a token of this phone. */
+    fun servers(): Set<String>
+    fun clear()
 }
 
 enum class PushResult { REGISTERED, SERVER_OFF, LISTEN_ONLY, FAILED }
@@ -30,12 +34,12 @@ fun pushLocale(language: String): String = language.lowercase().takeIf { it in S
 class PushRegistration(private val platform: PushPlatform, private val store: PushTokenStore) {
     val available: Boolean get() = platform.available
 
-    suspend fun register(server: PushEndpoint, language: String): PushResult {
+    suspend fun register(server: PushEndpoint, serverId: String, language: String): PushResult {
         if (!platform.available) return PushResult.FAILED
         val token = platform.token() ?: return PushResult.FAILED
         return try {
             server.registerPush(token, pushLocale(language))
-            store.save(token)
+            store.save(serverId, token)
             PushResult.REGISTERED
         } catch (e: HydraApiException) {
             when (e.httpCode) {
@@ -46,16 +50,44 @@ class PushRegistration(private val platform: PushPlatform, private val store: Pu
         }
     }
 
-    /** Takes the token back from [server] (when there is one to ask) and drops it at the push service. Never throws. */
-    suspend fun remove(server: PushEndpoint?) {
-        val token = store.load() ?: return
-        store.save(null)
+    /**
+     * Takes the registration of [serverId] back, asking [server] when there is a session to ask with. The token of the
+     * phone is one for every server: it is dropped at the push service when no other server keeps it, and also when
+     * [serverId] could not be told, so that it cannot go on sending. The others register again when they are next used.
+     * Never throws.
+     */
+    suspend fun remove(server: PushEndpoint?, serverId: String) {
+        val token = store.load(serverId) ?: return
+        store.save(serverId, null)
+        var told = false
         try {
-            server?.removePush(token)
+            if (server != null) {
+                server.removePush(token)
+                told = true
+            }
+        } catch (_: HydraApiException) {
+            // not told: the token is dropped below
+        } finally {
+            if (!told || store.servers().isEmpty()) drop()
+        }
+    }
+
+    /** The switch goes off: the server in use is told, and the token is dropped for all of them. Never throws. */
+    suspend fun removeAll(server: PushEndpoint?, serverId: String?) {
+        if (store.servers().isEmpty()) return
+        val token = serverId?.let { store.load(it) }
+        try {
+            if (token != null) server?.removePush(token)
         } catch (_: HydraApiException) {
             // the server forgets a dropped token the next time it tries to use it
         } finally {
-            platform.forget()
+            drop()
         }
+    }
+
+    /** Drops the token at the push service: no server reaches this phone until it registers again. */
+    fun drop() {
+        store.clear()
+        platform.forget()
     }
 }
