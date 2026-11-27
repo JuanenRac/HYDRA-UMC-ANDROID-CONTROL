@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [0.8.0.8] - STOP in every dialog and menu
 
 - **The STOP can be pressed with a dialog or a menu open:** a dialog or a menu of Android is a window of its own above the screen, so the STOP of the top bar could not be pressed while one was open. Every dialog of the app now carries the global STOP above its title, with what it did, and every menu carries it in its first row; one tap stops and the window stays. The dialogs of the system itself (permissions, installer, fingerprint) are not of the app and have none. New `StopWindowsTest`, which also fails when a screen opens a dialog or a menu without it.
 
