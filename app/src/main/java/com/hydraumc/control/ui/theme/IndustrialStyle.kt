@@ -18,43 +18,20 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
 /**
- * A modifier that applies a 3D metallic industrial look to a container.
+ * The card of a screen as a modifier: the same shape, border and faint wash as [Panel], with its inner padding.
  * @param backgroundColor The primary background color.
- * @param borderColor The border accent color.
+ * @param borderColor The border color.
  * @return The modified Modifier chain.
  */
 @Composable
 fun Modifier.metallicIndustrial(
-    backgroundColor: Color = MetallicBlueMedium,
-    borderColor: Color = MetallicBlueLight,
+    backgroundColor: Color = HydraColors.SurfaceRaised,
+    borderColor: Color = HydraColors.Outline,
 ): Modifier = this
-    .shadow(
-        elevation = 8.dp,
-        shape = RoundedCornerShape(12.dp),
-        ambientColor = Color.Black.copy(alpha = 0.5f),
-        spotColor = Color.Black,
-    )
-    .border(
-        width = 1.dp,
-        brush = Brush.verticalGradient(
-            colors = listOf(
-                borderColor.copy(alpha = 0.8f),
-                Color.Black.copy(alpha = 0.3f),
-                borderColor.copy(alpha = 0.5f)
-            )
-        ),
-        shape = RoundedCornerShape(12.dp)
-    )
-    .clip(RoundedCornerShape(12.dp))
-    .background(
-        brush = Brush.verticalGradient(
-            colors = listOf(
-                backgroundColor,
-                backgroundColor.copy(alpha = 0.9f),
-                Color.Black.copy(alpha = 0.4f)
-            )
-        )
-    )
+    .clip(RoundedCornerShape(18.dp))
+    .background(backgroundColor)
+    .background(Brush.verticalGradient(listOf(HydraColors.Accent.copy(alpha = 0.04f), Color.Transparent)))
+    .border(width = 1.dp, color = borderColor, shape = RoundedCornerShape(18.dp))
     .padding(12.dp)
 
 /**
@@ -72,7 +49,7 @@ fun Modifier.metallicButton(
 ): Modifier = this
     .shadow(
         elevation = if (pressed) 2.dp else 6.dp,
-        shape = RoundedCornerShape(8.dp)
+        shape = RoundedCornerShape(14.dp)
     )
     .border(
         width = 1.dp,
@@ -83,9 +60,9 @@ fun Modifier.metallicButton(
                 Color.Black.copy(alpha = 0.5f)
             )
         ),
-        shape = RoundedCornerShape(8.dp)
+        shape = RoundedCornerShape(14.dp)
     )
-    .clip(RoundedCornerShape(8.dp))
+    .clip(RoundedCornerShape(14.dp))
     .background(
         brush = Brush.verticalGradient(
             colors = if (pressed) {

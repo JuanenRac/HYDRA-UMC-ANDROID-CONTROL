@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **A new look, first step:** the app keeps its metallic blue and takes the structure of the sister apps of the family: one type scale in the font of the phone, raised cards with a thin border, and the shared pieces the next screens are built with (card, icon disc, status light, screen title, figure and menu row). No command, protection or text changes.
+- **Pictures of the screens:** a new workflow draws the main screens with invented data and keeps them as an artifact.
 - **Push messages from the server:** a new switch in Settings, Notifications (off by default) registers this phone, with the signed-in session, to be told through Firebase when a job finishes, a global stop is issued or the operator heartbeat is lost, even with the app closed. The messages only inform: nothing can be commanded from them. Switching it off or signing out takes the registration back. Only a build given the Firebase configuration (the secret or an ignored file) has it; any other build says so. Not tried on a real phone.
 
 ## [0.8.0.8] - STOP in every dialog and menu

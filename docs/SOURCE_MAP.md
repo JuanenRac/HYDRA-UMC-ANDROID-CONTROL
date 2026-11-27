@@ -63,6 +63,7 @@ Every file of the repository with a line on what it does: the annotated tree tha
 │   │   │   │   ├── VoiceAssistantDialog.kt # In-app mic/text button to HYDRA-UMC-VOICE-UI
 │   │   │   │   ├── theme/
 │   │   │   │   │   ├── Color.kt, Theme.kt, Typography.kt   # Material 3 color scheme, theme wrapper, type scale
+│   │   │   │   │   ├── Pieces.kt   # Shared pieces: card, icon disc, status light, screen title, figure, menu row
 │   │   │   │   │   └── HydraButton.kt, IndustrialComponents.kt, IndustrialStyle.kt   # Shared industrial-styled UI building blocks
 │   │   │   │   ├── TotpSection.kt                                                # Settings > Security: the second sign-in factor (key, recovery codes, turn on and off)
 │   │   │   │   └── SecuritySettings.kt                                           # Settings > Security: optional, configurable TLS (mode, pinned fingerprint, CA)
