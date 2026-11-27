@@ -42,7 +42,7 @@ import java.util.Locale
  * a list. Touching a robot opens its details and the way to Control.
  */
 @Composable
-fun DashboardScreen(viewModel: RobotViewModel, onOpenControl: () -> Unit = {}, onOpenSettings: () -> Unit = {}, onOpenNotices: () -> Unit = {}) {
+fun DashboardScreen(viewModel: RobotViewModel, onOpenControl: () -> Unit = {}, onOpenSettings: () -> Unit = {}, onOpenNotices: () -> Unit = {}, onOpenSecurity: () -> Unit = {}) {
     val robots = viewModel.robots.value
     val connection = viewModel.connectionState.value
     val connected = connection == WsStatus.CONNECTED
@@ -112,7 +112,7 @@ fun DashboardScreen(viewModel: RobotViewModel, onOpenControl: () -> Unit = {}, o
                     else -> null
                 },
             )
-            if (steps.pending.isNotEmpty()) NextSteps(steps, onOpenSettings)
+            if (steps.pending.isNotEmpty()) NextSteps(steps, onOpenSecurity)
         }
 
         if (robots.isEmpty()) {
@@ -172,7 +172,7 @@ private fun StatusCard(state: HomeState) {
 }
 
 @Composable
-private fun NextSteps(steps: SetupSteps, onOpenSettings: () -> Unit) {
+private fun NextSteps(steps: SetupSteps, onOpenSecurity: () -> Unit) {
     Panel(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -193,7 +193,7 @@ private fun NextSteps(steps: SetupSteps, onOpenSettings: () -> Unit) {
                         Text(stringResource(hint), style = MaterialTheme.typography.bodySmall, color = HydraColors.Muted)
                     }
                     // Only the second factor can be done from the phone.
-                    if (step == SetupStep.SECOND_FACTOR) TextButton(onClick = onOpenSettings) { Text(stringResource(R.string.home_step_do), color = HydraColors.Accent) }
+                    if (step == SetupStep.SECOND_FACTOR) TextButton(onClick = onOpenSecurity) { Text(stringResource(R.string.home_step_do), color = HydraColors.Accent) }
                 }
             }
         }

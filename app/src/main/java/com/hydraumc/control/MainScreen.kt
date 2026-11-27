@@ -15,6 +15,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -167,6 +168,11 @@ private fun MainScreenContent(
     }
     // A screen of More is opened above it: Back returns to where it was asked from.
     val openAbove: (Screen) -> Unit = { screen -> navController.navigate(screen.route) { launchSingleTop = true } }
+    var settingsTab by rememberSaveable { mutableIntStateOf(SettingsTab.CONNECTION) }
+    val openSettings: (Int) -> Unit = { tab ->
+        settingsTab = tab
+        openAbove(Screen.Settings)
+    }
 
     // Startup checks only fetch release metadata. The actual APK transfer and
     // Android installer are both initiated by the operator from this prompt.
@@ -186,7 +192,7 @@ private fun MainScreenContent(
                     // own Updates tab for exactly this in-flight state (see
                     // SettingsScreen.kt's own initialTabIndex comment).
                     updateViewModel.downloadAndInstall(update)
-                    openAbove(Screen.Settings)
+                    openSettings(SettingsTab.UPDATES)
                 }
             },
             confirmButton = {},
@@ -277,21 +283,21 @@ private fun MainScreenContent(
         }
         NavHost(navController, startDestination = Screen.Dashboard.route, Modifier.weight(1f).fillMaxWidth()) {
             composable(Screen.Dashboard.route) {
-                DashboardScreen(viewModel, onOpenControl = { openTab(Screen.Control) }, onOpenSettings = { openAbove(Screen.Settings) }, onOpenNotices = { openTab(Screen.Alerts) })
+                DashboardScreen(viewModel, onOpenControl = { openTab(Screen.Control) }, onOpenSettings = { openSettings(SettingsTab.CONNECTION) }, onOpenSecurity = { openSettings(SettingsTab.SECURITY) }, onOpenNotices = { openTab(Screen.Alerts) })
             }
             composable(Screen.Control.route) { ControlScreen(viewModel, onOpenThreeD = { openAbove(Screen.ThreeD) }) }
             composable(Screen.Camera.route) { CameraScreen(viewModel) }
             composable(Screen.ThreeD.route) { ThreeDScreen(viewModel) }
             composable(Screen.Telemetry.route) { TelemetryScreen(viewModel) }
-            composable(Screen.Settings.route) { SettingsScreen(viewModel, updateViewModel, onEnableBluetooth) }
+            composable(Screen.Settings.route) { SettingsScreen(viewModel, updateViewModel, onEnableBluetooth, openTab = settingsTab) }
             composable(Screen.Alerts.route) {
-                NoticesScreen(viewModel.notices.value, onMarkSeen = viewModel::markNoticesSeen, onSettings = { openAbove(Screen.Settings) })
+                NoticesScreen(viewModel.notices.value, onMarkSeen = viewModel::markNoticesSeen, onSettings = { openSettings(SettingsTab.NOTICES) })
             }
             composable(Screen.More.route) {
                 MoreScreen(
                     onThreeD = { openAbove(Screen.ThreeD) },
                     onTelemetry = { openAbove(Screen.Telemetry) },
-                    onSettings = { openAbove(Screen.Settings) },
+                    onSettings = openSettings,
                     onAccount = { showProfileDialog = true },
                     onAbout = { showAboutDialog = true },
                 )

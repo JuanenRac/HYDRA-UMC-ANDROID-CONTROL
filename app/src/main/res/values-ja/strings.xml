@@ -561,7 +561,6 @@
     <string name="more_settings_section">設定</string>
     <string name="more_3d_hint">空間内のロボット</string>
     <string name="more_telemetry_hint">サーバーの状態とイベントログ</string>
-    <string name="more_settings_hint">接続、Bluetooth、通知、更新、セキュリティ</string>
     <string name="more_account_hint">プロフィール、生体認証、ログアウト</string>
     <string name="more_about_hint">インストール版と作者</string>
     <string name="open_3d_view">3Dビューを開く</string>
@@ -637,6 +636,12 @@
     <string name="notices_update">新しいバージョンがあります: %1$s</string>
     <string name="notices_settings_link">通知の内容と方法</string>
     <string name="home_notices_label">未読の通知</string>
+    <string name="more_connection_title">接続と Bluetooth</string>
+    <string name="more_connection_hint">サーバー、ネットワーク検索、近くの機器</string>
+    <string name="more_notices_hint">通知の内容、プッシュ、腕時計</string>
+    <string name="more_security_title">セキュリティ</string>
+    <string name="more_security_hint">接続の保護、二段階認証、サーバー設定</string>
+    <string name="more_updates_hint">インストール版と新しい版</string>
     <!-- Common texts of the apps: written by tools/i18n_common.py of HYDRA-UMC-SDK, not by hand -->
     <string name="common_confirm">確認</string>
     <string name="common_cancel">キャンセル</string>

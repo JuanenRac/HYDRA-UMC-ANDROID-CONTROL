@@ -13,6 +13,7 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.test.core.app.ApplicationProvider
 import com.hydraumc.control.R
 import com.hydraumc.control.network.AuthStore
@@ -92,10 +93,10 @@ class EStopPresenceTest {
             stopOnScreen()
         }
         // the screens behind the cards of More
-        for (card in listOf(R.string.tab_3d_view, R.string.tab_telemetry, R.string.tab_settings)) {
+        for (card in listOf(R.string.tab_3d_view, R.string.tab_telemetry, R.string.more_connection_title, R.string.more_security_title)) {
             composeTestRule.onNodeWithTag("tab-more").performClick()
             composeTestRule.waitForIdle()
-            composeTestRule.onAllNodesWithText(app.getString(card))[0].performClick()
+            composeTestRule.onAllNodesWithText(app.getString(card))[0].performScrollTo().performClick()
             composeTestRule.waitForIdle()
             stopOnScreen()
         }

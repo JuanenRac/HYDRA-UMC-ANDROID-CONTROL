@@ -561,7 +561,6 @@
     <string name="more_settings_section">设置</string>
     <string name="more_3d_hint">机器人在空间中的姿态</string>
     <string name="more_telemetry_hint">服务器状态与事件日志</string>
-    <string name="more_settings_hint">连接、蓝牙、通知、更新、安全</string>
     <string name="more_account_hint">个人资料、生物识别与退出登录</string>
     <string name="more_about_hint">已安装版本与作者</string>
     <string name="open_3d_view">打开 3D 视图</string>
@@ -637,6 +636,12 @@
     <string name="notices_update">有新版本：%1$s</string>
     <string name="notices_settings_link">哪些情况会通知我</string>
     <string name="home_notices_label">未读通知</string>
+    <string name="more_connection_title">连接与蓝牙</string>
+    <string name="more_connection_hint">服务器、网络搜索、附近设备</string>
+    <string name="more_notices_hint">通知内容、推送与手表</string>
+    <string name="more_security_title">安全</string>
+    <string name="more_security_hint">连接安全、第二因素、服务器选项</string>
+    <string name="more_updates_hint">已安装版本与新版本</string>
     <!-- Common texts of the apps: written by tools/i18n_common.py of HYDRA-UMC-SDK, not by hand -->
     <string name="common_confirm">确认</string>
     <string name="common_cancel">取消</string>

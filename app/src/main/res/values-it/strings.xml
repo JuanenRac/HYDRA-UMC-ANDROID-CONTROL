@@ -561,7 +561,6 @@
     <string name="more_settings_section">Impostazioni</string>
     <string name="more_3d_hint">Il robot nello spazio</string>
     <string name="more_telemetry_hint">Stato del server e registro eventi</string>
-    <string name="more_settings_hint">Connessione, Bluetooth, avvisi, aggiornamenti, sicurezza</string>
     <string name="more_account_hint">Profilo, biometria e uscita</string>
     <string name="more_about_hint">Versione installata e autore</string>
     <string name="open_3d_view">Apri la vista 3D</string>
@@ -637,6 +636,12 @@
     <string name="notices_update">Disponibile una nuova versione: %1$s</string>
     <string name="notices_settings_link">Cosa mi avvisa e come</string>
     <string name="home_notices_label">Avvisi non letti</string>
+    <string name="more_connection_title">Connessione e Bluetooth</string>
+    <string name="more_connection_hint">Server, ricerca in rete, dispositivi vicini</string>
+    <string name="more_notices_hint">Cosa avvisa, push e orologio</string>
+    <string name="more_security_title">Sicurezza</string>
+    <string name="more_security_hint">Sicurezza della connessione, secondo fattore, opzioni del server</string>
+    <string name="more_updates_hint">Versione installata e nuove</string>
     <!-- Common texts of the apps: written by tools/i18n_common.py of HYDRA-UMC-SDK, not by hand -->
     <string name="common_confirm">Conferma</string>
     <string name="common_cancel">Annulla</string>

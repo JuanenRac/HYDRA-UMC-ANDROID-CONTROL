@@ -145,6 +145,13 @@ class ScreenshotsTest {
     }
 
     @Test
+    fun settings() {
+        val model = viewModel()
+        val updates = AppUpdateViewModel(app)
+        shot("06b_settings") { SettingsScreen(model, updates) }
+    }
+
+    @Test
     fun control() {
         val model = viewModel()
         shot("04_control") { ControlScreen(model) }

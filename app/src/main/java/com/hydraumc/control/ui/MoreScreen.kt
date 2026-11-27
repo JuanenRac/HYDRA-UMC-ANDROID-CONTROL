@@ -13,9 +13,12 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Apps
+import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Shield
+import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material.icons.filled.ViewInAr
 import androidx.compose.material3.MaterialTheme
@@ -31,7 +34,7 @@ import com.hydraumc.control.ui.theme.ScreenTitle
 
 /** Everything that is not on the bottom bar. */
 @Composable
-fun MoreScreen(onThreeD: () -> Unit, onTelemetry: () -> Unit, onSettings: () -> Unit, onAccount: () -> Unit, onAbout: () -> Unit) {
+fun MoreScreen(onThreeD: () -> Unit, onTelemetry: () -> Unit, onSettings: (Int) -> Unit, onAccount: () -> Unit, onAbout: () -> Unit) {
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 14.dp).padding(bottom = 16.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
@@ -41,7 +44,10 @@ fun MoreScreen(onThreeD: () -> Unit, onTelemetry: () -> Unit, onSettings: () -> 
         MenuRow(Icons.Filled.ViewInAr, stringResource(R.string.tab_3d_view), stringResource(R.string.more_3d_hint), onClick = onThreeD)
         MenuRow(Icons.Filled.Terminal, stringResource(R.string.tab_telemetry), stringResource(R.string.more_telemetry_hint), onClick = onTelemetry)
         SectionLabel(stringResource(R.string.more_settings_section))
-        MenuRow(Icons.Filled.Settings, stringResource(R.string.tab_settings), stringResource(R.string.more_settings_hint), onClick = onSettings)
+        MenuRow(Icons.Filled.Wifi, stringResource(R.string.more_connection_title), stringResource(R.string.more_connection_hint)) { onSettings(SettingsTab.CONNECTION) }
+        MenuRow(Icons.Filled.Notifications, stringResource(R.string.tab_notifications), stringResource(R.string.more_notices_hint)) { onSettings(SettingsTab.NOTICES) }
+        MenuRow(Icons.Filled.Shield, stringResource(R.string.more_security_title), stringResource(R.string.more_security_hint)) { onSettings(SettingsTab.SECURITY) }
+        MenuRow(Icons.Filled.Download, stringResource(R.string.common_updates), stringResource(R.string.more_updates_hint)) { onSettings(SettingsTab.UPDATES) }
         MenuRow(Icons.Filled.Person, stringResource(R.string.common_account), stringResource(R.string.more_account_hint), onClick = onAccount)
         MenuRow(Icons.Filled.Info, stringResource(R.string.about_title), stringResource(R.string.more_about_hint), onClick = onAbout)
     }
