@@ -237,7 +237,7 @@ fun ControlScreen(viewModel: RobotViewModel) {
                         colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
                         textStyle = LocalTextStyle.current.copy(fontWeight = FontWeight.Black, color = Color.White)
                     )
-                    ExposedDropdownMenu(expanded = expandedRobot, onDismissRequest = { expandedRobot = false }) {
+                    StopExposedDropdownMenu(expanded = expandedRobot, onDismissRequest = { expandedRobot = false }) {
                         robots.forEach { robot ->
                             DropdownMenuItem(
                                 text = { Text("${robot.name} (A${robot.id} - ${robot.model})") },

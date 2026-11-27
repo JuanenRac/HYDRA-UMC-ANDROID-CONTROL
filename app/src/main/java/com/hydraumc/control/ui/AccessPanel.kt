@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -219,7 +218,7 @@ fun AccessPanel(viewModel: RobotViewModel, robotId: Int, nowMs: Long) {
     }
 
     if (confirmTakeOver && canTakeOver) {
-        AlertDialog(
+        StopAlertDialog(
             onDismissRequest = { confirmTakeOver = false },
             title = { Text(stringResource(R.string.access_take_over_title)) },
             text = { Text(stringResource(R.string.access_take_over_message, claim?.ownerUsername ?: "")) },

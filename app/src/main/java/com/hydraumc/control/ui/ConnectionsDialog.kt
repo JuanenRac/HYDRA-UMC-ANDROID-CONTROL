@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -101,7 +100,7 @@ fun ConnectionsDialog(viewModel: RobotViewModel, onDismiss: () -> Unit) {
     val events = viewModel.connectionEvents.value
     val failure = viewModel.connectionsFailure.value
 
-    AlertDialog(
+    StopAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.connections_title)) },
         text = {

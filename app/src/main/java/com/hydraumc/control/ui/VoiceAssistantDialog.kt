@@ -45,7 +45,7 @@ fun VoiceAssistantDialog(
     val reply by viewModel.latestVoiceAssistantReply
     val lastError by viewModel.lastError
 
-    AlertDialog(
+    StopAlertDialog(
         onDismissRequest = {
             viewModel.clearVoiceAssistantReply()
             onDismiss()

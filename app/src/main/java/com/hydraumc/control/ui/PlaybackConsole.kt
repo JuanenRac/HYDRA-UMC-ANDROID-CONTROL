@@ -34,7 +34,6 @@ import androidx.compose.material.icons.filled.PowerOff
 import androidx.compose.material.icons.filled.PowerSettingsNew
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Stop
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -172,7 +171,7 @@ fun PlaybackConsole(viewModel: RobotViewModel, selectedRobot: RobotState?) {
             ClaimStanding.MINE_HERE, ClaimStanding.MINE_ELSEWHERE -> stringResource(R.string.play_confirm_mine)
             ClaimStanding.OTHER -> stringResource(R.string.play_confirm_other, viewModel.claimOf(selectedRobot.id)?.ownerUsername ?: "")
         }
-        AlertDialog(
+        StopAlertDialog(
             onDismissRequest = { confirmingPlay = false },
             title = { Text(stringResource(R.string.play_confirm_title)) },
             text = {
@@ -199,7 +198,7 @@ fun PlaybackConsole(viewModel: RobotViewModel, selectedRobot: RobotState?) {
 
     if (confirmingSafeMode) {
         val disabling = selectedRobot.isEnabled
-        AlertDialog(
+        StopAlertDialog(
             onDismissRequest = { confirmingSafeMode = false },
             title = { Text(stringResource(if (disabling) R.string.safe_mode_disable_title else R.string.safe_mode_enable_title)) },
             text = { Text(stringResource(if (disabling) R.string.safe_mode_disable_message else R.string.safe_mode_enable_message, selectedRobot.name)) },

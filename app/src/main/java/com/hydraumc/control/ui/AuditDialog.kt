@@ -20,7 +20,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -101,7 +100,7 @@ fun AuditDialog(viewModel: RobotViewModel, onDismiss: () -> Unit) {
     val failure = viewModel.auditFailure.value
     val busy = viewModel.auditBusy.value
 
-    AlertDialog(
+    StopAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.audit_title)) },
         text = {

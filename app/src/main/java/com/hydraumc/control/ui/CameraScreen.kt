@@ -75,7 +75,7 @@ fun CameraScreen(viewModel: RobotViewModel) {
                     unfocusedTextColor = Color.White
                 )
             )
-            ExposedDropdownMenu(
+            StopExposedDropdownMenu(
                 expanded = expanded,
                 onDismissRequest = { expanded = false }
             ) {

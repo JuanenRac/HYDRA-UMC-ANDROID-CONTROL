@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -59,7 +58,7 @@ fun WorkSelector(viewModel: RobotViewModel, robot: RobotState) {
     }
     if (open) {
         val files = viewModel.workFiles.value
-        AlertDialog(
+        StopAlertDialog(
             onDismissRequest = { open = false },
             title = { Text(stringResource(R.string.work_dialog_title)) },
             text = {
