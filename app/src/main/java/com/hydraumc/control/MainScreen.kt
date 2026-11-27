@@ -309,7 +309,10 @@ private fun MainScreenContent(
             composable(Screen.Telemetry.route) { TelemetryScreen(viewModel) }
             composable(Screen.Settings.route) { SettingsScreen(viewModel, updateViewModel, onEnableBluetooth, openTab = settingsTab) }
             composable(Screen.Alerts.route) {
-                NoticesScreen(viewModel.notices.value, onMarkSeen = viewModel::markNoticesSeen, onSettings = { openSettings(SettingsTab.NOTICES) })
+                NoticesScreen(
+                    viewModel.notices.value, onMarkSeen = viewModel::markNoticesSeen, onSettings = { openSettings(SettingsTab.NOTICES) },
+                    server = com.hydraumc.control.ui.ServerRecordUi(viewModel.serverRecord.reading, viewModel.serverRecord.busy.value) { viewModel.serverRecord.refresh() },
+                )
             }
             composable(Screen.Help.route) {
                 HelpScreen(helpTopic) { topic ->

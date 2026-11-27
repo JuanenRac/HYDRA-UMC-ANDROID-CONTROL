@@ -34,8 +34,13 @@ import java.text.DateFormat
 import java.util.Date
 
 @Composable
-fun NoticesScreen(notices: List<Notice>, onMarkSeen: () -> Unit, onSettings: () -> Unit) {
+fun NoticesScreen(notices: List<Notice>, onMarkSeen: () -> Unit, onSettings: () -> Unit, server: ServerRecordUi? = null) {
     var filter by rememberSaveable { mutableStateOf<NoticeGroup?>(null) }
+    // The phone's own list first; the server is asked only when its part is opened.
+    var ofServer by rememberSaveable { mutableStateOf(false) }
+    if (server != null && ofServer) {
+        androidx.compose.runtime.LaunchedEffect(Unit) { server.onRefresh() }
+    }
     val unseen = Notices.unseen(notices)
     val shown = notices.filter { filter == null || it.kind.group == filter }
     Column(
@@ -47,6 +52,16 @@ fun NoticesScreen(notices: List<Notice>, onMarkSeen: () -> Unit, onSettings: () 
             if (unseen > 0) stringResource(R.string.notices_attention, unseen) else stringResource(R.string.notices_calm),
         ) {
             if (notices.any { !it.seen }) TextButton(onClick = onMarkSeen) { Text(stringResource(R.string.notices_mark_seen), color = HydraColors.Accent) }
+        }
+        if (server != null) {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FilterChip(selected = !ofServer, onClick = { ofServer = false }, label = { Text(stringResource(R.string.record_tab_phone)) })
+                FilterChip(selected = ofServer, onClick = { ofServer = true }, label = { Text(stringResource(R.string.record_tab_server)) })
+            }
+            if (ofServer) {
+                ServerRecordView(server)
+                return@Column
+            }
         }
         Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             val filters = listOf(
