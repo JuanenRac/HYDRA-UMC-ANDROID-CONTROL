@@ -52,7 +52,7 @@ class RobotViewModelAccessTest {
 
     /** Answers by path; `commandAnswer` is what the command route says. */
     @Volatile private var commandAnswer: () -> MockResponse = { MockResponse().setResponseCode(200).setBody("{}") }
-    @Volatile private var claimAnswer: () -> MockResponse = { MockResponse().setResponseCode(200).setBody("""{"success":true}""") }
+    @Volatile private var claimAnswer: () -> MockResponse = { MockResponse().setResponseCode(200).setBody("""{"success":true,"reservation":{},"reservationHistory":[]}""") }
 
     @Before
     fun setUp() {

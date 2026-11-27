@@ -49,7 +49,7 @@ class RobotViewModelConditionalTest {
     private val bodies = CopyOnWriteArrayList<String>()
 
     @Volatile private var commandAnswer: () -> MockResponse = { MockResponse().setResponseCode(200).setBody("""{"success":true}""") }
-    @Volatile private var claimAnswer: () -> MockResponse = { MockResponse().setResponseCode(200).setBody("""{"success":true}""") }
+    @Volatile private var claimAnswer: () -> MockResponse = { MockResponse().setResponseCode(200).setBody("""{"success":true,"reservation":{},"reservationHistory":[]}""") }
     @Volatile private var robotAnswer: () -> MockResponse = { MockResponse().setResponseCode(404).setBody("{}") }
     @Volatile private var auditAnswer: () -> MockResponse = { MockResponse().setResponseCode(404).setBody("{}") }
 
@@ -192,7 +192,7 @@ class RobotViewModelConditionalTest {
 
     @Test
     fun `reserving and releasing carry the revision, a take-over does not`() {
-        claimAnswer = { MockResponse().setResponseCode(200).setBody("""{"success":true,"revision":"after-claim"}""") }
+        claimAnswer = { MockResponse().setResponseCode(200).setBody("""{"success":true,"reservation":{},"reservationHistory":[],"revision":"after-claim"}""") }
         val viewModel = newViewModel()
 
         viewModel.claimSelectedRobot()

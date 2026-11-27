@@ -29,7 +29,9 @@ package com.hydraumc.control.network
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import hydra.umc.client.HydraPostRobotByIdClaimBody
 import hydra.umc.client.HydraPostRobotByIdJogArmBody
+import hydra.umc.client.HydraPostRobotByIdReleaseBody
 import hydra.umc.client.HydraPostTotpBeginBody
 import hydra.umc.client.HydraPostTotpConfirmBody
 import hydra.umc.client.HydraPostTotpDisableBody
@@ -314,17 +316,15 @@ class HydraApiClient(
      * Reserves a robot for this account on this controller. [ttlMs] null lets the server pick its
      * default; [force] (administrators only) takes over a reservation held by someone else.
      */
-    suspend fun postClaim(robotId: Int, ttlMs: Long? = null, force: Boolean = false, ifMatch: String? = null): JSONObject = withContext(Dispatchers.IO) {
-        val body = JSONObject().put("controllerId", SessionController.id)
-        if (ttlMs != null) body.put("ttlMs", ttlMs)
-        if (force) body.put("force", true)
-        executeExpectingJson(controlRequest("/api/robot/$robotId/claim", body, ifMatch))
+    suspend fun postClaim(robotId: Int, ttlMs: Long? = null, force: Boolean = false, ifMatch: String? = null): JSONObject = typedCall(reservations) { api ->
+        val body = HydraPostRobotByIdClaimBody(ttlMs = ttlMs?.toDouble(), force = if (force) true else null, controllerId = SessionController.id)
+        asJson(api.postRobotByIdClaim(robotId.toLong(), headerIfMatch = ifMatch, headerXControllerId = SessionController.id, body = body).toJson())
     }
 
     /** Releases the reservation of a robot held by this account on this controller (idempotent on the server). */
-    suspend fun postRelease(robotId: Int, ifMatch: String? = null): JSONObject = withContext(Dispatchers.IO) {
-        val body = JSONObject().put("controllerId", SessionController.id)
-        executeExpectingJson(controlRequest("/api/robot/$robotId/release", body, ifMatch))
+    suspend fun postRelease(robotId: Int, ifMatch: String? = null): JSONObject = typedCall(reservations) { api ->
+        val body = HydraPostRobotByIdReleaseBody(controllerId = SessionController.id)
+        asJson(api.postRobotByIdRelease(robotId.toLong(), headerIfMatch = ifMatch, headerXControllerId = SessionController.id, body = body).toJson())
     }
 
     /** Arms (true) or disarms (false) the jog of one robot; only demanded by the server when the administrator turned it on. */
@@ -397,14 +397,6 @@ class HydraApiClient(
     } catch (e: HydraApiException) {
         if (e.isNotFound) null else throw e
     }
-
-    private fun controlRequest(path: String, body: JSONObject, ifMatch: String? = null): Request = Request.Builder()
-        .url("$baseUrl$path")
-        .header("Authorization", "Bearer ${authToken ?: ""}")
-        .header("X-Controller-Id", SessionController.id)
-        .apply { if (ifMatch != null) header("If-Match", ifMatch) }
-        .post(body.toString().toRequestBody(JSON_MEDIA_TYPE))
-        .build()
 
     /** One robot with its revision (GET /api/robot/:id); null from an older server without the route. */
     suspend fun getRobot(robotId: Int): RobotRead? = withContext(Dispatchers.IO) {
@@ -589,17 +581,22 @@ class HydraApiClient(
      * The typed client of the SDK (`hydra.umc.client.HydraServerClient`), carried over the same HTTP client, token and error rules as the calls written
      * by hand in this class (see [OkHttpHydraTransport]). docs/typed_client_inventory.json says which routes go through it.
      */
-    private val typed: HydraServerClient by lazy {
-        HydraServerClient(OkHttpHydraTransport({ baseUrl }, { authToken }, { client }, ::executeWithHeaders))
-    }
+    private val transport by lazy { OkHttpHydraTransport({ baseUrl }, { authToken }, { client }, ::executeWithHeaders) }
+
+    private val typed: HydraServerClient by lazy { HydraServerClient(transport) }
+
+    /** The typed client of the reservation routes: over answers completed by [completeReservationAnswer]. */
+    private val reservations: HydraServerClient by lazy { HydraServerClient { request -> completeReservationAnswer(transport.send(request)) } }
 
     /**
      * One call of the typed client. A refusal or a network failure arrives as the [HydraApiException] it always was; an answer that does not have
      * the shape of the contract (a field missing or of another type) is a [HydraApiException] too, never a crash of the caller.
      */
-    private suspend fun <T> typedCall(call: suspend (HydraServerClient) -> T): T = withContext(Dispatchers.IO) {
+    private suspend fun <T> typedCall(call: suspend (HydraServerClient) -> T): T = typedCall(typed, call)
+
+    private suspend fun <T> typedCall(api: HydraServerClient, call: suspend (HydraServerClient) -> T): T = withContext(Dispatchers.IO) {
         try {
-            call(typed)
+            call(api)
         } catch (e: HydraApiException) {
             throw e
         } catch (e: ClassCastException) {
@@ -656,6 +653,16 @@ class HydraApiClient(
     }
 
     companion object {
+        /**
+         * What a server may leave out of the answer to a claim or a release that the app still accepts: a server of the first
+         * contract sends no `revision` (an empty one is never used as If-Match), and the release of a robot that was never
+         * reserved has no `reservationHistory`. Anything else that is missing stays an error.
+         */
+        internal fun completeReservationAnswer(answer: Any?): Any? {
+            if (answer !is Map<*, *> || answer["success"] !is Boolean) return answer
+            return mapOf<Any?, Any?>("revision" to "", "reservationHistory" to emptyList<Any?>()) + answer
+        }
+
         /** Required TLS means the very first request already goes to https. */
         internal fun startsWithTls(mode: TlsMode): Boolean = mode == TlsMode.REQUIRED
 

@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- **Reserving and releasing a robot go through the typed client of the SDK:** `POST /api/robot/{id}/claim` and `POST /api/robot/{id}/release` are no longer written by hand. The request is the same (token, controller id, `If-Match`), a refusal is the same `HydraApiException`, and an answer without the shape of the contract is one too. A server that sends no revision, and the release of a robot that was never reserved (no history), are still accepted.
 - **A server that answers very fast no longer loses the first events of the live connection:** the socket callbacks could run before the app had stored the socket, and were then dropped (no "connected" state, or no sign-in request after a rejected session). Each connection attempt now has a number and a socket that opens after a disconnect is closed. The unit tests also record any exception that no coroutine handled and fail with its real source, instead of failing a later unrelated test.
 - **The vendored files follow the SDK contract again:** the SDK is pinned to its newest release and the vendored server answers now include the routes of the watch release notice, so the nightly family check finds no drift.
 - **The phone tells the server about the watch notice:** on connecting, and when the switch changes, the app sends whether it tells the watch about a newer release (with a random identity of this installation), so an administrator can see it. A server without that route is ignored.
