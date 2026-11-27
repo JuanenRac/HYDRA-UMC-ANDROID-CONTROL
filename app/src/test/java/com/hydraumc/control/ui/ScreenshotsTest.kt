@@ -99,6 +99,12 @@ class ScreenshotsTest {
     }
 
     @Test
+    fun more() {
+        viewModel()
+        shot("06_more") { MoreScreen({}, {}, {}, {}, {}) }
+    }
+
+    @Test
     fun control() {
         val model = viewModel()
         shot("04_control") { ControlScreen(model) }

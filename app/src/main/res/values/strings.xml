@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">HYDRA-UMC CONTROL</string>
-    <string name="tab_dashboard">@string/common_dashboard</string>
     <string name="tab_control">Control</string>
-    <string name="tab_camera">@string/common_camera</string>
     <string name="select_camera_feed">Select Camera Feed</string>
     <string name="robot_camera_fallback_name">Robot Camera %d</string>
     <string name="camera_enabled_label">Camera Enabled</string>
@@ -13,7 +11,7 @@
     <string name="tab_3d_view">3D View</string>
     <string name="tab_telemetry">@string/common_telemetry</string>
     <string name="tab_settings">@string/common_settings</string>
-    <string name="dashboard_title">Dashboard</string>
+    <string name="dashboard_title">Home</string>
     <string name="server_status">Server Status: %s</string>
     <string name="no_robots">No connected or configured robots.</string>
     <string name="online">ONLINE</string>
@@ -34,8 +32,6 @@
     <string name="connection_settings">Connection Settings</string>
     <string name="auto_discovery">Auto Discovery</string>
     <string name="no_servers_found">No servers found.</string>
-    <string name="server_selector_with_count">Servers (%d)</string>
-    <string name="server_selector_none">No Servers</string>
     <string name="error_enter_ip_port">Please enter an IP and port.</string>
     <string name="error_invalid_port">Invalid port: %s</string>
     <string name="error_robot_not_found">The selected robot no longer exists on the server.</string>
@@ -559,6 +555,19 @@
     <string name="canota_error">Reason: %1$s</string>
     <string name="canota_percent">%1$d%%</string>
 
+    <string name="tab_home">Home</string>
+    <string name="tab_cameras">Cameras</string>
+    <string name="tab_more">More</string>
+    <string name="more_subtitle">Settings and tools</string>
+    <string name="more_tools_section">Tools</string>
+    <string name="more_settings_section">Settings</string>
+    <string name="more_3d_hint">The robot in space</string>
+    <string name="more_telemetry_hint">Server health and event log</string>
+    <string name="more_settings_hint">Connection, Bluetooth, notices, updates, security</string>
+    <string name="more_account_hint">Your profile, biometrics and sign out</string>
+    <string name="more_about_hint">Installed version and authorship</string>
+    <string name="open_3d_view">Open the 3D view</string>
+    <string name="header_server_line">%1$s · %2$s</string>
     <!-- Common texts of the apps: written by tools/i18n_common.py of HYDRA-UMC-SDK, not by hand -->
     <string name="common_confirm">Confirm</string>
     <string name="common_cancel">Cancel</string>

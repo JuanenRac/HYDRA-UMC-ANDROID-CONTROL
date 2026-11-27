@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">HYDRA-UMC CONTROL</string>
-    <string name="tab_dashboard">@string/common_dashboard</string>
     <string name="tab_control">控制</string>
-    <string name="tab_camera">@string/common_camera</string>
     <string name="select_camera_feed">选择摄像头</string>
     <string name="robot_camera_fallback_name">机器人摄像头 %d</string>
     <string name="camera_enabled_label">摄像头已启用</string>
@@ -13,7 +11,7 @@
     <string name="tab_3d_view">3D 视图</string>
     <string name="tab_telemetry">@string/common_telemetry</string>
     <string name="tab_settings">@string/common_settings</string>
-    <string name="dashboard_title">仪表盘</string>
+    <string name="dashboard_title">首页</string>
     <string name="server_status">服务器状态：%s</string>
     <string name="no_robots">没有已连接或已配置的机器人。</string>
     <string name="online">在线</string>
@@ -34,8 +32,6 @@
     <string name="connection_settings">连接设置</string>
     <string name="auto_discovery">自动发现</string>
     <string name="no_servers_found">未找到任何服务器。</string>
-    <string name="server_selector_with_count">服务器 (%d)</string>
-    <string name="server_selector_none">无服务器</string>
     <string name="error_enter_ip_port">请输入 IP 和端口。</string>
     <string name="error_invalid_port">无效端口：%s</string>
     <string name="error_robot_not_found">所选机器人在服务器上已不存在。</string>
@@ -559,6 +555,19 @@
     <string name="canota_error">原因：%1$s</string>
     <string name="canota_percent">%1$d%%</string>
 
+    <string name="tab_home">首页</string>
+    <string name="tab_cameras">摄像头</string>
+    <string name="tab_more">更多</string>
+    <string name="more_subtitle">设置与工具</string>
+    <string name="more_tools_section">工具</string>
+    <string name="more_settings_section">设置</string>
+    <string name="more_3d_hint">机器人在空间中的姿态</string>
+    <string name="more_telemetry_hint">服务器状态与事件日志</string>
+    <string name="more_settings_hint">连接、蓝牙、通知、更新、安全</string>
+    <string name="more_account_hint">个人资料、生物识别与退出登录</string>
+    <string name="more_about_hint">已安装版本与作者</string>
+    <string name="open_3d_view">打开 3D 视图</string>
+    <string name="header_server_line">%1$s · %2$s</string>
     <!-- Common texts of the apps: written by tools/i18n_common.py of HYDRA-UMC-SDK, not by hand -->
     <string name="common_confirm">确认</string>
     <string name="common_cancel">取消</string>

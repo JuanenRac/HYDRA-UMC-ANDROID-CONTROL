@@ -197,7 +197,7 @@ per its own comment ("for stable runtime behavior"); confirm with the owner if t
 - **Tests**: JUnit + Robolectric + Roborazzi dependencies are declared; the default Android Studio template package
   (`com.example`) is still there (including the Roborazzi screenshot test), but real `com.hydraumc.control` unit
   tests now exist too - `Parol6KinematicsTest.kt`, `RobotViewContractTest.kt`, `HydraWebSocketTest.kt`,
-  `SubHeaderRowLayoutTest.kt`, `MjpegStreamParserTest.kt`, `GitHubReleaseUpdaterTest.kt`,
+  `TopBarLayoutTest.kt`, `MjpegStreamParserTest.kt`, `GitHubReleaseUpdaterTest.kt`,
   `ReleaseMetadataParserTest.kt`, `SemanticVersionTest.kt`, `RobotViewModelSendAtomicCommandTest.kt`,
   `RobotViewModelSendVoiceTurnTest.kt`, `BoundedRequestScopeTest.kt`, and `WatchCompanionProtocolTest.kt`, `JoystickHoldTest.kt`, `HydraApiClientErrorsTest.kt` and `RobotViewModelCommandErrorsTest.kt`
   (90 `@Test` methods total across those files plus the `com.example` template, all passing via

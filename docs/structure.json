@@ -60,14 +60,14 @@
             "pt": "Esqueleto de navegação inferior"
           },
           "tree_desc": {
-            "en": "Bottom-nav scaffold, top bar (server selector, profile, telemetry, settings)",
-            "es": "Estructura de navegación inferior, barra superior (selector de servidor, perfil, telemetría, ajustes)",
-            "de": "Unteres Navigations-Grundgerüst, obere Leiste (Serverauswahl, Profil, Telemetrie, Einstellungen)",
-            "fr": "Structure de navigation inférieure, barre supérieure (sélecteur de serveur, profil, télémétrie, réglages)",
-            "it": "Struttura di navigazione inferiore, top bar (selettore server, profilo, telemetria, impostazioni)",
-            "ja": "ボトムナビゲーションのスキャフォールド、トップバー（サーバーセレクター、プロフィール、テレメトリ、設定）",
-            "zh": "底部导航脚手架、顶部栏（服务器选择器、资料、遥测、设置）",
-            "pt": "Esqueleto de navegação inferior, barra superior (seletor de servidor, perfil, telemetria, definições)"
+            "en": "Bottom bar (Home, Control, Cameras, More), header and screens",
+            "es": "Barra inferior (Inicio, Control, Cámaras, Más), cabecera y pantallas",
+            "de": "Untere Leiste (Start, Control, Kameras, Mehr), Kopfzeile und Bildschirme",
+            "fr": "Barre inférieure (Accueil, Control, Caméras, Plus), en-tête et écrans",
+            "it": "Barra inferiore (Home, Control, Camere, Altro), intestazione e schermate",
+            "ja": "下部バー（ホーム、Control、カメラ、その他）、ヘッダー、各画面",
+            "zh": "底部栏（首页、Control、摄像头、更多）、页眉与各屏幕",
+            "pt": "Barra inferior (Início, Control, Câmaras, Mais), cabeçalho e ecrãs"
           }
         },
         {

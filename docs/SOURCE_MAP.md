@@ -52,6 +52,8 @@ Every file of the repository with a line on what it does: the annotated tree tha
 │   │   │   │   ├── DashboardScreen.kt      # 3D carousel robot picker + system health + module matrix
 │   │   │   │   ├── GlobalStop.kt           # Global STOP button + result banner (one tap, every robot)
 │   │   │   │   ├── Joystick3D.kt           # Reusable 2-axis joystick control component
+│   │   │   │   ├── HydraTopBar.kt          # Header of every screen: mark, global STOP, server in use, voice, account
+│   │   │   │   ├── MoreScreen.kt           # "More": the tools and settings as explained cards
 │   │   │   │   ├── LoginScreen.kt          # Username/password + IP/port entry, biometric login
 │   │   │   │   ├── MjpegPlayer.kt          # MJPEG stream parser + Canvas renderer
 │   │   │   │   ├── PlaybackConsole.kt      # Shared floating STOP/play/pause/stop console

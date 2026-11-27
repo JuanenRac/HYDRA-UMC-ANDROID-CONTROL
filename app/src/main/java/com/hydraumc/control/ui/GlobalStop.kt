@@ -14,6 +14,7 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -72,15 +73,16 @@ fun GlobalStopButton(viewModel: RobotViewModel, modifier: Modifier = Modifier, t
     Column(
         modifier = modifier
             .let { if (touchZone) it.stopTouchZone() else it }
-            .height(40.dp)
-            .widthIn(min = 64.dp)
-            .background(StopRed.copy(alpha = glow), RoundedCornerShape(8.dp))
+            .height(52.dp)
+            .widthIn(min = 112.dp)
+            .background(StopRed.copy(alpha = glow), RoundedCornerShape(26.dp))
+            .border(2.dp, Color(0xFFFF8A80), RoundedCornerShape(26.dp))
             .clickable {
                 vibrateOn(vibrator, longArrayOf(0, 80, 40, 80))
                 viewModel.globalStop()
             }
             .semantics { contentDescription = description }
-            .padding(horizontal = 8.dp),
+            .padding(horizontal = 14.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
@@ -88,13 +90,13 @@ fun GlobalStopButton(viewModel: RobotViewModel, modifier: Modifier = Modifier, t
             stringResource(R.string.stop_all_label),
             color = Color.White,
             fontWeight = FontWeight.Black,
-            fontSize = 15.sp,
+            fontSize = 20.sp,
             maxLines = 1,
         )
         Text(
             stringResource(R.string.stop_all_caption),
             color = Color.White,
-            fontSize = 9.sp,
+            fontSize = 10.sp,
             maxLines = 1,
         )
     }

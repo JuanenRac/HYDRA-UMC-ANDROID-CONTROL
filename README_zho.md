@@ -245,7 +245,7 @@ APK 会生成在 `app/build/outputs/apk/debug/app-debug.apk`。使用 `adb insta
 HYDRA-UMC-ANDROID-CONTROL/
 ├── app/src/main/java/com/hydraumc/control/
 │   ├── MainActivity.kt                                          入口点——启动画面、登录/主界面门禁、冷启动安全的全局紧急停止处理
-│   ├── MainScreen.kt                                            底部导航脚手架、顶部栏（服务器选择器、资料、遥测、设置）
+│   ├── MainScreen.kt                                            底部栏（首页、Control、摄像头、更多）、页眉与各屏幕
 │   ├── kinematics/                                              PAROL6 机械臂的正逆运动学
 │   ├── model/                                                   应用读取到的服务器状态
 │   ├── network/                                                 REST 客户端、WebSocket 和发现

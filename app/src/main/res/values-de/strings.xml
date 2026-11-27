@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">HYDRA-UMC CONTROL</string>
-    <string name="tab_dashboard">@string/common_dashboard</string>
     <string name="tab_control">Steuerung</string>
-    <string name="tab_camera">@string/common_camera</string>
     <string name="select_camera_feed">Kamera auswählen</string>
     <string name="robot_camera_fallback_name">Roboterkamera %d</string>
     <string name="camera_enabled_label">Kamera aktiviert</string>
@@ -13,7 +11,7 @@
     <string name="tab_3d_view">3D-Ansicht</string>
     <string name="tab_telemetry">@string/common_telemetry</string>
     <string name="tab_settings">@string/common_settings</string>
-    <string name="dashboard_title">Dashboard</string>
+    <string name="dashboard_title">Start</string>
     <string name="server_status">Server-Status: %s</string>
     <string name="no_robots">Keine Roboter verbunden oder konfiguriert.</string>
     <string name="online">ONLINE</string>
@@ -34,8 +32,6 @@
     <string name="connection_settings">Verbindungseinstellungen</string>
     <string name="auto_discovery">Automatische Erkennung</string>
     <string name="no_servers_found">Keine Server gefunden.</string>
-    <string name="server_selector_with_count">Server (%d)</string>
-    <string name="server_selector_none">Keine Server</string>
     <string name="error_enter_ip_port">Bitte geben Sie eine IP und einen Port ein.</string>
     <string name="error_invalid_port">Ungültiger Port: %s</string>
     <string name="error_robot_not_found">Der ausgewählte Roboter existiert nicht mehr auf dem Server.</string>
@@ -559,6 +555,19 @@
     <string name="canota_error">Grund: %1$s</string>
     <string name="canota_percent">%1$d %%</string>
 
+    <string name="tab_home">Start</string>
+    <string name="tab_cameras">Kameras</string>
+    <string name="tab_more">Mehr</string>
+    <string name="more_subtitle">Einstellungen und Werkzeuge</string>
+    <string name="more_tools_section">Werkzeuge</string>
+    <string name="more_settings_section">Einstellungen</string>
+    <string name="more_3d_hint">Der Roboter im Raum</string>
+    <string name="more_telemetry_hint">Serverzustand und Ereignisprotokoll</string>
+    <string name="more_settings_hint">Verbindung, Bluetooth, Meldungen, Updates, Sicherheit</string>
+    <string name="more_account_hint">Profil, Biometrie und Abmelden</string>
+    <string name="more_about_hint">Installierte Version und Urheber</string>
+    <string name="open_3d_view">3D-Ansicht öffnen</string>
+    <string name="header_server_line">%1$s · %2$s</string>
     <!-- Common texts of the apps: written by tools/i18n_common.py of HYDRA-UMC-SDK, not by hand -->
     <string name="common_confirm">Bestätigen</string>
     <string name="common_cancel">Abbrechen</string>

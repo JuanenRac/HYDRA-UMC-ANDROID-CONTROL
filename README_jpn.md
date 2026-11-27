@@ -245,7 +245,7 @@ APK は `app/build/outputs/apk/debug/app-debug.apk` に生成されます。`adb
 HYDRA-UMC-ANDROID-CONTROL/
 ├── app/src/main/java/com/hydraumc/control/
 │   ├── MainActivity.kt                                          エントリポイント——スプラッシュ、ログイン/メイン画面ゲーティング、コールドスタートセーフなグローバル緊急停止処理
-│   ├── MainScreen.kt                                            ボトムナビゲーションのスキャフォールド、トップバー（サーバーセレクター、プロフィール、テレメトリ、設定）
+│   ├── MainScreen.kt                                            下部バー（ホーム、Control、カメラ、その他）、ヘッダー、各画面
 │   ├── kinematics/                                              PAROL6 アームの順運動学と逆運動学
 │   ├── model/                                                   アプリが読み取るサーバーの状態
 │   ├── network/                                                 REST クライアント、WebSocket、探索

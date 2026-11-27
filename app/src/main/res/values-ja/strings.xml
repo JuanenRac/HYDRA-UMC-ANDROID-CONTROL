@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">HYDRA-UMC CONTROL</string>
-    <string name="tab_dashboard">@string/common_dashboard</string>
     <string name="tab_control">制御</string>
-    <string name="tab_camera">@string/common_camera</string>
     <string name="select_camera_feed">カメラを選択</string>
     <string name="robot_camera_fallback_name">ロボットカメラ %d</string>
     <string name="camera_enabled_label">カメラ有効</string>
@@ -13,7 +11,7 @@
     <string name="tab_3d_view">3D ビュー</string>
     <string name="tab_telemetry">@string/common_telemetry</string>
     <string name="tab_settings">@string/common_settings</string>
-    <string name="dashboard_title">ダッシュボード</string>
+    <string name="dashboard_title">ホーム</string>
     <string name="server_status">サーバー状態：%s</string>
     <string name="no_robots">接続または設定済みのロボットがありません。</string>
     <string name="online">オンライン</string>
@@ -34,8 +32,6 @@
     <string name="connection_settings">接続設定</string>
     <string name="auto_discovery">自動検出</string>
     <string name="no_servers_found">サーバーが見つかりませんでした。</string>
-    <string name="server_selector_with_count">サーバー (%d)</string>
-    <string name="server_selector_none">サーバーなし</string>
     <string name="error_enter_ip_port">IP とポートを入力してください。</string>
     <string name="error_invalid_port">無効なポート：%s</string>
     <string name="error_robot_not_found">選択したロボットはサーバー上に存在しなくなりました。</string>
@@ -559,6 +555,19 @@
     <string name="canota_error">理由: %1$s</string>
     <string name="canota_percent">%1$d%%</string>
 
+    <string name="tab_home">ホーム</string>
+    <string name="tab_cameras">カメラ</string>
+    <string name="tab_more">その他</string>
+    <string name="more_subtitle">設定とツール</string>
+    <string name="more_tools_section">ツール</string>
+    <string name="more_settings_section">設定</string>
+    <string name="more_3d_hint">空間内のロボット</string>
+    <string name="more_telemetry_hint">サーバーの状態とイベントログ</string>
+    <string name="more_settings_hint">接続、Bluetooth、通知、更新、セキュリティ</string>
+    <string name="more_account_hint">プロフィール、生体認証、ログアウト</string>
+    <string name="more_about_hint">インストール版と作者</string>
+    <string name="open_3d_view">3Dビューを開く</string>
+    <string name="header_server_line">%1$s · %2$s</string>
     <!-- Common texts of the apps: written by tools/i18n_common.py of HYDRA-UMC-SDK, not by hand -->
     <string name="common_confirm">確認</string>
     <string name="common_cancel">キャンセル</string>

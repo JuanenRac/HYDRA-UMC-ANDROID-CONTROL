@@ -246,7 +246,7 @@ Un semplice `./gradlew assembleDebug` (il percorso "Compilazione Manuale" sopra,
 HYDRA-UMC-ANDROID-CONTROL/
 ├── app/src/main/java/com/hydraumc/control/
 │   ├── MainActivity.kt                                          Punto di ingresso - splash, gating login/schermata principale, gestione dell'E-STOP globale sicura in avvio a freddo
-│   ├── MainScreen.kt                                            Struttura di navigazione inferiore, top bar (selettore server, profilo, telemetria, impostazioni)
+│   ├── MainScreen.kt                                            Barra inferiore (Home, Control, Camere, Altro), intestazione e schermate
 │   ├── kinematics/                                              cinematica diretta e inversa del braccio PAROL6
 │   ├── model/                                                   lo stato del server come lo legge l'app
 │   ├── network/                                                 client REST, WebSocket e individuazione
