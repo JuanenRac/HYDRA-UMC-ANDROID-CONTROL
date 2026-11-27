@@ -515,9 +515,11 @@
     <string name="watch_alert_stop_confirmed">STOP vom Server bestätigt</string>
     <string name="watch_confirm_relay_off">Die Bestätigung von der Uhr ist am Telefon ausgeschaltet.</string>
     <string name="pairing_switch_label">Kopplung per QR-Code oder Link erlauben</string>
-    <string name="pairing_switch_hint">Die Admin-Seite des Servers zeigt einen QR-Code mit Adresse und Zertifikat-Fingerabdruck. Mit der Telefonkamera scannen oder den Link hier einfügen. Die App zeigt, was sie gelesen hat, und fragt, bevor sie etwas speichert. Standardmäßig aus.</string>
+    <string name="pairing_switch_hint">Die Admin-Seite des Servers zeigt einen QR-Code mit Adresse und Zertifikat-Fingerabdruck. Hier oder mit der Telefonkamera scannen oder den Link einfügen. Die Kamera öffnet sich nur, wenn Sie auf Scannen tippen. Die App zeigt, was sie gelesen hat, und fragt, bevor sie etwas speichert. Standardmäßig aus.</string>
     <string name="pairing_paste_label">Kopplungslink</string>
     <string name="pairing_paste_button">Link lesen</string>
+    <string name="pairing_scan_button">QR-Code scannen</string>
+    <string name="pairing_scan_unavailable">Dieses Telefon konnte den Code-Leser nicht öffnen. Fügen Sie stattdessen den Link ein.</string>
     <string name="pairing_off">Die Kopplung ist ausgeschaltet. Im Zugriffsbereich einschalten.</string>
     <string name="pairing_dialog_title">Mit diesem Server koppeln?</string>
     <string name="pairing_dialog_message">%1$s unter %2$s, Port %3$d.</string>

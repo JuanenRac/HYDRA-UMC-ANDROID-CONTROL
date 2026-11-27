@@ -46,6 +46,7 @@ Every file of the repository with a line on what it does: the annotated tree tha
 │   │   │   │   ├── DeadManJogControl.kt    # Hold-to-move buttons of the continuous jog and the link indicator
 │   │   │   │   ├── LinkAndWatchSettings.kt # Switches of the continuous jog, the link, the watch and the pairing; the pairing dialog
 │   │   │   │   ├── SavedServersSection.kt  # The kept servers in Settings: use one, forget one
+│   │   │   │   ├── PairingScanner.kt       # Reads the pairing QR code with the camera (the code scanner of Google Play services)
 │   │   │   │   ├── WorkSelector.kt         # The Work loaded in the robot and the list to pick another from
 │   │   │   │   ├── AccessPanel.kt          # Reservation and jog-arming panel of the Control screen
 │   │   │   │   ├── AuditDialog.kt           # Audit record of the server (administrators), with the chain check

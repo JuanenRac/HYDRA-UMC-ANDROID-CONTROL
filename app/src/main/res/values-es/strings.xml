@@ -515,9 +515,11 @@
     <string name="watch_alert_stop_confirmed">STOP confirmado por el servidor</string>
     <string name="watch_confirm_relay_off">La confirmación desde el reloj está desactivada en el teléfono.</string>
     <string name="pairing_switch_label">Permitir el emparejamiento por código QR o enlace</string>
-    <string name="pairing_switch_hint">La página de administración del servidor muestra un código QR con su dirección y la huella de su certificado. Escanéalo con la cámara del teléfono o pega aquí el enlace. La app muestra lo leído y pregunta antes de guardar nada. Desactivado por defecto.</string>
+    <string name="pairing_switch_hint">La página de administración del servidor muestra un código QR con su dirección y la huella de su certificado. Escanéalo desde aquí o con la cámara del teléfono, o pega el enlace. La cámara solo se abre al tocar Escanear. La app muestra lo leído y pregunta antes de guardar nada. Desactivado por defecto.</string>
     <string name="pairing_paste_label">Enlace de emparejamiento</string>
     <string name="pairing_paste_button">Leer enlace</string>
+    <string name="pairing_scan_button">Escanear el código QR</string>
+    <string name="pairing_scan_unavailable">Este teléfono no pudo abrir el lector de códigos. Pega el enlace.</string>
     <string name="pairing_off">El emparejamiento está desactivado. Actívalo en el panel de acceso.</string>
     <string name="pairing_dialog_title">¿Emparejar con este servidor?</string>
     <string name="pairing_dialog_message">%1$s en %2$s, puerto %3$d.</string>

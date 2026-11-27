@@ -515,9 +515,11 @@
     <string name="watch_alert_stop_confirmed">STOPがサーバーに確認されました</string>
     <string name="watch_confirm_relay_off">ウォッチからの確認はスマートフォンでオフになっています。</string>
     <string name="pairing_switch_label">QRコードまたはリンクでのペアリングを許可</string>
-    <string name="pairing_switch_hint">サーバーの管理ページには、アドレスと証明書のフィンガープリントを含むQRコードが表示されます。スマートフォンのカメラで読み取るか、リンクをここに貼り付けてください。アプリは読み取った内容を表示し、保存する前に確認します。初期設定ではオフです。</string>
+    <string name="pairing_switch_hint">サーバーの管理ページには、アドレスと証明書のフィンガープリントを含むQRコードが表示されます。ここから、またはスマートフォンのカメラで読み取るか、リンクを貼り付けてください。カメラは読み取りボタンを押したときだけ開きます。アプリは読み取った内容を表示し、保存する前に確認します。初期設定ではオフです。</string>
     <string name="pairing_paste_label">ペアリングリンク</string>
     <string name="pairing_paste_button">リンクを読み取る</string>
+    <string name="pairing_scan_button">QRコードを読み取る</string>
+    <string name="pairing_scan_unavailable">この端末ではコードリーダーを開けませんでした。代わりにリンクを貼り付けてください。</string>
     <string name="pairing_off">ペアリングはオフです。アクセスパネルでオンにしてください。</string>
     <string name="pairing_dialog_title">このサーバーとペアリングしますか?</string>
     <string name="pairing_dialog_message">%1$s(%2$s、ポート %3$d)</string>
