@@ -660,4 +660,13 @@
     <string name="common_up_to_date">Al día</string>
     <string name="common_system_default">Predeterminado del sistema</string>
     <string name="common_select_a_robot">Selecciona un robot</string>
+    <!-- Push messages of the server -->
+    <string name="push_switch_label">Notificaciones push del servidor</string>
+    <string name="push_switch_hint">Avisa a este teléfono cuando termina un trabajo, se da una parada global o se pierde el latido del operador, aunque la app esté cerrada. Solo informan: desde ellas no se puede mandar nada. El servidor debe tener el push activado.</string>
+    <string name="push_unavailable">Esta compilación no tiene configuración de Firebase: las notificaciones push están desactivadas.</string>
+    <string name="push_server_off">Este servidor tiene las notificaciones push desactivadas.</string>
+    <string name="push_failed">No se pudo registrar este teléfono para las notificaciones push.</string>
+    <string name="push_registered">Este teléfono está registrado: el servidor le avisará.</string>
+    <string name="push_listen_only">Solo escucha está activado: este teléfono no se registra.</string>
+    <string name="push_channel_name">Avisos del servidor</string>
 </resources>

@@ -36,3 +36,31 @@ jobs:
       - name: Test the release publish script keeps the token off the command line
         if: ${{ hashFiles('tools/test_publish_script.py') != '' }}
         run: python tools/test_publish_script.py
+
+  push-build:
+    name: Release build with the Firebase configuration
+    # The secret only reaches code of this repository that the owner pushed: the main branch and his own pull requests.
+    # A fork, a bot and an unreviewed branch never see it. Nothing is uploaded.
+    if: ${{ github.actor == github.repository_owner && (github.ref == 'refs/heads/main' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Java
+        uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
+        with:
+          distribution: temurin
+          java-version: "21"
+      - name: Build the release APK with push on
+        env:
+          HYDRA_UMC_CI: "1"
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          chmod +x gradlew
+          ./gradlew --no-daemon assembleRelease | tee "$RUNNER_TEMP/build.log"
+          grep -q "^PUSH_CONFIG=ON" "$RUNNER_TEMP/build.log" || echo "::warning::the secret GOOGLE_SERVICES_JSON is not set: this build has push off"

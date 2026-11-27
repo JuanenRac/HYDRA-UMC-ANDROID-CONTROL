@@ -19,6 +19,9 @@ captures/
 *.keystore
 keystore.properties
 
+# Firebase configuration - given to the build, never committed
+google-services.json
+
 # OS / editor
 .DS_Store
 .artifacts/97d37a92-5d59-4f92-b4ae-3a283cb8b179/implementation_plan.artifact.md

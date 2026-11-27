@@ -22,6 +22,7 @@ import kotlinx.coroutines.flow.first
 
 private val Context.notificationPrefsDataStore by preferencesDataStore(name = "notification_prefs")
 private val KEY_NOTIFICATIONS_ENABLED = booleanPreferencesKey("notifications_enabled")
+private val KEY_PUSH_ENABLED = booleanPreferencesKey("server_push_enabled")
 
 /**
  * Helper class to manage loading and saving the in-app notifications toggle.
@@ -31,6 +32,18 @@ class NotificationPrefs(private val context: Context) {
     /** Loads whether notifications are enabled - defaults to true, matching this app's always-on behavior before this preference existed. */
     suspend fun isEnabled(): Boolean {
         return context.notificationPrefsDataStore.data.first()[KEY_NOTIFICATIONS_ENABLED] ?: true
+    }
+
+    /** Whether this phone asks the server for push messages - off until the person turns it on. */
+    suspend fun isPushEnabled(): Boolean {
+        return context.notificationPrefsDataStore.data.first()[KEY_PUSH_ENABLED] ?: false
+    }
+
+    /** Persists the push preference. */
+    suspend fun setPushEnabled(enabled: Boolean) {
+        context.notificationPrefsDataStore.edit { prefs ->
+            prefs[KEY_PUSH_ENABLED] = enabled
+        }
     }
 
     /** Persists the notifications-enabled preference. */

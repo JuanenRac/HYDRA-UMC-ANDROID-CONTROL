@@ -660,4 +660,13 @@
     <string name="common_up_to_date">Up to date</string>
     <string name="common_system_default">System default</string>
     <string name="common_select_a_robot">Select a robot</string>
+    <!-- Push messages of the server -->
+    <string name="push_switch_label">Push messages from the server</string>
+    <string name="push_switch_hint">Tells this phone when a job finishes, a global stop is issued or the operator heartbeat is lost, even with the app closed. They only inform: nothing can be commanded from them. The server must have push switched on.</string>
+    <string name="push_unavailable">This build has no Firebase configuration: push messages are off.</string>
+    <string name="push_server_off">This server has push messages switched off.</string>
+    <string name="push_failed">This phone could not be registered for push messages.</string>
+    <string name="push_registered">This phone is registered: the server will notify it.</string>
+    <string name="push_listen_only">Listen only is on: this phone is not registered.</string>
+    <string name="push_channel_name">Server messages</string>
 </resources>

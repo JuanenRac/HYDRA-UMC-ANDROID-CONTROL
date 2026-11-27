@@ -29,6 +29,7 @@ package com.hydraumc.control.network
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import hydra.umc.client.HydraPostPushDevicesBody
 import hydra.umc.client.HydraPostRobotByIdClaimBody
 import hydra.umc.client.HydraPostRobotByIdJogArmBody
 import hydra.umc.client.HydraPostRobotByIdReleaseBody
@@ -214,6 +215,16 @@ class HydraApiClient(
     /** Tells the server whether this phone tells its watch about a newer release (shown to an administrator; nothing else happens). */
     suspend fun postWatchReleaseNotice(deviceId: String, notifiesWatch: Boolean) {
         typedCall { api -> api.postWatchReleaseNotice(HydraPostWatchReleaseNoticeBody(deviceId, "android", notifiesWatch)) }
+    }
+
+    /** Tells the server the Firebase token of this phone, for the account of the signed-in session. */
+    suspend fun postPushDevice(token: String, locale: String) {
+        typedCall { api -> api.postPushDevices(HydraPostPushDevicesBody(token, "android", locale)) }
+    }
+
+    /** Takes the token back. */
+    suspend fun deletePushDevice(token: String) {
+        typedCall { api -> api.deletePushDevicesByToken(token) }
     }
 
     override suspend fun totpStatus(): HydraTotpStatus = typedCall { api -> api.getTotpStatus() }

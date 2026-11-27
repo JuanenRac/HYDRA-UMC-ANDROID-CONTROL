@@ -11,6 +11,8 @@
   "/api/login",
   "/api/logout",
   "/api/operator/presence",
+  "/api/push/devices",
+  "/api/push/devices/{p}",
   "/api/refresh",
   "/api/robot/{p}",
   "/api/robot/{p}/claim",

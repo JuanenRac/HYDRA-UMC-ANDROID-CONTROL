@@ -660,4 +660,13 @@
     <string name="common_up_to_date">已是最新</string>
     <string name="common_system_default">跟随系统</string>
     <string name="common_select_a_robot">请选择一个机器人</string>
+    <!-- Push messages of the server -->
+    <string name="push_switch_label">服务器推送通知</string>
+    <string name="push_switch_hint">当作业完成、发出全局停止或操作员在场心跳丢失时通知本手机,即使应用已关闭。通知仅用于告知,无法从中下达任何指令。服务器必须开启推送。</string>
+    <string name="push_unavailable">此构建版本没有 Firebase 配置:推送通知已关闭。</string>
+    <string name="push_server_off">此服务器已关闭推送通知。</string>
+    <string name="push_failed">无法为本手机注册推送通知。</string>
+    <string name="push_registered">本手机已注册:服务器将向它发送通知。</string>
+    <string name="push_listen_only">已开启仅监听:本手机不会注册。</string>
+    <string name="push_channel_name">服务器消息</string>
 </resources>

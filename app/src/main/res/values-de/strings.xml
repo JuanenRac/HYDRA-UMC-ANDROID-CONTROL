@@ -660,4 +660,13 @@
     <string name="common_up_to_date">Aktuell</string>
     <string name="common_system_default">Systemstandard</string>
     <string name="common_select_a_robot">Roboter auswählen</string>
+    <!-- Push messages of the server -->
+    <string name="push_switch_label">Push-Nachrichten vom Server</string>
+    <string name="push_switch_hint">Benachrichtigt dieses Telefon, wenn ein Auftrag endet, ein globaler Stopp ausgelöst wird oder das Lebenszeichen des Bedieners ausfällt, auch bei geschlossener App. Sie informieren nur: Es lässt sich nichts darüber steuern. Push muss am Server eingeschaltet sein.</string>
+    <string name="push_unavailable">Dieser Build hat keine Firebase-Konfiguration: Push-Nachrichten sind aus.</string>
+    <string name="push_server_off">Auf diesem Server sind Push-Nachrichten ausgeschaltet.</string>
+    <string name="push_failed">Dieses Telefon konnte nicht für Push-Nachrichten registriert werden.</string>
+    <string name="push_registered">Dieses Telefon ist registriert: Der Server wird es benachrichtigen.</string>
+    <string name="push_listen_only">Nur Zuhören ist an: Dieses Telefon wird nicht registriert.</string>
+    <string name="push_channel_name">Meldungen des Servers</string>
 </resources>

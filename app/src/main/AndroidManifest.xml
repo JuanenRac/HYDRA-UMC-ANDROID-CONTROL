@@ -106,6 +106,15 @@
                 android:resource="@xml/update_file_paths" />
         </provider>
 
+        <!-- The push messages of the server (Firebase Cloud Messaging). A build without the Firebase configuration never
+             starts Firebase, so this is never called. No token is made until the person switches the messages on. -->
+        <meta-data android:name="firebase_messaging_auto_init_enabled" android:value="false" />
+        <service android:name=".push.HydraPushService" android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+
         <!-- Receives only Data Layer messages from the Watch APK with this
              same package name and signing certificate. It relays recognised
              text through the normal authenticated Server session; it never

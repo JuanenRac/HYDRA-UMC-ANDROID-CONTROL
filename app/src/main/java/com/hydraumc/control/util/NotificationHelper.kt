@@ -54,6 +54,8 @@ object NotificationHelper {
     private const val CHANNEL_ID = "hydra_mission_alerts"
     private const val ESTOP_CHANNEL_ID = "hydra_safety_alerts"
     private const val PERSISTENT_ID = 1001
+    /** The channel the server names in its push messages (FCM_ANDROID_CHANNEL of HYDRA-UMC-SERVER). */
+    private const val SERVER_CHANNEL_ID = "hydra_umc_server"
 
     // Distinct PendingIntent request codes for sendAlert()'s "open app" intent
     // vs showSafetyNotification()'s own "open app" intent. Both target
@@ -69,6 +71,7 @@ object NotificationHelper {
     private const val REQUEST_CODE_ALERT_OPEN = 100
     private const val REQUEST_CODE_SAFETY_OPEN = 200
     private const val REQUEST_CODE_SAFETY_ESTOP = 201
+    private const val REQUEST_CODE_SERVER_OPEN = 300
 
     /** Initializes the notification channels. */
     fun createChannel(context: Context) {
@@ -88,6 +91,10 @@ object NotificationHelper {
                 setShowBadge(false)
             }
             notificationManager.createNotificationChannel(safetyChannel)
+
+            // The push messages of the server: information only.
+            val serverChannel = NotificationChannel(SERVER_CHANNEL_ID, context.getString(R.string.push_channel_name), NotificationManager.IMPORTANCE_HIGH)
+            notificationManager.createNotificationChannel(serverChannel)
         }
     }
 
@@ -114,6 +121,33 @@ object NotificationHelper {
         val notificationManager: NotificationManager =
             context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         notificationManager.notify(System.currentTimeMillis().toInt(), builder.build())
+    }
+
+    /**
+     * A push message of the server that arrived with the app on screen. It only informs: no action, and a tap just brings the
+     * app forward without restarting its screens.
+     */
+    fun showServerNotice(context: Context, title: String, message: String, tag: String) {
+        val intent = Intent(context, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
+        }
+        val pendingIntent = PendingIntent.getActivity(
+            context,
+            REQUEST_CODE_SERVER_OPEN,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+        val builder = NotificationCompat.Builder(context, SERVER_CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setContentTitle(title)
+            .setContentText(message)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(message))
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setContentIntent(pendingIntent)
+            .setAutoCancel(true)
+        val notificationManager: NotificationManager =
+            context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.notify(tag, 0, builder.build())
     }
 
     /** Shows a persistent notification with an E-STOP action. */
