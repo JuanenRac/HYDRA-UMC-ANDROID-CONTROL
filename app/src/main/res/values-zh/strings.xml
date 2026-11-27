@@ -13,10 +13,7 @@
     <string name="tab_settings">@string/common_settings</string>
     <string name="dashboard_title">首页</string>
     <string name="no_robots">没有已连接或已配置的机器人。</string>
-    <string name="online">在线</string>
-    <string name="offline">离线</string>
     <string name="tool">工具：%s</string>
-    <string name="pos_arm">位置（机械臂）：</string>
     <string name="pos_xy">位置（XY 工作台）：</string>
     <string name="speed">速度：%s mm/s</string>
     <string name="accel">加速度：%s mm/s²</string>
@@ -104,7 +101,6 @@
     <string name="uptime_label">运行时间：%s</string>
     <string name="controllers_label">控制器数：%d</string>
     <string name="robots_label">机器人数：%d</string>
-    <string name="role_label">角色：%s</string>
     <string name="no_telemetry_data">未收到遥测数据</string>
     <string name="clear_logs_desc">清除日志</string>
     <string name="remember_me_label">记住我</string>
