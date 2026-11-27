@@ -45,7 +45,7 @@ import com.hydraumc.control.util.FirstRun
 import com.hydraumc.control.viewmodel.RobotViewModel
 
 /** Where somebody not signed in is. */
-enum class EntryStep { WELCOME, DISCOVERY, SIGN_IN }
+enum class EntryStep { WELCOME, DISCOVERY, SIGN_IN, HELP }
 
 /** The shape of the big buttons of these screens. */
 internal val BigButtonShape = RoundedCornerShape(14.dp)
@@ -82,7 +82,16 @@ fun SignInFlow(viewModel: RobotViewModel, firstRun: Boolean) {
                 onManual = { step = EntryStep.SIGN_IN },
             )
         }
-        EntryStep.SIGN_IN -> LoginScreen(viewModel, onSearch = search, onAbout = { about = true })
+        EntryStep.SIGN_IN -> LoginScreen(viewModel, onSearch = search, onAbout = { about = true }, onHelp = { step = EntryStep.HELP })
+        EntryStep.HELP -> {
+            BackHandler { step = EntryStep.SIGN_IN }
+            Column(Modifier.fillMaxSize().background(HydraColors.Background).statusBarsPadding().navigationBarsPadding()) {
+                IconButton(onClick = { step = EntryStep.SIGN_IN }) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.common_previous), tint = HydraColors.Accent)
+                }
+                HelpScreen(HelpTopic.START)
+            }
+        }
     }
     // Remembered once somebody gets in, so the welcome is not shown again after signing out.
     val signedIn = viewModel.isLoggedIn.value

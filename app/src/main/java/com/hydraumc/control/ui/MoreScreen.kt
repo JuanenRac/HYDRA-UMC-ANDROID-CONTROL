@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.material.icons.filled.Apps
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Notifications
@@ -34,7 +35,7 @@ import com.hydraumc.control.ui.theme.ScreenTitle
 
 /** Everything that is not on the bottom bar. */
 @Composable
-fun MoreScreen(onThreeD: () -> Unit, onTelemetry: () -> Unit, onSettings: (Int) -> Unit, onAccount: () -> Unit, onAbout: () -> Unit) {
+fun MoreScreen(onThreeD: () -> Unit, onTelemetry: () -> Unit, onSettings: (Int) -> Unit, onAccount: () -> Unit, onAbout: () -> Unit, onHelp: () -> Unit = {}) {
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 14.dp).padding(bottom = 16.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
@@ -49,6 +50,7 @@ fun MoreScreen(onThreeD: () -> Unit, onTelemetry: () -> Unit, onSettings: (Int) 
         MenuRow(Icons.Filled.Shield, stringResource(R.string.more_security_title), stringResource(R.string.more_security_hint)) { onSettings(SettingsTab.SECURITY) }
         MenuRow(Icons.Filled.Download, stringResource(R.string.common_updates), stringResource(R.string.more_updates_hint)) { onSettings(SettingsTab.UPDATES) }
         MenuRow(Icons.Filled.Person, stringResource(R.string.common_account), stringResource(R.string.more_account_hint), onClick = onAccount)
+        MenuRow(Icons.AutoMirrored.Filled.HelpOutline, stringResource(R.string.help_title), stringResource(R.string.help_subtitle), onClick = onHelp)
         MenuRow(Icons.Filled.Info, stringResource(R.string.about_title), stringResource(R.string.more_about_hint), onClick = onAbout)
     }
 }

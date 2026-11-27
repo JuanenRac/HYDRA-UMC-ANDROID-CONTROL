@@ -123,7 +123,7 @@ app/src/main/java/com/hydraumc/control/
 ├── ui/
 │   ├── SplashScreen.kt          # Animated splash screen
 │   ├── LoginScreen.kt           # Biometric-aware access control
-│   ├── DashboardScreen.kt       # 3D carousel + system health + module matrix
+│   ├── DashboardScreen.kt       # Home: state, next steps, robot list; server health card
 │   ├── ControlScreen.kt         # Jog controls + I/O (valves/pumps) + speed/acceleration sliders
 │   ├── CameraScreen.kt          # MJPEG viewer screen wrapping MjpegPlayer
 │   ├── MjpegPlayer.kt           # Canvas-based MJPEG frame decoder/renderer

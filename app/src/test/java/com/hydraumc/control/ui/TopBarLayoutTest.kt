@@ -50,7 +50,7 @@ class TopBarLayoutTest {
         composeTestRule.waitForIdle()
 
         val width = composeTestRule.onRoot().fetchSemanticsNode().boundsInRoot.right
-        for (id in listOf(R.string.stop_all_description, R.string.voice_assistant_title, R.string.user_profile_title)) {
+        for (id in listOf(R.string.stop_all_description, R.string.voice_assistant_title, R.string.help_title, R.string.user_profile_title)) {
             val node = composeTestRule.onNodeWithContentDescription(app.getString(id))
             node.assertIsDisplayed()
             val bounds = node.fetchSemanticsNode().boundsInRoot

@@ -57,6 +57,8 @@ sealed class Screen(val route: String, @param:StringRes val titleRes: Int, val i
     object ThreeD : Screen("threed", R.string.tab_3d_view, Icons.Filled.ViewInAr)
     /** The Industrial Telemetry screen (from More). */
     object Telemetry : Screen("telemetry", R.string.tab_telemetry, Icons.Filled.Terminal)
+    /** Help by screen and level (from the header and More). */
+    object Help : Screen("help", R.string.help_title, Icons.Filled.Info)
     /** The Application Settings screen (from More). */
     object Settings : Screen("settings", R.string.tab_settings, Icons.Filled.Settings)
 }
@@ -65,7 +67,7 @@ sealed class Screen(val route: String, @param:StringRes val titleRes: Int, val i
 val items = listOf(Screen.Dashboard, Screen.Control, Screen.Camera, Screen.Alerts, Screen.More)
 
 /** The screens reached from More: the bar keeps More selected while one of them is open. */
-private val moreRoutes = setOf(Screen.ThreeD.route, Screen.Telemetry.route, Screen.Settings.route)
+private val moreRoutes = setOf(Screen.ThreeD.route, Screen.Telemetry.route, Screen.Settings.route, Screen.Help.route)
 
 /**
  * Main application screen that provides the scaffold for navigation and global UI components.
@@ -174,6 +176,22 @@ private fun MainScreenContent(
         openAbove(Screen.Settings)
     }
 
+    // The help opens on the topic of the screen it is asked from.
+    var helpTopic by rememberSaveable { mutableStateOf<HelpTopic?>(null) }
+    val openHelp: () -> Unit = {
+        if (currentDestination?.route != Screen.Help.route) {
+            helpTopic = when (currentDestination?.route) {
+                Screen.Dashboard.route -> HelpTopic.HOME
+                Screen.Control.route, Screen.ThreeD.route -> HelpTopic.CONTROL
+                Screen.Camera.route -> HelpTopic.CAMERAS
+                Screen.Alerts.route -> HelpTopic.NOTICES
+                Screen.Settings.route -> HelpTopic.ACCOUNT
+                else -> null
+            }
+            openAbove(Screen.Help)
+        }
+    }
+
     // Startup checks only fetch release metadata. The actual APK transfer and
     // Android installer are both initiated by the operator from this prompt.
     if (updateState is AppUpdateState.Available) {
@@ -207,7 +225,7 @@ private fun MainScreenContent(
     Scaffold(
         topBar = {
             Column {
-                HydraTopBar(viewModel, onVoice = { showVoiceAssistantDialog = true }, onProfile = { showProfileDialog = true })
+                HydraTopBar(viewModel, onVoice = { showVoiceAssistantDialog = true }, onProfile = { showProfileDialog = true }, onHelp = openHelp)
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                 StopAllBanner(viewModel)
             }
@@ -293,12 +311,28 @@ private fun MainScreenContent(
             composable(Screen.Alerts.route) {
                 NoticesScreen(viewModel.notices.value, onMarkSeen = viewModel::markNoticesSeen, onSettings = { openSettings(SettingsTab.NOTICES) })
             }
+            composable(Screen.Help.route) {
+                HelpScreen(helpTopic) { topic ->
+                    when (topic) {
+                        HelpTopic.HOME -> openTab(Screen.Dashboard)
+                        HelpTopic.CONTROL -> openTab(Screen.Control)
+                        HelpTopic.CAMERAS -> openTab(Screen.Camera)
+                        HelpTopic.NOTICES -> openTab(Screen.Alerts)
+                        HelpTopic.ACCOUNT -> openSettings(SettingsTab.SECURITY)
+                        else -> Unit
+                    }
+                }
+            }
             composable(Screen.More.route) {
                 MoreScreen(
                     onThreeD = { openAbove(Screen.ThreeD) },
                     onTelemetry = { openAbove(Screen.Telemetry) },
                     onSettings = openSettings,
                     onAccount = { showProfileDialog = true },
+                    onHelp = {
+                        helpTopic = null
+                        openAbove(Screen.Help)
+                    },
                     onAbout = { showAboutDialog = true },
                 )
             }

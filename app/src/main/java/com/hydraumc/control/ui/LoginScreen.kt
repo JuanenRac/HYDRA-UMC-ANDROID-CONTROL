@@ -13,6 +13,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.material.icons.automirrored.filled.Login
 import androidx.compose.material.icons.filled.Dns
 import androidx.compose.material.icons.filled.ErrorOutline
@@ -54,7 +55,7 @@ import com.hydraumc.control.viewmodel.RobotViewModel
  * @param viewModel The shared RobotViewModel.
  */
 @Composable
-fun LoginScreen(viewModel: RobotViewModel, onSearch: (() -> Unit)? = null, onAbout: (() -> Unit)? = null) {
+fun LoginScreen(viewModel: RobotViewModel, onSearch: (() -> Unit)? = null, onAbout: (() -> Unit)? = null, onHelp: (() -> Unit)? = null) {
     var reachHelp by rememberSaveable { mutableStateOf(false) }
     if (reachHelp) ReachHelpDialog { reachHelp = false }
     val context = LocalContext.current
@@ -96,9 +97,16 @@ fun LoginScreen(viewModel: RobotViewModel, onSearch: (() -> Unit)? = null, onAbo
     val buttonShape = BigButtonShape
 
     Box(Modifier.fillMaxSize().background(entryBackdrop())) {
-        onAbout?.let { open ->
-            IconButton(onClick = open, Modifier.align(Alignment.TopEnd).statusBarsPadding().padding(8.dp)) {
-                Icon(Icons.Filled.Info, contentDescription = stringResource(R.string.about_title), tint = HydraColors.Muted)
+        Row(Modifier.align(Alignment.TopEnd).statusBarsPadding().padding(8.dp)) {
+            onHelp?.let { open ->
+                IconButton(onClick = open) {
+                    Icon(Icons.AutoMirrored.Filled.HelpOutline, contentDescription = stringResource(R.string.help_title), tint = HydraColors.Muted)
+                }
+            }
+            onAbout?.let { open ->
+                IconButton(onClick = open) {
+                    Icon(Icons.Filled.Info, contentDescription = stringResource(R.string.about_title), tint = HydraColors.Muted)
+                }
             }
         }
         Column(

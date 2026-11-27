@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- **Help by screen and level:** the "?" of the header opens the help of the screen you are on; it is also in More and on the sign-in. Basic, advanced, technical or all (the choice is remembered), with a search and a button to go to the screen. The texts are inside the app, in the eight languages.
 - **Settings in order:** More lists Connection and Bluetooth, Notifications, Security and Updates, each with a line that explains it, and the tabs of Settings now carry words next to their icons.
 - **Notices screen:** a new tab keeps what happened and when: connection lost and restored, robots without connection or in safe mode, STOP confirmed or not, finished jobs, push messages of the server and new versions, with filters, a counter on the tab and on the home screen and Mark seen. The list is the phone's own (the last 100, from what it sees while the app is open and the messages it receives); nothing new is asked to the server.
 - **New home screen:** one line says how the cell is (ready, moving, robots without connection or in safe mode), two figures, the next steps of the installation (what is not known is never shown as pending) and the robots in a list that opens their details and Control. Without a connection it offers to retry or choose the server. The health of the server moved to the telemetry screen.

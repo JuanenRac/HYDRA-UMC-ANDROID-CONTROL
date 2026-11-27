@@ -88,7 +88,7 @@ class ScreenshotsTest {
     @Test
     fun signIn() {
         val model = viewModel()
-        shot("01_sign_in") { LoginScreen(model, onSearch = {}, onAbout = {}) }
+        shot("01_sign_in") { LoginScreen(model, onSearch = {}, onAbout = {}, onHelp = {}) }
     }
 
     @Test
@@ -149,6 +149,11 @@ class ScreenshotsTest {
         val model = viewModel()
         val updates = AppUpdateViewModel(app)
         shot("06b_settings") { SettingsScreen(model, updates) }
+    }
+
+    @Test
+    fun help() {
+        shot("07_help") { HelpScreen(HelpTopic.CONTROL) {} }
     }
 
     @Test

@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Person
@@ -37,6 +38,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -51,7 +53,7 @@ import com.hydraumc.control.viewmodel.RobotViewModel
 
 /** The header: the brand and the global STOP, and under them the server and the two buttons that are always at hand. */
 @Composable
-fun HydraTopBar(viewModel: RobotViewModel, onVoice: () -> Unit, onProfile: () -> Unit) {
+fun HydraTopBar(viewModel: RobotViewModel, onVoice: () -> Unit, onProfile: () -> Unit, onHelp: () -> Unit = {}) {
     var serverMenu by remember { mutableStateOf(false) }
     val connection = viewModel.connectionState.value
     val active = viewModel.activeServer.value
@@ -107,6 +109,9 @@ fun HydraTopBar(viewModel: RobotViewModel, onVoice: () -> Unit, onProfile: () ->
             }
             IconButton(onClick = onVoice) {
                 Icon(Icons.Filled.Mic, contentDescription = stringResource(R.string.voice_assistant_title), tint = HydraColors.Accent)
+            }
+            IconButton(onClick = onHelp, modifier = Modifier.testTag("header-help")) {
+                Icon(Icons.AutoMirrored.Filled.HelpOutline, contentDescription = stringResource(R.string.help_title), tint = HydraColors.Accent)
             }
             IconButton(onClick = onProfile) {
                 Icon(Icons.Filled.Person, contentDescription = stringResource(R.string.user_profile_title), tint = HydraColors.Accent)

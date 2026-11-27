@@ -54,6 +54,7 @@ Every file of the repository with a line on what it does: the annotated tree tha
 │   │   │   │   ├── Joystick3D.kt           # Reusable 2-axis joystick control component
 │   │   │   │   ├── HydraTopBar.kt          # Header of every screen: mark, global STOP, server in use, voice, account
 │   │   │   │   ├── NoticesScreen.kt        # What happened: filters, mark seen, link to the settings
+│   │   │   │   ├── HelpScreen.kt           # Help by screen and level, with search
 │   │   │   │   ├── MoreScreen.kt           # "More": the tools and settings as explained cards
 │   │   │   │   ├── EntryScreens.kt         # First use: welcome, server search, notices step, help to reach the server
 │   │   │   │   ├── LoginScreen.kt          # Username/password + IP/port entry, biometric login
