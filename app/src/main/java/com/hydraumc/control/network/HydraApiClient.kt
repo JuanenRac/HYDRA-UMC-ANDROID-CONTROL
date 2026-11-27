@@ -454,6 +454,25 @@ class HydraApiClient(
         executeExpectingText(request, client)
     }
 
+    /** The faults of the server (GET /api/faults): the active ones and the latest [limit] of the record, as text for [ServerFaults.parse]. Read only. */
+    suspend fun getFaultsBody(limit: Int): String = withContext(Dispatchers.IO) {
+        val request = Request.Builder()
+            .url("$baseUrl/api/faults?limit=${limit.coerceIn(1, 200)}")
+            .header("Authorization", "Bearer ${authToken ?: ""}")
+            .get()
+            .build()
+        executeExpectingText(request, client)
+    }
+
+    /** The health of the controller board in [slot] (GET /api/ecosystem/node-health). Read only: nothing is sent to the board. */
+    suspend fun getBoardHealth(slot: Int): BoardHealth = typedCall { api ->
+        val health = api.getEcosystemNodeHealth(slot.toString())
+        BoardHealth(
+            slot = health.slot.toInt(), online = health.online, heard = health.heard == true, ageMs = health.ageMs,
+            flags = health.flagNames.orEmpty(), txErrors = health.txErrors, rxErrors = health.rxErrors, stalls = health.stalls, uptimeS = health.uptimeS,
+        )
+    }
+
     /** The latest lines of the history of sign-ins (GET /api/connections/events), newest first, as text for [ConnectionHistory.parseEvents]. */
     suspend fun getConnectionEventsBody(limit: Int): String = withContext(Dispatchers.IO) {
         val request = Request.Builder()

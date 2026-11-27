@@ -1,6 +1,7 @@
 {
   "typed": [
     "/api/claims",
+    "/api/ecosystem/node-health",
     "/api/ecosystem/status",
     "/api/push/devices",
     "/api/push/devices/{p}",
@@ -23,6 +24,7 @@
     "/api/camera/{p}/stream": "an address handed to the picture player, not a request of the app (the stream is opened by the player)",
     "/api/connections/clients": "the answer is kept as text on purpose (the audit hash, the history and the options are read from the exact text), and the typed client returns a parsed model",
     "/api/connections/events": "the answer is kept as text on purpose (the audit hash, the history and the options are read from the exact text), and the typed client returns a parsed model",
+    "/api/faults": "the typed client declares no answer for this route (it returns Unit), so the body the app reads would be lost",
     "/api/hydra-info": "the discovery probe: it tries http and then https, builds its own address and must never throw",
     "/api/login": "sign-in is not migrated: it sends no token and the refresh sits below the authenticated call",
     "/api/logout": "sign-in is not migrated: best effort, never throws",

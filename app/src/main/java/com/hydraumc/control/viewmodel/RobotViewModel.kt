@@ -438,6 +438,8 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
     // [AdminReadings]; these are the same states the screens have always read.
     private val admin = AdminReadings(scope = viewModelScope, client = { apiClient }, onSessionProblem = { renewSessionOrLogout() })
     val auditRead get() = admin.auditRead
+    /** The fault record of the server and the health of its boards, read on demand for the Notices screen. */
+    val serverRecord = ServerRecord(viewModelScope, { apiClient }, { renewSessionOrLogout() })
     /** The chain check of the lines in [auditRead] (only after the operator asked to verify); null before. */
     val auditChain get() = admin.auditChain
     val auditBusy get() = admin.auditBusy

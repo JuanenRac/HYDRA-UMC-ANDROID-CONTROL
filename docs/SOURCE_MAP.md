@@ -39,6 +39,7 @@ Every file of the repository with a line on what it does: the annotated tree tha
 │   │   │   │   ├── DeadManJogRunner.kt    # The continuous jog: jogStart, the heartbeat, jogStop, and every way a session ends
 │   │   │   │   ├── RobotCommandContract.kt   # Command names and limits, generated from docs/robot_command_contract.json (tools/gen_command_contract.py)
 │   │   │   │   ├── ContractV2.kt          # The server's second contract as pure rules: conditional writes by robot revision, the atomic table move and the audit record
+│   │   │   │   ├── ServerReadings.kt       # The server's fault record and board health: what is read from the two answers
 │   │   │   │   ├── BleCommands.kt         # One robot command to send over Bluetooth LE and its acknowledgement (see docs/BLE_CONTRACT.md)
 │   │   │   │   └── BlePermissions.kt      # The runtime permissions Bluetooth LE needs on each Android version
 │   │   │   ├── ui/
@@ -56,6 +57,7 @@ Every file of the repository with a line on what it does: the annotated tree tha
 │   │   │   │   ├── GlobalStop.kt           # Global STOP button + result banner (one tap, every robot)
 │   │   │   │   ├── Joystick3D.kt           # Reusable 2-axis joystick control component
 │   │   │   │   ├── HydraTopBar.kt          # Header of every screen: mark, global STOP, server in use, voice, account
+│   │   │   │   ├── ServerRecordView.kt     # The server's part of Notices: faults and controller boards
 │   │   │   │   ├── NoticesScreen.kt        # What happened: filters, mark seen, link to the settings
 │   │   │   │   ├── HelpScreen.kt           # Help by screen and level, with search
 │   │   │   │   ├── MoreScreen.kt           # "More": the tools and settings as explained cards
@@ -103,6 +105,7 @@ Every file of the repository with a line on what it does: the annotated tree tha
 │   │   │   │   ├── RobotViewModel.kt   # Shared ViewModel - networking, auth, discovery, atomic command dispatch, all UI state
 │   │   │   │   ├── CommandErrorText.kt # The texts of a failed command, in the language of the phone
 │   │   │   │   ├── DeadManJogController.kt # What the screen sees of the continuous jog and of the link: switches, held controls, level
+│   │   │   │   ├── ServerRecord.kt         # Reads the fault record and the board health on demand, for the server in use
 │   │   │   │   ├── HomeSummary.kt          # What the home screen says: state of the cell and next steps (pure rules)
 │   │   │   │   ├── TotpFlow.kt             # The steps of the second-factor screen: status, turn on (password, key, first code, recovery codes), turn off, new recovery codes
 │   │   │   │   └── BleScanController.kt # The Bluetooth LE scan: checks, filter, stop after a few seconds
