@@ -13,6 +13,7 @@ import android.os.Build
 import android.service.quicksettings.Tile
 import android.service.quicksettings.TileService
 import com.hydraumc.control.MainActivity
+import com.hydraumc.control.util.GlobalStopRequest
 import com.hydraumc.control.R
 
 /**
@@ -46,8 +47,7 @@ class GlobalStopTileService : TileService() {
 
     companion object {
         /** The request MainActivity answers with the global stop (see its onNewIntent). */
-        fun stopIntent(context: Context): Intent = Intent(context, MainActivity::class.java).apply {
-            action = "ACTION_GLOBAL_ESTOP"
+        fun stopIntent(context: Context): Intent = GlobalStopRequest.stamp(context, Intent(context, MainActivity::class.java)).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
         }
     }

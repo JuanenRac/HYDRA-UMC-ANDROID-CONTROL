@@ -8,11 +8,13 @@ package com.hydraumc.control.widget
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.widget.RemoteViews
 import com.hydraumc.control.MainActivity
 import com.hydraumc.control.R
+import com.hydraumc.control.util.GlobalStopRequest
 
 /**
  * Implementation of App Widget functionality.
@@ -39,6 +41,13 @@ class GlobalStopWidget : AppWidgetProvider() {
     }
 }
 
+/** Gives the widgets already on the home screen a fresh stop request (one placed by an earlier version carries no proof). */
+internal fun refreshGlobalStopWidgets(context: Context) {
+    val manager = AppWidgetManager.getInstance(context) ?: return
+    val ids = manager.getAppWidgetIds(ComponentName(context, GlobalStopWidget::class.java)) ?: return
+    for (id in ids) updateAppWidget(context, manager, id)
+}
+
 internal fun updateAppWidget(
     context: Context,
     appWidgetManager: AppWidgetManager,
@@ -48,8 +57,7 @@ internal fun updateAppWidget(
     val views = RemoteViews(context.packageName, R.layout.widget_global_stop)
 
     // Intent to trigger the E-STOP action in MainActivity
-    val intent = Intent(context, MainActivity::class.java).apply {
-        action = "ACTION_GLOBAL_ESTOP"
+    val intent = GlobalStopRequest.stamp(context, Intent(context, MainActivity::class.java)).apply {
         // SINGLE_TOP (with launchMode singleTop) delivers the tap to the running activity (onNewIntent)
         // instead of rebuilding it, which dropped the live connection before the stop could be sent.
         flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
