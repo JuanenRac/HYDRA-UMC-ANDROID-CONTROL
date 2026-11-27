@@ -106,7 +106,7 @@ class ScreenshotsTest {
     }
 
     @Test
-    fun notices() {
+    fun noticesStep() {
         val model = viewModel()
         shot("02c_notices") { NoticesStep(model) {} }
     }
@@ -124,6 +124,18 @@ class ScreenshotsTest {
         model.connectionState.value = WsStatus.DISCONNECTED
         val updates = AppUpdateViewModel(app)
         shot("08_home_offline") { MainScreen(model, updates) }
+    }
+
+    @Test
+    fun notices() {
+        val at = 1_700_000_000_000L
+        val list = listOf(
+            com.hydraumc.control.util.Notice(com.hydraumc.control.util.NoticeKind.ROBOT_OFFLINE, "Robot A3", at),
+            com.hydraumc.control.util.Notice(com.hydraumc.control.util.NoticeKind.ROBOT_SAFE_MODE, "Robot A2", at - 1_500_000),
+            com.hydraumc.control.util.Notice(com.hydraumc.control.util.NoticeKind.STOP_CONFIRMED, "", at - 2_500_000, seen = true),
+            com.hydraumc.control.util.Notice(com.hydraumc.control.util.NoticeKind.JOB_DONE, "Robot A1", at - 80_000_000, seen = true),
+        )
+        shot("05_notices") { NoticesScreen(list, {}, {}) }
     }
 
     @Test

@@ -42,7 +42,7 @@ import java.util.Locale
  * a list. Touching a robot opens its details and the way to Control.
  */
 @Composable
-fun DashboardScreen(viewModel: RobotViewModel, onOpenControl: () -> Unit = {}, onOpenSettings: () -> Unit = {}) {
+fun DashboardScreen(viewModel: RobotViewModel, onOpenControl: () -> Unit = {}, onOpenSettings: () -> Unit = {}, onOpenNotices: () -> Unit = {}) {
     val robots = viewModel.robots.value
     val connection = viewModel.connectionState.value
     val connected = connection == WsStatus.CONNECTED
@@ -87,15 +87,15 @@ fun DashboardScreen(viewModel: RobotViewModel, onOpenControl: () -> Unit = {}, o
 
         if (robots.isNotEmpty()) {
             val online = robots.count { it.online }
-            val moving = robots.count { HomeState.moving(it) }
+            val unseen = com.hydraumc.control.util.Notices.unseen(viewModel.notices.value)
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 StatTile(
                     Icons.Filled.PrecisionManufacturing, "$online/${robots.size}", stringResource(R.string.home_robots_online),
                     if (online < robots.size) HydraColors.Amber else HydraColors.Ok, Modifier.weight(1f), onOpenControl,
                 )
                 StatTile(
-                    Icons.Filled.PlayCircle, moving.toString(), stringResource(R.string.home_robots_moving_label),
-                    HydraColors.Accent, Modifier.weight(1f), onOpenControl,
+                    Icons.Filled.Notifications, unseen.toString(), stringResource(R.string.home_notices_label),
+                    if (unseen > 0) HydraColors.Amber else HydraColors.Accent, Modifier.weight(1f), onOpenNotices,
                 )
             }
         }

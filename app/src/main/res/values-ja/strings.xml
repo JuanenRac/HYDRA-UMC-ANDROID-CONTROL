@@ -611,7 +611,6 @@
     <string name="home_safe_mode">セーフモードのロボット: %1$d</string>
     <string name="home_safe_mode_hint">管理者による有効化が必要です</string>
     <string name="home_robots_online">オンラインのロボット</string>
-    <string name="home_robots_moving_label">動作中</string>
     <string name="home_stop_title">STOP は引き続き有効です</string>
     <string name="home_stop_text">押すと送信されます。確認できない場合はアプリが知らせるので、物理的な非常停止を使ってください。</string>
     <string name="home_choose_server">サーバーを選ぶ</string>
@@ -626,6 +625,18 @@
     <string name="home_step_do">設定する</string>
     <string name="home_robot_online_line">オンライン · X %1$s · Y %2$s · Z %3$s</string>
     <string name="home_robot_open_control">Control で開く</string>
+    <string name="tab_notices">通知</string>
+    <string name="notices_attention">要確認: %1$d</string>
+    <string name="notices_calm">異常なし</string>
+    <string name="notices_calm_hint">アプリを開いている間にこの端末が検知したことと、サーバーからの通知がここに表示されます。</string>
+    <string name="notices_mark_seen">既読にする</string>
+    <string name="notices_filter_all">すべて</string>
+    <string name="notices_filter_server">サーバー</string>
+    <string name="notices_filter_jobs">ジョブ</string>
+    <string name="notices_job_done">%1$s のジョブが完了</string>
+    <string name="notices_update">新しいバージョンがあります: %1$s</string>
+    <string name="notices_settings_link">通知の内容と方法</string>
+    <string name="home_notices_label">未読の通知</string>
     <!-- Common texts of the apps: written by tools/i18n_common.py of HYDRA-UMC-SDK, not by hand -->
     <string name="common_confirm">確認</string>
     <string name="common_cancel">キャンセル</string>

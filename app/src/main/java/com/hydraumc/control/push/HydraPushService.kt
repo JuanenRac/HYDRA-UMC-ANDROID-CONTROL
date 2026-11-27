@@ -24,6 +24,10 @@ class HydraPushService : FirebaseMessagingService() {
     override fun onMessageReceived(message: RemoteMessage) {
         val shown = message.notification ?: return
         val title = shown.title?.takeIf { it.isNotBlank() } ?: return
+        com.hydraumc.control.util.NoticeLog(this).add(
+            com.hydraumc.control.util.NoticeKind.SERVER_MESSAGE,
+            listOf(title, shown.body.orEmpty()).filter { it.isNotBlank() }.joinToString(" - "),
+        )
         NotificationHelper.createChannel(this)
         NotificationHelper.showServerNotice(this, title, shown.body.orEmpty(), shown.tag ?: message.data["kind"].orEmpty())
     }

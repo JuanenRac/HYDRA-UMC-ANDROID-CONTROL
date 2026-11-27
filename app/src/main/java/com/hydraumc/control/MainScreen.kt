@@ -48,6 +48,8 @@ sealed class Screen(val route: String, @param:StringRes val titleRes: Int, val i
     object Control : Screen("control", R.string.tab_control, Icons.Filled.ControlCamera)
     /** The Camera Feed screen. */
     object Camera : Screen("camera", R.string.tab_cameras, Icons.Filled.Videocam)
+    /** What happened, when and what to do. */
+    object Alerts : Screen("notices", R.string.tab_notices, Icons.Filled.Notifications)
     /** The tools and settings, as explained cards. */
     object More : Screen("more", R.string.tab_more, Icons.Filled.Apps)
     /** The 3D Simulation screen (from More or Control). */
@@ -59,7 +61,7 @@ sealed class Screen(val route: String, @param:StringRes val titleRes: Int, val i
 }
 
 /** List of screen items to display in the Bottom Navigation Bar. */
-val items = listOf(Screen.Dashboard, Screen.Control, Screen.Camera, Screen.More)
+val items = listOf(Screen.Dashboard, Screen.Control, Screen.Camera, Screen.Alerts, Screen.More)
 
 /** The screens reached from More: the bar keeps More selected while one of them is open. */
 private val moreRoutes = setOf(Screen.ThreeD.route, Screen.Telemetry.route, Screen.Settings.route)
@@ -96,6 +98,17 @@ private fun MainScreenContent(
     var showProfileDialog by remember { mutableStateOf(value = false) }
     var showVoiceAssistantDialog by remember { mutableStateOf(value = false) }
     val updateState by updateViewModel.state.collectAsState()
+    val unseen = com.hydraumc.control.util.Notices.unseen(viewModel.notices.value)
+    // The notices screen is filled from what the phone sees while the app is on screen.
+    LaunchedEffect(viewModel) {
+        while (true) {
+            viewModel.noticesTick()
+            kotlinx.coroutines.delay(1_000)
+        }
+    }
+    LaunchedEffect(updateState) {
+        (updateState as? AppUpdateState.Available)?.let { viewModel.noteUpdate(it.update.version.toString()) }
+    }
 
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
@@ -202,7 +215,13 @@ private fun MainScreenContent(
                     } == true
                     NavigationBarItem(
                         modifier = Modifier.testTag("tab-" + screen.route),
-                        icon = { Icon(screen.icon, contentDescription = null) },
+                        icon = {
+                            if (screen == Screen.Alerts && unseen > 0) {
+                                BadgedBox(badge = { Badge { Text(unseen.toString()) } }) { Icon(screen.icon, contentDescription = null) }
+                            } else {
+                                Icon(screen.icon, contentDescription = null)
+                            }
+                        },
                         label = {
                             Text(text = stringResource(screen.titleRes), style = MaterialTheme.typography.labelSmall, maxLines = 1, softWrap = false)
                         },
@@ -258,13 +277,16 @@ private fun MainScreenContent(
         }
         NavHost(navController, startDestination = Screen.Dashboard.route, Modifier.weight(1f).fillMaxWidth()) {
             composable(Screen.Dashboard.route) {
-                DashboardScreen(viewModel, onOpenControl = { openTab(Screen.Control) }, onOpenSettings = { openAbove(Screen.Settings) })
+                DashboardScreen(viewModel, onOpenControl = { openTab(Screen.Control) }, onOpenSettings = { openAbove(Screen.Settings) }, onOpenNotices = { openTab(Screen.Alerts) })
             }
             composable(Screen.Control.route) { ControlScreen(viewModel, onOpenThreeD = { openAbove(Screen.ThreeD) }) }
             composable(Screen.Camera.route) { CameraScreen(viewModel) }
             composable(Screen.ThreeD.route) { ThreeDScreen(viewModel) }
             composable(Screen.Telemetry.route) { TelemetryScreen(viewModel) }
             composable(Screen.Settings.route) { SettingsScreen(viewModel, updateViewModel, onEnableBluetooth) }
+            composable(Screen.Alerts.route) {
+                NoticesScreen(viewModel.notices.value, onMarkSeen = viewModel::markNoticesSeen, onSettings = { openAbove(Screen.Settings) })
+            }
             composable(Screen.More.route) {
                 MoreScreen(
                     onThreeD = { openAbove(Screen.ThreeD) },

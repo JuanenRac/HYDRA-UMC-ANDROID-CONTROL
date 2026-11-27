@@ -611,7 +611,6 @@
     <string name="home_safe_mode">Roboter im sicheren Modus: %1$d</string>
     <string name="home_safe_mode_hint">Ein Administrator muss sie aktivieren</string>
     <string name="home_robots_online">Roboter online</string>
-    <string name="home_robots_moving_label">Gerade in Bewegung</string>
     <string name="home_stop_title">Der STOP bleibt aktiv</string>
     <string name="home_stop_text">Er wird beim Drücken gesendet. Ohne Bestätigung sagt die App es: Nutzen Sie den physischen Not-Halt.</string>
     <string name="home_choose_server">Server wählen</string>
@@ -626,6 +625,18 @@
     <string name="home_step_do">Erledigen</string>
     <string name="home_robot_online_line">Online · X %1$s · Y %2$s · Z %3$s</string>
     <string name="home_robot_open_control">In Control öffnen</string>
+    <string name="tab_notices">Meldungen</string>
+    <string name="notices_attention">Brauchen Aufmerksamkeit: %1$d</string>
+    <string name="notices_calm">Alles ruhig</string>
+    <string name="notices_calm_hint">Hier erscheint, was dieses Telefon bei geöffneter App sieht, und die Meldungen des Servers.</string>
+    <string name="notices_mark_seen">Als gesehen markieren</string>
+    <string name="notices_filter_all">Alle</string>
+    <string name="notices_filter_server">Server</string>
+    <string name="notices_filter_jobs">Aufträge</string>
+    <string name="notices_job_done">Auftrag beendet auf %1$s</string>
+    <string name="notices_update">Neue Version verfügbar: %1$s</string>
+    <string name="notices_settings_link">Was mich benachrichtigt und wie</string>
+    <string name="home_notices_label">Ungelesene Meldungen</string>
     <!-- Common texts of the apps: written by tools/i18n_common.py of HYDRA-UMC-SDK, not by hand -->
     <string name="common_confirm">Bestätigen</string>
     <string name="common_cancel">Abbrechen</string>

@@ -611,7 +611,6 @@
     <string name="home_safe_mode">Robots en modo seguro: %1$d</string>
     <string name="home_safe_mode_hint">Un administrador debe activarlos</string>
     <string name="home_robots_online">Robots en línea</string>
-    <string name="home_robots_moving_label">En movimiento</string>
     <string name="home_stop_title">El STOP sigue activo</string>
     <string name="home_stop_text">Se intenta enviar al pulsarlo. Si no se confirma, la app lo dice: usa la seta física.</string>
     <string name="home_choose_server">Elegir servidor</string>
@@ -626,6 +625,18 @@
     <string name="home_step_do">Hacerlo</string>
     <string name="home_robot_online_line">En línea · X %1$s · Y %2$s · Z %3$s</string>
     <string name="home_robot_open_control">Abrir en Control</string>
+    <string name="tab_notices">Avisos</string>
+    <string name="notices_attention">Necesitan atención: %1$d</string>
+    <string name="notices_calm">Todo en calma</string>
+    <string name="notices_calm_hint">Aquí aparece lo que este teléfono ve con la app abierta y los mensajes del servidor.</string>
+    <string name="notices_mark_seen">Marcar vistos</string>
+    <string name="notices_filter_all">Todos</string>
+    <string name="notices_filter_server">Servidor</string>
+    <string name="notices_filter_jobs">Trabajos</string>
+    <string name="notices_job_done">Trabajo terminado en %1$s</string>
+    <string name="notices_update">Hay una versión nueva: %1$s</string>
+    <string name="notices_settings_link">Qué me avisa y cómo</string>
+    <string name="home_notices_label">Avisos sin leer</string>
     <!-- Common texts of the apps: written by tools/i18n_common.py of HYDRA-UMC-SDK, not by hand -->
     <string name="common_confirm">Confirmar</string>
     <string name="common_cancel">Cancelar</string>

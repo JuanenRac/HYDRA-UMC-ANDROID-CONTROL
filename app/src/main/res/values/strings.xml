@@ -611,7 +611,6 @@
     <string name="home_safe_mode">Robots in safe mode: %1$d</string>
     <string name="home_safe_mode_hint">An administrator has to enable them</string>
     <string name="home_robots_online">Robots online</string>
-    <string name="home_robots_moving_label">Moving now</string>
     <string name="home_stop_title">The STOP stays active</string>
     <string name="home_stop_text">It is sent when you press it. If it is not confirmed, the app says so: use the physical emergency stop.</string>
     <string name="home_choose_server">Choose server</string>
@@ -626,6 +625,18 @@
     <string name="home_step_do">Do it</string>
     <string name="home_robot_online_line">Online · X %1$s · Y %2$s · Z %3$s</string>
     <string name="home_robot_open_control">Open in Control</string>
+    <string name="tab_notices">Notices</string>
+    <string name="notices_attention">Needing attention: %1$d</string>
+    <string name="notices_calm">All calm</string>
+    <string name="notices_calm_hint">What this phone sees while the app is open, and the messages of the server, appear here.</string>
+    <string name="notices_mark_seen">Mark seen</string>
+    <string name="notices_filter_all">All</string>
+    <string name="notices_filter_server">Server</string>
+    <string name="notices_filter_jobs">Jobs</string>
+    <string name="notices_job_done">Job finished on %1$s</string>
+    <string name="notices_update">A new version is available: %1$s</string>
+    <string name="notices_settings_link">What notifies me and how</string>
+    <string name="home_notices_label">Unread notices</string>
     <!-- Common texts of the apps: written by tools/i18n_common.py of HYDRA-UMC-SDK, not by hand -->
     <string name="common_confirm">Confirm</string>
     <string name="common_cancel">Cancel</string>

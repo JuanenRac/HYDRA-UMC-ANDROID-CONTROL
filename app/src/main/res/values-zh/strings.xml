@@ -611,7 +611,6 @@
     <string name="home_safe_mode">处于安全模式的机器人：%1$d</string>
     <string name="home_safe_mode_hint">需要管理员启用</string>
     <string name="home_robots_online">在线机器人</string>
-    <string name="home_robots_moving_label">运动中</string>
     <string name="home_stop_title">STOP 仍然有效</string>
     <string name="home_stop_text">按下即发送。若未获确认，应用会提示：请使用实体急停按钮。</string>
     <string name="home_choose_server">选择服务器</string>
@@ -626,6 +625,18 @@
     <string name="home_step_do">去完成</string>
     <string name="home_robot_online_line">在线 · X %1$s · Y %2$s · Z %3$s</string>
     <string name="home_robot_open_control">在 Control 中打开</string>
+    <string name="tab_notices">通知</string>
+    <string name="notices_attention">需要处理：%1$d</string>
+    <string name="notices_calm">一切平静</string>
+    <string name="notices_calm_hint">这里显示应用打开时手机看到的情况以及服务器消息。</string>
+    <string name="notices_mark_seen">标记为已读</string>
+    <string name="notices_filter_all">全部</string>
+    <string name="notices_filter_server">服务器</string>
+    <string name="notices_filter_jobs">作业</string>
+    <string name="notices_job_done">%1$s 的作业已完成</string>
+    <string name="notices_update">有新版本：%1$s</string>
+    <string name="notices_settings_link">哪些情况会通知我</string>
+    <string name="home_notices_label">未读通知</string>
     <!-- Common texts of the apps: written by tools/i18n_common.py of HYDRA-UMC-SDK, not by hand -->
     <string name="common_confirm">确认</string>
     <string name="common_cancel">取消</string>

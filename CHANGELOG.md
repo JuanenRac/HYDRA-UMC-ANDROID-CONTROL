@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- **Notices screen:** a new tab keeps what happened and when: connection lost and restored, robots without connection or in safe mode, STOP confirmed or not, finished jobs, push messages of the server and new versions, with filters, a counter on the tab and on the home screen and Mark seen. The list is the phone's own (the last 100, from what it sees while the app is open and the messages it receives); nothing new is asked to the server.
 - **New home screen:** one line says how the cell is (ready, moving, robots without connection or in safe mode), two figures, the next steps of the installation (what is not known is never shown as pending) and the robots in a list that opens their details and Control. Without a connection it offers to retry or choose the server. The health of the server moved to the telemetry screen.
 - **First use and sign-in:** a phone that never signed in gets a welcome with three steps, a search for the servers of the network (choosing one only fills in its address) and, once in, a step with the notification switches, which keep their values, and the STOP. The sign-in has the search, help on how to reach the server and About.
 - **About and diagnostic:** About has the new look and can share a short report about the app and the phone, with no address, user name, password or token.

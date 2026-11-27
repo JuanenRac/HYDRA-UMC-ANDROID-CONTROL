@@ -53,6 +53,7 @@ Every file of the repository with a line on what it does: the annotated tree tha
 │   │   │   │   ├── GlobalStop.kt           # Global STOP button + result banner (one tap, every robot)
 │   │   │   │   ├── Joystick3D.kt           # Reusable 2-axis joystick control component
 │   │   │   │   ├── HydraTopBar.kt          # Header of every screen: mark, global STOP, server in use, voice, account
+│   │   │   │   ├── NoticesScreen.kt        # What happened: filters, mark seen, link to the settings
 │   │   │   │   ├── MoreScreen.kt           # "More": the tools and settings as explained cards
 │   │   │   │   ├── EntryScreens.kt         # First use: welcome, server search, notices step, help to reach the server
 │   │   │   │   ├── LoginScreen.kt          # Username/password + IP/port entry, biometric login
@@ -77,6 +78,7 @@ Every file of the repository with a line on what it does: the annotated tree tha
 │   │   │   ├── util/
 │   │   │   │   ├── DiagnosticReport.kt     # The report "Share diagnostic" prepares: app and phone only
 │   │   │   │   ├── FirstRun.kt             # Whether this phone has signed in before
+│   │   │   │   ├── NoticeLog.kt            # The notices kept on the phone (the last 100)
 │   │   │   │   ├── BiometricHelper.kt      # androidx.biometric prompt wrapper
 │   │   │   │   ├── NotificationHelper.kt   # Job-complete/safety push notifications
 │   │   │   │   ├── NotificationPrefs.kt    # Persistent storage for the in-app notifications toggle
