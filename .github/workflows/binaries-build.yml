@@ -122,6 +122,9 @@ jobs:
       - name: Compile the release APK without a version bump
         env:
           HYDRA_UMC_CI: "1"
+          # The Firebase configuration of the push messages; read by the build from the environment, never written to a file.
+          # Only the owner reaches this job, on a commit of the main branch. Without the secret the APK has push off.
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
         shell: bash
         run: |
           set -euo pipefail

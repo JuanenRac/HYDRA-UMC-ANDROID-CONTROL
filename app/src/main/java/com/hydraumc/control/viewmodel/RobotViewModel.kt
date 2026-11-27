@@ -577,6 +577,8 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
     // existed); loaded for real in init{} below and updated via
     // setNotificationsEnabled().
     val notificationsEnabled = mutableStateOf(value = true)
+    /** The push messages of the server (off until the person turns them on; only in a build with the Firebase configuration). */
+    val push = PushSwitchController(application, viewModelScope, notificationPrefs, { apiClient })
 
     val selectedCameraId = mutableIntStateOf(1)
     // Read-only state for this app's own voice-assistant button
@@ -639,6 +641,7 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
     init {
         connectionState.value = WsStatus.DISCONNECTED
         NotificationHelper.createChannel(application)
+        push.load()
 
         viewModelScope.launch {
             val notificationsSaved = notificationPrefs.isEnabled()
@@ -902,6 +905,7 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
         val client = apiClient
         apiClient = null
         authTokenState.value = null
+        push.signedOut(client)
         val keepPassword = isBiometricEnabled.value
         if (!keepPassword) loginPassword.value = ""
         viewModelScope.launch {
@@ -976,6 +980,7 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
             connectionState.value = WsStatus.DISCONNECTED
             lastError.value = "The server keeps rejecting the session right after renewing it. Sign in again; if it repeats, check the server."
             liveSocket.close()
+            push.signedOut(null)
             return
         }
         reloginJob = viewModelScope.launch {
@@ -983,6 +988,7 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
                 isLoggedIn.value = false
                 connectionState.value = WsStatus.DISCONNECTED
                 liveSocket.close()
+                push.signedOut(null)
             }
         }
     }
@@ -1149,6 +1155,7 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
 
                 override fun onSynced() {
                     onInitialConnectSucceeded?.invoke()
+                    push.sync()
                 }
 
                 override fun onSyncFailed(error: HydraApiException) {

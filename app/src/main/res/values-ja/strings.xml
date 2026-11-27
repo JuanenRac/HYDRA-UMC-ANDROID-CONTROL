@@ -660,4 +660,13 @@
     <string name="common_up_to_date">最新です</string>
     <string name="common_system_default">システムの既定値</string>
     <string name="common_select_a_robot">ロボットを選択してください</string>
+    <!-- Push messages of the server -->
+    <string name="push_switch_label">サーバーからのプッシュ通知</string>
+    <string name="push_switch_hint">作業の完了、グローバル停止、オペレーターの在席信号の途絶を、アプリを閉じていてもこの端末に知らせます。通知は知らせるだけで、通知から操作することはできません。サーバー側でプッシュを有効にする必要があります。</string>
+    <string name="push_unavailable">このビルドには Firebase の設定がないため、プッシュ通知は無効です。</string>
+    <string name="push_server_off">このサーバーはプッシュ通知を無効にしています。</string>
+    <string name="push_failed">この端末をプッシュ通知に登録できませんでした。</string>
+    <string name="push_registered">この端末は登録されました。サーバーから通知が届きます。</string>
+    <string name="push_listen_only">「受信のみ」が有効なため、この端末は登録されません。</string>
+    <string name="push_channel_name">サーバーからのお知らせ</string>
 </resources>

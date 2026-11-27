@@ -84,6 +84,38 @@ val appVersionBuild = Regex("(?m)^versionBuild=(\\d+)\\s*$").find(versionPropsTe
 val appVersionName = "$appVersionMajor.$appVersionMinor.$appVersionPatch" +
     if (appVersionBuild != null && appVersionMajor * 10000 + appVersionMinor * 100 + appVersionPatch >= 800) ".$appVersionBuild" else ""
 
+// =============================================================================
+// Push messages (Firebase)
+// =============================================================================
+// The Firebase configuration file is NOT kept in the repository: the build takes it from the environment variable
+// GOOGLE_SERVICES_JSON (the secret of the CI) or from app/google-services.json (ignored by Git), and turns the four values
+// the app needs into build constants. Without either, the constants are empty and the app is built with push off. Nothing of
+// the file is ever printed, not even when it is wrong. See docs/PUSH_NOTIFICATIONS.md.
+val firebaseConfiguration: Map<String, String> = run {
+    val text = providers.environmentVariable("GOOGLE_SERVICES_JSON").orNull?.takeIf { it.isNotBlank() }
+        ?: file("google-services.json").takeIf { it.isFile }?.readText()
+        ?: return@run emptyMap<String, String>()
+    val values = runCatching {
+        fun Any?.obj() = this as Map<*, *>
+        val root = groovy.json.JsonSlurper().parseText(text).obj()
+        val info = root["project_info"].obj()
+        val client = (root["client"] as List<*>).map { it.obj() }
+            .first { it["client_info"].obj()["android_client_info"].obj()["package_name"] == "com.hydraumc.control" }
+        mapOf(
+            "project" to info["project_id"] as String,
+            "sender" to info["project_number"] as String,
+            "app" to client["client_info"].obj()["mobilesdk_app_id"] as String,
+            "key" to (client["api_key"] as List<*>).first().obj()["current_key"] as String,
+        )
+    }.getOrNull()
+    // the cause is left out on purpose: the message of a parse error quotes the file
+    if (values == null || values.values.any { !it.matches(Regex("[A-Za-z0-9:_.-]+")) }) {
+        throw GradleException("The Firebase configuration is not usable: it must be the google-services.json of an Android app registered as com.hydraumc.control")
+    }
+    values
+}
+logger.lifecycle(if (firebaseConfiguration.isEmpty()) "PUSH_CONFIG=OFF (no Firebase configuration: the app is built with push off)" else "PUSH_CONFIG=ON")
+
 android {
     namespace = "com.hydraumc.control"
     // 37 required by androidx.core 1.19 and the other current androidx releases
@@ -97,6 +129,10 @@ android {
         targetSdk = 37
         versionCode = appVersionCode
         versionName = appVersionName
+        buildConfigField("String", "FCM_PROJECT_ID", "\"${firebaseConfiguration["project"] ?: ""}\"")
+        buildConfigField("String", "FCM_SENDER_ID", "\"${firebaseConfiguration["sender"] ?: ""}\"")
+        buildConfigField("String", "FCM_APP_ID", "\"${firebaseConfiguration["app"] ?: ""}\"")
+        buildConfigField("String", "FCM_API_KEY", "\"${firebaseConfiguration["key"] ?: ""}\"")
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_21
@@ -241,6 +277,11 @@ dependencies {
     // Private, end-to-end encrypted Watch <-> phone transport. Google Play
     // services accepts only the same applicationId signed with the same key.
     implementation(libs.play.services.wearable)
+
+    // Push messages of the server (see push/FirebasePush.kt). The app starts Firebase itself from the build constants, so
+    // the Google Services plugin is not needed.
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.messaging)
 
     // Testing
     testImplementation(libs.junit)

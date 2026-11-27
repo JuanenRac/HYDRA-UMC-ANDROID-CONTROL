@@ -33,6 +33,7 @@ import com.hydraumc.control.viewmodel.AppUpdateState
 import com.hydraumc.control.viewmodel.AppUpdateViewModel
 import com.hydraumc.control.R
 import com.hydraumc.control.model.BleDevice
+import com.hydraumc.control.push.PushResult
 import com.hydraumc.control.model.ServerInfo
 import com.hydraumc.control.ui.theme.metallicIndustrial
 import com.hydraumc.control.ui.theme.HydraButton
@@ -146,6 +147,42 @@ private fun NotificationSettings(viewModel: RobotViewModel) {
             style = MaterialTheme.typography.bodySmall,
             color = Color.Gray,
         )
+        Spacer(modifier = Modifier.height(16.dp))
+        ServerPushSettings(viewModel)
+    }
+}
+
+/** The push messages of the server: they reach the phone with the app closed, and they only inform. */
+@Composable
+private fun ServerPushSettings(viewModel: RobotViewModel) {
+    val push = viewModel.push
+
+    Column {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(stringResource(R.string.push_switch_label), style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+            Switch(checked = push.enabled.value, onCheckedChange = { push.set(it) }, enabled = push.available)
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            stringResource(if (push.available) R.string.push_switch_hint else R.string.push_unavailable),
+            style = MaterialTheme.typography.bodySmall,
+            color = Color.Gray,
+        )
+        val outcome = when (push.result.value) {
+            PushResult.REGISTERED -> R.string.push_registered
+            PushResult.SERVER_OFF -> R.string.push_server_off
+            PushResult.LISTEN_ONLY -> R.string.push_listen_only
+            PushResult.FAILED -> R.string.push_failed
+            null -> null
+        }
+        if (outcome != null) {
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(stringResource(outcome), style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+        }
     }
 }
 

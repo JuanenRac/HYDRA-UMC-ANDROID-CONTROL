@@ -2,6 +2,8 @@
   "typed": [
     "/api/claims",
     "/api/ecosystem/status",
+    "/api/push/devices",
+    "/api/push/devices/{p}",
     "/api/robot/{p}/claim",
     "/api/robot/{p}/jog-arm",
     "/api/robot/{p}/release",
