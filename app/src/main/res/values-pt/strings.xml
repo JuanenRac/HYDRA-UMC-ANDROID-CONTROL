@@ -13,10 +13,7 @@
     <string name="tab_settings">@string/common_settings</string>
     <string name="dashboard_title">Início</string>
     <string name="no_robots">Não há robôs ligados nem configurados.</string>
-    <string name="online">EM LINHA</string>
-    <string name="offline">FORA DE LINHA</string>
     <string name="tool">Ferramenta: %s</string>
-    <string name="pos_arm">Posição (braço):</string>
     <string name="pos_xy">Posição (mesa XY):</string>
     <string name="speed">Velocidade: %s mm/s</string>
     <string name="accel">Aceleração: %s mm/s²</string>
@@ -104,7 +101,6 @@
     <string name="uptime_label">Tempo ativo: %s</string>
     <string name="controllers_label">Controladores: %d</string>
     <string name="robots_label">Robôs: %d</string>
-    <string name="role_label">Papel: %s</string>
     <string name="no_telemetry_data">NENHUM DADO DE TELEMETRIA RECEBIDO</string>
     <string name="clear_logs_desc">Limpar registos</string>
     <string name="remember_me_label">Lembrar-me</string>

@@ -13,10 +13,7 @@
     <string name="tab_settings">@string/common_settings</string>
     <string name="dashboard_title">ホーム</string>
     <string name="no_robots">接続または設定済みのロボットがありません。</string>
-    <string name="online">オンライン</string>
-    <string name="offline">オフライン</string>
     <string name="tool">ツール：%s</string>
-    <string name="pos_arm">位置（アーム）：</string>
     <string name="pos_xy">位置（XY テーブル）：</string>
     <string name="speed">速度：%s mm/s</string>
     <string name="accel">加速度：%s mm/s²</string>
@@ -104,7 +101,6 @@
     <string name="uptime_label">稼働時間：%s</string>
     <string name="controllers_label">コントローラー数：%d</string>
     <string name="robots_label">ロボット数：%d</string>
-    <string name="role_label">役割：%s</string>
     <string name="no_telemetry_data">テレメトリデータを受信していません</string>
     <string name="clear_logs_desc">ログをクリア</string>
     <string name="remember_me_label">ログイン情報を記憶する</string>
