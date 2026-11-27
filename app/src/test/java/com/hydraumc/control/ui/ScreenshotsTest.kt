@@ -6,9 +6,8 @@
 package com.hydraumc.control.ui
 
 import android.app.Application
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -79,7 +78,8 @@ class ScreenshotsTest {
 
     private fun shot(name: String, content: @Composable () -> Unit) {
         composeTestRule.setContent {
-            HydraTheme { Box(Modifier.fillMaxSize().background(HydraColors.Background)) { content() } }
+            // a Surface, as in the activity: it gives the text its colour
+            HydraTheme { Surface(Modifier.fillMaxSize(), color = HydraColors.Background, contentColor = HydraColors.Text) { content() } }
         }
         composeTestRule.waitForIdle()
         composeTestRule.onRoot().captureRoboImage("build/screenshots/$name.png")
