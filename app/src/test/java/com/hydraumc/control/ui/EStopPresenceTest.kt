@@ -79,7 +79,8 @@ class EStopPresenceTest {
     fun everyScreenOfTheNavigationKeepsTheStopOfTheHeader() {
         val app = ApplicationProvider.getApplicationContext<Application>()
         val model = viewModel()
-        composeTestRule.setContent { com.hydraumc.control.MainScreen(model, com.hydraumc.control.viewmodel.AppUpdateViewModel(app)) }
+        val updates = com.hydraumc.control.viewmodel.AppUpdateViewModel(app)
+        composeTestRule.setContent { com.hydraumc.control.MainScreen(model, updates) }
         composeTestRule.waitForIdle()
         fun stopOnScreen() {
             composeTestRule.onAllNodesWithContentDescription(stopDescription())[0].assertIsDisplayed()
