@@ -8,6 +8,7 @@ package com.hydraumc.control.network
 import kotlinx.coroutines.runBlocking
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
+import org.json.JSONObject
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -78,6 +79,57 @@ class TypedClaimsAndLimitsTest {
             fail("expected a HydraApiException")
         } catch (e: HydraApiException) {
             assertTrue(e.httpCode == 500)
+        }
+    }
+
+    @Test
+    fun `a claim goes out with the token, the controller and the revision, and gives the new revision`() {
+        server.enqueue(
+            MockResponse().setResponseCode(200).setBody(
+                """{"success":true,"reservation":{"ownerUsername":"ana","expiresAt":2000},"reservationHistory":[],"revision":"r2"}""",
+            ),
+        )
+        val answer = runBlocking { client.postClaim(2, ifMatch = "\"r1\"") }
+        assertEquals("r2", answer.getString("revision"))
+        assertEquals("ana", answer.getJSONObject("reservation").getString("ownerUsername"))
+        val request = server.takeRequest()
+        assertEquals("POST", request.method)
+        assertEquals("/api/robot/2/claim", request.path)
+        assertEquals("Bearer tok.en", request.getHeader("Authorization"))
+        assertEquals("\"r1\"", request.getHeader("If-Match"))
+        assertEquals(SessionController.id, request.getHeader("X-Controller-Id"))
+        assertEquals("""{"controllerId":"${SessionController.id}"}""", request.body.readUtf8())
+    }
+
+    @Test
+    fun `a take over sends force and the life of the claim`() {
+        server.enqueue(MockResponse().setResponseCode(200).setBody("""{"success":true,"reservation":{},"reservationHistory":[],"revision":"r3"}"""))
+        runBlocking { client.postClaim(2, ttlMs = 60_000L, force = true) }
+        val request = server.takeRequest()
+        val body = JSONObject(request.body.readUtf8())
+        assertTrue(body.getBoolean("force"))
+        assertEquals(60_000L, body.getLong("ttlMs"))
+        assertNull(request.getHeader("If-Match"))
+    }
+
+    @Test
+    fun `an older server with no revision and a release with no history are accepted`() {
+        server.enqueue(MockResponse().setResponseCode(200).setBody("""{"success":true,"reservation":{},"reservationHistory":[]}"""))
+        server.enqueue(MockResponse().setResponseCode(200).setBody("""{"success":true}"""))
+        assertNull(revisionOf(runBlocking { client.postClaim(2) }))
+        assertTrue(runBlocking { client.postRelease(2) }.getBoolean("success"))
+        assertEquals("/api/robot/2/claim", server.takeRequest().path)
+        assertEquals("/api/robot/2/release", server.takeRequest().path)
+    }
+
+    @Test
+    fun `a claim answer without a reservation is an API error`() {
+        server.enqueue(MockResponse().setResponseCode(200).setBody("""{"success":true}"""))
+        try {
+            runBlocking { client.postClaim(2) }
+            fail("expected a HydraApiException")
+        } catch (e: HydraApiException) {
+            assertNull(e.httpCode)
         }
     }
 }
