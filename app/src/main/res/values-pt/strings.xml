@@ -504,9 +504,11 @@
     <string name="watch_alert_stop_confirmed">STOP confirmado pelo servidor</string>
     <string name="watch_confirm_relay_off">A confirmação a partir do relógio está desativada no telemóvel.</string>
     <string name="pairing_switch_label">Permitir o emparelhamento por código QR ou ligação</string>
-    <string name="pairing_switch_hint">A página de administração do servidor mostra um código QR com o endereço e a impressão digital do certificado. Leia-o com a câmara do telemóvel ou cole aqui a ligação. A aplicação mostra o que leu e pergunta antes de guardar seja o que for. Desativado por predefinição.</string>
+    <string name="pairing_switch_hint">A página de administração do servidor mostra um código QR com o endereço e a impressão digital do certificado. Leia-o a partir daqui ou com a câmara do telemóvel, ou cole a ligação. A câmara só abre quando toca em Ler o código. A aplicação mostra o que leu e pergunta antes de guardar seja o que for. Desativado por predefinição.</string>
     <string name="pairing_paste_label">Ligação de emparelhamento</string>
     <string name="pairing_paste_button">Ler ligação</string>
+    <string name="pairing_scan_button">Ler o código QR</string>
+    <string name="pairing_scan_unavailable">Este telemóvel não conseguiu abrir o leitor de códigos. Cole antes a ligação.</string>
     <string name="pairing_off">O emparelhamento está desativado. Ative-o no painel de acesso.</string>
     <string name="pairing_dialog_title">Emparelhar com este servidor?</string>
     <string name="pairing_dialog_message">%1$s em %2$s, porta %3$d.</string>

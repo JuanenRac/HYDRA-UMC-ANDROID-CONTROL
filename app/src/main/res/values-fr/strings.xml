@@ -504,9 +504,11 @@
     <string name="watch_alert_stop_confirmed">STOP confirmé par le serveur</string>
     <string name="watch_confirm_relay_off">La confirmation depuis la montre est désactivée sur le téléphone.</string>
     <string name="pairing_switch_label">Autoriser l\'association par code QR ou lien</string>
-    <string name="pairing_switch_hint">La page d\'administration du serveur affiche un code QR avec son adresse et l\'empreinte de son certificat. Scannez-le avec l\'appareil photo du téléphone ou collez le lien ici. L\'appli montre ce qu\'elle a lu et demande avant de rien enregistrer. Désactivé par défaut.</string>
+    <string name="pairing_switch_hint">La page d\'administration du serveur affiche un code QR avec son adresse et l\'empreinte de son certificat. Scannez-le d\'ici ou avec l\'appareil photo du téléphone, ou collez le lien. L\'appareil photo ne s\'ouvre que lorsque vous touchez Scanner. L\'appli montre ce qu\'elle a lu et demande avant de rien enregistrer. Désactivé par défaut.</string>
     <string name="pairing_paste_label">Lien d\'association</string>
     <string name="pairing_paste_button">Lire le lien</string>
+    <string name="pairing_scan_button">Scanner le code QR</string>
+    <string name="pairing_scan_unavailable">Ce téléphone n\'a pas pu ouvrir le lecteur de codes. Collez plutôt le lien.</string>
     <string name="pairing_off">L\'association est désactivée. Activez-la dans le panneau d\'accès.</string>
     <string name="pairing_dialog_title">Associer avec ce serveur ?</string>
     <string name="pairing_dialog_message">%1$s à %2$s, port %3$d.</string>

@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- **Scan the pairing code inside the app:** with pairing switched on (still off by default), a button next to the paste box reads the QR code of the admin page with the camera. The camera is opened by the code scanner of Google Play services only when the button is tapped, so the app asks for no camera permission. What the code says is checked like a pasted link: a link without a certificate fingerprint is refused and nothing is kept before you confirm. Not tried on a real phone.
 - **Help by screen and level:** the "?" of the header opens the help of the screen you are on; it is also in More and on the sign-in. Basic, advanced, technical or all (the choice is remembered), with a search and a button to go to the screen. The texts are inside the app, in the eight languages.
 - **Settings in order:** More lists Connection and Bluetooth, Notifications, Security and Updates, each with a line that explains it, and the tabs of Settings now carry words next to their icons.
 - **Notices screen:** a new tab keeps what happened and when: connection lost and restored, robots without connection or in safe mode, STOP confirmed or not, finished jobs, push messages of the server and new versions, with filters, a counter on the tab and on the home screen and Mark seen. The list is the phone's own (the last 100, from what it sees while the app is open and the messages it receives); nothing new is asked to the server.

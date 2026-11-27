@@ -28,6 +28,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.hydraumc.control.R
@@ -68,17 +69,31 @@ fun LinkAndWatchSettings(viewModel: RobotViewModel) {
 }
 
 /**
- * Pairing by QR code or link: the switch and a box to paste the link the admin page of the server shows. The phone camera
- * can also open the link straight into this app. Nothing is kept before the person confirms what the link says.
+ * Pairing by QR code or link: the switch, a button that reads the QR code with the camera and a box to paste the link the
+ * admin page of the server shows. The phone camera can also open the link straight into this app. Whatever the way in, the
+ * text is checked the same, and nothing is kept before the person confirms what the link says.
  */
 @Composable
 fun PairingSection(viewModel: RobotViewModel) {
     var text by remember { mutableStateOf("") }
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+    val reader = LocalQrReader.current
+    val unavailable = stringResource(R.string.pairing_scan_unavailable)
+    val notALink = stringResource(R.string.pairing_problem_not_link)
     Column(modifier = Modifier.fillMaxWidth()) {
         SwitchRow(viewModel.pairingEnabled.value, viewModel::setPairingEnabled, stringResource(R.string.pairing_switch_label), stringResource(R.string.pairing_switch_hint))
         if (viewModel.pairingEnabled.value) {
             Spacer(modifier = Modifier.height(6.dp))
+            OutlinedButton(
+                onClick = {
+                    reader.read(
+                        context,
+                        onText = { read -> scope.launch { if (!viewModel.receivePairing(read)) viewModel.lastError.value = notALink } },
+                        onUnavailable = { viewModel.lastError.value = unavailable },
+                    )
+                },
+            ) { Text(stringResource(R.string.pairing_scan_button)) }
             OutlinedTextField(
                 value = text,
                 onValueChange = { text = it },
