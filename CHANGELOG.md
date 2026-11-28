@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- The server client and the recorded server answers now come from SDK 0.7.8, and the continuous integration fetches that tag.
+
 ## [0.8.0.9] - New look, QR pairing, several servers and the server's fault record
 
 - **Not tried on a real phone:** this version was checked with automated tests and emulators only.
