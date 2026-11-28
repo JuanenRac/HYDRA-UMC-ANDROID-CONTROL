@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **Listen only no longer holds back the stop of a held jog:** switching it on while a jog was held made the app refuse its own `jogStop` and report a stop that was not confirmed. The `jogStop` now always leaves; a new jog and its heartbeats are still refused.
+
 - **Scan the pairing code inside the app:** with pairing switched on (still off by default), a button next to the paste box reads the QR code of the admin page with the camera. The camera is opened by the code scanner of Google Play services only when the button is tapped, so the app asks for no camera permission. What the code says is checked like a pasted link: a link without a certificate fingerprint is refused and nothing is kept before you confirm. Not tried on a real phone.
 - **Help by screen and level:** the "?" of the header opens the help of the screen you are on; it is also in More and on the sign-in. Basic, advanced, technical or all (the choice is remembered), with a search and a button to go to the screen. The texts are inside the app, in the eight languages.
 - **Server faults and board health in Notices:** a second part of the Notices screen reads, on demand and read only, the active faults and the latest 50 of the server's record, and the health of the controller boards (slots 0 to 7). It says when the server has either of them off, or the account may not ask. The phone's own list is unchanged. Not tried on a real phone.

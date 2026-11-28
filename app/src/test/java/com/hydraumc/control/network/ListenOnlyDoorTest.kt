@@ -30,7 +30,7 @@ class ListenOnlyDoorTest {
     fun `reads, STOP and the session go through`() {
         assertTrue(ListenOnly.allowsRequest("GET", segs("api/settings"), null))
         assertTrue(ListenOnly.allowsRequest("POST", segs("api/stop-all"), null))
-        for (command in listOf("stop", "disable")) {
+        for (command in listOf("stop", "jogStop", "disable")) {
             assertTrue(command, ListenOnly.allowsRequest("POST", segs("api/robot/3/command"), "{\"command\":\"$command\"}"))
         }
         for (name in listOf("login", "refresh", "logout")) assertTrue(name, ListenOnly.allowsRequest("POST", segs("api/$name"), "{}"))
@@ -39,7 +39,7 @@ class ListenOnlyDoorTest {
 
     @Test
     fun `every other robot command and every administration write is refused`() {
-        for (command in listOf("jog", "jogStart", "play", "pause", "reset", "enable", "tool", "valve", "pump", "speed", "vision")) {
+        for (command in listOf("jog", "jogStart", "jogHeartbeat", "play", "pause", "reset", "enable", "tool", "valve", "pump", "speed", "vision")) {
             assertFalse(command, ListenOnly.allowsRequest("POST", segs("api/robot/3/command"), "{\"command\":\"$command\"}"))
         }
         assertFalse(ListenOnly.allowsRequest("POST", segs("api/robot/3/command"), "not json"))

@@ -9,7 +9,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-/** Listen only: off lets everything through; on lets only STOP and the safe-mode disable go out. */
+/** Listen only: off lets everything through; on lets only the stops and the safe-mode disable go out. */
 class ListenOnlyTest {
     @Test
     fun `off lets every command of the contract through`() {
@@ -17,9 +17,16 @@ class ListenOnlyTest {
     }
 
     @Test
-    fun `on lets only stop and disable go out`() {
+    fun `on lets only the stops and disable go out`() {
         val allowed = RobotCommandContract.ALL.filter { ListenOnly.allows(true, it) }.toSet()
-        assertTrue(allowed == setOf(RobotCommandContract.STOP, RobotCommandContract.DISABLE))
+        assertTrue(allowed == setOf(RobotCommandContract.STOP, RobotCommandContract.JOG_STOP, RobotCommandContract.DISABLE))
+    }
+
+    @Test
+    fun `the jogStop of a held jog always leaves and its start and heartbeat do not`() {
+        assertTrue(ListenOnly.allows(true, RobotCommandContract.JOG_STOP))
+        assertFalse(ListenOnly.allows(true, RobotCommandContract.JOG_START))
+        assertFalse(ListenOnly.allows(true, RobotCommandContract.JOG_HEARTBEAT))
     }
 
     @Test

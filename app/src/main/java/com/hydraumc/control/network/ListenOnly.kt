@@ -16,10 +16,11 @@ import org.json.JSONObject
 
 /**
  * Listen only: the app shows the robots and their data but sends no robot command. The only ones that still go out are
- * STOP and the safe-mode disable, because refusing a stop would be the unsafe side. Off by default.
+ * the stops (STOP and the jogStop of a held jog) and the safe-mode disable, because refusing a stop would be the unsafe
+ * side. Off by default.
  */
 object ListenOnly {
-    private val ALWAYS_ALLOWED: Set<String> = setOf(RobotCommandContract.STOP, RobotCommandContract.DISABLE)
+    private val ALWAYS_ALLOWED: Set<String> = setOf(RobotCommandContract.STOP, RobotCommandContract.JOG_STOP, RobotCommandContract.DISABLE)
 
     /** Whether [command] may leave the app while Listen only is [on]. */
     fun allows(on: Boolean, command: String): Boolean = !on || command in ALWAYS_ALLOWED
@@ -51,7 +52,7 @@ object ListenOnly {
 
     /**
      * Whether a request may leave the app while Listen only is on: a read, STOP (the global one and a robot command
-     * that is stop or disable) and the sign-in, the renewal and the end of the session. Every other write to the server
+     * that is stop, jogStop or disable) and the sign-in, the renewal and the end of the session. Every other write to the server
      * (settings, push and presence registration, files, users) is refused. The path is read by its segments.
      */
     fun allowsRequest(method: String, pathSegments: List<String>, bodyText: String?): Boolean {
