@@ -51,7 +51,11 @@ class SwitchesKeepLateReadTest {
     }
 
     @After
-    fun tearDown() = MainDispatcherSwap.reset()
+    fun tearDown() {
+        // Nothing is left chosen for the tests of other classes that run in the same process.
+        runBlocking { cases.forEach { ConnectionPrefs(context).forgetFlag(it.flag) } }
+        MainDispatcherSwap.reset()
+    }
 
     @Test
     fun `a switch changed while the saved choices are being read keeps the new value`() {

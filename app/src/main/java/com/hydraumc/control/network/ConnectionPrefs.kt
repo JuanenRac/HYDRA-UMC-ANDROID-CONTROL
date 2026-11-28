@@ -103,6 +103,12 @@ class ConnectionPrefs(private val context: Context) {
         context.connectionDataStore.edit { prefs -> prefs[booleanPreferencesKey("flag_$name")] = on }
     }
 
+    /** Leaves the switch [name] as never chosen. For the tests: the store outlives a test in the same process. */
+    @androidx.annotation.VisibleForTesting
+    internal suspend fun forgetFlag(name: String) {
+        context.connectionDataStore.edit { prefs -> prefs.remove(booleanPreferencesKey("flag_$name")) }
+    }
+
     /** A random identity of this installation, made once, so the server keeps one watch notice entry per phone. It says nothing about the device. */
     suspend fun watchNoticeDeviceId(): String {
         val key = stringPreferencesKey("watch_notice_device_id")
