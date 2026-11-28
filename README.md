@@ -69,7 +69,7 @@ Each line is one part of this repository and the light says how far it is today.
 
 ## 🎯 Overview
 
-Screens of the app: a bottom bar with **Home** (state of the cell, next steps, robot list), **Control** (joysticks, play, pause, stop, reservation of the robot), **Cameras** (live MJPEG with picture-in-picture), **Notices** (what happened, kept on the phone) and **More** (3D view with the real STUDIO scene, telemetry with the health of the server, settings, account, help by screen and level, About). Before signing in: a welcome the first time, the search for servers and the sign-in. A red **STOP** button sits in the header of every screen and in every dialog and menu, also on a home-screen widget.
+Screens of the app: a bottom bar with **Home** (state of the cell, next steps, robot list), **Control** (joysticks, play, pause, stop, reservation of the robot), **Cameras** (live MJPEG with picture-in-picture), **Notices** (what happened, kept on the phone) and **More** (3D view with the real STUDIO scene, telemetry with the health of the server, settings, account, help by screen and level, About). Before the login: a welcome the first time, the search for servers and the login screen. A red **STOP** button sits in the header of every screen and in every dialog and menu, also on a home-screen widget.
 
 ## 🧩 Role in HYDRA-UMC
 
