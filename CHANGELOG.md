@@ -5,6 +5,7 @@
 ## [0.8.0.9] - New look, QR pairing, several servers and the server's fault record
 
 - **Not tried on a real phone:** this version was checked with automated tests and emulators only.
+- **The last position of a switch is the one that is kept:** the choices of Settings (the covered-screen protection and Listen only among them) are now saved one at a time and in the order they were made. A switch turned off and on again at once could be saved the other way round.
 - **Listen only no longer holds back the stop of a held jog:** switching it on while a jog was held made the app refuse its own `jogStop` and report a stop that was not confirmed. The `jogStop` now always leaves; a new jog and its heartbeats are still refused.
 
 - **Scan the pairing code inside the app:** with pairing switched on (still off by default), a button next to the paste box reads the QR code of the admin page with the camera. The camera is opened by the code scanner of Google Play services only when the button is tapped, so the app asks for no camera permission. What the code says is checked like a pasted link: a link without a certificate fingerprint is refused and nothing is kept before you confirm. Not tried on a real phone.

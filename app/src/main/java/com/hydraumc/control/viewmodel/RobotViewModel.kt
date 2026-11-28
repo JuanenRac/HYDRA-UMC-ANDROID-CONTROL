@@ -96,6 +96,8 @@ import com.hydraumc.control.wear.WearAlertSink
 import com.hydraumc.control.util.NotificationHelper
 import com.hydraumc.control.util.StaleData
 import com.hydraumc.control.util.reuseUnchangedRows
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.launch
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
@@ -396,6 +398,15 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
     // The same for the other switches that init reads from the saved choices: a switch the person changed
     // while that read was still running keeps the new value (the late read must not undo it).
     private val switchesTouched = HashSet<String>()
+    // The saved choices are written one at a time and in the order they were made. One coroutine per change could finish
+    // the other way round: off and on again at once then left "off" on disk while the screen showed "on".
+    private val choiceWrites = Mutex()
+    private fun saveInOrder(write: suspend () -> Unit) {
+        // Undispatched: the place in the queue of the lock is taken before this call returns.
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO, kotlinx.coroutines.CoroutineStart.UNDISPATCHED) {
+            choiceWrites.withLock { write() }
+        }
+    }
     private fun touchSwitch(key: String, set: () -> Unit) = synchronized(switchesTouched) { switchesTouched.add(key); set() }
     private fun loadSwitchUnlessTouched(key: String, saved: Boolean, set: (Boolean) -> Unit) =
         synchronized(switchesTouched) { if (key !in switchesTouched) set(saved) }
@@ -1880,7 +1891,7 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
     fun setConditionalMode(mode: ConditionalMode) {
         conditionalModeTouched = true
         conditionalMode.value = mode
-        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) { prefs.saveConditionalMode(mode) }
+        saveInOrder { prefs.saveConditionalMode(mode) }
     }
 
     /** Switches Listen only and keeps the choice. A jog that is held stops when it is switched on. */
@@ -1888,7 +1899,7 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
         listenOnlyTouched = true
         listenOnlyGeneral = on
         refreshListenOnly()
-        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) { prefs.saveListenOnly(on) }
+        saveInOrder { prefs.saveListenOnly(on) }
     }
 
     /**
@@ -1909,14 +1920,14 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
         listenOnlyServers.value = if (on) listenOnlyServers.value + key else listenOnlyServers.value - key
         refreshListenOnly()
         val saved = listenOnlyServers.value
-        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) { prefs.saveListenOnlyServers(saved) }
+        saveInOrder { prefs.saveListenOnlyServers(saved) }
     }
 
     /** Chooses whether PLAY asks first, and keeps the choice. */
     fun setConfirmPlay(ask: Boolean) {
         confirmPlayTouched = true
         confirmPlay.value = ask
-        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) { prefs.saveConfirmPlay(ask) }
+        saveInOrder { prefs.saveConfirmPlay(ask) }
     }
 
     /** Chooses whether HOME/RESET is offered, and keeps the choice. Switching it off also drops a confirmation under way. */
@@ -1924,7 +1935,7 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
         homeResetTouched = true
         homeResetEnabled.value = on
         if (!on) homeResetConfirmation.cancel()
-        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) { prefs.saveHomeReset(on) }
+        saveInOrder { prefs.saveHomeReset(on) }
     }
 
     private fun linkProbeActive(): Boolean = connectionState.value == WsStatus.CONNECTED && isAppInForeground
@@ -1933,23 +1944,23 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
         touchSwitch(ConnectionPrefs.Flags.DEAD_MAN_JOG) { deadMan.enabled.value = on }
         if (!on) deadMan.interrupt()
         deadMan.ensureProbe { linkProbeActive() }
-        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) { prefs.saveFlag(ConnectionPrefs.Flags.DEAD_MAN_JOG, on) }
+        saveInOrder { prefs.saveFlag(ConnectionPrefs.Flags.DEAD_MAN_JOG, on) }
     }
 
     fun setLinkBlockOnBadLink(on: Boolean) {
         touchSwitch(ConnectionPrefs.Flags.LINK_BLOCK_JOG) { deadMan.blockOnBadLink.value = on }
-        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) { prefs.saveFlag(ConnectionPrefs.Flags.LINK_BLOCK_JOG, on) }
+        saveInOrder { prefs.saveFlag(ConnectionPrefs.Flags.LINK_BLOCK_JOG, on) }
     }
 
     fun setFilterObscuredTouches(on: Boolean) {
         touchSwitch(ConnectionPrefs.Flags.FILTER_OBSCURED_TOUCHES) { filterObscuredTouches.value = on }
-        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) { prefs.saveFlag(ConnectionPrefs.Flags.FILTER_OBSCURED_TOUCHES, on) }
+        saveInOrder { prefs.saveFlag(ConnectionPrefs.Flags.FILTER_OBSCURED_TOUCHES, on) }
     }
 
     fun setLinkIndicator(on: Boolean) {
         touchSwitch(ConnectionPrefs.Flags.LINK_INDICATOR) { deadMan.indicator.value = on }
         deadMan.ensureProbe { linkProbeActive() }
-        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) { prefs.saveFlag(ConnectionPrefs.Flags.LINK_INDICATOR, on) }
+        saveInOrder { prefs.saveFlag(ConnectionPrefs.Flags.LINK_INDICATOR, on) }
     }
 
     /** The phrase for a reason the continuous jog does not start, in the language of the phone. */
@@ -1964,7 +1975,7 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
     fun setPairingEnabled(on: Boolean) {
         touchSwitch(ConnectionPrefs.Flags.PAIRING) { pairingEnabled.value = on }
         if (!on) pairingOffer.value = null
-        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) { prefs.saveFlag(ConnectionPrefs.Flags.PAIRING, on) }
+        saveInOrder { prefs.saveFlag(ConnectionPrefs.Flags.PAIRING, on) }
     }
 
     /**
@@ -2016,13 +2027,13 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
     fun setWatchAlertsEnabled(on: Boolean) {
         touchSwitch(ConnectionPrefs.Flags.WATCH_ALERTS) { watchAlertsEnabled.value = on }
         if (on) ensureWatchAlertLoop()
-        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) { prefs.saveFlag(ConnectionPrefs.Flags.WATCH_ALERTS, on) }
+        saveInOrder { prefs.saveFlag(ConnectionPrefs.Flags.WATCH_ALERTS, on) }
     }
 
     fun setWatchReleaseNoticeEnabled(on: Boolean) {
         watchReleaseNoticeTouched = true
         watchReleaseNoticeEnabled.value = on
-        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) { prefs.saveFlag(ConnectionPrefs.Flags.WATCH_RELEASE_NOTICE, on) }
+        saveInOrder { prefs.saveFlag(ConnectionPrefs.Flags.WATCH_RELEASE_NOTICE, on) }
         reportWatchReleaseNotice()
     }
 
@@ -2044,12 +2055,12 @@ class RobotViewModel @JvmOverloads constructor(application: Application, authSto
 
     fun setPresenceRelayEnabled(on: Boolean) {
         touchSwitch(ConnectionPrefs.Flags.PRESENCE_RELAY) { presenceRelayEnabled.value = on }
-        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) { prefs.saveFlag(ConnectionPrefs.Flags.PRESENCE_RELAY, on) }
+        saveInOrder { prefs.saveFlag(ConnectionPrefs.Flags.PRESENCE_RELAY, on) }
     }
 
     fun setVoiceConfirmRelayEnabled(on: Boolean) {
         touchSwitch(ConnectionPrefs.Flags.VOICE_CONFIRM_RELAY) { voiceConfirmRelayEnabled.value = on }
-        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) { prefs.saveFlag(ConnectionPrefs.Flags.VOICE_CONFIRM_RELAY, on) }
+        saveInOrder { prefs.saveFlag(ConnectionPrefs.Flags.VOICE_CONFIRM_RELAY, on) }
     }
 
     /** The sentence of an alert, in the language of the phone. */
